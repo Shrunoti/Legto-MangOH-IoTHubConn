@@ -1,0 +1,1303 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"consolelogger.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.consolelogger_log,"ax",%progbits
+  20              		.align	2
+  21              		.global	consolelogger_log
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	consolelogger_log, %function
+  25              	consolelogger_log:
+  26              	.LFB1:
+  27              		.file 1 "Source\\azure_iot_sdk\\c-utility\\src\\consolelogger.c"
+   1:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** // Copyright (c) Microsoft. All rights reserved.
+   2:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** // Licensed under the MIT license. See LICENSE file in the project root for full license informatio
+   3:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+   4:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** #include <stdarg.h>
+   5:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** #include <stdio.h>
+   6:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** #include <time.h>
+   7:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** #include "azure_c_shared_utility/xlogging.h"
+   8:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** #include "azure_c_shared_utility/consolelogger.h"
+   9:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+  10:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** #if (defined(_MSC_VER)) && (!(defined WINCE))
+  11:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** #include "windows.h"
+  12:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+  13:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** /*returns a string as if printed by vprintf*/
+  14:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** static char* vprintf_alloc(const char* format, va_list va)
+  15:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** {
+  16:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     char* result;
+  17:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     int neededSize = vsnprintf(NULL, 0, format, va);
+  18:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     if (neededSize < 0)
+  19:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+  20:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         result = NULL;
+  21:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+  22:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     else
+  23:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+  24:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         result = (char*)malloc(neededSize + 1);
+  25:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         if (result == NULL)
+  26:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         {
+  27:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             /*return as is*/
+  28:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         }
+  29:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         else
+  30:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         {
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 2
+
+
+  31:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             if (vsnprintf(result, neededSize + 1, format, va) != neededSize)
+  32:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             {
+  33:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****                 free(result);
+  34:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****                 result = NULL;
+  35:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             }
+  36:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         }
+  37:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+  38:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     return result;
+  39:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** }
+  40:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+  41:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** /*returns a string as if printed by printf*/
+  42:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** static char* printf_alloc(const char* format, ...)
+  43:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** {
+  44:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     char* result;
+  45:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     va_list va;
+  46:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     va_start(va, format);
+  47:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     result = vprintf_alloc(format, va);
+  48:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     va_end(va);
+  49:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     return result;
+  50:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** }
+  51:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+  52:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** /*returns NULL if it fails*/
+  53:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** static char* lastErrorToString(DWORD lastError)
+  54:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** {
+  55:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     char* result;
+  56:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     if (lastError == 0)
+  57:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+  58:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         result = printf_alloc(""); /*no error should appear*/
+  59:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         if (result == NULL)
+  60:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         {
+  61:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             (void)printf("failure in printf_alloc");
+  62:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         }
+  63:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         else
+  64:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         {
+  65:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             /*return as is*/
+  66:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         }
+  67:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+  68:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     else
+  69:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+  70:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         char temp[MESSAGE_BUFFER_SIZE];
+  71:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, lastErr
+  72:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         {
+  73:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             result = printf_alloc("GetLastError()=0X%x", lastError);
+  74:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             if (result == NULL)
+  75:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             {
+  76:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****                 (void)printf("failure in printf_alloc\n");
+  77:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****                 /*return as is*/
+  78:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             }
+  79:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             else
+  80:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             {
+  81:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****                 /*return as is*/
+  82:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             }
+  83:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         }
+  84:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         else
+  85:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         {
+  86:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             /*eliminate the \r or \n from the string*/
+  87:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             /*one replace of each is enough*/
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 3
+
+
+  88:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             char* whereAreThey;
+  89:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             if ((whereAreThey = strchr(temp, '\r')) != NULL)
+  90:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             {
+  91:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****                 *whereAreThey = '\0';
+  92:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             }
+  93:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             if ((whereAreThey = strchr(temp, '\n')) != NULL)
+  94:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             {
+  95:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****                 *whereAreThey = '\0';
+  96:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             }
+  97:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+  98:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             result = printf_alloc("GetLastError()==0X%x (%s)", lastError, temp);
+  99:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 100:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             if (result == NULL)
+ 101:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             {
+ 102:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****                 (void)printf("failure in printf_alloc\n");
+ 103:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****                 /*return as is*/
+ 104:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             }
+ 105:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             else
+ 106:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             {
+ 107:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****                 /*return as is*/
+ 108:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****             }
+ 109:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         }
+ 110:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 111:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     return result;
+ 112:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** }
+ 113:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** /*this function will use 1x printf (in the happy case) .*/
+ 114:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** /*more than 1x printf / function call can mean intermingled LogErrors in a multithreaded env*/
+ 115:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** /*the function will also attempt to produce some human readable strings for GetLastError*/
+ 116:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** void consolelogger_log_with_GetLastError(const char* file, const char* func, int line, const char* 
+ 117:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** {
+ 118:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     DWORD lastError;
+ 119:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     char* lastErrorAsString;
+ 120:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     int lastErrorAsString_should_be_freed;
+ 121:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     time_t t;
+ 122:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     int systemMessage_should_be_freed;
+ 123:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     char* systemMessage;
+ 124:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     int userMessage_should_be_freed;
+ 125:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     char* userMessage;
+ 126:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 127:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     va_list args;
+ 128:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     va_start(args, format);
+ 129:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 130:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     /*this is what this case will do:
+ 131:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     1. snip the last error
+ 132:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     2. create a string with what that last error means
+ 133:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     3. printf the system message (__FILE__, __LINE__ etc) + the last error + whatever the user want
+ 134:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     */
+ 135:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     /*1. snip the last error*/
+ 136:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     lastError = GetLastError();
+ 137:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 138:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     /*2. create a string with what that last error means*/
+ 139:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     lastErrorAsString = lastErrorToString(lastError);
+ 140:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     if (lastErrorAsString == NULL)
+ 141:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+ 142:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         (void)printf("failure in lastErrorToString");
+ 143:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         lastErrorAsString = "";
+ 144:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         lastErrorAsString_should_be_freed = 0;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 4
+
+
+ 145:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 146:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     else
+ 147:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+ 148:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         lastErrorAsString_should_be_freed = 1;
+ 149:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 150:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 151:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     t = time(NULL);
+ 152:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     systemMessage = printf_alloc("Error: Time:%.24s File:%s Func:%s Line:%d %s", ctime(&t), file, f
+ 153:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 154:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     if (systemMessage == NULL)
+ 155:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+ 156:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         systemMessage = "";
+ 157:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         (void)printf("Error: [FAILED] Time:%.24s File : %s Func : %s Line : %d %s", ctime(&t), file
+ 158:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         systemMessage_should_be_freed = 0;
+ 159:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 160:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     else
+ 161:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+ 162:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         systemMessage_should_be_freed = 1;
+ 163:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 164:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 165:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     userMessage = vprintf_alloc(format, args);
+ 166:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     if (userMessage == NULL)
+ 167:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+ 168:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         (void)printf("[FAILED] ");
+ 169:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         (void)vprintf(format, args);
+ 170:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         (void)printf("\n");
+ 171:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         userMessage_should_be_freed = 0;
+ 172:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 173:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     else
+ 174:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+ 175:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         /*3. printf the system message(__FILE__, __LINE__ etc) + the last error + whatever the user
+ 176:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         (void)printf("%s %s\n", systemMessage, userMessage);
+ 177:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         userMessage_should_be_freed = 1;
+ 178:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 179:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 180:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     if (userMessage_should_be_freed == 1)
+ 181:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+ 182:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         free(userMessage);
+ 183:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 184:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 185:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     if (systemMessage_should_be_freed == 1)
+ 186:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+ 187:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         free(systemMessage);
+ 188:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 189:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 190:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     if (lastErrorAsString_should_be_freed == 1)
+ 191:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+ 192:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         free(lastErrorAsString);
+ 193:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 194:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     va_end(args);
+ 195:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** }
+ 196:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** #endif
+ 197:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 198:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** #if defined(__GNUC__)
+ 199:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** __attribute__ ((format (printf, 6, 7)))
+ 200:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** #endif
+ 201:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** void consolelogger_log(LOG_CATEGORY log_category, const char* file, const char* func, int line, uns
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 5
+
+
+ 202:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** {
+  28              		.loc 1 202 0
+  29              		.cfi_startproc
+  30              		@ args = 8, pretend = 0, frame = 8
+  31              		@ frame_needed = 0, uses_anonymous_args = 1
+  32              	.LVL0:
+  33 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+  34              		.cfi_def_cfa_offset 20
+  35              		.cfi_offset 4, -20
+  36              		.cfi_offset 5, -16
+  37              		.cfi_offset 6, -12
+  38              		.cfi_offset 7, -8
+  39              		.cfi_offset 14, -4
+  40 0002 85B0     		sub	sp, sp, #20
+  41              		.cfi_def_cfa_offset 40
+  42 0004 0400     		movs	r4, r0
+  43 0006 0D00     		movs	r5, r1
+  44 0008 1600     		movs	r6, r2
+  45 000a 1F00     		movs	r7, r3
+ 203:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     time_t t;
+ 204:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     va_list args;
+ 205:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     va_start(args, format);
+  46              		.loc 1 205 0
+  47 000c 0CAB     		add	r3, sp, #48
+  48              	.LVL1:
+  49 000e 0293     		str	r3, [sp, #8]
+ 206:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 207:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     t = time(NULL);
+  50              		.loc 1 207 0
+  51 0010 0020     		movs	r0, #0
+  52              	.LVL2:
+  53 0012 FFF7FEFF 		bl	time
+  54              	.LVL3:
+  55 0016 0390     		str	r0, [sp, #12]
+ 208:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 209:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     switch (log_category)
+  56              		.loc 1 209 0
+  57 0018 002C     		cmp	r4, #0
+  58 001a 05D0     		beq	.L3
+  59 001c 012C     		cmp	r4, #1
+  60 001e 0DD1     		bne	.L2
+ 210:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+ 211:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     case AZ_LOG_INFO:
+ 212:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         (void)printf("Info: ");
+  61              		.loc 1 212 0
+  62 0020 0C48     		ldr	r0, .L6
+  63 0022 FFF7FEFF 		bl	printf
+  64              	.LVL4:
+ 213:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         break;
+  65              		.loc 1 213 0
+  66 0026 09E0     		b	.L2
+  67              	.L3:
+ 214:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     case AZ_LOG_ERROR:
+ 215:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         (void)printf("Error: Time:%.24s File:%s Func:%s Line:%d ", ctime(&t), file, func, line);
+  68              		.loc 1 215 0
+  69 0028 03A8     		add	r0, sp, #12
+  70 002a FFF7FEFF 		bl	ctime
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 6
+
+
+  71              	.LVL5:
+  72 002e 0100     		movs	r1, r0
+  73 0030 0097     		str	r7, [sp]
+  74 0032 3300     		movs	r3, r6
+  75 0034 2A00     		movs	r2, r5
+  76 0036 0848     		ldr	r0, .L6+4
+  77 0038 FFF7FEFF 		bl	printf
+  78              	.LVL6:
+  79              	.L2:
+ 216:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         break;
+ 217:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     default:
+ 218:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         break;
+ 219:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 220:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 221:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     (void)vprintf(format, args);
+  80              		.loc 1 221 0
+  81 003c 0299     		ldr	r1, [sp, #8]
+  82 003e 0B98     		ldr	r0, [sp, #44]
+  83 0040 FFF7FEFF 		bl	vprintf
+  84              	.LVL7:
+ 222:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     va_end(args);
+ 223:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** 
+ 224:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     (void)log_category;
+ 225:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     if (options & LOG_LINE)
+  85              		.loc 1 225 0
+  86 0044 0A9B     		ldr	r3, [sp, #40]
+  87 0046 DB07     		lsls	r3, r3, #31
+  88 0048 02D5     		bpl	.L1
+ 226:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     {
+ 227:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****         (void)printf("\r\n");
+  89              		.loc 1 227 0
+  90 004a 0448     		ldr	r0, .L6+8
+  91 004c FFF7FEFF 		bl	puts
+  92              	.LVL8:
+  93              	.L1:
+ 228:Source\azure_iot_sdk\c-utility\src/consolelogger.c ****     }
+ 229:Source\azure_iot_sdk\c-utility\src/consolelogger.c **** }
+  94              		.loc 1 229 0
+  95 0050 05B0     		add	sp, sp, #20
+  96              		@ sp needed
+  97              	.LVL9:
+  98              	.LVL10:
+  99              	.LVL11:
+ 100 0052 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 101              	.L7:
+ 102              		.align	2
+ 103              	.L6:
+ 104 0054 00000000 		.word	.LC0
+ 105 0058 08000000 		.word	.LC2
+ 106 005c 34000000 		.word	.LC4
+ 107              		.cfi_endproc
+ 108              	.LFE1:
+ 109              		.size	consolelogger_log, .-consolelogger_log
+ 110              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 111              		.align	2
+ 112              	.LC0:
+ 113 0000 496E666F 		.ascii	"Info: \000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 7
+
+
+ 113      3A2000
+ 114 0007 00       		.space	1
+ 115              	.LC2:
+ 116 0008 4572726F 		.ascii	"Error: Time:%.24s File:%s Func:%s Line:%d \000"
+ 116      723A2054 
+ 116      696D653A 
+ 116      252E3234 
+ 116      73204669 
+ 117 0033 00       		.space	1
+ 118              	.LC4:
+ 119 0034 0D00     		.ascii	"\015\000"
+ 120              		.text
+ 121              	.Letext0:
+ 122              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 123              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 124              		.file 4 ".\\Source\\azure_iot_sdk\\c-utility\\inc/azure_c_shared_utility/xlogging.h"
+ 125              		.file 5 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 126              		.file 6 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 127              		.file 7 "<built-in>"
+ 128              		.section	.debug_info,"",%progbits
+ 129              	.Ldebug_info0:
+ 130 0000 44020000 		.4byte	0x244
+ 131 0004 0400     		.2byte	0x4
+ 132 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 133 000a 04       		.byte	0x4
+ 134 000b 01       		.uleb128 0x1
+ 135 000c 2B020000 		.4byte	.LASF30
+ 136 0010 0C       		.byte	0xc
+ 137 0011 34000000 		.4byte	.LASF31
+ 138 0015 ED000000 		.4byte	.LASF32
+ 139 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 140 001d 00000000 		.4byte	0
+ 141 0021 00000000 		.4byte	.Ldebug_line0
+ 142 0025 02       		.uleb128 0x2
+ 143 0026 BC000000 		.4byte	.LASF0
+ 144 002a 02       		.byte	0x2
+ 145 002b 28       		.byte	0x28
+ 146 002c 30000000 		.4byte	0x30
+ 147 0030 03       		.uleb128 0x3
+ 148 0031 DE010000 		.4byte	.LASF33
+ 149 0035 04       		.byte	0x4
+ 150 0036 07       		.byte	0x7
+ 151 0037 00       		.byte	0
+ 152 0038 47000000 		.4byte	0x47
+ 153 003c 04       		.uleb128 0x4
+ 154 003d 00000000 		.4byte	.LASF34
+ 155 0041 47000000 		.4byte	0x47
+ 156 0045 00       		.byte	0
+ 157 0046 00       		.byte	0
+ 158 0047 05       		.uleb128 0x5
+ 159 0048 04       		.byte	0x4
+ 160 0049 02       		.uleb128 0x2
+ 161 004a 1F000000 		.4byte	.LASF1
+ 162 004e 02       		.byte	0x2
+ 163 004f 62       		.byte	0x62
+ 164 0050 25000000 		.4byte	0x25
+ 165 0054 06       		.uleb128 0x6
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 8
+
+
+ 166 0055 01       		.byte	0x1
+ 167 0056 06       		.byte	0x6
+ 168 0057 BD020000 		.4byte	.LASF2
+ 169 005b 06       		.uleb128 0x6
+ 170 005c 01       		.byte	0x1
+ 171 005d 08       		.byte	0x8
+ 172 005e D2000000 		.4byte	.LASF3
+ 173 0062 06       		.uleb128 0x6
+ 174 0063 02       		.byte	0x2
+ 175 0064 05       		.byte	0x5
+ 176 0065 02020000 		.4byte	.LASF4
+ 177 0069 06       		.uleb128 0x6
+ 178 006a 02       		.byte	0x2
+ 179 006b 07       		.byte	0x7
+ 180 006c 80000000 		.4byte	.LASF5
+ 181 0070 06       		.uleb128 0x6
+ 182 0071 04       		.byte	0x4
+ 183 0072 05       		.byte	0x5
+ 184 0073 1D020000 		.4byte	.LASF6
+ 185 0077 06       		.uleb128 0x6
+ 186 0078 04       		.byte	0x4
+ 187 0079 07       		.byte	0x7
+ 188 007a A5000000 		.4byte	.LASF7
+ 189 007e 06       		.uleb128 0x6
+ 190 007f 08       		.byte	0x8
+ 191 0080 05       		.byte	0x5
+ 192 0081 E8010000 		.4byte	.LASF8
+ 193 0085 06       		.uleb128 0x6
+ 194 0086 08       		.byte	0x8
+ 195 0087 07       		.byte	0x7
+ 196 0088 92010000 		.4byte	.LASF9
+ 197 008c 07       		.uleb128 0x7
+ 198 008d 04       		.byte	0x4
+ 199 008e 05       		.byte	0x5
+ 200 008f 696E7400 		.ascii	"int\000"
+ 201 0093 06       		.uleb128 0x6
+ 202 0094 04       		.byte	0x4
+ 203 0095 07       		.byte	0x7
+ 204 0096 E0000000 		.4byte	.LASF10
+ 205 009a 06       		.uleb128 0x6
+ 206 009b 08       		.byte	0x8
+ 207 009c 04       		.byte	0x4
+ 208 009d C9010000 		.4byte	.LASF11
+ 209 00a1 06       		.uleb128 0x6
+ 210 00a2 04       		.byte	0x4
+ 211 00a3 07       		.byte	0x7
+ 212 00a4 D5010000 		.4byte	.LASF12
+ 213 00a8 06       		.uleb128 0x6
+ 214 00a9 01       		.byte	0x1
+ 215 00aa 08       		.byte	0x8
+ 216 00ab F6010000 		.4byte	.LASF13
+ 217 00af 08       		.uleb128 0x8
+ 218 00b0 04       		.byte	0x4
+ 219 00b1 B5000000 		.4byte	0xb5
+ 220 00b5 09       		.uleb128 0x9
+ 221 00b6 A8000000 		.4byte	0xa8
+ 222 00ba 02       		.uleb128 0x2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 9
+
+
+ 223 00bb AE010000 		.4byte	.LASF14
+ 224 00bf 03       		.byte	0x3
+ 225 00c0 28       		.byte	0x28
+ 226 00c1 70000000 		.4byte	0x70
+ 227 00c5 0A       		.uleb128 0xa
+ 228 00c6 6F000000 		.4byte	.LASF35
+ 229 00ca 01       		.byte	0x1
+ 230 00cb 5B000000 		.4byte	0x5b
+ 231 00cf 04       		.byte	0x4
+ 232 00d0 22       		.byte	0x22
+ 233 00d1 E8000000 		.4byte	0xe8
+ 234 00d5 0B       		.uleb128 0xb
+ 235 00d6 DC020000 		.4byte	.LASF15
+ 236 00da 00       		.byte	0
+ 237 00db 0B       		.uleb128 0xb
+ 238 00dc 11020000 		.4byte	.LASF16
+ 239 00e0 01       		.byte	0x1
+ 240 00e1 0B       		.uleb128 0xb
+ 241 00e2 27000000 		.4byte	.LASF17
+ 242 00e6 02       		.byte	0x2
+ 243 00e7 00       		.byte	0
+ 244 00e8 02       		.uleb128 0x2
+ 245 00e9 93000000 		.4byte	.LASF18
+ 246 00ed 04       		.byte	0x4
+ 247 00ee 27       		.byte	0x27
+ 248 00ef C5000000 		.4byte	0xc5
+ 249 00f3 0C       		.uleb128 0xc
+ 250 00f4 05000000 		.4byte	.LASF36
+ 251 00f8 01       		.byte	0x1
+ 252 00f9 C9       		.byte	0xc9
+ 253 00fa 00000000 		.4byte	.LFB1
+ 254 00fe 60000000 		.4byte	.LFE1-.LFB1
+ 255 0102 01       		.uleb128 0x1
+ 256 0103 9C       		.byte	0x9c
+ 257 0104 0C020000 		.4byte	0x20c
+ 258 0108 0D       		.uleb128 0xd
+ 259 0109 C9020000 		.4byte	.LASF19
+ 260 010d 01       		.byte	0x1
+ 261 010e C9       		.byte	0xc9
+ 262 010f E8000000 		.4byte	0xe8
+ 263 0113 00000000 		.4byte	.LLST0
+ 264 0117 0D       		.uleb128 0xd
+ 265 0118 A0000000 		.4byte	.LASF20
+ 266 011c 01       		.byte	0x1
+ 267 011d C9       		.byte	0xc9
+ 268 011e AF000000 		.4byte	0xaf
+ 269 0122 21000000 		.4byte	.LLST1
+ 270 0126 0D       		.uleb128 0xd
+ 271 0127 B7000000 		.4byte	.LASF21
+ 272 012b 01       		.byte	0x1
+ 273 012c C9       		.byte	0xc9
+ 274 012d AF000000 		.4byte	0xaf
+ 275 0131 4D000000 		.4byte	.LLST2
+ 276 0135 0D       		.uleb128 0xd
+ 277 0136 A9010000 		.4byte	.LASF22
+ 278 013a 01       		.byte	0x1
+ 279 013b C9       		.byte	0xc9
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 10
+
+
+ 280 013c 8C000000 		.4byte	0x8c
+ 281 0140 79000000 		.4byte	.LLST3
+ 282 0144 0E       		.uleb128 0xe
+ 283 0145 67000000 		.4byte	.LASF23
+ 284 0149 01       		.byte	0x1
+ 285 014a C9       		.byte	0xc9
+ 286 014b 93000000 		.4byte	0x93
+ 287 014f 02       		.uleb128 0x2
+ 288 0150 91       		.byte	0x91
+ 289 0151 00       		.sleb128 0
+ 290 0152 0E       		.uleb128 0xe
+ 291 0153 CB000000 		.4byte	.LASF24
+ 292 0157 01       		.byte	0x1
+ 293 0158 C9       		.byte	0xc9
+ 294 0159 AF000000 		.4byte	0xaf
+ 295 015d 02       		.uleb128 0x2
+ 296 015e 91       		.byte	0x91
+ 297 015f 04       		.sleb128 4
+ 298 0160 0F       		.uleb128 0xf
+ 299 0161 10       		.uleb128 0x10
+ 300 0162 7400     		.ascii	"t\000"
+ 301 0164 01       		.byte	0x1
+ 302 0165 CB       		.byte	0xcb
+ 303 0166 BA000000 		.4byte	0xba
+ 304 016a 02       		.uleb128 0x2
+ 305 016b 91       		.byte	0x91
+ 306 016c 64       		.sleb128 -28
+ 307 016d 11       		.uleb128 0x11
+ 308 016e 0C020000 		.4byte	.LASF25
+ 309 0172 01       		.byte	0x1
+ 310 0173 CC       		.byte	0xcc
+ 311 0174 49000000 		.4byte	0x49
+ 312 0178 02       		.uleb128 0x2
+ 313 0179 91       		.byte	0x91
+ 314 017a 60       		.sleb128 -32
+ 315 017b 12       		.uleb128 0x12
+ 316 017c 16000000 		.4byte	.LVL3
+ 317 0180 0C020000 		.4byte	0x20c
+ 318 0184 8E010000 		.4byte	0x18e
+ 319 0188 13       		.uleb128 0x13
+ 320 0189 01       		.uleb128 0x1
+ 321 018a 50       		.byte	0x50
+ 322 018b 01       		.uleb128 0x1
+ 323 018c 30       		.byte	0x30
+ 324 018d 00       		.byte	0
+ 325 018e 12       		.uleb128 0x12
+ 326 018f 26000000 		.4byte	.LVL4
+ 327 0193 17020000 		.4byte	0x217
+ 328 0197 A5010000 		.4byte	0x1a5
+ 329 019b 13       		.uleb128 0x13
+ 330 019c 01       		.uleb128 0x1
+ 331 019d 50       		.byte	0x50
+ 332 019e 05       		.uleb128 0x5
+ 333 019f 03       		.byte	0x3
+ 334 01a0 00000000 		.4byte	.LC0
+ 335 01a4 00       		.byte	0
+ 336 01a5 12       		.uleb128 0x12
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 11
+
+
+ 337 01a6 2E000000 		.4byte	.LVL5
+ 338 01aa 22020000 		.4byte	0x222
+ 339 01ae B9010000 		.4byte	0x1b9
+ 340 01b2 13       		.uleb128 0x13
+ 341 01b3 01       		.uleb128 0x1
+ 342 01b4 50       		.byte	0x50
+ 343 01b5 02       		.uleb128 0x2
+ 344 01b6 91       		.byte	0x91
+ 345 01b7 64       		.sleb128 -28
+ 346 01b8 00       		.byte	0
+ 347 01b9 12       		.uleb128 0x12
+ 348 01ba 3C000000 		.4byte	.LVL6
+ 349 01be 17020000 		.4byte	0x217
+ 350 01c2 E3010000 		.4byte	0x1e3
+ 351 01c6 13       		.uleb128 0x13
+ 352 01c7 01       		.uleb128 0x1
+ 353 01c8 50       		.byte	0x50
+ 354 01c9 05       		.uleb128 0x5
+ 355 01ca 03       		.byte	0x3
+ 356 01cb 08000000 		.4byte	.LC2
+ 357 01cf 13       		.uleb128 0x13
+ 358 01d0 01       		.uleb128 0x1
+ 359 01d1 52       		.byte	0x52
+ 360 01d2 02       		.uleb128 0x2
+ 361 01d3 75       		.byte	0x75
+ 362 01d4 00       		.sleb128 0
+ 363 01d5 13       		.uleb128 0x13
+ 364 01d6 01       		.uleb128 0x1
+ 365 01d7 53       		.byte	0x53
+ 366 01d8 02       		.uleb128 0x2
+ 367 01d9 76       		.byte	0x76
+ 368 01da 00       		.sleb128 0
+ 369 01db 13       		.uleb128 0x13
+ 370 01dc 02       		.uleb128 0x2
+ 371 01dd 7D       		.byte	0x7d
+ 372 01de 00       		.sleb128 0
+ 373 01df 02       		.uleb128 0x2
+ 374 01e0 77       		.byte	0x77
+ 375 01e1 00       		.sleb128 0
+ 376 01e2 00       		.byte	0
+ 377 01e3 12       		.uleb128 0x12
+ 378 01e4 44000000 		.4byte	.LVL7
+ 379 01e8 2D020000 		.4byte	0x22d
+ 380 01ec F8010000 		.4byte	0x1f8
+ 381 01f0 13       		.uleb128 0x13
+ 382 01f1 01       		.uleb128 0x1
+ 383 01f2 50       		.byte	0x50
+ 384 01f3 03       		.uleb128 0x3
+ 385 01f4 91       		.byte	0x91
+ 386 01f5 04       		.sleb128 4
+ 387 01f6 06       		.byte	0x6
+ 388 01f7 00       		.byte	0
+ 389 01f8 14       		.uleb128 0x14
+ 390 01f9 50000000 		.4byte	.LVL8
+ 391 01fd 38020000 		.4byte	0x238
+ 392 0201 13       		.uleb128 0x13
+ 393 0202 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 12
+
+
+ 394 0203 50       		.byte	0x50
+ 395 0204 05       		.uleb128 0x5
+ 396 0205 03       		.byte	0x3
+ 397 0206 34000000 		.4byte	.LC4
+ 398 020a 00       		.byte	0
+ 399 020b 00       		.byte	0
+ 400 020c 15       		.uleb128 0x15
+ 401 020d C4010000 		.4byte	.LASF26
+ 402 0211 C4010000 		.4byte	.LASF26
+ 403 0215 05       		.byte	0x5
+ 404 0216 37       		.byte	0x37
+ 405 0217 15       		.uleb128 0x15
+ 406 0218 FB010000 		.4byte	.LASF27
+ 407 021c FB010000 		.4byte	.LASF27
+ 408 0220 06       		.byte	0x6
+ 409 0221 BB       		.byte	0xbb
+ 410 0222 15       		.uleb128 0x15
+ 411 0223 D6020000 		.4byte	.LASF28
+ 412 0227 D6020000 		.4byte	.LASF28
+ 413 022b 05       		.byte	0x5
+ 414 022c 3A       		.byte	0x3a
+ 415 022d 15       		.uleb128 0x15
+ 416 022e 17000000 		.4byte	.LASF29
+ 417 0232 17000000 		.4byte	.LASF29
+ 418 0236 06       		.byte	0x6
+ 419 0237 C3       		.byte	0xc3
+ 420 0238 16       		.uleb128 0x16
+ 421 0239 26020000 		.4byte	.LASF37
+ 422 023d B5010000 		.4byte	.LASF38
+ 423 0241 07       		.byte	0x7
+ 424 0242 00       		.byte	0
+ 425 0243 26020000 		.4byte	.LASF37
+ 426 0247 00       		.byte	0
+ 427              		.section	.debug_abbrev,"",%progbits
+ 428              	.Ldebug_abbrev0:
+ 429 0000 01       		.uleb128 0x1
+ 430 0001 11       		.uleb128 0x11
+ 431 0002 01       		.byte	0x1
+ 432 0003 25       		.uleb128 0x25
+ 433 0004 0E       		.uleb128 0xe
+ 434 0005 13       		.uleb128 0x13
+ 435 0006 0B       		.uleb128 0xb
+ 436 0007 03       		.uleb128 0x3
+ 437 0008 0E       		.uleb128 0xe
+ 438 0009 1B       		.uleb128 0x1b
+ 439 000a 0E       		.uleb128 0xe
+ 440 000b 55       		.uleb128 0x55
+ 441 000c 17       		.uleb128 0x17
+ 442 000d 11       		.uleb128 0x11
+ 443 000e 01       		.uleb128 0x1
+ 444 000f 10       		.uleb128 0x10
+ 445 0010 17       		.uleb128 0x17
+ 446 0011 00       		.byte	0
+ 447 0012 00       		.byte	0
+ 448 0013 02       		.uleb128 0x2
+ 449 0014 16       		.uleb128 0x16
+ 450 0015 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 13
+
+
+ 451 0016 03       		.uleb128 0x3
+ 452 0017 0E       		.uleb128 0xe
+ 453 0018 3A       		.uleb128 0x3a
+ 454 0019 0B       		.uleb128 0xb
+ 455 001a 3B       		.uleb128 0x3b
+ 456 001b 0B       		.uleb128 0xb
+ 457 001c 49       		.uleb128 0x49
+ 458 001d 13       		.uleb128 0x13
+ 459 001e 00       		.byte	0
+ 460 001f 00       		.byte	0
+ 461 0020 03       		.uleb128 0x3
+ 462 0021 13       		.uleb128 0x13
+ 463 0022 01       		.byte	0x1
+ 464 0023 03       		.uleb128 0x3
+ 465 0024 0E       		.uleb128 0xe
+ 466 0025 0B       		.uleb128 0xb
+ 467 0026 0B       		.uleb128 0xb
+ 468 0027 3A       		.uleb128 0x3a
+ 469 0028 0B       		.uleb128 0xb
+ 470 0029 3B       		.uleb128 0x3b
+ 471 002a 0B       		.uleb128 0xb
+ 472 002b 01       		.uleb128 0x1
+ 473 002c 13       		.uleb128 0x13
+ 474 002d 00       		.byte	0
+ 475 002e 00       		.byte	0
+ 476 002f 04       		.uleb128 0x4
+ 477 0030 0D       		.uleb128 0xd
+ 478 0031 00       		.byte	0
+ 479 0032 03       		.uleb128 0x3
+ 480 0033 0E       		.uleb128 0xe
+ 481 0034 49       		.uleb128 0x49
+ 482 0035 13       		.uleb128 0x13
+ 483 0036 38       		.uleb128 0x38
+ 484 0037 0B       		.uleb128 0xb
+ 485 0038 34       		.uleb128 0x34
+ 486 0039 19       		.uleb128 0x19
+ 487 003a 00       		.byte	0
+ 488 003b 00       		.byte	0
+ 489 003c 05       		.uleb128 0x5
+ 490 003d 0F       		.uleb128 0xf
+ 491 003e 00       		.byte	0
+ 492 003f 0B       		.uleb128 0xb
+ 493 0040 0B       		.uleb128 0xb
+ 494 0041 00       		.byte	0
+ 495 0042 00       		.byte	0
+ 496 0043 06       		.uleb128 0x6
+ 497 0044 24       		.uleb128 0x24
+ 498 0045 00       		.byte	0
+ 499 0046 0B       		.uleb128 0xb
+ 500 0047 0B       		.uleb128 0xb
+ 501 0048 3E       		.uleb128 0x3e
+ 502 0049 0B       		.uleb128 0xb
+ 503 004a 03       		.uleb128 0x3
+ 504 004b 0E       		.uleb128 0xe
+ 505 004c 00       		.byte	0
+ 506 004d 00       		.byte	0
+ 507 004e 07       		.uleb128 0x7
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 14
+
+
+ 508 004f 24       		.uleb128 0x24
+ 509 0050 00       		.byte	0
+ 510 0051 0B       		.uleb128 0xb
+ 511 0052 0B       		.uleb128 0xb
+ 512 0053 3E       		.uleb128 0x3e
+ 513 0054 0B       		.uleb128 0xb
+ 514 0055 03       		.uleb128 0x3
+ 515 0056 08       		.uleb128 0x8
+ 516 0057 00       		.byte	0
+ 517 0058 00       		.byte	0
+ 518 0059 08       		.uleb128 0x8
+ 519 005a 0F       		.uleb128 0xf
+ 520 005b 00       		.byte	0
+ 521 005c 0B       		.uleb128 0xb
+ 522 005d 0B       		.uleb128 0xb
+ 523 005e 49       		.uleb128 0x49
+ 524 005f 13       		.uleb128 0x13
+ 525 0060 00       		.byte	0
+ 526 0061 00       		.byte	0
+ 527 0062 09       		.uleb128 0x9
+ 528 0063 26       		.uleb128 0x26
+ 529 0064 00       		.byte	0
+ 530 0065 49       		.uleb128 0x49
+ 531 0066 13       		.uleb128 0x13
+ 532 0067 00       		.byte	0
+ 533 0068 00       		.byte	0
+ 534 0069 0A       		.uleb128 0xa
+ 535 006a 04       		.uleb128 0x4
+ 536 006b 01       		.byte	0x1
+ 537 006c 03       		.uleb128 0x3
+ 538 006d 0E       		.uleb128 0xe
+ 539 006e 0B       		.uleb128 0xb
+ 540 006f 0B       		.uleb128 0xb
+ 541 0070 49       		.uleb128 0x49
+ 542 0071 13       		.uleb128 0x13
+ 543 0072 3A       		.uleb128 0x3a
+ 544 0073 0B       		.uleb128 0xb
+ 545 0074 3B       		.uleb128 0x3b
+ 546 0075 0B       		.uleb128 0xb
+ 547 0076 01       		.uleb128 0x1
+ 548 0077 13       		.uleb128 0x13
+ 549 0078 00       		.byte	0
+ 550 0079 00       		.byte	0
+ 551 007a 0B       		.uleb128 0xb
+ 552 007b 28       		.uleb128 0x28
+ 553 007c 00       		.byte	0
+ 554 007d 03       		.uleb128 0x3
+ 555 007e 0E       		.uleb128 0xe
+ 556 007f 1C       		.uleb128 0x1c
+ 557 0080 0B       		.uleb128 0xb
+ 558 0081 00       		.byte	0
+ 559 0082 00       		.byte	0
+ 560 0083 0C       		.uleb128 0xc
+ 561 0084 2E       		.uleb128 0x2e
+ 562 0085 01       		.byte	0x1
+ 563 0086 3F       		.uleb128 0x3f
+ 564 0087 19       		.uleb128 0x19
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 15
+
+
+ 565 0088 03       		.uleb128 0x3
+ 566 0089 0E       		.uleb128 0xe
+ 567 008a 3A       		.uleb128 0x3a
+ 568 008b 0B       		.uleb128 0xb
+ 569 008c 3B       		.uleb128 0x3b
+ 570 008d 0B       		.uleb128 0xb
+ 571 008e 27       		.uleb128 0x27
+ 572 008f 19       		.uleb128 0x19
+ 573 0090 11       		.uleb128 0x11
+ 574 0091 01       		.uleb128 0x1
+ 575 0092 12       		.uleb128 0x12
+ 576 0093 06       		.uleb128 0x6
+ 577 0094 40       		.uleb128 0x40
+ 578 0095 18       		.uleb128 0x18
+ 579 0096 9742     		.uleb128 0x2117
+ 580 0098 19       		.uleb128 0x19
+ 581 0099 01       		.uleb128 0x1
+ 582 009a 13       		.uleb128 0x13
+ 583 009b 00       		.byte	0
+ 584 009c 00       		.byte	0
+ 585 009d 0D       		.uleb128 0xd
+ 586 009e 05       		.uleb128 0x5
+ 587 009f 00       		.byte	0
+ 588 00a0 03       		.uleb128 0x3
+ 589 00a1 0E       		.uleb128 0xe
+ 590 00a2 3A       		.uleb128 0x3a
+ 591 00a3 0B       		.uleb128 0xb
+ 592 00a4 3B       		.uleb128 0x3b
+ 593 00a5 0B       		.uleb128 0xb
+ 594 00a6 49       		.uleb128 0x49
+ 595 00a7 13       		.uleb128 0x13
+ 596 00a8 02       		.uleb128 0x2
+ 597 00a9 17       		.uleb128 0x17
+ 598 00aa 00       		.byte	0
+ 599 00ab 00       		.byte	0
+ 600 00ac 0E       		.uleb128 0xe
+ 601 00ad 05       		.uleb128 0x5
+ 602 00ae 00       		.byte	0
+ 603 00af 03       		.uleb128 0x3
+ 604 00b0 0E       		.uleb128 0xe
+ 605 00b1 3A       		.uleb128 0x3a
+ 606 00b2 0B       		.uleb128 0xb
+ 607 00b3 3B       		.uleb128 0x3b
+ 608 00b4 0B       		.uleb128 0xb
+ 609 00b5 49       		.uleb128 0x49
+ 610 00b6 13       		.uleb128 0x13
+ 611 00b7 02       		.uleb128 0x2
+ 612 00b8 18       		.uleb128 0x18
+ 613 00b9 00       		.byte	0
+ 614 00ba 00       		.byte	0
+ 615 00bb 0F       		.uleb128 0xf
+ 616 00bc 18       		.uleb128 0x18
+ 617 00bd 00       		.byte	0
+ 618 00be 00       		.byte	0
+ 619 00bf 00       		.byte	0
+ 620 00c0 10       		.uleb128 0x10
+ 621 00c1 34       		.uleb128 0x34
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 16
+
+
+ 622 00c2 00       		.byte	0
+ 623 00c3 03       		.uleb128 0x3
+ 624 00c4 08       		.uleb128 0x8
+ 625 00c5 3A       		.uleb128 0x3a
+ 626 00c6 0B       		.uleb128 0xb
+ 627 00c7 3B       		.uleb128 0x3b
+ 628 00c8 0B       		.uleb128 0xb
+ 629 00c9 49       		.uleb128 0x49
+ 630 00ca 13       		.uleb128 0x13
+ 631 00cb 02       		.uleb128 0x2
+ 632 00cc 18       		.uleb128 0x18
+ 633 00cd 00       		.byte	0
+ 634 00ce 00       		.byte	0
+ 635 00cf 11       		.uleb128 0x11
+ 636 00d0 34       		.uleb128 0x34
+ 637 00d1 00       		.byte	0
+ 638 00d2 03       		.uleb128 0x3
+ 639 00d3 0E       		.uleb128 0xe
+ 640 00d4 3A       		.uleb128 0x3a
+ 641 00d5 0B       		.uleb128 0xb
+ 642 00d6 3B       		.uleb128 0x3b
+ 643 00d7 0B       		.uleb128 0xb
+ 644 00d8 49       		.uleb128 0x49
+ 645 00d9 13       		.uleb128 0x13
+ 646 00da 02       		.uleb128 0x2
+ 647 00db 18       		.uleb128 0x18
+ 648 00dc 00       		.byte	0
+ 649 00dd 00       		.byte	0
+ 650 00de 12       		.uleb128 0x12
+ 651 00df 898201   		.uleb128 0x4109
+ 652 00e2 01       		.byte	0x1
+ 653 00e3 11       		.uleb128 0x11
+ 654 00e4 01       		.uleb128 0x1
+ 655 00e5 31       		.uleb128 0x31
+ 656 00e6 13       		.uleb128 0x13
+ 657 00e7 01       		.uleb128 0x1
+ 658 00e8 13       		.uleb128 0x13
+ 659 00e9 00       		.byte	0
+ 660 00ea 00       		.byte	0
+ 661 00eb 13       		.uleb128 0x13
+ 662 00ec 8A8201   		.uleb128 0x410a
+ 663 00ef 00       		.byte	0
+ 664 00f0 02       		.uleb128 0x2
+ 665 00f1 18       		.uleb128 0x18
+ 666 00f2 9142     		.uleb128 0x2111
+ 667 00f4 18       		.uleb128 0x18
+ 668 00f5 00       		.byte	0
+ 669 00f6 00       		.byte	0
+ 670 00f7 14       		.uleb128 0x14
+ 671 00f8 898201   		.uleb128 0x4109
+ 672 00fb 01       		.byte	0x1
+ 673 00fc 11       		.uleb128 0x11
+ 674 00fd 01       		.uleb128 0x1
+ 675 00fe 31       		.uleb128 0x31
+ 676 00ff 13       		.uleb128 0x13
+ 677 0100 00       		.byte	0
+ 678 0101 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 17
+
+
+ 679 0102 15       		.uleb128 0x15
+ 680 0103 2E       		.uleb128 0x2e
+ 681 0104 00       		.byte	0
+ 682 0105 3F       		.uleb128 0x3f
+ 683 0106 19       		.uleb128 0x19
+ 684 0107 3C       		.uleb128 0x3c
+ 685 0108 19       		.uleb128 0x19
+ 686 0109 6E       		.uleb128 0x6e
+ 687 010a 0E       		.uleb128 0xe
+ 688 010b 03       		.uleb128 0x3
+ 689 010c 0E       		.uleb128 0xe
+ 690 010d 3A       		.uleb128 0x3a
+ 691 010e 0B       		.uleb128 0xb
+ 692 010f 3B       		.uleb128 0x3b
+ 693 0110 0B       		.uleb128 0xb
+ 694 0111 00       		.byte	0
+ 695 0112 00       		.byte	0
+ 696 0113 16       		.uleb128 0x16
+ 697 0114 2E       		.uleb128 0x2e
+ 698 0115 00       		.byte	0
+ 699 0116 3F       		.uleb128 0x3f
+ 700 0117 19       		.uleb128 0x19
+ 701 0118 3C       		.uleb128 0x3c
+ 702 0119 19       		.uleb128 0x19
+ 703 011a 6E       		.uleb128 0x6e
+ 704 011b 0E       		.uleb128 0xe
+ 705 011c 03       		.uleb128 0x3
+ 706 011d 0E       		.uleb128 0xe
+ 707 011e 3A       		.uleb128 0x3a
+ 708 011f 0B       		.uleb128 0xb
+ 709 0120 3B       		.uleb128 0x3b
+ 710 0121 0B       		.uleb128 0xb
+ 711 0122 6E       		.uleb128 0x6e
+ 712 0123 0E       		.uleb128 0xe
+ 713 0124 00       		.byte	0
+ 714 0125 00       		.byte	0
+ 715 0126 00       		.byte	0
+ 716              		.section	.debug_loc,"",%progbits
+ 717              	.Ldebug_loc0:
+ 718              	.LLST0:
+ 719 0000 00000000 		.4byte	.LVL0
+ 720 0004 12000000 		.4byte	.LVL2
+ 721 0008 0100     		.2byte	0x1
+ 722 000a 50       		.byte	0x50
+ 723 000b 12000000 		.4byte	.LVL2
+ 724 000f 60000000 		.4byte	.LFE1
+ 725 0013 0400     		.2byte	0x4
+ 726 0015 F3       		.byte	0xf3
+ 727 0016 01       		.uleb128 0x1
+ 728 0017 50       		.byte	0x50
+ 729 0018 9F       		.byte	0x9f
+ 730 0019 00000000 		.4byte	0
+ 731 001d 00000000 		.4byte	0
+ 732              	.LLST1:
+ 733 0021 00000000 		.4byte	.LVL0
+ 734 0025 15000000 		.4byte	.LVL3-1
+ 735 0029 0100     		.2byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 18
+
+
+ 736 002b 51       		.byte	0x51
+ 737 002c 15000000 		.4byte	.LVL3-1
+ 738 0030 52000000 		.4byte	.LVL9
+ 739 0034 0100     		.2byte	0x1
+ 740 0036 55       		.byte	0x55
+ 741 0037 52000000 		.4byte	.LVL9
+ 742 003b 60000000 		.4byte	.LFE1
+ 743 003f 0400     		.2byte	0x4
+ 744 0041 F3       		.byte	0xf3
+ 745 0042 01       		.uleb128 0x1
+ 746 0043 51       		.byte	0x51
+ 747 0044 9F       		.byte	0x9f
+ 748 0045 00000000 		.4byte	0
+ 749 0049 00000000 		.4byte	0
+ 750              	.LLST2:
+ 751 004d 00000000 		.4byte	.LVL0
+ 752 0051 15000000 		.4byte	.LVL3-1
+ 753 0055 0100     		.2byte	0x1
+ 754 0057 52       		.byte	0x52
+ 755 0058 15000000 		.4byte	.LVL3-1
+ 756 005c 52000000 		.4byte	.LVL10
+ 757 0060 0100     		.2byte	0x1
+ 758 0062 56       		.byte	0x56
+ 759 0063 52000000 		.4byte	.LVL10
+ 760 0067 60000000 		.4byte	.LFE1
+ 761 006b 0400     		.2byte	0x4
+ 762 006d F3       		.byte	0xf3
+ 763 006e 01       		.uleb128 0x1
+ 764 006f 52       		.byte	0x52
+ 765 0070 9F       		.byte	0x9f
+ 766 0071 00000000 		.4byte	0
+ 767 0075 00000000 		.4byte	0
+ 768              	.LLST3:
+ 769 0079 00000000 		.4byte	.LVL0
+ 770 007d 0E000000 		.4byte	.LVL1
+ 771 0081 0100     		.2byte	0x1
+ 772 0083 53       		.byte	0x53
+ 773 0084 0E000000 		.4byte	.LVL1
+ 774 0088 52000000 		.4byte	.LVL11
+ 775 008c 0100     		.2byte	0x1
+ 776 008e 57       		.byte	0x57
+ 777 008f 52000000 		.4byte	.LVL11
+ 778 0093 60000000 		.4byte	.LFE1
+ 779 0097 0400     		.2byte	0x4
+ 780 0099 F3       		.byte	0xf3
+ 781 009a 01       		.uleb128 0x1
+ 782 009b 53       		.byte	0x53
+ 783 009c 9F       		.byte	0x9f
+ 784 009d 00000000 		.4byte	0
+ 785 00a1 00000000 		.4byte	0
+ 786              		.section	.debug_aranges,"",%progbits
+ 787 0000 1C000000 		.4byte	0x1c
+ 788 0004 0200     		.2byte	0x2
+ 789 0006 00000000 		.4byte	.Ldebug_info0
+ 790 000a 04       		.byte	0x4
+ 791 000b 00       		.byte	0
+ 792 000c 0000     		.2byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 19
+
+
+ 793 000e 0000     		.2byte	0
+ 794 0010 00000000 		.4byte	.LFB1
+ 795 0014 60000000 		.4byte	.LFE1-.LFB1
+ 796 0018 00000000 		.4byte	0
+ 797 001c 00000000 		.4byte	0
+ 798              		.section	.debug_ranges,"",%progbits
+ 799              	.Ldebug_ranges0:
+ 800 0000 00000000 		.4byte	.LFB1
+ 801 0004 60000000 		.4byte	.LFE1
+ 802 0008 00000000 		.4byte	0
+ 803 000c 00000000 		.4byte	0
+ 804              		.section	.debug_line,"",%progbits
+ 805              	.Ldebug_line0:
+ 806 0000 3A020000 		.section	.debug_str,"MS",%progbits,1
+ 806      02001A02 
+ 806      00000201 
+ 806      FB0E0D00 
+ 806      01010101 
+ 807              	.LASF34:
+ 808 0000 5F5F6170 		.ascii	"__ap\000"
+ 808      00
+ 809              	.LASF36:
+ 810 0005 636F6E73 		.ascii	"consolelogger_log\000"
+ 810      6F6C656C 
+ 810      6F676765 
+ 810      725F6C6F 
+ 810      6700
+ 811              	.LASF29:
+ 812 0017 76707269 		.ascii	"vprintf\000"
+ 812      6E746600 
+ 813              	.LASF1:
+ 814 001f 76615F6C 		.ascii	"va_list\000"
+ 814      69737400 
+ 815              	.LASF17:
+ 816 0027 415A5F4C 		.ascii	"AZ_LOG_TRACE\000"
+ 816      4F475F54 
+ 816      52414345 
+ 816      00
+ 817              	.LASF31:
+ 818 0034 536F7572 		.ascii	"Source\\azure_iot_sdk\\c-utility\\src\\consolelogge"
+ 818      63655C61 
+ 818      7A757265 
+ 818      5F696F74 
+ 818      5F73646B 
+ 819 0063 722E6300 		.ascii	"r.c\000"
+ 820              	.LASF23:
+ 821 0067 6F707469 		.ascii	"options\000"
+ 821      6F6E7300 
+ 822              	.LASF35:
+ 823 006f 4C4F475F 		.ascii	"LOG_CATEGORY_TAG\000"
+ 823      43415445 
+ 823      474F5259 
+ 823      5F544147 
+ 823      00
+ 824              	.LASF5:
+ 825 0080 73686F72 		.ascii	"short unsigned int\000"
+ 825      7420756E 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 20
+
+
+ 825      7369676E 
+ 825      65642069 
+ 825      6E7400
+ 826              	.LASF18:
+ 827 0093 4C4F475F 		.ascii	"LOG_CATEGORY\000"
+ 827      43415445 
+ 827      474F5259 
+ 827      00
+ 828              	.LASF20:
+ 829 00a0 66696C65 		.ascii	"file\000"
+ 829      00
+ 830              	.LASF7:
+ 831 00a5 6C6F6E67 		.ascii	"long unsigned int\000"
+ 831      20756E73 
+ 831      69676E65 
+ 831      6420696E 
+ 831      7400
+ 832              	.LASF21:
+ 833 00b7 66756E63 		.ascii	"func\000"
+ 833      00
+ 834              	.LASF0:
+ 835 00bc 5F5F676E 		.ascii	"__gnuc_va_list\000"
+ 835      75635F76 
+ 835      615F6C69 
+ 835      737400
+ 836              	.LASF24:
+ 837 00cb 666F726D 		.ascii	"format\000"
+ 837      617400
+ 838              	.LASF3:
+ 839 00d2 756E7369 		.ascii	"unsigned char\000"
+ 839      676E6564 
+ 839      20636861 
+ 839      7200
+ 840              	.LASF10:
+ 841 00e0 756E7369 		.ascii	"unsigned int\000"
+ 841      676E6564 
+ 841      20696E74 
+ 841      00
+ 842              	.LASF32:
+ 843 00ed 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 843      73657273 
+ 843      5C506875 
+ 843      6F6E675C 
+ 843      446F6375 
+ 844 011b 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 844      6F742D73 
+ 844      646B2D69 
+ 844      6F742D64 
+ 844      65765C50 
+ 845 014c 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 845      494F542D 
+ 845      4875622D 
+ 845      44656D6F 
+ 845      5C50534F 
+ 846 017e 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 846      2D487562 
+ 846      2D44656D 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 21
+
+
+ 846      6F2E6379 
+ 846      64736E00 
+ 847              	.LASF9:
+ 848 0192 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 848      206C6F6E 
+ 848      6720756E 
+ 848      7369676E 
+ 848      65642069 
+ 849              	.LASF22:
+ 850 01a9 6C696E65 		.ascii	"line\000"
+ 850      00
+ 851              	.LASF14:
+ 852 01ae 74696D65 		.ascii	"time_t\000"
+ 852      5F7400
+ 853              	.LASF38:
+ 854 01b5 5F5F6275 		.ascii	"__builtin_puts\000"
+ 854      696C7469 
+ 854      6E5F7075 
+ 854      747300
+ 855              	.LASF26:
+ 856 01c4 74696D65 		.ascii	"time\000"
+ 856      00
+ 857              	.LASF11:
+ 858 01c9 6C6F6E67 		.ascii	"long double\000"
+ 858      20646F75 
+ 858      626C6500 
+ 859              	.LASF12:
+ 860 01d5 73697A65 		.ascii	"sizetype\000"
+ 860      74797065 
+ 860      00
+ 861              	.LASF33:
+ 862 01de 5F5F7661 		.ascii	"__va_list\000"
+ 862      5F6C6973 
+ 862      7400
+ 863              	.LASF8:
+ 864 01e8 6C6F6E67 		.ascii	"long long int\000"
+ 864      206C6F6E 
+ 864      6720696E 
+ 864      7400
+ 865              	.LASF13:
+ 866 01f6 63686172 		.ascii	"char\000"
+ 866      00
+ 867              	.LASF27:
+ 868 01fb 7072696E 		.ascii	"printf\000"
+ 868      746600
+ 869              	.LASF4:
+ 870 0202 73686F72 		.ascii	"short int\000"
+ 870      7420696E 
+ 870      7400
+ 871              	.LASF25:
+ 872 020c 61726773 		.ascii	"args\000"
+ 872      00
+ 873              	.LASF16:
+ 874 0211 415A5F4C 		.ascii	"AZ_LOG_INFO\000"
+ 874      4F475F49 
+ 874      4E464F00 
+ 875              	.LASF6:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cca15Qa6.s 			page 22
+
+
+ 876 021d 6C6F6E67 		.ascii	"long int\000"
+ 876      20696E74 
+ 876      00
+ 877              	.LASF37:
+ 878 0226 70757473 		.ascii	"puts\000"
+ 878      00
+ 879              	.LASF30:
+ 880 022b 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 880      43313120 
+ 880      352E342E 
+ 880      31203230 
+ 880      31363036 
+ 881 025e 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 881      20726576 
+ 881      6973696F 
+ 881      6E203233 
+ 881      37373135 
+ 882 0291 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 882      67202D66 
+ 882      66756E63 
+ 882      74696F6E 
+ 882      2D736563 
+ 883              	.LASF2:
+ 884 02bd 7369676E 		.ascii	"signed char\000"
+ 884      65642063 
+ 884      68617200 
+ 885              	.LASF19:
+ 886 02c9 6C6F675F 		.ascii	"log_category\000"
+ 886      63617465 
+ 886      676F7279 
+ 886      00
+ 887              	.LASF28:
+ 888 02d6 6374696D 		.ascii	"ctime\000"
+ 888      6500
+ 889              	.LASF15:
+ 890 02dc 415A5F4C 		.ascii	"AZ_LOG_ERROR\000"
+ 890      4F475F45 
+ 890      52524F52 
+ 890      00
+ 891              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

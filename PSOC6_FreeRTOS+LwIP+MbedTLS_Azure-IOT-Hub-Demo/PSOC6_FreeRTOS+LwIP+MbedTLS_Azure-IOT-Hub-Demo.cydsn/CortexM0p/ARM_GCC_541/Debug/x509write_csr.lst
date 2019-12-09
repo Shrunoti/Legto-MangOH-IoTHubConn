@@ -1,0 +1,4755 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"x509write_csr.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.mbedtls_x509write_csr_init,"ax",%progbits
+  20              		.align	2
+  21              		.global	mbedtls_x509write_csr_init
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	mbedtls_x509write_csr_init, %function
+  25              	mbedtls_x509write_csr_init:
+  26              	.LFB10:
+  27              		.file 1 "Source\\mbedtls_open\\library\\x509write_csr.c"
+   1:Source\mbedtls_open\library/x509write_csr.c **** /*
+   2:Source\mbedtls_open\library/x509write_csr.c ****  *  X.509 Certificate Signing Request writing
+   3:Source\mbedtls_open\library/x509write_csr.c ****  *
+   4:Source\mbedtls_open\library/x509write_csr.c ****  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+   5:Source\mbedtls_open\library/x509write_csr.c ****  *  SPDX-License-Identifier: Apache-2.0
+   6:Source\mbedtls_open\library/x509write_csr.c ****  *
+   7:Source\mbedtls_open\library/x509write_csr.c ****  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+   8:Source\mbedtls_open\library/x509write_csr.c ****  *  not use this file except in compliance with the License.
+   9:Source\mbedtls_open\library/x509write_csr.c ****  *  You may obtain a copy of the License at
+  10:Source\mbedtls_open\library/x509write_csr.c ****  *
+  11:Source\mbedtls_open\library/x509write_csr.c ****  *  http://www.apache.org/licenses/LICENSE-2.0
+  12:Source\mbedtls_open\library/x509write_csr.c ****  *
+  13:Source\mbedtls_open\library/x509write_csr.c ****  *  Unless required by applicable law or agreed to in writing, software
+  14:Source\mbedtls_open\library/x509write_csr.c ****  *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  15:Source\mbedtls_open\library/x509write_csr.c ****  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  16:Source\mbedtls_open\library/x509write_csr.c ****  *  See the License for the specific language governing permissions and
+  17:Source\mbedtls_open\library/x509write_csr.c ****  *  limitations under the License.
+  18:Source\mbedtls_open\library/x509write_csr.c ****  *
+  19:Source\mbedtls_open\library/x509write_csr.c ****  *  This file is part of mbed TLS (https://tls.mbed.org)
+  20:Source\mbedtls_open\library/x509write_csr.c ****  */
+  21:Source\mbedtls_open\library/x509write_csr.c **** /*
+  22:Source\mbedtls_open\library/x509write_csr.c ****  * References:
+  23:Source\mbedtls_open\library/x509write_csr.c ****  * - CSRs: PKCS#10 v1.7 aka RFC 2986
+  24:Source\mbedtls_open\library/x509write_csr.c ****  * - attributes: PKCS#9 v2.0 aka RFC 2985
+  25:Source\mbedtls_open\library/x509write_csr.c ****  */
+  26:Source\mbedtls_open\library/x509write_csr.c **** 
+  27:Source\mbedtls_open\library/x509write_csr.c **** #if !defined(MBEDTLS_CONFIG_FILE)
+  28:Source\mbedtls_open\library/x509write_csr.c **** #include "mbedtls/config.h"
+  29:Source\mbedtls_open\library/x509write_csr.c **** #else
+  30:Source\mbedtls_open\library/x509write_csr.c **** #include MBEDTLS_CONFIG_FILE
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 2
+
+
+  31:Source\mbedtls_open\library/x509write_csr.c **** #endif
+  32:Source\mbedtls_open\library/x509write_csr.c **** 
+  33:Source\mbedtls_open\library/x509write_csr.c **** #if defined(MBEDTLS_X509_CSR_WRITE_C)
+  34:Source\mbedtls_open\library/x509write_csr.c **** 
+  35:Source\mbedtls_open\library/x509write_csr.c **** #include "mbedtls/x509_csr.h"
+  36:Source\mbedtls_open\library/x509write_csr.c **** #include "mbedtls/oid.h"
+  37:Source\mbedtls_open\library/x509write_csr.c **** #include "mbedtls/asn1write.h"
+  38:Source\mbedtls_open\library/x509write_csr.c **** #include "mbedtls/platform_util.h"
+  39:Source\mbedtls_open\library/x509write_csr.c **** 
+  40:Source\mbedtls_open\library/x509write_csr.c **** #include <string.h>
+  41:Source\mbedtls_open\library/x509write_csr.c **** #include <stdlib.h>
+  42:Source\mbedtls_open\library/x509write_csr.c **** 
+  43:Source\mbedtls_open\library/x509write_csr.c **** #if defined(MBEDTLS_PEM_WRITE_C)
+  44:Source\mbedtls_open\library/x509write_csr.c **** #include "mbedtls/pem.h"
+  45:Source\mbedtls_open\library/x509write_csr.c **** #endif
+  46:Source\mbedtls_open\library/x509write_csr.c **** 
+  47:Source\mbedtls_open\library/x509write_csr.c **** void mbedtls_x509write_csr_init( mbedtls_x509write_csr *ctx )
+  48:Source\mbedtls_open\library/x509write_csr.c **** {
+  28              		.loc 1 48 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  33 0000 10B5     		push	{r4, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  49:Source\mbedtls_open\library/x509write_csr.c ****     memset( ctx, 0, sizeof( mbedtls_x509write_csr ) );
+  37              		.loc 1 49 0
+  38 0002 1022     		movs	r2, #16
+  39 0004 0021     		movs	r1, #0
+  40 0006 FFF7FEFF 		bl	memset
+  41              	.LVL1:
+  50:Source\mbedtls_open\library/x509write_csr.c **** }
+  42              		.loc 1 50 0
+  43              		@ sp needed
+  44 000a 10BD     		pop	{r4, pc}
+  45              		.cfi_endproc
+  46              	.LFE10:
+  47              		.size	mbedtls_x509write_csr_init, .-mbedtls_x509write_csr_init
+  48              		.section	.text.mbedtls_x509write_csr_free,"ax",%progbits
+  49              		.align	2
+  50              		.global	mbedtls_x509write_csr_free
+  51              		.code	16
+  52              		.thumb_func
+  53              		.type	mbedtls_x509write_csr_free, %function
+  54              	mbedtls_x509write_csr_free:
+  55              	.LFB11:
+  51:Source\mbedtls_open\library/x509write_csr.c **** 
+  52:Source\mbedtls_open\library/x509write_csr.c **** void mbedtls_x509write_csr_free( mbedtls_x509write_csr *ctx )
+  53:Source\mbedtls_open\library/x509write_csr.c **** {
+  56              		.loc 1 53 0
+  57              		.cfi_startproc
+  58              		@ args = 0, pretend = 0, frame = 0
+  59              		@ frame_needed = 0, uses_anonymous_args = 0
+  60              	.LVL2:
+  61 0000 10B5     		push	{r4, lr}
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 3
+
+
+  62              		.cfi_def_cfa_offset 8
+  63              		.cfi_offset 4, -8
+  64              		.cfi_offset 14, -4
+  65 0002 0400     		movs	r4, r0
+  54:Source\mbedtls_open\library/x509write_csr.c ****     mbedtls_asn1_free_named_data_list( &ctx->subject );
+  66              		.loc 1 54 0
+  67 0004 0430     		adds	r0, r0, #4
+  68              	.LVL3:
+  69 0006 FFF7FEFF 		bl	mbedtls_asn1_free_named_data_list
+  70              	.LVL4:
+  55:Source\mbedtls_open\library/x509write_csr.c ****     mbedtls_asn1_free_named_data_list( &ctx->extensions );
+  71              		.loc 1 55 0
+  72 000a 2000     		movs	r0, r4
+  73 000c 0C30     		adds	r0, r0, #12
+  74 000e FFF7FEFF 		bl	mbedtls_asn1_free_named_data_list
+  75              	.LVL5:
+  56:Source\mbedtls_open\library/x509write_csr.c **** 
+  57:Source\mbedtls_open\library/x509write_csr.c ****     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_x509write_csr ) );
+  76              		.loc 1 57 0
+  77 0012 1021     		movs	r1, #16
+  78 0014 2000     		movs	r0, r4
+  79 0016 FFF7FEFF 		bl	mbedtls_platform_zeroize
+  80              	.LVL6:
+  58:Source\mbedtls_open\library/x509write_csr.c **** }
+  81              		.loc 1 58 0
+  82              		@ sp needed
+  83              	.LVL7:
+  84 001a 10BD     		pop	{r4, pc}
+  85              		.cfi_endproc
+  86              	.LFE11:
+  87              		.size	mbedtls_x509write_csr_free, .-mbedtls_x509write_csr_free
+  88              		.section	.text.mbedtls_x509write_csr_set_md_alg,"ax",%progbits
+  89              		.align	2
+  90              		.global	mbedtls_x509write_csr_set_md_alg
+  91              		.code	16
+  92              		.thumb_func
+  93              		.type	mbedtls_x509write_csr_set_md_alg, %function
+  94              	mbedtls_x509write_csr_set_md_alg:
+  95              	.LFB12:
+  59:Source\mbedtls_open\library/x509write_csr.c **** 
+  60:Source\mbedtls_open\library/x509write_csr.c **** void mbedtls_x509write_csr_set_md_alg( mbedtls_x509write_csr *ctx, mbedtls_md_type_t md_alg )
+  61:Source\mbedtls_open\library/x509write_csr.c **** {
+  96              		.loc 1 61 0
+  97              		.cfi_startproc
+  98              		@ args = 0, pretend = 0, frame = 0
+  99              		@ frame_needed = 0, uses_anonymous_args = 0
+ 100              		@ link register save eliminated.
+ 101              	.LVL8:
+  62:Source\mbedtls_open\library/x509write_csr.c ****     ctx->md_alg = md_alg;
+ 102              		.loc 1 62 0
+ 103 0000 0172     		strb	r1, [r0, #8]
+  63:Source\mbedtls_open\library/x509write_csr.c **** }
+ 104              		.loc 1 63 0
+ 105              		@ sp needed
+ 106 0002 7047     		bx	lr
+ 107              		.cfi_endproc
+ 108              	.LFE12:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 4
+
+
+ 109              		.size	mbedtls_x509write_csr_set_md_alg, .-mbedtls_x509write_csr_set_md_alg
+ 110              		.section	.text.mbedtls_x509write_csr_set_key,"ax",%progbits
+ 111              		.align	2
+ 112              		.global	mbedtls_x509write_csr_set_key
+ 113              		.code	16
+ 114              		.thumb_func
+ 115              		.type	mbedtls_x509write_csr_set_key, %function
+ 116              	mbedtls_x509write_csr_set_key:
+ 117              	.LFB13:
+  64:Source\mbedtls_open\library/x509write_csr.c **** 
+  65:Source\mbedtls_open\library/x509write_csr.c **** void mbedtls_x509write_csr_set_key( mbedtls_x509write_csr *ctx, mbedtls_pk_context *key )
+  66:Source\mbedtls_open\library/x509write_csr.c **** {
+ 118              		.loc 1 66 0
+ 119              		.cfi_startproc
+ 120              		@ args = 0, pretend = 0, frame = 0
+ 121              		@ frame_needed = 0, uses_anonymous_args = 0
+ 122              		@ link register save eliminated.
+ 123              	.LVL9:
+  67:Source\mbedtls_open\library/x509write_csr.c ****     ctx->key = key;
+ 124              		.loc 1 67 0
+ 125 0000 0160     		str	r1, [r0]
+  68:Source\mbedtls_open\library/x509write_csr.c **** }
+ 126              		.loc 1 68 0
+ 127              		@ sp needed
+ 128 0002 7047     		bx	lr
+ 129              		.cfi_endproc
+ 130              	.LFE13:
+ 131              		.size	mbedtls_x509write_csr_set_key, .-mbedtls_x509write_csr_set_key
+ 132              		.section	.text.mbedtls_x509write_csr_set_subject_name,"ax",%progbits
+ 133              		.align	2
+ 134              		.global	mbedtls_x509write_csr_set_subject_name
+ 135              		.code	16
+ 136              		.thumb_func
+ 137              		.type	mbedtls_x509write_csr_set_subject_name, %function
+ 138              	mbedtls_x509write_csr_set_subject_name:
+ 139              	.LFB14:
+  69:Source\mbedtls_open\library/x509write_csr.c **** 
+  70:Source\mbedtls_open\library/x509write_csr.c **** int mbedtls_x509write_csr_set_subject_name( mbedtls_x509write_csr *ctx,
+  71:Source\mbedtls_open\library/x509write_csr.c ****                                     const char *subject_name )
+  72:Source\mbedtls_open\library/x509write_csr.c **** {
+ 140              		.loc 1 72 0
+ 141              		.cfi_startproc
+ 142              		@ args = 0, pretend = 0, frame = 0
+ 143              		@ frame_needed = 0, uses_anonymous_args = 0
+ 144              	.LVL10:
+ 145 0000 10B5     		push	{r4, lr}
+ 146              		.cfi_def_cfa_offset 8
+ 147              		.cfi_offset 4, -8
+ 148              		.cfi_offset 14, -4
+  73:Source\mbedtls_open\library/x509write_csr.c ****     return mbedtls_x509_string_to_names( &ctx->subject, subject_name );
+ 149              		.loc 1 73 0
+ 150 0002 0430     		adds	r0, r0, #4
+ 151              	.LVL11:
+ 152 0004 FFF7FEFF 		bl	mbedtls_x509_string_to_names
+ 153              	.LVL12:
+  74:Source\mbedtls_open\library/x509write_csr.c **** }
+ 154              		.loc 1 74 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 5
+
+
+ 155              		@ sp needed
+ 156 0008 10BD     		pop	{r4, pc}
+ 157              		.cfi_endproc
+ 158              	.LFE14:
+ 159              		.size	mbedtls_x509write_csr_set_subject_name, .-mbedtls_x509write_csr_set_subject_name
+ 160 000a C046     		.section	.text.mbedtls_x509write_csr_set_extension,"ax",%progbits
+ 161              		.align	2
+ 162              		.global	mbedtls_x509write_csr_set_extension
+ 163              		.code	16
+ 164              		.thumb_func
+ 165              		.type	mbedtls_x509write_csr_set_extension, %function
+ 166              	mbedtls_x509write_csr_set_extension:
+ 167              	.LFB15:
+  75:Source\mbedtls_open\library/x509write_csr.c **** 
+  76:Source\mbedtls_open\library/x509write_csr.c **** int mbedtls_x509write_csr_set_extension( mbedtls_x509write_csr *ctx,
+  77:Source\mbedtls_open\library/x509write_csr.c ****                                  const char *oid, size_t oid_len,
+  78:Source\mbedtls_open\library/x509write_csr.c ****                                  const unsigned char *val, size_t val_len )
+  79:Source\mbedtls_open\library/x509write_csr.c **** {
+ 168              		.loc 1 79 0
+ 169              		.cfi_startproc
+ 170              		@ args = 4, pretend = 0, frame = 0
+ 171              		@ frame_needed = 0, uses_anonymous_args = 0
+ 172              	.LVL13:
+ 173 0000 10B5     		push	{r4, lr}
+ 174              		.cfi_def_cfa_offset 8
+ 175              		.cfi_offset 4, -8
+ 176              		.cfi_offset 14, -4
+ 177 0002 82B0     		sub	sp, sp, #8
+ 178              		.cfi_def_cfa_offset 16
+  80:Source\mbedtls_open\library/x509write_csr.c ****     return mbedtls_x509_set_extension( &ctx->extensions, oid, oid_len,
+ 179              		.loc 1 80 0
+ 180 0004 0C30     		adds	r0, r0, #12
+ 181              	.LVL14:
+ 182 0006 049C     		ldr	r4, [sp, #16]
+ 183 0008 0194     		str	r4, [sp, #4]
+ 184 000a 0093     		str	r3, [sp]
+ 185 000c 0023     		movs	r3, #0
+ 186              	.LVL15:
+ 187 000e FFF7FEFF 		bl	mbedtls_x509_set_extension
+ 188              	.LVL16:
+  81:Source\mbedtls_open\library/x509write_csr.c ****                                0, val, val_len );
+  82:Source\mbedtls_open\library/x509write_csr.c **** }
+ 189              		.loc 1 82 0
+ 190 0012 02B0     		add	sp, sp, #8
+ 191              		@ sp needed
+ 192 0014 10BD     		pop	{r4, pc}
+ 193              		.cfi_endproc
+ 194              	.LFE15:
+ 195              		.size	mbedtls_x509write_csr_set_extension, .-mbedtls_x509write_csr_set_extension
+ 196 0016 C046     		.section	.text.mbedtls_x509write_csr_set_key_usage,"ax",%progbits
+ 197              		.align	2
+ 198              		.global	mbedtls_x509write_csr_set_key_usage
+ 199              		.code	16
+ 200              		.thumb_func
+ 201              		.type	mbedtls_x509write_csr_set_key_usage, %function
+ 202              	mbedtls_x509write_csr_set_key_usage:
+ 203              	.LFB16:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 6
+
+
+  83:Source\mbedtls_open\library/x509write_csr.c **** 
+  84:Source\mbedtls_open\library/x509write_csr.c **** int mbedtls_x509write_csr_set_key_usage( mbedtls_x509write_csr *ctx, unsigned char key_usage )
+  85:Source\mbedtls_open\library/x509write_csr.c **** {
+ 204              		.loc 1 85 0
+ 205              		.cfi_startproc
+ 206              		@ args = 0, pretend = 0, frame = 16
+ 207              		@ frame_needed = 0, uses_anonymous_args = 0
+ 208              	.LVL17:
+ 209 0000 10B5     		push	{r4, lr}
+ 210              		.cfi_def_cfa_offset 8
+ 211              		.cfi_offset 4, -8
+ 212              		.cfi_offset 14, -4
+ 213 0002 86B0     		sub	sp, sp, #24
+ 214              		.cfi_def_cfa_offset 32
+ 215 0004 0400     		movs	r4, r0
+ 216 0006 0F22     		movs	r2, #15
+ 217 0008 6A44     		add	r2, r2, sp
+ 218 000a 1170     		strb	r1, [r2]
+  86:Source\mbedtls_open\library/x509write_csr.c ****     unsigned char buf[4];
+  87:Source\mbedtls_open\library/x509write_csr.c ****     unsigned char *c;
+  88:Source\mbedtls_open\library/x509write_csr.c ****     int ret;
+  89:Source\mbedtls_open\library/x509write_csr.c **** 
+  90:Source\mbedtls_open\library/x509write_csr.c ****     c = buf + 4;
+ 219              		.loc 1 90 0
+ 220 000c 06AB     		add	r3, sp, #24
+ 221 000e 0493     		str	r3, [sp, #16]
+  91:Source\mbedtls_open\library/x509write_csr.c **** 
+  92:Source\mbedtls_open\library/x509write_csr.c ****     if( ( ret = mbedtls_asn1_write_bitstring( &c, buf, &key_usage, 7 ) ) != 4 )
+ 222              		.loc 1 92 0
+ 223 0010 0723     		movs	r3, #7
+ 224 0012 05A9     		add	r1, sp, #20
+ 225              	.LVL18:
+ 226 0014 04A8     		add	r0, sp, #16
+ 227              	.LVL19:
+ 228 0016 FFF7FEFF 		bl	mbedtls_asn1_write_bitstring
+ 229              	.LVL20:
+ 230 001a 0428     		cmp	r0, #4
+ 231 001c 07D1     		bne	.L8
+  93:Source\mbedtls_open\library/x509write_csr.c ****         return( ret );
+  94:Source\mbedtls_open\library/x509write_csr.c **** 
+  95:Source\mbedtls_open\library/x509write_csr.c ****     ret = mbedtls_x509write_csr_set_extension( ctx, MBEDTLS_OID_KEY_USAGE,
+ 232              		.loc 1 95 0
+ 233 001e 0423     		movs	r3, #4
+ 234 0020 0093     		str	r3, [sp]
+ 235 0022 05AB     		add	r3, sp, #20
+ 236 0024 0322     		movs	r2, #3
+ 237 0026 0349     		ldr	r1, .L11
+ 238 0028 2000     		movs	r0, r4
+ 239              	.LVL21:
+ 240 002a FFF7FEFF 		bl	mbedtls_x509write_csr_set_extension
+ 241              	.LVL22:
+ 242              	.L8:
+  96:Source\mbedtls_open\library/x509write_csr.c ****                                        MBEDTLS_OID_SIZE( MBEDTLS_OID_KEY_USAGE ),
+  97:Source\mbedtls_open\library/x509write_csr.c ****                                        buf, 4 );
+  98:Source\mbedtls_open\library/x509write_csr.c ****     if( ret != 0 )
+  99:Source\mbedtls_open\library/x509write_csr.c ****         return( ret );
+ 100:Source\mbedtls_open\library/x509write_csr.c **** 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 7
+
+
+ 101:Source\mbedtls_open\library/x509write_csr.c ****     return( 0 );
+ 102:Source\mbedtls_open\library/x509write_csr.c **** }
+ 243              		.loc 1 102 0
+ 244 002e 06B0     		add	sp, sp, #24
+ 245              		@ sp needed
+ 246              	.LVL23:
+ 247 0030 10BD     		pop	{r4, pc}
+ 248              	.L12:
+ 249 0032 C046     		.align	2
+ 250              	.L11:
+ 251 0034 00000000 		.word	.LC0
+ 252              		.cfi_endproc
+ 253              	.LFE16:
+ 254              		.size	mbedtls_x509write_csr_set_key_usage, .-mbedtls_x509write_csr_set_key_usage
+ 255              		.section	.text.mbedtls_x509write_csr_set_ns_cert_type,"ax",%progbits
+ 256              		.align	2
+ 257              		.global	mbedtls_x509write_csr_set_ns_cert_type
+ 258              		.code	16
+ 259              		.thumb_func
+ 260              		.type	mbedtls_x509write_csr_set_ns_cert_type, %function
+ 261              	mbedtls_x509write_csr_set_ns_cert_type:
+ 262              	.LFB17:
+ 103:Source\mbedtls_open\library/x509write_csr.c **** 
+ 104:Source\mbedtls_open\library/x509write_csr.c **** int mbedtls_x509write_csr_set_ns_cert_type( mbedtls_x509write_csr *ctx,
+ 105:Source\mbedtls_open\library/x509write_csr.c ****                                     unsigned char ns_cert_type )
+ 106:Source\mbedtls_open\library/x509write_csr.c **** {
+ 263              		.loc 1 106 0
+ 264              		.cfi_startproc
+ 265              		@ args = 0, pretend = 0, frame = 16
+ 266              		@ frame_needed = 0, uses_anonymous_args = 0
+ 267              	.LVL24:
+ 268 0000 10B5     		push	{r4, lr}
+ 269              		.cfi_def_cfa_offset 8
+ 270              		.cfi_offset 4, -8
+ 271              		.cfi_offset 14, -4
+ 272 0002 86B0     		sub	sp, sp, #24
+ 273              		.cfi_def_cfa_offset 32
+ 274 0004 0400     		movs	r4, r0
+ 275 0006 0F22     		movs	r2, #15
+ 276 0008 6A44     		add	r2, r2, sp
+ 277 000a 1170     		strb	r1, [r2]
+ 107:Source\mbedtls_open\library/x509write_csr.c ****     unsigned char buf[4];
+ 108:Source\mbedtls_open\library/x509write_csr.c ****     unsigned char *c;
+ 109:Source\mbedtls_open\library/x509write_csr.c ****     int ret;
+ 110:Source\mbedtls_open\library/x509write_csr.c **** 
+ 111:Source\mbedtls_open\library/x509write_csr.c ****     c = buf + 4;
+ 278              		.loc 1 111 0
+ 279 000c 06AB     		add	r3, sp, #24
+ 280 000e 0493     		str	r3, [sp, #16]
+ 112:Source\mbedtls_open\library/x509write_csr.c **** 
+ 113:Source\mbedtls_open\library/x509write_csr.c ****     if( ( ret = mbedtls_asn1_write_bitstring( &c, buf, &ns_cert_type, 8 ) ) != 4 )
+ 281              		.loc 1 113 0
+ 282 0010 0823     		movs	r3, #8
+ 283 0012 05A9     		add	r1, sp, #20
+ 284              	.LVL25:
+ 285 0014 04A8     		add	r0, sp, #16
+ 286              	.LVL26:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 8
+
+
+ 287 0016 FFF7FEFF 		bl	mbedtls_asn1_write_bitstring
+ 288              	.LVL27:
+ 289 001a 0428     		cmp	r0, #4
+ 290 001c 07D1     		bne	.L14
+ 114:Source\mbedtls_open\library/x509write_csr.c ****         return( ret );
+ 115:Source\mbedtls_open\library/x509write_csr.c **** 
+ 116:Source\mbedtls_open\library/x509write_csr.c ****     ret = mbedtls_x509write_csr_set_extension( ctx, MBEDTLS_OID_NS_CERT_TYPE,
+ 291              		.loc 1 116 0
+ 292 001e 0423     		movs	r3, #4
+ 293 0020 0093     		str	r3, [sp]
+ 294 0022 05AB     		add	r3, sp, #20
+ 295 0024 0922     		movs	r2, #9
+ 296 0026 0349     		ldr	r1, .L17
+ 297 0028 2000     		movs	r0, r4
+ 298              	.LVL28:
+ 299 002a FFF7FEFF 		bl	mbedtls_x509write_csr_set_extension
+ 300              	.LVL29:
+ 301              	.L14:
+ 117:Source\mbedtls_open\library/x509write_csr.c ****                                        MBEDTLS_OID_SIZE( MBEDTLS_OID_NS_CERT_TYPE ),
+ 118:Source\mbedtls_open\library/x509write_csr.c ****                                        buf, 4 );
+ 119:Source\mbedtls_open\library/x509write_csr.c ****     if( ret != 0 )
+ 120:Source\mbedtls_open\library/x509write_csr.c ****         return( ret );
+ 121:Source\mbedtls_open\library/x509write_csr.c **** 
+ 122:Source\mbedtls_open\library/x509write_csr.c ****     return( 0 );
+ 123:Source\mbedtls_open\library/x509write_csr.c **** }
+ 302              		.loc 1 123 0
+ 303 002e 06B0     		add	sp, sp, #24
+ 304              		@ sp needed
+ 305              	.LVL30:
+ 306 0030 10BD     		pop	{r4, pc}
+ 307              	.L18:
+ 308 0032 C046     		.align	2
+ 309              	.L17:
+ 310 0034 04000000 		.word	.LC2
+ 311              		.cfi_endproc
+ 312              	.LFE17:
+ 313              		.size	mbedtls_x509write_csr_set_ns_cert_type, .-mbedtls_x509write_csr_set_ns_cert_type
+ 314              		.section	.text.mbedtls_x509write_csr_der,"ax",%progbits
+ 315              		.align	2
+ 316              		.global	mbedtls_x509write_csr_der
+ 317              		.code	16
+ 318              		.thumb_func
+ 319              		.type	mbedtls_x509write_csr_der, %function
+ 320              	mbedtls_x509write_csr_der:
+ 321              	.LFB18:
+ 124:Source\mbedtls_open\library/x509write_csr.c **** 
+ 125:Source\mbedtls_open\library/x509write_csr.c **** int mbedtls_x509write_csr_der( mbedtls_x509write_csr *ctx, unsigned char *buf, size_t size,
+ 126:Source\mbedtls_open\library/x509write_csr.c ****                        int (*f_rng)(void *, unsigned char *, size_t),
+ 127:Source\mbedtls_open\library/x509write_csr.c ****                        void *p_rng )
+ 128:Source\mbedtls_open\library/x509write_csr.c **** {
+ 322              		.loc 1 128 0
+ 323              		.cfi_startproc
+ 324              		@ args = 4, pretend = 0, frame = 3168
+ 325              		@ frame_needed = 0, uses_anonymous_args = 0
+ 326              	.LVL31:
+ 327 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 328              		.cfi_def_cfa_offset 20
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 9
+
+
+ 329              		.cfi_offset 4, -20
+ 330              		.cfi_offset 5, -16
+ 331              		.cfi_offset 6, -12
+ 332              		.cfi_offset 7, -8
+ 333              		.cfi_offset 14, -4
+ 334 0002 AE4C     		ldr	r4, .L46
+ 335 0004 A544     		add	sp, sp, r4
+ 336              		.cfi_def_cfa_offset 3208
+ 337 0006 0700     		movs	r7, r0
+ 338 0008 0491     		str	r1, [sp, #16]
+ 339 000a 0592     		str	r2, [sp, #20]
+ 340 000c 1D00     		movs	r5, r3
+ 129:Source\mbedtls_open\library/x509write_csr.c ****     int ret;
+ 130:Source\mbedtls_open\library/x509write_csr.c ****     const char *sig_oid;
+ 131:Source\mbedtls_open\library/x509write_csr.c ****     size_t sig_oid_len = 0;
+ 341              		.loc 1 131 0
+ 342 000e 0023     		movs	r3, #0
+ 343              	.LVL32:
+ 344 0010 C622     		movs	r2, #198
+ 345              	.LVL33:
+ 346 0012 1201     		lsls	r2, r2, #4
+ 347 0014 02A9     		add	r1, sp, #8
+ 348              	.LVL34:
+ 349 0016 8C46     		mov	ip, r1
+ 350 0018 6244     		add	r2, r2, ip
+ 351 001a 1360     		str	r3, [r2]
+ 352              	.LVL35:
+ 132:Source\mbedtls_open\library/x509write_csr.c ****     unsigned char *c, *c2;
+ 133:Source\mbedtls_open\library/x509write_csr.c ****     unsigned char hash[64];
+ 134:Source\mbedtls_open\library/x509write_csr.c ****     unsigned char sig[MBEDTLS_MPI_MAX_SIZE];
+ 135:Source\mbedtls_open\library/x509write_csr.c ****     unsigned char tmp_buf[2048];
+ 136:Source\mbedtls_open\library/x509write_csr.c ****     size_t pub_len = 0, sig_and_oid_len = 0, sig_len;
+ 137:Source\mbedtls_open\library/x509write_csr.c ****     size_t len = 0;
+ 138:Source\mbedtls_open\library/x509write_csr.c ****     mbedtls_pk_type_t pk_alg;
+ 139:Source\mbedtls_open\library/x509write_csr.c **** 
+ 140:Source\mbedtls_open\library/x509write_csr.c ****     /*
+ 141:Source\mbedtls_open\library/x509write_csr.c ****      * Prepare data to be signed in tmp_buf
+ 142:Source\mbedtls_open\library/x509write_csr.c ****      */
+ 143:Source\mbedtls_open\library/x509write_csr.c ****     c = tmp_buf + sizeof( tmp_buf );
+ 353              		.loc 1 143 0
+ 354 001c A84B     		ldr	r3, .L46+4
+ 355 001e 6344     		add	r3, r3, ip
+ 356 0020 A84A     		ldr	r2, .L46+8
+ 357 0022 6244     		add	r2, r2, ip
+ 358 0024 1360     		str	r3, [r2]
+ 144:Source\mbedtls_open\library/x509write_csr.c **** 
+ 145:Source\mbedtls_open\library/x509write_csr.c ****     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_x509_write_extensions( &c, tmp_buf, ctx->extensions ) );
+ 359              		.loc 1 145 0
+ 360 0026 C268     		ldr	r2, [r0, #12]
+ 361 0028 08A9     		add	r1, sp, #32
+ 362 002a A648     		ldr	r0, .L46+8
+ 363              	.LVL36:
+ 364 002c 6044     		add	r0, r0, ip
+ 365 002e FFF7FEFF 		bl	mbedtls_x509_write_extensions
+ 366              	.LVL37:
+ 367 0032 041E     		subs	r4, r0, #0
+ 368              	.LVL38:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 10
+
+
+ 369 0034 00DA     		bge	.LCB302
+ 370 0036 38E1     		b	.L23	@long jump
+ 371              	.LCB302:
+ 372              		.loc 1 145 0 is_stmt 0 discriminator 2
+ 373 0038 061E     		subs	r6, r0, #0
+ 374              	.LVL39:
+ 146:Source\mbedtls_open\library/x509write_csr.c **** 
+ 147:Source\mbedtls_open\library/x509write_csr.c ****     if( len )
+ 375              		.loc 1 147 0 is_stmt 1 discriminator 2
+ 376 003a 54D0     		beq	.L21
+ 148:Source\mbedtls_open\library/x509write_csr.c ****     {
+ 149:Source\mbedtls_open\library/x509write_csr.c ****         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( &c, tmp_buf, len ) );
+ 377              		.loc 1 149 0
+ 378 003c 0200     		movs	r2, r0
+ 379 003e 08A9     		add	r1, sp, #32
+ 380 0040 A048     		ldr	r0, .L46+8
+ 381              	.LVL40:
+ 382 0042 02AB     		add	r3, sp, #8
+ 383 0044 9C46     		mov	ip, r3
+ 384 0046 6044     		add	r0, r0, ip
+ 385 0048 FFF7FEFF 		bl	mbedtls_asn1_write_len
+ 386              	.LVL41:
+ 387 004c 0028     		cmp	r0, #0
+ 388 004e 00DA     		bge	.LCB321
+ 389 0050 31E1     		b	.L20	@long jump
+ 390              	.LCB321:
+ 391              		.loc 1 149 0 is_stmt 0 discriminator 2
+ 392 0052 0419     		adds	r4, r0, r4
+ 393              	.LVL42:
+ 150:Source\mbedtls_open\library/x509write_csr.c ****         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_tag( &c, tmp_buf, MBEDTLS_ASN1_CONSTRUCTED |
+ 394              		.loc 1 150 0 is_stmt 1 discriminator 2
+ 395 0054 3022     		movs	r2, #48
+ 396 0056 08A9     		add	r1, sp, #32
+ 397 0058 9A48     		ldr	r0, .L46+8
+ 398              	.LVL43:
+ 399 005a 02AB     		add	r3, sp, #8
+ 400 005c 9C46     		mov	ip, r3
+ 401 005e 6044     		add	r0, r0, ip
+ 402 0060 FFF7FEFF 		bl	mbedtls_asn1_write_tag
+ 403              	.LVL44:
+ 404 0064 0028     		cmp	r0, #0
+ 405 0066 00DA     		bge	.LCB336
+ 406 0068 25E1     		b	.L20	@long jump
+ 407              	.LCB336:
+ 408 006a 0419     		adds	r4, r0, r4
+ 409              	.LVL45:
+ 151:Source\mbedtls_open\library/x509write_csr.c ****                                                         MBEDTLS_ASN1_SEQUENCE ) );
+ 152:Source\mbedtls_open\library/x509write_csr.c **** 
+ 153:Source\mbedtls_open\library/x509write_csr.c ****         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( &c, tmp_buf, len ) );
+ 410              		.loc 1 153 0 discriminator 2
+ 411 006c 2200     		movs	r2, r4
+ 412 006e 08A9     		add	r1, sp, #32
+ 413 0070 9448     		ldr	r0, .L46+8
+ 414              	.LVL46:
+ 415 0072 02AB     		add	r3, sp, #8
+ 416 0074 9C46     		mov	ip, r3
+ 417 0076 6044     		add	r0, r0, ip
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 11
+
+
+ 418 0078 FFF7FEFF 		bl	mbedtls_asn1_write_len
+ 419              	.LVL47:
+ 420 007c 0028     		cmp	r0, #0
+ 421 007e 00DA     		bge	.LCB351
+ 422 0080 19E1     		b	.L20	@long jump
+ 423              	.LCB351:
+ 424 0082 0419     		adds	r4, r0, r4
+ 425              	.LVL48:
+ 154:Source\mbedtls_open\library/x509write_csr.c ****         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_tag( &c, tmp_buf, MBEDTLS_ASN1_CONSTRUCTED |
+ 426              		.loc 1 154 0 discriminator 2
+ 427 0084 3122     		movs	r2, #49
+ 428 0086 08A9     		add	r1, sp, #32
+ 429 0088 8E48     		ldr	r0, .L46+8
+ 430              	.LVL49:
+ 431 008a 02AB     		add	r3, sp, #8
+ 432 008c 9C46     		mov	ip, r3
+ 433 008e 6044     		add	r0, r0, ip
+ 434 0090 FFF7FEFF 		bl	mbedtls_asn1_write_tag
+ 435              	.LVL50:
+ 436 0094 0028     		cmp	r0, #0
+ 437 0096 00DA     		bge	.LCB366
+ 438 0098 0DE1     		b	.L20	@long jump
+ 439              	.LCB366:
+ 440 009a 0419     		adds	r4, r0, r4
+ 441              	.LVL51:
+ 155:Source\mbedtls_open\library/x509write_csr.c ****                                                         MBEDTLS_ASN1_SET ) );
+ 156:Source\mbedtls_open\library/x509write_csr.c **** 
+ 157:Source\mbedtls_open\library/x509write_csr.c ****         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_oid( &c, tmp_buf, MBEDTLS_OID_PKCS9_CSR_EXT_R
+ 442              		.loc 1 157 0 discriminator 2
+ 443 009c 0923     		movs	r3, #9
+ 444 009e 8A4A     		ldr	r2, .L46+12
+ 445 00a0 08A9     		add	r1, sp, #32
+ 446 00a2 8848     		ldr	r0, .L46+8
+ 447              	.LVL52:
+ 448 00a4 02AE     		add	r6, sp, #8
+ 449 00a6 B446     		mov	ip, r6
+ 450 00a8 6044     		add	r0, r0, ip
+ 451 00aa FFF7FEFF 		bl	mbedtls_asn1_write_oid
+ 452              	.LVL53:
+ 453 00ae 0028     		cmp	r0, #0
+ 454 00b0 00DA     		bge	.LCB382
+ 455 00b2 00E1     		b	.L20	@long jump
+ 456              	.LCB382:
+ 457 00b4 0419     		adds	r4, r0, r4
+ 458              	.LVL54:
+ 158:Source\mbedtls_open\library/x509write_csr.c ****                                           MBEDTLS_OID_SIZE( MBEDTLS_OID_PKCS9_CSR_EXT_REQ ) ) );
+ 159:Source\mbedtls_open\library/x509write_csr.c **** 
+ 160:Source\mbedtls_open\library/x509write_csr.c ****         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( &c, tmp_buf, len ) );
+ 459              		.loc 1 160 0 discriminator 2
+ 460 00b6 2200     		movs	r2, r4
+ 461 00b8 08A9     		add	r1, sp, #32
+ 462 00ba 8248     		ldr	r0, .L46+8
+ 463              	.LVL55:
+ 464 00bc 02AB     		add	r3, sp, #8
+ 465 00be 9C46     		mov	ip, r3
+ 466 00c0 6044     		add	r0, r0, ip
+ 467 00c2 FFF7FEFF 		bl	mbedtls_asn1_write_len
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 12
+
+
+ 468              	.LVL56:
+ 469 00c6 0028     		cmp	r0, #0
+ 470 00c8 00DA     		bge	.LCB397
+ 471 00ca F4E0     		b	.L20	@long jump
+ 472              	.LCB397:
+ 473 00cc 0419     		adds	r4, r0, r4
+ 474              	.LVL57:
+ 161:Source\mbedtls_open\library/x509write_csr.c ****         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_tag( &c, tmp_buf, MBEDTLS_ASN1_CONSTRUCTED |
+ 475              		.loc 1 161 0 discriminator 2
+ 476 00ce 3022     		movs	r2, #48
+ 477 00d0 08A9     		add	r1, sp, #32
+ 478 00d2 7C48     		ldr	r0, .L46+8
+ 479              	.LVL58:
+ 480 00d4 02AB     		add	r3, sp, #8
+ 481 00d6 9C46     		mov	ip, r3
+ 482 00d8 6044     		add	r0, r0, ip
+ 483 00da FFF7FEFF 		bl	mbedtls_asn1_write_tag
+ 484              	.LVL59:
+ 485 00de 0028     		cmp	r0, #0
+ 486 00e0 00DA     		bge	.LCB412
+ 487 00e2 E8E0     		b	.L20	@long jump
+ 488              	.LCB412:
+ 489 00e4 0619     		adds	r6, r0, r4
+ 490              	.LVL60:
+ 491              	.L21:
+ 162:Source\mbedtls_open\library/x509write_csr.c ****                                                         MBEDTLS_ASN1_SEQUENCE ) );
+ 163:Source\mbedtls_open\library/x509write_csr.c ****     }
+ 164:Source\mbedtls_open\library/x509write_csr.c **** 
+ 165:Source\mbedtls_open\library/x509write_csr.c ****     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( &c, tmp_buf, len ) );
+ 492              		.loc 1 165 0
+ 493 00e6 3200     		movs	r2, r6
+ 494 00e8 08A9     		add	r1, sp, #32
+ 495 00ea 7648     		ldr	r0, .L46+8
+ 496              	.LVL61:
+ 497 00ec 02AB     		add	r3, sp, #8
+ 498 00ee 9C46     		mov	ip, r3
+ 499 00f0 6044     		add	r0, r0, ip
+ 500 00f2 FFF7FEFF 		bl	mbedtls_asn1_write_len
+ 501              	.LVL62:
+ 502 00f6 0028     		cmp	r0, #0
+ 503 00f8 00DA     		bge	.LCB431
+ 504 00fa DCE0     		b	.L20	@long jump
+ 505              	.LCB431:
+ 506              		.loc 1 165 0 is_stmt 0 discriminator 2
+ 507 00fc 8419     		adds	r4, r0, r6
+ 508              	.LVL63:
+ 166:Source\mbedtls_open\library/x509write_csr.c ****     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_tag( &c, tmp_buf, MBEDTLS_ASN1_CONSTRUCTED |
+ 509              		.loc 1 166 0 is_stmt 1 discriminator 2
+ 510 00fe A022     		movs	r2, #160
+ 511 0100 08A9     		add	r1, sp, #32
+ 512 0102 7048     		ldr	r0, .L46+8
+ 513              	.LVL64:
+ 514 0104 02AB     		add	r3, sp, #8
+ 515 0106 9C46     		mov	ip, r3
+ 516 0108 6044     		add	r0, r0, ip
+ 517 010a FFF7FEFF 		bl	mbedtls_asn1_write_tag
+ 518              	.LVL65:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 13
+
+
+ 519 010e 0028     		cmp	r0, #0
+ 520 0110 00DA     		bge	.LCB446
+ 521 0112 D0E0     		b	.L20	@long jump
+ 522              	.LCB446:
+ 523 0114 0419     		adds	r4, r0, r4
+ 524              	.LVL66:
+ 167:Source\mbedtls_open\library/x509write_csr.c ****                                                     MBEDTLS_ASN1_CONTEXT_SPECIFIC ) );
+ 168:Source\mbedtls_open\library/x509write_csr.c **** 
+ 169:Source\mbedtls_open\library/x509write_csr.c ****     MBEDTLS_ASN1_CHK_ADD( pub_len, mbedtls_pk_write_pubkey_der( ctx->key,
+ 525              		.loc 1 169 0 discriminator 2
+ 526 0116 08A9     		add	r1, sp, #32
+ 527 0118 6A4B     		ldr	r3, .L46+8
+ 528 011a 02AA     		add	r2, sp, #8
+ 529 011c 9446     		mov	ip, r2
+ 530 011e 6344     		add	r3, r3, ip
+ 531 0120 1B68     		ldr	r3, [r3]
+ 532 0122 5A1A     		subs	r2, r3, r1
+ 533 0124 3868     		ldr	r0, [r7]
+ 534              	.LVL67:
+ 535 0126 FFF7FEFF 		bl	mbedtls_pk_write_pubkey_der
+ 536              	.LVL68:
+ 537 012a 0028     		cmp	r0, #0
+ 538 012c 00DA     		bge	.LCB465
+ 539 012e C2E0     		b	.L20	@long jump
+ 540              	.LCB465:
+ 541              	.LVL69:
+ 170:Source\mbedtls_open\library/x509write_csr.c ****                                                 tmp_buf, c - tmp_buf ) );
+ 171:Source\mbedtls_open\library/x509write_csr.c ****     c -= pub_len;
+ 542              		.loc 1 171 0 discriminator 2
+ 543 0130 644B     		ldr	r3, .L46+8
+ 544 0132 02AA     		add	r2, sp, #8
+ 545 0134 9446     		mov	ip, r2
+ 546 0136 6344     		add	r3, r3, ip
+ 547 0138 1B68     		ldr	r3, [r3]
+ 548 013a 1B1A     		subs	r3, r3, r0
+ 549 013c 614A     		ldr	r2, .L46+8
+ 550 013e 6244     		add	r2, r2, ip
+ 551 0140 1360     		str	r3, [r2]
+ 172:Source\mbedtls_open\library/x509write_csr.c ****     len += pub_len;
+ 552              		.loc 1 172 0 discriminator 2
+ 553 0142 2418     		adds	r4, r4, r0
+ 554              	.LVL70:
+ 173:Source\mbedtls_open\library/x509write_csr.c **** 
+ 174:Source\mbedtls_open\library/x509write_csr.c ****     /*
+ 175:Source\mbedtls_open\library/x509write_csr.c ****      *  Subject  ::=  Name
+ 176:Source\mbedtls_open\library/x509write_csr.c ****      */
+ 177:Source\mbedtls_open\library/x509write_csr.c ****     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_x509_write_names( &c, tmp_buf, ctx->subject ) );
+ 555              		.loc 1 177 0 discriminator 2
+ 556 0144 7A68     		ldr	r2, [r7, #4]
+ 557 0146 08A9     		add	r1, sp, #32
+ 558 0148 5E48     		ldr	r0, .L46+8
+ 559              	.LVL71:
+ 560 014a 6044     		add	r0, r0, ip
+ 561 014c FFF7FEFF 		bl	mbedtls_x509_write_names
+ 562              	.LVL72:
+ 563 0150 0028     		cmp	r0, #0
+ 564 0152 00DA     		bge	.LCB491
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 14
+
+
+ 565 0154 AFE0     		b	.L20	@long jump
+ 566              	.LCB491:
+ 567 0156 0419     		adds	r4, r0, r4
+ 568              	.LVL73:
+ 178:Source\mbedtls_open\library/x509write_csr.c **** 
+ 179:Source\mbedtls_open\library/x509write_csr.c ****     /*
+ 180:Source\mbedtls_open\library/x509write_csr.c ****      *  Version  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
+ 181:Source\mbedtls_open\library/x509write_csr.c ****      */
+ 182:Source\mbedtls_open\library/x509write_csr.c ****     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_int( &c, tmp_buf, 0 ) );
+ 569              		.loc 1 182 0 discriminator 2
+ 570 0158 0022     		movs	r2, #0
+ 571 015a 08A9     		add	r1, sp, #32
+ 572 015c 5948     		ldr	r0, .L46+8
+ 573              	.LVL74:
+ 574 015e 02AB     		add	r3, sp, #8
+ 575 0160 9C46     		mov	ip, r3
+ 576 0162 6044     		add	r0, r0, ip
+ 577 0164 FFF7FEFF 		bl	mbedtls_asn1_write_int
+ 578              	.LVL75:
+ 579 0168 0028     		cmp	r0, #0
+ 580 016a 00DA     		bge	.LCB506
+ 581 016c A3E0     		b	.L20	@long jump
+ 582              	.LCB506:
+ 583 016e 0419     		adds	r4, r0, r4
+ 584              	.LVL76:
+ 183:Source\mbedtls_open\library/x509write_csr.c **** 
+ 184:Source\mbedtls_open\library/x509write_csr.c ****     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( &c, tmp_buf, len ) );
+ 585              		.loc 1 184 0 discriminator 2
+ 586 0170 2200     		movs	r2, r4
+ 587 0172 08A9     		add	r1, sp, #32
+ 588 0174 5348     		ldr	r0, .L46+8
+ 589              	.LVL77:
+ 590 0176 02AB     		add	r3, sp, #8
+ 591 0178 9C46     		mov	ip, r3
+ 592 017a 6044     		add	r0, r0, ip
+ 593 017c FFF7FEFF 		bl	mbedtls_asn1_write_len
+ 594              	.LVL78:
+ 595 0180 0028     		cmp	r0, #0
+ 596 0182 00DA     		bge	.LCB521
+ 597 0184 97E0     		b	.L20	@long jump
+ 598              	.LCB521:
+ 599 0186 0419     		adds	r4, r0, r4
+ 600              	.LVL79:
+ 185:Source\mbedtls_open\library/x509write_csr.c ****     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_tag( &c, tmp_buf, MBEDTLS_ASN1_CONSTRUCTED |
+ 601              		.loc 1 185 0 discriminator 2
+ 602 0188 3022     		movs	r2, #48
+ 603 018a 08A9     		add	r1, sp, #32
+ 604 018c 4D48     		ldr	r0, .L46+8
+ 605              	.LVL80:
+ 606 018e 02AB     		add	r3, sp, #8
+ 607 0190 9C46     		mov	ip, r3
+ 608 0192 6044     		add	r0, r0, ip
+ 609 0194 FFF7FEFF 		bl	mbedtls_asn1_write_tag
+ 610              	.LVL81:
+ 611 0198 0028     		cmp	r0, #0
+ 612 019a 00DA     		bge	.LCB536
+ 613 019c 8BE0     		b	.L20	@long jump
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 15
+
+
+ 614              	.LCB536:
+ 615 019e 0419     		adds	r4, r0, r4
+ 616              	.LVL82:
+ 186:Source\mbedtls_open\library/x509write_csr.c ****                                                     MBEDTLS_ASN1_SEQUENCE ) );
+ 187:Source\mbedtls_open\library/x509write_csr.c **** 
+ 188:Source\mbedtls_open\library/x509write_csr.c ****     /*
+ 189:Source\mbedtls_open\library/x509write_csr.c ****      * Prepare signature
+ 190:Source\mbedtls_open\library/x509write_csr.c ****      */
+ 191:Source\mbedtls_open\library/x509write_csr.c ****     mbedtls_md( mbedtls_md_info_from_type( ctx->md_alg ), c, len, hash );
+ 617              		.loc 1 191 0 discriminator 2
+ 618 01a0 387A     		ldrb	r0, [r7, #8]
+ 619              	.LVL83:
+ 620 01a2 FFF7FEFF 		bl	mbedtls_md_info_from_type
+ 621              	.LVL84:
+ 622 01a6 494B     		ldr	r3, .L46+16
+ 623 01a8 02AA     		add	r2, sp, #8
+ 624 01aa 9446     		mov	ip, r2
+ 625 01ac 6344     		add	r3, r3, ip
+ 626 01ae 2200     		movs	r2, r4
+ 627 01b0 4449     		ldr	r1, .L46+8
+ 628 01b2 6144     		add	r1, r1, ip
+ 629 01b4 0968     		ldr	r1, [r1]
+ 630 01b6 FFF7FEFF 		bl	mbedtls_md
+ 631              	.LVL85:
+ 192:Source\mbedtls_open\library/x509write_csr.c **** 
+ 193:Source\mbedtls_open\library/x509write_csr.c ****     if( ( ret = mbedtls_pk_sign( ctx->key, ctx->md_alg, hash, 0, sig, &sig_len,
+ 632              		.loc 1 193 0 discriminator 2
+ 633 01ba 397A     		ldrb	r1, [r7, #8]
+ 634 01bc C823     		movs	r3, #200
+ 635 01be 1B01     		lsls	r3, r3, #4
+ 636 01c0 02AA     		add	r2, sp, #8
+ 637 01c2 9446     		mov	ip, r2
+ 638 01c4 6344     		add	r3, r3, ip
+ 639 01c6 1B68     		ldr	r3, [r3]
+ 640 01c8 0393     		str	r3, [sp, #12]
+ 641 01ca 0295     		str	r5, [sp, #8]
+ 642 01cc 07AB     		add	r3, sp, #28
+ 643 01ce 0193     		str	r3, [sp, #4]
+ 644 01d0 3B4B     		ldr	r3, .L46+4
+ 645 01d2 6344     		add	r3, r3, ip
+ 646 01d4 0093     		str	r3, [sp]
+ 647 01d6 0023     		movs	r3, #0
+ 648 01d8 3C4A     		ldr	r2, .L46+16
+ 649 01da 6244     		add	r2, r2, ip
+ 650 01dc 3868     		ldr	r0, [r7]
+ 651 01de FFF7FEFF 		bl	mbedtls_pk_sign
+ 652              	.LVL86:
+ 653 01e2 0028     		cmp	r0, #0
+ 654 01e4 67D1     		bne	.L20
+ 194:Source\mbedtls_open\library/x509write_csr.c ****                                  f_rng, p_rng ) ) != 0 )
+ 195:Source\mbedtls_open\library/x509write_csr.c ****     {
+ 196:Source\mbedtls_open\library/x509write_csr.c ****         return( ret );
+ 197:Source\mbedtls_open\library/x509write_csr.c ****     }
+ 198:Source\mbedtls_open\library/x509write_csr.c **** 
+ 199:Source\mbedtls_open\library/x509write_csr.c ****     if( mbedtls_pk_can_do( ctx->key, MBEDTLS_PK_RSA ) )
+ 655              		.loc 1 199 0
+ 656 01e6 0121     		movs	r1, #1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 16
+
+
+ 657 01e8 3868     		ldr	r0, [r7]
+ 658              	.LVL87:
+ 659 01ea FFF7FEFF 		bl	mbedtls_pk_can_do
+ 660              	.LVL88:
+ 661 01ee 0028     		cmp	r0, #0
+ 662 01f0 07D1     		bne	.L39
+ 200:Source\mbedtls_open\library/x509write_csr.c ****         pk_alg = MBEDTLS_PK_RSA;
+ 201:Source\mbedtls_open\library/x509write_csr.c ****     else if( mbedtls_pk_can_do( ctx->key, MBEDTLS_PK_ECDSA ) )
+ 663              		.loc 1 201 0
+ 664 01f2 0421     		movs	r1, #4
+ 665 01f4 3868     		ldr	r0, [r7]
+ 666 01f6 FFF7FEFF 		bl	mbedtls_pk_can_do
+ 667              	.LVL89:
+ 668 01fa 0028     		cmp	r0, #0
+ 669 01fc 56D0     		beq	.L40
+ 202:Source\mbedtls_open\library/x509write_csr.c ****         pk_alg = MBEDTLS_PK_ECDSA;
+ 670              		.loc 1 202 0
+ 671 01fe 0420     		movs	r0, #4
+ 672 0200 00E0     		b	.L22
+ 673              	.L39:
+ 200:Source\mbedtls_open\library/x509write_csr.c ****         pk_alg = MBEDTLS_PK_RSA;
+ 674              		.loc 1 200 0
+ 675 0202 0120     		movs	r0, #1
+ 676              	.L22:
+ 677              	.LVL90:
+ 203:Source\mbedtls_open\library/x509write_csr.c ****     else
+ 204:Source\mbedtls_open\library/x509write_csr.c ****         return( MBEDTLS_ERR_X509_INVALID_ALG );
+ 205:Source\mbedtls_open\library/x509write_csr.c **** 
+ 206:Source\mbedtls_open\library/x509write_csr.c ****     if( ( ret = mbedtls_oid_get_oid_by_sig_alg( pk_alg, ctx->md_alg,
+ 678              		.loc 1 206 0
+ 679 0204 397A     		ldrb	r1, [r7, #8]
+ 680 0206 C623     		movs	r3, #198
+ 681 0208 1B01     		lsls	r3, r3, #4
+ 682 020a 02AA     		add	r2, sp, #8
+ 683 020c 9446     		mov	ip, r2
+ 684 020e 6344     		add	r3, r3, ip
+ 685 0210 2F4A     		ldr	r2, .L46+20
+ 686 0212 6244     		add	r2, r2, ip
+ 687 0214 FFF7FEFF 		bl	mbedtls_oid_get_oid_by_sig_alg
+ 688              	.LVL91:
+ 689 0218 0028     		cmp	r0, #0
+ 690 021a 4CD1     		bne	.L20
+ 207:Source\mbedtls_open\library/x509write_csr.c ****                                                 &sig_oid, &sig_oid_len ) ) != 0 )
+ 208:Source\mbedtls_open\library/x509write_csr.c ****     {
+ 209:Source\mbedtls_open\library/x509write_csr.c ****         return( ret );
+ 210:Source\mbedtls_open\library/x509write_csr.c ****     }
+ 211:Source\mbedtls_open\library/x509write_csr.c **** 
+ 212:Source\mbedtls_open\library/x509write_csr.c ****     /*
+ 213:Source\mbedtls_open\library/x509write_csr.c ****      * Write data to output buffer
+ 214:Source\mbedtls_open\library/x509write_csr.c ****      */
+ 215:Source\mbedtls_open\library/x509write_csr.c ****     c2 = buf + size;
+ 691              		.loc 1 215 0
+ 692 021c 059B     		ldr	r3, [sp, #20]
+ 693 021e 1F00     		movs	r7, r3
+ 694              	.LVL92:
+ 695 0220 049E     		ldr	r6, [sp, #16]
+ 696 0222 B446     		mov	ip, r6
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 17
+
+
+ 697 0224 6744     		add	r7, r7, ip
+ 698 0226 2B4B     		ldr	r3, .L46+24
+ 699 0228 02AA     		add	r2, sp, #8
+ 700 022a 9446     		mov	ip, r2
+ 701 022c 6344     		add	r3, r3, ip
+ 702 022e 1F60     		str	r7, [r3]
+ 216:Source\mbedtls_open\library/x509write_csr.c ****     MBEDTLS_ASN1_CHK_ADD( sig_and_oid_len, mbedtls_x509_write_sig( &c2, buf,
+ 703              		.loc 1 216 0
+ 704 0230 079B     		ldr	r3, [sp, #28]
+ 705 0232 0193     		str	r3, [sp, #4]
+ 706 0234 224B     		ldr	r3, .L46+4
+ 707 0236 6344     		add	r3, r3, ip
+ 708 0238 0093     		str	r3, [sp]
+ 709 023a C623     		movs	r3, #198
+ 710 023c 1B01     		lsls	r3, r3, #4
+ 711 023e 6344     		add	r3, r3, ip
+ 712 0240 1B68     		ldr	r3, [r3]
+ 713 0242 234A     		ldr	r2, .L46+20
+ 714 0244 6244     		add	r2, r2, ip
+ 715 0246 1268     		ldr	r2, [r2]
+ 716 0248 3100     		movs	r1, r6
+ 717 024a 2248     		ldr	r0, .L46+24
+ 718              	.LVL93:
+ 719 024c 6044     		add	r0, r0, ip
+ 720 024e FFF7FEFF 		bl	mbedtls_x509_write_sig
+ 721              	.LVL94:
+ 722 0252 051E     		subs	r5, r0, #0
+ 723              	.LVL95:
+ 724 0254 2CDB     		blt	.L42
+ 725              	.LVL96:
+ 217:Source\mbedtls_open\library/x509write_csr.c ****                                         sig_oid, sig_oid_len, sig, sig_len ) );
+ 218:Source\mbedtls_open\library/x509write_csr.c **** 
+ 219:Source\mbedtls_open\library/x509write_csr.c ****     if( len > (size_t)( c2 - buf ) )
+ 726              		.loc 1 219 0 discriminator 2
+ 727 0256 1F4B     		ldr	r3, .L46+24
+ 728 0258 02AA     		add	r2, sp, #8
+ 729 025a 9446     		mov	ip, r2
+ 730 025c 6344     		add	r3, r3, ip
+ 731 025e 1868     		ldr	r0, [r3]
+ 732              	.LVL97:
+ 733 0260 831B     		subs	r3, r0, r6
+ 734 0262 9C42     		cmp	r4, r3
+ 735 0264 25D8     		bhi	.L43
+ 220:Source\mbedtls_open\library/x509write_csr.c ****         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
+ 221:Source\mbedtls_open\library/x509write_csr.c **** 
+ 222:Source\mbedtls_open\library/x509write_csr.c ****     c2 -= len;
+ 736              		.loc 1 222 0
+ 737 0266 001B     		subs	r0, r0, r4
+ 738 0268 1A4B     		ldr	r3, .L46+24
+ 739 026a 6344     		add	r3, r3, ip
+ 740 026c 1860     		str	r0, [r3]
+ 223:Source\mbedtls_open\library/x509write_csr.c ****     memcpy( c2, c, len );
+ 741              		.loc 1 223 0
+ 742 026e 2200     		movs	r2, r4
+ 743 0270 144B     		ldr	r3, .L46+8
+ 744 0272 6344     		add	r3, r3, ip
+ 745 0274 1968     		ldr	r1, [r3]
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 18
+
+
+ 746 0276 FFF7FEFF 		bl	memcpy
+ 747              	.LVL98:
+ 224:Source\mbedtls_open\library/x509write_csr.c **** 
+ 225:Source\mbedtls_open\library/x509write_csr.c ****     len += sig_and_oid_len;
+ 748              		.loc 1 225 0
+ 749 027a 6419     		adds	r4, r4, r5
+ 750              	.LVL99:
+ 226:Source\mbedtls_open\library/x509write_csr.c ****     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( &c2, buf, len ) );
+ 751              		.loc 1 226 0
+ 752 027c 2200     		movs	r2, r4
+ 753 027e 3100     		movs	r1, r6
+ 754 0280 1448     		ldr	r0, .L46+24
+ 755 0282 02AB     		add	r3, sp, #8
+ 756 0284 9C46     		mov	ip, r3
+ 757 0286 6044     		add	r0, r0, ip
+ 758 0288 FFF7FEFF 		bl	mbedtls_asn1_write_len
+ 759              	.LVL100:
+ 760 028c 0028     		cmp	r0, #0
+ 761 028e 12DB     		blt	.L20
+ 762              		.loc 1 226 0 is_stmt 0 discriminator 2
+ 763 0290 0419     		adds	r4, r0, r4
+ 764              	.LVL101:
+ 227:Source\mbedtls_open\library/x509write_csr.c ****     MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_tag( &c2, buf, MBEDTLS_ASN1_CONSTRUCTED |
+ 765              		.loc 1 227 0 is_stmt 1 discriminator 2
+ 766 0292 3022     		movs	r2, #48
+ 767 0294 3100     		movs	r1, r6
+ 768 0296 0F48     		ldr	r0, .L46+24
+ 769              	.LVL102:
+ 770 0298 02AB     		add	r3, sp, #8
+ 771 029a 9C46     		mov	ip, r3
+ 772 029c 6044     		add	r0, r0, ip
+ 773 029e FFF7FEFF 		bl	mbedtls_asn1_write_tag
+ 774              	.LVL103:
+ 775 02a2 0028     		cmp	r0, #0
+ 776 02a4 07DB     		blt	.L20
+ 777 02a6 0019     		adds	r0, r0, r4
+ 778              	.LVL104:
+ 228:Source\mbedtls_open\library/x509write_csr.c ****                                                  MBEDTLS_ASN1_SEQUENCE ) );
+ 229:Source\mbedtls_open\library/x509write_csr.c **** 
+ 230:Source\mbedtls_open\library/x509write_csr.c ****     return( (int) len );
+ 779              		.loc 1 230 0 discriminator 2
+ 780 02a8 05E0     		b	.L20
+ 781              	.LVL105:
+ 782              	.L23:
+ 783 02aa 04E0     		b	.L20
+ 784              	.LVL106:
+ 785              	.L40:
+ 204:Source\mbedtls_open\library/x509write_csr.c **** 
+ 786              		.loc 1 204 0
+ 787 02ac 0A48     		ldr	r0, .L46+28
+ 788 02ae 02E0     		b	.L20
+ 789              	.LVL107:
+ 790              	.L42:
+ 791 02b0 01E0     		b	.L20
+ 792              	.LVL108:
+ 793              	.L43:
+ 220:Source\mbedtls_open\library/x509write_csr.c **** 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 19
+
+
+ 794              		.loc 1 220 0
+ 795 02b2 6C20     		movs	r0, #108
+ 796 02b4 4042     		rsbs	r0, r0, #0
+ 797              	.LVL109:
+ 798              	.L20:
+ 231:Source\mbedtls_open\library/x509write_csr.c **** }
+ 799              		.loc 1 231 0
+ 800 02b6 094B     		ldr	r3, .L46+32
+ 801 02b8 9D44     		add	sp, sp, r3
+ 802              		@ sp needed
+ 803 02ba F0BD     		pop	{r4, r5, r6, r7, pc}
+ 804              	.L47:
+ 805              		.align	2
+ 806              	.L46:
+ 807 02bc 8CF3FFFF 		.word	-3188
+ 808 02c0 18080000 		.word	2072
+ 809 02c4 5C0C0000 		.word	3164
+ 810 02c8 10000000 		.word	.LC4
+ 811 02cc 180C0000 		.word	3096
+ 812 02d0 640C0000 		.word	3172
+ 813 02d4 580C0000 		.word	3160
+ 814 02d8 00DDFFFF 		.word	-8960
+ 815 02dc 740C0000 		.word	3188
+ 816              		.cfi_endproc
+ 817              	.LFE18:
+ 818              		.size	mbedtls_x509write_csr_der, .-mbedtls_x509write_csr_der
+ 819              		.section	.text.mbedtls_x509write_csr_pem,"ax",%progbits
+ 820              		.align	2
+ 821              		.global	mbedtls_x509write_csr_pem
+ 822              		.code	16
+ 823              		.thumb_func
+ 824              		.type	mbedtls_x509write_csr_pem, %function
+ 825              	mbedtls_x509write_csr_pem:
+ 826              	.LFB19:
+ 232:Source\mbedtls_open\library/x509write_csr.c **** 
+ 233:Source\mbedtls_open\library/x509write_csr.c **** #define PEM_BEGIN_CSR           "-----BEGIN CERTIFICATE REQUEST-----\n"
+ 234:Source\mbedtls_open\library/x509write_csr.c **** #define PEM_END_CSR             "-----END CERTIFICATE REQUEST-----\n"
+ 235:Source\mbedtls_open\library/x509write_csr.c **** 
+ 236:Source\mbedtls_open\library/x509write_csr.c **** #if defined(MBEDTLS_PEM_WRITE_C)
+ 237:Source\mbedtls_open\library/x509write_csr.c **** int mbedtls_x509write_csr_pem( mbedtls_x509write_csr *ctx, unsigned char *buf, size_t size,
+ 238:Source\mbedtls_open\library/x509write_csr.c ****                        int (*f_rng)(void *, unsigned char *, size_t),
+ 239:Source\mbedtls_open\library/x509write_csr.c ****                        void *p_rng )
+ 240:Source\mbedtls_open\library/x509write_csr.c **** {
+ 827              		.loc 1 240 0
+ 828              		.cfi_startproc
+ 829              		@ args = 4, pretend = 0, frame = 4104
+ 830              		@ frame_needed = 0, uses_anonymous_args = 0
+ 831              	.LVL110:
+ 832 0000 30B5     		push	{r4, r5, lr}
+ 833              		.cfi_def_cfa_offset 12
+ 834              		.cfi_offset 4, -12
+ 835              		.cfi_offset 5, -8
+ 836              		.cfi_offset 14, -4
+ 837 0002 114C     		ldr	r4, .L52
+ 838 0004 A544     		add	sp, sp, r4
+ 839              		.cfi_def_cfa_offset 4136
+ 840 0006 0C00     		movs	r4, r1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 20
+
+
+ 841 0008 1500     		movs	r5, r2
+ 241:Source\mbedtls_open\library/x509write_csr.c ****     int ret;
+ 242:Source\mbedtls_open\library/x509write_csr.c ****     unsigned char output_buf[4096];
+ 243:Source\mbedtls_open\library/x509write_csr.c ****     size_t olen = 0;
+ 842              		.loc 1 243 0
+ 843 000a 0022     		movs	r2, #0
+ 844              	.LVL111:
+ 845 000c 0592     		str	r2, [sp, #20]
+ 244:Source\mbedtls_open\library/x509write_csr.c **** 
+ 245:Source\mbedtls_open\library/x509write_csr.c ****     if( ( ret = mbedtls_x509write_csr_der( ctx, output_buf, sizeof(output_buf),
+ 846              		.loc 1 245 0
+ 847 000e 0F4A     		ldr	r2, .L52+4
+ 848 0010 6A44     		add	r2, r2, sp
+ 849 0012 1268     		ldr	r2, [r2]
+ 850 0014 0092     		str	r2, [sp]
+ 851 0016 8022     		movs	r2, #128
+ 852 0018 5201     		lsls	r2, r2, #5
+ 853 001a 06A9     		add	r1, sp, #24
+ 854              	.LVL112:
+ 855 001c FFF7FEFF 		bl	mbedtls_x509write_csr_der
+ 856              	.LVL113:
+ 857 0020 0028     		cmp	r0, #0
+ 858 0022 0EDB     		blt	.L49
+ 246:Source\mbedtls_open\library/x509write_csr.c ****                                    f_rng, p_rng ) ) < 0 )
+ 247:Source\mbedtls_open\library/x509write_csr.c ****     {
+ 248:Source\mbedtls_open\library/x509write_csr.c ****         return( ret );
+ 249:Source\mbedtls_open\library/x509write_csr.c ****     }
+ 250:Source\mbedtls_open\library/x509write_csr.c **** 
+ 251:Source\mbedtls_open\library/x509write_csr.c ****     if( ( ret = mbedtls_pem_write_buffer( PEM_BEGIN_CSR, PEM_END_CSR,
+ 252:Source\mbedtls_open\library/x509write_csr.c ****                                   output_buf + sizeof(output_buf) - ret,
+ 859              		.loc 1 252 0
+ 860 0024 8022     		movs	r2, #128
+ 861 0026 5201     		lsls	r2, r2, #5
+ 862 0028 121A     		subs	r2, r2, r0
+ 251:Source\mbedtls_open\library/x509write_csr.c ****                                   output_buf + sizeof(output_buf) - ret,
+ 863              		.loc 1 251 0
+ 864 002a 06AB     		add	r3, sp, #24
+ 865 002c 9C46     		mov	ip, r3
+ 866 002e 6244     		add	r2, r2, ip
+ 867 0030 05AB     		add	r3, sp, #20
+ 868 0032 0293     		str	r3, [sp, #8]
+ 869 0034 0195     		str	r5, [sp, #4]
+ 870 0036 0094     		str	r4, [sp]
+ 871 0038 0300     		movs	r3, r0
+ 872 003a 0549     		ldr	r1, .L52+8
+ 873 003c 0548     		ldr	r0, .L52+12
+ 874              	.LVL114:
+ 875 003e FFF7FEFF 		bl	mbedtls_pem_write_buffer
+ 876              	.LVL115:
+ 877              	.L49:
+ 253:Source\mbedtls_open\library/x509write_csr.c ****                                   ret, buf, size, &olen ) ) != 0 )
+ 254:Source\mbedtls_open\library/x509write_csr.c ****     {
+ 255:Source\mbedtls_open\library/x509write_csr.c ****         return( ret );
+ 256:Source\mbedtls_open\library/x509write_csr.c ****     }
+ 257:Source\mbedtls_open\library/x509write_csr.c **** 
+ 258:Source\mbedtls_open\library/x509write_csr.c ****     return( 0 );
+ 259:Source\mbedtls_open\library/x509write_csr.c **** }
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 21
+
+
+ 878              		.loc 1 259 0
+ 879 0042 054B     		ldr	r3, .L52+16
+ 880 0044 9D44     		add	sp, sp, r3
+ 881              		@ sp needed
+ 882              	.LVL116:
+ 883              	.LVL117:
+ 884 0046 30BD     		pop	{r4, r5, pc}
+ 885              	.L53:
+ 886              		.align	2
+ 887              	.L52:
+ 888 0048 E4EFFFFF 		.word	-4124
+ 889 004c 28100000 		.word	4136
+ 890 0050 1C000000 		.word	.LC6
+ 891 0054 40000000 		.word	.LC8
+ 892 0058 1C100000 		.word	4124
+ 893              		.cfi_endproc
+ 894              	.LFE19:
+ 895              		.size	mbedtls_x509write_csr_pem, .-mbedtls_x509write_csr_pem
+ 896              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 897              		.align	2
+ 898              	.LC0:
+ 899 0000 551D0F00 		.ascii	"U\035\017\000"
+ 900              	.LC2:
+ 901 0004 60864801 		.ascii	"`\206H\001\206\370B\001\001\000"
+ 901      86F84201 
+ 901      0100
+ 902 000e 0000     		.space	2
+ 903              	.LC4:
+ 904 0010 2A864886 		.ascii	"*\206H\206\367\015\001\011\016\000"
+ 904      F70D0109 
+ 904      0E00
+ 905 001a 0000     		.space	2
+ 906              	.LC6:
+ 907 001c 2D2D2D2D 		.ascii	"-----END CERTIFICATE REQUEST-----\012\000"
+ 907      2D454E44 
+ 907      20434552 
+ 907      54494649 
+ 907      43415445 
+ 908 003f 00       		.space	1
+ 909              	.LC8:
+ 910 0040 2D2D2D2D 		.ascii	"-----BEGIN CERTIFICATE REQUEST-----\012\000"
+ 910      2D424547 
+ 910      494E2043 
+ 910      45525449 
+ 910      46494341 
+ 911              		.text
+ 912              	.Letext0:
+ 913              		.file 2 ".\\Source\\mbedtls_open\\include/mbedtls/asn1.h"
+ 914              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 915              		.file 4 ".\\Source\\mbedtls_open\\include/mbedtls/md.h"
+ 916              		.file 5 ".\\Source\\mbedtls_open\\include/mbedtls/pk.h"
+ 917              		.file 6 ".\\Source\\mbedtls_open\\include/mbedtls/x509_csr.h"
+ 918              		.file 7 ".\\Source\\mbedtls_open\\include/mbedtls/platform_util.h"
+ 919              		.file 8 ".\\Source\\mbedtls_open\\include/mbedtls/x509.h"
+ 920              		.file 9 ".\\Source\\mbedtls_open\\include/mbedtls/asn1write.h"
+ 921              		.file 10 ".\\Source\\mbedtls_open\\include/mbedtls/oid.h"
+ 922              		.file 11 ".\\Source\\mbedtls_open\\include/mbedtls/pem.h"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 22
+
+
+ 923              		.section	.debug_info,"",%progbits
+ 924              	.Ldebug_info0:
+ 925 0000 0B0C0000 		.4byte	0xc0b
+ 926 0004 0400     		.2byte	0x4
+ 927 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 928 000a 04       		.byte	0x4
+ 929 000b 01       		.uleb128 0x1
+ 930 000c E6000000 		.4byte	.LASF93
+ 931 0010 0C       		.byte	0xc
+ 932 0011 77020000 		.4byte	.LASF94
+ 933 0015 A8030000 		.4byte	.LASF95
+ 934 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 935 001d 00000000 		.4byte	0
+ 936 0021 00000000 		.4byte	.Ldebug_line0
+ 937 0025 02       		.uleb128 0x2
+ 938 0026 01       		.byte	0x1
+ 939 0027 06       		.byte	0x6
+ 940 0028 E2060000 		.4byte	.LASF0
+ 941 002c 02       		.uleb128 0x2
+ 942 002d 01       		.byte	0x1
+ 943 002e 08       		.byte	0x8
+ 944 002f 10030000 		.4byte	.LASF1
+ 945 0033 02       		.uleb128 0x2
+ 946 0034 02       		.byte	0x2
+ 947 0035 05       		.byte	0x5
+ 948 0036 C0010000 		.4byte	.LASF2
+ 949 003a 02       		.uleb128 0x2
+ 950 003b 02       		.byte	0x2
+ 951 003c 07       		.byte	0x7
+ 952 003d EC050000 		.4byte	.LASF3
+ 953 0041 02       		.uleb128 0x2
+ 954 0042 04       		.byte	0x4
+ 955 0043 05       		.byte	0x5
+ 956 0044 BD020000 		.4byte	.LASF4
+ 957 0048 02       		.uleb128 0x2
+ 958 0049 04       		.byte	0x4
+ 959 004a 07       		.byte	0x7
+ 960 004b 11060000 		.4byte	.LASF5
+ 961 004f 02       		.uleb128 0x2
+ 962 0050 08       		.byte	0x8
+ 963 0051 05       		.byte	0x5
+ 964 0052 A3020000 		.4byte	.LASF6
+ 965 0056 02       		.uleb128 0x2
+ 966 0057 08       		.byte	0x8
+ 967 0058 07       		.byte	0x7
+ 968 0059 5A040000 		.4byte	.LASF7
+ 969 005d 03       		.uleb128 0x3
+ 970 005e 04       		.byte	0x4
+ 971 005f 05       		.byte	0x5
+ 972 0060 696E7400 		.ascii	"int\000"
+ 973 0064 02       		.uleb128 0x2
+ 974 0065 04       		.byte	0x4
+ 975 0066 07       		.byte	0x7
+ 976 0067 C8040000 		.4byte	.LASF8
+ 977 006b 04       		.uleb128 0x4
+ 978 006c CB000000 		.4byte	.LASF10
+ 979 0070 03       		.byte	0x3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 23
+
+
+ 980 0071 D8       		.byte	0xd8
+ 981 0072 64000000 		.4byte	0x64
+ 982 0076 02       		.uleb128 0x2
+ 983 0077 08       		.byte	0x8
+ 984 0078 04       		.byte	0x4
+ 985 0079 30030000 		.4byte	.LASF9
+ 986 007d 05       		.uleb128 0x5
+ 987 007e E7040000 		.4byte	.LASF11
+ 988 0082 0C       		.byte	0xc
+ 989 0083 02       		.byte	0x2
+ 990 0084 86       		.byte	0x86
+ 991 0085 AC000000 		.4byte	0xac
+ 992 0089 06       		.uleb128 0x6
+ 993 008a 74616700 		.ascii	"tag\000"
+ 994 008e 02       		.byte	0x2
+ 995 008f 88       		.byte	0x88
+ 996 0090 5D000000 		.4byte	0x5d
+ 997 0094 00       		.byte	0
+ 998 0095 06       		.uleb128 0x6
+ 999 0096 6C656E00 		.ascii	"len\000"
+ 1000 009a 02       		.byte	0x2
+ 1001 009b 89       		.byte	0x89
+ 1002 009c 6B000000 		.4byte	0x6b
+ 1003 00a0 04       		.byte	0x4
+ 1004 00a1 06       		.uleb128 0x6
+ 1005 00a2 7000     		.ascii	"p\000"
+ 1006 00a4 02       		.byte	0x2
+ 1007 00a5 8A       		.byte	0x8a
+ 1008 00a6 AC000000 		.4byte	0xac
+ 1009 00aa 08       		.byte	0x8
+ 1010 00ab 00       		.byte	0
+ 1011 00ac 07       		.uleb128 0x7
+ 1012 00ad 04       		.byte	0x4
+ 1013 00ae 2C000000 		.4byte	0x2c
+ 1014 00b2 04       		.uleb128 0x4
+ 1015 00b3 E7040000 		.4byte	.LASF11
+ 1016 00b7 02       		.byte	0x2
+ 1017 00b8 8C       		.byte	0x8c
+ 1018 00b9 7D000000 		.4byte	0x7d
+ 1019 00bd 05       		.uleb128 0x5
+ 1020 00be 6D050000 		.4byte	.LASF12
+ 1021 00c2 20       		.byte	0x20
+ 1022 00c3 02       		.byte	0x2
+ 1023 00c4 A6       		.byte	0xa6
+ 1024 00c5 FA000000 		.4byte	0xfa
+ 1025 00c9 06       		.uleb128 0x6
+ 1026 00ca 6F696400 		.ascii	"oid\000"
+ 1027 00ce 02       		.byte	0x2
+ 1028 00cf A8       		.byte	0xa8
+ 1029 00d0 B2000000 		.4byte	0xb2
+ 1030 00d4 00       		.byte	0
+ 1031 00d5 06       		.uleb128 0x6
+ 1032 00d6 76616C00 		.ascii	"val\000"
+ 1033 00da 02       		.byte	0x2
+ 1034 00db A9       		.byte	0xa9
+ 1035 00dc B2000000 		.4byte	0xb2
+ 1036 00e0 0C       		.byte	0xc
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 24
+
+
+ 1037 00e1 08       		.uleb128 0x8
+ 1038 00e2 AC070000 		.4byte	.LASF13
+ 1039 00e6 02       		.byte	0x2
+ 1040 00e7 AA       		.byte	0xaa
+ 1041 00e8 FA000000 		.4byte	0xfa
+ 1042 00ec 18       		.byte	0x18
+ 1043 00ed 08       		.uleb128 0x8
+ 1044 00ee 89070000 		.4byte	.LASF14
+ 1045 00f2 02       		.byte	0x2
+ 1046 00f3 AB       		.byte	0xab
+ 1047 00f4 2C000000 		.4byte	0x2c
+ 1048 00f8 1C       		.byte	0x1c
+ 1049 00f9 00       		.byte	0
+ 1050 00fa 07       		.uleb128 0x7
+ 1051 00fb 04       		.byte	0x4
+ 1052 00fc BD000000 		.4byte	0xbd
+ 1053 0100 04       		.uleb128 0x4
+ 1054 0101 6D050000 		.4byte	.LASF12
+ 1055 0105 02       		.byte	0x2
+ 1056 0106 AD       		.byte	0xad
+ 1057 0107 BD000000 		.4byte	0xbd
+ 1058 010b 09       		.uleb128 0x9
+ 1059 010c 01       		.byte	0x1
+ 1060 010d 2C000000 		.4byte	0x2c
+ 1061 0111 04       		.byte	0x4
+ 1062 0112 38       		.byte	0x38
+ 1063 0113 54010000 		.4byte	0x154
+ 1064 0117 0A       		.uleb128 0xa
+ 1065 0118 05070000 		.4byte	.LASF15
+ 1066 011c 00       		.byte	0
+ 1067 011d 0A       		.uleb128 0xa
+ 1068 011e 8F050000 		.4byte	.LASF16
+ 1069 0122 01       		.byte	0x1
+ 1070 0123 0A       		.uleb128 0xa
+ 1071 0124 C4050000 		.4byte	.LASF17
+ 1072 0128 02       		.byte	0x2
+ 1073 0129 0A       		.uleb128 0xa
+ 1074 012a AE050000 		.4byte	.LASF18
+ 1075 012e 03       		.byte	0x3
+ 1076 012f 0A       		.uleb128 0xa
+ 1077 0130 35060000 		.4byte	.LASF19
+ 1078 0134 04       		.byte	0x4
+ 1079 0135 0A       		.uleb128 0xa
+ 1080 0136 23060000 		.4byte	.LASF20
+ 1081 013a 05       		.byte	0x5
+ 1082 013b 0A       		.uleb128 0xa
+ 1083 013c D5040000 		.4byte	.LASF21
+ 1084 0140 06       		.byte	0x6
+ 1085 0141 0A       		.uleb128 0xa
+ 1086 0142 77070000 		.4byte	.LASF22
+ 1087 0146 07       		.byte	0x7
+ 1088 0147 0A       		.uleb128 0xa
+ 1089 0148 80010000 		.4byte	.LASF23
+ 1090 014c 08       		.byte	0x8
+ 1091 014d 0A       		.uleb128 0xa
+ 1092 014e 6A060000 		.4byte	.LASF24
+ 1093 0152 09       		.byte	0x9
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 25
+
+
+ 1094 0153 00       		.byte	0
+ 1095 0154 04       		.uleb128 0x4
+ 1096 0155 D5010000 		.4byte	.LASF25
+ 1097 0159 04       		.byte	0x4
+ 1098 015a 43       		.byte	0x43
+ 1099 015b 0B010000 		.4byte	0x10b
+ 1100 015f 0B       		.uleb128 0xb
+ 1101 0160 04       		.byte	0x4
+ 1102 0161 07       		.uleb128 0x7
+ 1103 0162 04       		.byte	0x4
+ 1104 0163 6E010000 		.4byte	0x16e
+ 1105 0167 02       		.uleb128 0x2
+ 1106 0168 01       		.byte	0x1
+ 1107 0169 08       		.byte	0x8
+ 1108 016a 4E050000 		.4byte	.LASF26
+ 1109 016e 0C       		.uleb128 0xc
+ 1110 016f 67010000 		.4byte	0x167
+ 1111 0173 09       		.uleb128 0x9
+ 1112 0174 01       		.byte	0x1
+ 1113 0175 2C000000 		.4byte	0x2c
+ 1114 0179 05       		.byte	0x5
+ 1115 017a 4C       		.byte	0x4c
+ 1116 017b AA010000 		.4byte	0x1aa
+ 1117 017f 0A       		.uleb128 0xa
+ 1118 0180 55030000 		.4byte	.LASF27
+ 1119 0184 00       		.byte	0
+ 1120 0185 0A       		.uleb128 0xa
+ 1121 0186 1E050000 		.4byte	.LASF28
+ 1122 018a 01       		.byte	0x1
+ 1123 018b 0A       		.uleb128 0xa
+ 1124 018c FF020000 		.4byte	.LASF29
+ 1125 0190 02       		.byte	0x2
+ 1126 0191 0A       		.uleb128 0xa
+ 1127 0192 65030000 		.4byte	.LASF30
+ 1128 0196 03       		.byte	0x3
+ 1129 0197 0A       		.uleb128 0xa
+ 1130 0198 30070000 		.4byte	.LASF31
+ 1131 019c 04       		.byte	0x4
+ 1132 019d 0A       		.uleb128 0xa
+ 1133 019e 1C000000 		.4byte	.LASF32
+ 1134 01a2 05       		.byte	0x5
+ 1135 01a3 0A       		.uleb128 0xa
+ 1136 01a4 00000000 		.4byte	.LASF33
+ 1137 01a8 06       		.byte	0x6
+ 1138 01a9 00       		.byte	0
+ 1139 01aa 04       		.uleb128 0x4
+ 1140 01ab 27020000 		.4byte	.LASF34
+ 1141 01af 05       		.byte	0x5
+ 1142 01b0 54       		.byte	0x54
+ 1143 01b1 73010000 		.4byte	0x173
+ 1144 01b5 04       		.uleb128 0x4
+ 1145 01b6 FF050000 		.4byte	.LASF35
+ 1146 01ba 05       		.byte	0x5
+ 1147 01bb 7B       		.byte	0x7b
+ 1148 01bc C0010000 		.4byte	0x1c0
+ 1149 01c0 0D       		.uleb128 0xd
+ 1150 01c1 FF050000 		.4byte	.LASF35
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 26
+
+
+ 1151 01c5 05       		.uleb128 0x5
+ 1152 01c6 45060000 		.4byte	.LASF36
+ 1153 01ca 08       		.byte	0x8
+ 1154 01cb 05       		.byte	0x5
+ 1155 01cc 80       		.byte	0x80
+ 1156 01cd EA010000 		.4byte	0x1ea
+ 1157 01d1 08       		.uleb128 0x8
+ 1158 01d2 58020000 		.4byte	.LASF37
+ 1159 01d6 05       		.byte	0x5
+ 1160 01d7 82       		.byte	0x82
+ 1161 01d8 EA010000 		.4byte	0x1ea
+ 1162 01dc 00       		.byte	0
+ 1163 01dd 08       		.uleb128 0x8
+ 1164 01de 79030000 		.4byte	.LASF38
+ 1165 01e2 05       		.byte	0x5
+ 1166 01e3 83       		.byte	0x83
+ 1167 01e4 5F010000 		.4byte	0x15f
+ 1168 01e8 04       		.byte	0x4
+ 1169 01e9 00       		.byte	0
+ 1170 01ea 07       		.uleb128 0x7
+ 1171 01eb 04       		.byte	0x4
+ 1172 01ec F0010000 		.4byte	0x1f0
+ 1173 01f0 0C       		.uleb128 0xc
+ 1174 01f1 B5010000 		.4byte	0x1b5
+ 1175 01f5 04       		.uleb128 0x4
+ 1176 01f6 45060000 		.4byte	.LASF36
+ 1177 01fa 05       		.byte	0x5
+ 1178 01fb 84       		.byte	0x84
+ 1179 01fc C5010000 		.4byte	0x1c5
+ 1180 0200 07       		.uleb128 0x7
+ 1181 0201 04       		.byte	0x4
+ 1182 0202 06020000 		.4byte	0x206
+ 1183 0206 0C       		.uleb128 0xc
+ 1184 0207 2C000000 		.4byte	0x2c
+ 1185 020b 07       		.uleb128 0x7
+ 1186 020c 04       		.byte	0x4
+ 1187 020d 11020000 		.4byte	0x211
+ 1188 0211 0E       		.uleb128 0xe
+ 1189 0212 5D000000 		.4byte	0x5d
+ 1190 0216 2A020000 		.4byte	0x22a
+ 1191 021a 0F       		.uleb128 0xf
+ 1192 021b 5F010000 		.4byte	0x15f
+ 1193 021f 0F       		.uleb128 0xf
+ 1194 0220 AC000000 		.4byte	0xac
+ 1195 0224 0F       		.uleb128 0xf
+ 1196 0225 6B000000 		.4byte	0x6b
+ 1197 0229 00       		.byte	0
+ 1198 022a 05       		.uleb128 0x5
+ 1199 022b 71040000 		.4byte	.LASF39
+ 1200 022f 10       		.byte	0x10
+ 1201 0230 06       		.byte	0x6
+ 1202 0231 4A       		.byte	0x4a
+ 1203 0232 67020000 		.4byte	0x267
+ 1204 0236 06       		.uleb128 0x6
+ 1205 0237 6B657900 		.ascii	"key\000"
+ 1206 023b 06       		.byte	0x6
+ 1207 023c 4C       		.byte	0x4c
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 27
+
+
+ 1208 023d 67020000 		.4byte	0x267
+ 1209 0241 00       		.byte	0
+ 1210 0242 08       		.uleb128 0x8
+ 1211 0243 78010000 		.4byte	.LASF40
+ 1212 0247 06       		.byte	0x6
+ 1213 0248 4D       		.byte	0x4d
+ 1214 0249 6D020000 		.4byte	0x26d
+ 1215 024d 04       		.byte	0x4
+ 1216 024e 08       		.uleb128 0x8
+ 1217 024f 53040000 		.4byte	.LASF41
+ 1218 0253 06       		.byte	0x6
+ 1219 0254 4E       		.byte	0x4e
+ 1220 0255 54010000 		.4byte	0x154
+ 1221 0259 08       		.byte	0x8
+ 1222 025a 08       		.uleb128 0x8
+ 1223 025b D2000000 		.4byte	.LASF42
+ 1224 025f 06       		.byte	0x6
+ 1225 0260 4F       		.byte	0x4f
+ 1226 0261 6D020000 		.4byte	0x26d
+ 1227 0265 0C       		.byte	0xc
+ 1228 0266 00       		.byte	0
+ 1229 0267 07       		.uleb128 0x7
+ 1230 0268 04       		.byte	0x4
+ 1231 0269 F5010000 		.4byte	0x1f5
+ 1232 026d 07       		.uleb128 0x7
+ 1233 026e 04       		.byte	0x4
+ 1234 026f 00010000 		.4byte	0x100
+ 1235 0273 04       		.uleb128 0x4
+ 1236 0274 71040000 		.4byte	.LASF39
+ 1237 0278 06       		.byte	0x6
+ 1238 0279 51       		.byte	0x51
+ 1239 027a 2A020000 		.4byte	0x22a
+ 1240 027e 02       		.uleb128 0x2
+ 1241 027f 04       		.byte	0x4
+ 1242 0280 07       		.byte	0x7
+ 1243 0281 DD000000 		.4byte	.LASF43
+ 1244 0285 10       		.uleb128 0x10
+ 1245 0286 2C000000 		.4byte	0x2c
+ 1246 028a 95020000 		.4byte	0x295
+ 1247 028e 11       		.uleb128 0x11
+ 1248 028f 7E020000 		.4byte	0x27e
+ 1249 0293 03       		.byte	0x3
+ 1250 0294 00       		.byte	0
+ 1251 0295 12       		.uleb128 0x12
+ 1252 0296 A5010000 		.4byte	.LASF44
+ 1253 029a 01       		.byte	0x1
+ 1254 029b 2F       		.byte	0x2f
+ 1255 029c 00000000 		.4byte	.LFB10
+ 1256 02a0 0C000000 		.4byte	.LFE10-.LFB10
+ 1257 02a4 01       		.uleb128 0x1
+ 1258 02a5 9C       		.byte	0x9c
+ 1259 02a6 D5020000 		.4byte	0x2d5
+ 1260 02aa 13       		.uleb128 0x13
+ 1261 02ab 63747800 		.ascii	"ctx\000"
+ 1262 02af 01       		.byte	0x1
+ 1263 02b0 2F       		.byte	0x2f
+ 1264 02b1 D5020000 		.4byte	0x2d5
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 28
+
+
+ 1265 02b5 00000000 		.4byte	.LLST0
+ 1266 02b9 14       		.uleb128 0x14
+ 1267 02ba 0A000000 		.4byte	.LVL1
+ 1268 02be 200B0000 		.4byte	0xb20
+ 1269 02c2 15       		.uleb128 0x15
+ 1270 02c3 01       		.uleb128 0x1
+ 1271 02c4 50       		.byte	0x50
+ 1272 02c5 03       		.uleb128 0x3
+ 1273 02c6 F3       		.byte	0xf3
+ 1274 02c7 01       		.uleb128 0x1
+ 1275 02c8 50       		.byte	0x50
+ 1276 02c9 15       		.uleb128 0x15
+ 1277 02ca 01       		.uleb128 0x1
+ 1278 02cb 51       		.byte	0x51
+ 1279 02cc 01       		.uleb128 0x1
+ 1280 02cd 30       		.byte	0x30
+ 1281 02ce 15       		.uleb128 0x15
+ 1282 02cf 01       		.uleb128 0x1
+ 1283 02d0 52       		.byte	0x52
+ 1284 02d1 01       		.uleb128 0x1
+ 1285 02d2 40       		.byte	0x40
+ 1286 02d3 00       		.byte	0
+ 1287 02d4 00       		.byte	0
+ 1288 02d5 07       		.uleb128 0x7
+ 1289 02d6 04       		.byte	0x4
+ 1290 02d7 73020000 		.4byte	0x273
+ 1291 02db 12       		.uleb128 0x12
+ 1292 02dc 15070000 		.4byte	.LASF45
+ 1293 02e0 01       		.byte	0x1
+ 1294 02e1 34       		.byte	0x34
+ 1295 02e2 00000000 		.4byte	.LFB11
+ 1296 02e6 1C000000 		.4byte	.LFE11-.LFB11
+ 1297 02ea 01       		.uleb128 0x1
+ 1298 02eb 9C       		.byte	0x9c
+ 1299 02ec 3D030000 		.4byte	0x33d
+ 1300 02f0 13       		.uleb128 0x13
+ 1301 02f1 63747800 		.ascii	"ctx\000"
+ 1302 02f5 01       		.byte	0x1
+ 1303 02f6 34       		.byte	0x34
+ 1304 02f7 D5020000 		.4byte	0x2d5
+ 1305 02fb 21000000 		.4byte	.LLST1
+ 1306 02ff 16       		.uleb128 0x16
+ 1307 0300 0A000000 		.4byte	.LVL4
+ 1308 0304 290B0000 		.4byte	0xb29
+ 1309 0308 13030000 		.4byte	0x313
+ 1310 030c 15       		.uleb128 0x15
+ 1311 030d 01       		.uleb128 0x1
+ 1312 030e 50       		.byte	0x50
+ 1313 030f 02       		.uleb128 0x2
+ 1314 0310 74       		.byte	0x74
+ 1315 0311 04       		.sleb128 4
+ 1316 0312 00       		.byte	0
+ 1317 0313 16       		.uleb128 0x16
+ 1318 0314 12000000 		.4byte	.LVL5
+ 1319 0318 290B0000 		.4byte	0xb29
+ 1320 031c 27030000 		.4byte	0x327
+ 1321 0320 15       		.uleb128 0x15
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 29
+
+
+ 1322 0321 01       		.uleb128 0x1
+ 1323 0322 50       		.byte	0x50
+ 1324 0323 02       		.uleb128 0x2
+ 1325 0324 74       		.byte	0x74
+ 1326 0325 0C       		.sleb128 12
+ 1327 0326 00       		.byte	0
+ 1328 0327 14       		.uleb128 0x14
+ 1329 0328 1A000000 		.4byte	.LVL6
+ 1330 032c 350B0000 		.4byte	0xb35
+ 1331 0330 15       		.uleb128 0x15
+ 1332 0331 01       		.uleb128 0x1
+ 1333 0332 50       		.byte	0x50
+ 1334 0333 02       		.uleb128 0x2
+ 1335 0334 74       		.byte	0x74
+ 1336 0335 00       		.sleb128 0
+ 1337 0336 15       		.uleb128 0x15
+ 1338 0337 01       		.uleb128 0x1
+ 1339 0338 51       		.byte	0x51
+ 1340 0339 01       		.uleb128 0x1
+ 1341 033a 40       		.byte	0x40
+ 1342 033b 00       		.byte	0
+ 1343 033c 00       		.byte	0
+ 1344 033d 12       		.uleb128 0x12
+ 1345 033e 2D050000 		.4byte	.LASF46
+ 1346 0342 01       		.byte	0x1
+ 1347 0343 3C       		.byte	0x3c
+ 1348 0344 00000000 		.4byte	.LFB12
+ 1349 0348 04000000 		.4byte	.LFE12-.LFB12
+ 1350 034c 01       		.uleb128 0x1
+ 1351 034d 9C       		.byte	0x9c
+ 1352 034e 6D030000 		.4byte	0x36d
+ 1353 0352 17       		.uleb128 0x17
+ 1354 0353 63747800 		.ascii	"ctx\000"
+ 1355 0357 01       		.byte	0x1
+ 1356 0358 3C       		.byte	0x3c
+ 1357 0359 D5020000 		.4byte	0x2d5
+ 1358 035d 01       		.uleb128 0x1
+ 1359 035e 50       		.byte	0x50
+ 1360 035f 18       		.uleb128 0x18
+ 1361 0360 53040000 		.4byte	.LASF41
+ 1362 0364 01       		.byte	0x1
+ 1363 0365 3C       		.byte	0x3c
+ 1364 0366 54010000 		.4byte	0x154
+ 1365 036a 01       		.uleb128 0x1
+ 1366 036b 51       		.byte	0x51
+ 1367 036c 00       		.byte	0
+ 1368 036d 12       		.uleb128 0x12
+ 1369 036e E1020000 		.4byte	.LASF47
+ 1370 0372 01       		.byte	0x1
+ 1371 0373 41       		.byte	0x41
+ 1372 0374 00000000 		.4byte	.LFB13
+ 1373 0378 04000000 		.4byte	.LFE13-.LFB13
+ 1374 037c 01       		.uleb128 0x1
+ 1375 037d 9C       		.byte	0x9c
+ 1376 037e 9D030000 		.4byte	0x39d
+ 1377 0382 17       		.uleb128 0x17
+ 1378 0383 63747800 		.ascii	"ctx\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 30
+
+
+ 1379 0387 01       		.byte	0x1
+ 1380 0388 41       		.byte	0x41
+ 1381 0389 D5020000 		.4byte	0x2d5
+ 1382 038d 01       		.uleb128 0x1
+ 1383 038e 50       		.byte	0x50
+ 1384 038f 17       		.uleb128 0x17
+ 1385 0390 6B657900 		.ascii	"key\000"
+ 1386 0394 01       		.byte	0x1
+ 1387 0395 41       		.byte	0x41
+ 1388 0396 67020000 		.4byte	0x267
+ 1389 039a 01       		.uleb128 0x1
+ 1390 039b 51       		.byte	0x51
+ 1391 039c 00       		.byte	0
+ 1392 039d 19       		.uleb128 0x19
+ 1393 039e 00020000 		.4byte	.LASF49
+ 1394 03a2 01       		.byte	0x1
+ 1395 03a3 46       		.byte	0x46
+ 1396 03a4 5D000000 		.4byte	0x5d
+ 1397 03a8 00000000 		.4byte	.LFB14
+ 1398 03ac 0A000000 		.4byte	.LFE14-.LFB14
+ 1399 03b0 01       		.uleb128 0x1
+ 1400 03b1 9C       		.byte	0x9c
+ 1401 03b2 EF030000 		.4byte	0x3ef
+ 1402 03b6 13       		.uleb128 0x13
+ 1403 03b7 63747800 		.ascii	"ctx\000"
+ 1404 03bb 01       		.byte	0x1
+ 1405 03bc 46       		.byte	0x46
+ 1406 03bd D5020000 		.4byte	0x2d5
+ 1407 03c1 4D000000 		.4byte	.LLST2
+ 1408 03c5 1A       		.uleb128 0x1a
+ 1409 03c6 5D060000 		.4byte	.LASF48
+ 1410 03ca 01       		.byte	0x1
+ 1411 03cb 47       		.byte	0x47
+ 1412 03cc 61010000 		.4byte	0x161
+ 1413 03d0 7B000000 		.4byte	.LLST3
+ 1414 03d4 14       		.uleb128 0x14
+ 1415 03d5 08000000 		.4byte	.LVL12
+ 1416 03d9 400B0000 		.4byte	0xb40
+ 1417 03dd 15       		.uleb128 0x15
+ 1418 03de 01       		.uleb128 0x1
+ 1419 03df 50       		.byte	0x50
+ 1420 03e0 05       		.uleb128 0x5
+ 1421 03e1 F3       		.byte	0xf3
+ 1422 03e2 01       		.uleb128 0x1
+ 1423 03e3 50       		.byte	0x50
+ 1424 03e4 23       		.byte	0x23
+ 1425 03e5 04       		.uleb128 0x4
+ 1426 03e6 15       		.uleb128 0x15
+ 1427 03e7 01       		.uleb128 0x1
+ 1428 03e8 51       		.byte	0x51
+ 1429 03e9 03       		.uleb128 0x3
+ 1430 03ea F3       		.byte	0xf3
+ 1431 03eb 01       		.uleb128 0x1
+ 1432 03ec 51       		.byte	0x51
+ 1433 03ed 00       		.byte	0
+ 1434 03ee 00       		.byte	0
+ 1435 03ef 19       		.uleb128 0x19
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 31
+
+
+ 1436 03f0 7F060000 		.4byte	.LASF50
+ 1437 03f4 01       		.byte	0x1
+ 1438 03f5 4C       		.byte	0x4c
+ 1439 03f6 5D000000 		.4byte	0x5d
+ 1440 03fa 00000000 		.4byte	.LFB15
+ 1441 03fe 16000000 		.4byte	.LFE15-.LFB15
+ 1442 0402 01       		.uleb128 0x1
+ 1443 0403 9C       		.byte	0x9c
+ 1444 0404 88040000 		.4byte	0x488
+ 1445 0408 13       		.uleb128 0x13
+ 1446 0409 63747800 		.ascii	"ctx\000"
+ 1447 040d 01       		.byte	0x1
+ 1448 040e 4C       		.byte	0x4c
+ 1449 040f D5020000 		.4byte	0x2d5
+ 1450 0413 9C000000 		.4byte	.LLST4
+ 1451 0417 13       		.uleb128 0x13
+ 1452 0418 6F696400 		.ascii	"oid\000"
+ 1453 041c 01       		.byte	0x1
+ 1454 041d 4D       		.byte	0x4d
+ 1455 041e 61010000 		.4byte	0x161
+ 1456 0422 CA000000 		.4byte	.LLST5
+ 1457 0426 1A       		.uleb128 0x1a
+ 1458 0427 F8040000 		.4byte	.LASF51
+ 1459 042b 01       		.byte	0x1
+ 1460 042c 4D       		.byte	0x4d
+ 1461 042d 6B000000 		.4byte	0x6b
+ 1462 0431 EB000000 		.4byte	.LLST6
+ 1463 0435 13       		.uleb128 0x13
+ 1464 0436 76616C00 		.ascii	"val\000"
+ 1465 043a 01       		.byte	0x1
+ 1466 043b 4E       		.byte	0x4e
+ 1467 043c 00020000 		.4byte	0x200
+ 1468 0440 0C010000 		.4byte	.LLST7
+ 1469 0444 18       		.uleb128 0x18
+ 1470 0445 39020000 		.4byte	.LASF52
+ 1471 0449 01       		.byte	0x1
+ 1472 044a 4E       		.byte	0x4e
+ 1473 044b 6B000000 		.4byte	0x6b
+ 1474 044f 02       		.uleb128 0x2
+ 1475 0450 91       		.byte	0x91
+ 1476 0451 00       		.sleb128 0
+ 1477 0452 14       		.uleb128 0x14
+ 1478 0453 12000000 		.4byte	.LVL16
+ 1479 0457 4C0B0000 		.4byte	0xb4c
+ 1480 045b 15       		.uleb128 0x15
+ 1481 045c 01       		.uleb128 0x1
+ 1482 045d 50       		.byte	0x50
+ 1483 045e 05       		.uleb128 0x5
+ 1484 045f F3       		.byte	0xf3
+ 1485 0460 01       		.uleb128 0x1
+ 1486 0461 50       		.byte	0x50
+ 1487 0462 23       		.byte	0x23
+ 1488 0463 0C       		.uleb128 0xc
+ 1489 0464 15       		.uleb128 0x15
+ 1490 0465 01       		.uleb128 0x1
+ 1491 0466 51       		.byte	0x51
+ 1492 0467 03       		.uleb128 0x3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 32
+
+
+ 1493 0468 F3       		.byte	0xf3
+ 1494 0469 01       		.uleb128 0x1
+ 1495 046a 51       		.byte	0x51
+ 1496 046b 15       		.uleb128 0x15
+ 1497 046c 01       		.uleb128 0x1
+ 1498 046d 52       		.byte	0x52
+ 1499 046e 03       		.uleb128 0x3
+ 1500 046f F3       		.byte	0xf3
+ 1501 0470 01       		.uleb128 0x1
+ 1502 0471 52       		.byte	0x52
+ 1503 0472 15       		.uleb128 0x15
+ 1504 0473 01       		.uleb128 0x1
+ 1505 0474 53       		.byte	0x53
+ 1506 0475 01       		.uleb128 0x1
+ 1507 0476 30       		.byte	0x30
+ 1508 0477 15       		.uleb128 0x15
+ 1509 0478 02       		.uleb128 0x2
+ 1510 0479 7D       		.byte	0x7d
+ 1511 047a 00       		.sleb128 0
+ 1512 047b 03       		.uleb128 0x3
+ 1513 047c F3       		.byte	0xf3
+ 1514 047d 01       		.uleb128 0x1
+ 1515 047e 53       		.byte	0x53
+ 1516 047f 15       		.uleb128 0x15
+ 1517 0480 02       		.uleb128 0x2
+ 1518 0481 7D       		.byte	0x7d
+ 1519 0482 04       		.sleb128 4
+ 1520 0483 02       		.uleb128 0x2
+ 1521 0484 74       		.byte	0x74
+ 1522 0485 00       		.sleb128 0
+ 1523 0486 00       		.byte	0
+ 1524 0487 00       		.byte	0
+ 1525 0488 19       		.uleb128 0x19
+ 1526 0489 A4040000 		.4byte	.LASF53
+ 1527 048d 01       		.byte	0x1
+ 1528 048e 54       		.byte	0x54
+ 1529 048f 5D000000 		.4byte	0x5d
+ 1530 0493 00000000 		.4byte	.LFB16
+ 1531 0497 38000000 		.4byte	.LFE16-.LFB16
+ 1532 049b 01       		.uleb128 0x1
+ 1533 049c 9C       		.byte	0x9c
+ 1534 049d 38050000 		.4byte	0x538
+ 1535 04a1 13       		.uleb128 0x13
+ 1536 04a2 63747800 		.ascii	"ctx\000"
+ 1537 04a6 01       		.byte	0x1
+ 1538 04a7 54       		.byte	0x54
+ 1539 04a8 D5020000 		.4byte	0x2d5
+ 1540 04ac 39010000 		.4byte	.LLST8
+ 1541 04b0 1A       		.uleb128 0x1a
+ 1542 04b1 85050000 		.4byte	.LASF54
+ 1543 04b5 01       		.byte	0x1
+ 1544 04b6 54       		.byte	0x54
+ 1545 04b7 2C000000 		.4byte	0x2c
+ 1546 04bb 65010000 		.4byte	.LLST9
+ 1547 04bf 1B       		.uleb128 0x1b
+ 1548 04c0 62756600 		.ascii	"buf\000"
+ 1549 04c4 01       		.byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 33
+
+
+ 1550 04c5 56       		.byte	0x56
+ 1551 04c6 85020000 		.4byte	0x285
+ 1552 04ca 02       		.uleb128 0x2
+ 1553 04cb 91       		.byte	0x91
+ 1554 04cc 74       		.sleb128 -12
+ 1555 04cd 1B       		.uleb128 0x1b
+ 1556 04ce 6300     		.ascii	"c\000"
+ 1557 04d0 01       		.byte	0x1
+ 1558 04d1 57       		.byte	0x57
+ 1559 04d2 AC000000 		.4byte	0xac
+ 1560 04d6 02       		.uleb128 0x2
+ 1561 04d7 91       		.byte	0x91
+ 1562 04d8 70       		.sleb128 -16
+ 1563 04d9 1C       		.uleb128 0x1c
+ 1564 04da 72657400 		.ascii	"ret\000"
+ 1565 04de 01       		.byte	0x1
+ 1566 04df 58       		.byte	0x58
+ 1567 04e0 5D000000 		.4byte	0x5d
+ 1568 04e4 90010000 		.4byte	.LLST10
+ 1569 04e8 16       		.uleb128 0x16
+ 1570 04e9 1A000000 		.4byte	.LVL20
+ 1571 04ed 580B0000 		.4byte	0xb58
+ 1572 04f1 0D050000 		.4byte	0x50d
+ 1573 04f5 15       		.uleb128 0x15
+ 1574 04f6 01       		.uleb128 0x1
+ 1575 04f7 50       		.byte	0x50
+ 1576 04f8 02       		.uleb128 0x2
+ 1577 04f9 91       		.byte	0x91
+ 1578 04fa 70       		.sleb128 -16
+ 1579 04fb 15       		.uleb128 0x15
+ 1580 04fc 01       		.uleb128 0x1
+ 1581 04fd 51       		.byte	0x51
+ 1582 04fe 02       		.uleb128 0x2
+ 1583 04ff 91       		.byte	0x91
+ 1584 0500 74       		.sleb128 -12
+ 1585 0501 15       		.uleb128 0x15
+ 1586 0502 01       		.uleb128 0x1
+ 1587 0503 52       		.byte	0x52
+ 1588 0504 02       		.uleb128 0x2
+ 1589 0505 91       		.byte	0x91
+ 1590 0506 6F       		.sleb128 -17
+ 1591 0507 15       		.uleb128 0x15
+ 1592 0508 01       		.uleb128 0x1
+ 1593 0509 53       		.byte	0x53
+ 1594 050a 01       		.uleb128 0x1
+ 1595 050b 37       		.byte	0x37
+ 1596 050c 00       		.byte	0
+ 1597 050d 14       		.uleb128 0x14
+ 1598 050e 2E000000 		.4byte	.LVL22
+ 1599 0512 EF030000 		.4byte	0x3ef
+ 1600 0516 15       		.uleb128 0x15
+ 1601 0517 01       		.uleb128 0x1
+ 1602 0518 50       		.byte	0x50
+ 1603 0519 02       		.uleb128 0x2
+ 1604 051a 74       		.byte	0x74
+ 1605 051b 00       		.sleb128 0
+ 1606 051c 15       		.uleb128 0x15
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 34
+
+
+ 1607 051d 01       		.uleb128 0x1
+ 1608 051e 51       		.byte	0x51
+ 1609 051f 05       		.uleb128 0x5
+ 1610 0520 03       		.byte	0x3
+ 1611 0521 00000000 		.4byte	.LC0
+ 1612 0525 15       		.uleb128 0x15
+ 1613 0526 01       		.uleb128 0x1
+ 1614 0527 52       		.byte	0x52
+ 1615 0528 01       		.uleb128 0x1
+ 1616 0529 33       		.byte	0x33
+ 1617 052a 15       		.uleb128 0x15
+ 1618 052b 01       		.uleb128 0x1
+ 1619 052c 53       		.byte	0x53
+ 1620 052d 02       		.uleb128 0x2
+ 1621 052e 91       		.byte	0x91
+ 1622 052f 74       		.sleb128 -12
+ 1623 0530 15       		.uleb128 0x15
+ 1624 0531 02       		.uleb128 0x2
+ 1625 0532 7D       		.byte	0x7d
+ 1626 0533 00       		.sleb128 0
+ 1627 0534 01       		.uleb128 0x1
+ 1628 0535 34       		.byte	0x34
+ 1629 0536 00       		.byte	0
+ 1630 0537 00       		.byte	0
+ 1631 0538 19       		.uleb128 0x19
+ 1632 0539 2F000000 		.4byte	.LASF55
+ 1633 053d 01       		.byte	0x1
+ 1634 053e 68       		.byte	0x68
+ 1635 053f 5D000000 		.4byte	0x5d
+ 1636 0543 00000000 		.4byte	.LFB17
+ 1637 0547 38000000 		.4byte	.LFE17-.LFB17
+ 1638 054b 01       		.uleb128 0x1
+ 1639 054c 9C       		.byte	0x9c
+ 1640 054d E8050000 		.4byte	0x5e8
+ 1641 0551 13       		.uleb128 0x13
+ 1642 0552 63747800 		.ascii	"ctx\000"
+ 1643 0556 01       		.byte	0x1
+ 1644 0557 68       		.byte	0x68
+ 1645 0558 D5020000 		.4byte	0x2d5
+ 1646 055c AE010000 		.4byte	.LLST11
+ 1647 0560 1A       		.uleb128 0x1a
+ 1648 0561 BE000000 		.4byte	.LASF56
+ 1649 0565 01       		.byte	0x1
+ 1650 0566 69       		.byte	0x69
+ 1651 0567 2C000000 		.4byte	0x2c
+ 1652 056b DA010000 		.4byte	.LLST12
+ 1653 056f 1B       		.uleb128 0x1b
+ 1654 0570 62756600 		.ascii	"buf\000"
+ 1655 0574 01       		.byte	0x1
+ 1656 0575 6B       		.byte	0x6b
+ 1657 0576 85020000 		.4byte	0x285
+ 1658 057a 02       		.uleb128 0x2
+ 1659 057b 91       		.byte	0x91
+ 1660 057c 74       		.sleb128 -12
+ 1661 057d 1B       		.uleb128 0x1b
+ 1662 057e 6300     		.ascii	"c\000"
+ 1663 0580 01       		.byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 35
+
+
+ 1664 0581 6C       		.byte	0x6c
+ 1665 0582 AC000000 		.4byte	0xac
+ 1666 0586 02       		.uleb128 0x2
+ 1667 0587 91       		.byte	0x91
+ 1668 0588 70       		.sleb128 -16
+ 1669 0589 1C       		.uleb128 0x1c
+ 1670 058a 72657400 		.ascii	"ret\000"
+ 1671 058e 01       		.byte	0x1
+ 1672 058f 6D       		.byte	0x6d
+ 1673 0590 5D000000 		.4byte	0x5d
+ 1674 0594 05020000 		.4byte	.LLST13
+ 1675 0598 16       		.uleb128 0x16
+ 1676 0599 1A000000 		.4byte	.LVL27
+ 1677 059d 580B0000 		.4byte	0xb58
+ 1678 05a1 BD050000 		.4byte	0x5bd
+ 1679 05a5 15       		.uleb128 0x15
+ 1680 05a6 01       		.uleb128 0x1
+ 1681 05a7 50       		.byte	0x50
+ 1682 05a8 02       		.uleb128 0x2
+ 1683 05a9 91       		.byte	0x91
+ 1684 05aa 70       		.sleb128 -16
+ 1685 05ab 15       		.uleb128 0x15
+ 1686 05ac 01       		.uleb128 0x1
+ 1687 05ad 51       		.byte	0x51
+ 1688 05ae 02       		.uleb128 0x2
+ 1689 05af 91       		.byte	0x91
+ 1690 05b0 74       		.sleb128 -12
+ 1691 05b1 15       		.uleb128 0x15
+ 1692 05b2 01       		.uleb128 0x1
+ 1693 05b3 52       		.byte	0x52
+ 1694 05b4 02       		.uleb128 0x2
+ 1695 05b5 91       		.byte	0x91
+ 1696 05b6 6F       		.sleb128 -17
+ 1697 05b7 15       		.uleb128 0x15
+ 1698 05b8 01       		.uleb128 0x1
+ 1699 05b9 53       		.byte	0x53
+ 1700 05ba 01       		.uleb128 0x1
+ 1701 05bb 38       		.byte	0x38
+ 1702 05bc 00       		.byte	0
+ 1703 05bd 14       		.uleb128 0x14
+ 1704 05be 2E000000 		.4byte	.LVL29
+ 1705 05c2 EF030000 		.4byte	0x3ef
+ 1706 05c6 15       		.uleb128 0x15
+ 1707 05c7 01       		.uleb128 0x1
+ 1708 05c8 50       		.byte	0x50
+ 1709 05c9 02       		.uleb128 0x2
+ 1710 05ca 74       		.byte	0x74
+ 1711 05cb 00       		.sleb128 0
+ 1712 05cc 15       		.uleb128 0x15
+ 1713 05cd 01       		.uleb128 0x1
+ 1714 05ce 51       		.byte	0x51
+ 1715 05cf 05       		.uleb128 0x5
+ 1716 05d0 03       		.byte	0x3
+ 1717 05d1 04000000 		.4byte	.LC2
+ 1718 05d5 15       		.uleb128 0x15
+ 1719 05d6 01       		.uleb128 0x1
+ 1720 05d7 52       		.byte	0x52
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 36
+
+
+ 1721 05d8 01       		.uleb128 0x1
+ 1722 05d9 39       		.byte	0x39
+ 1723 05da 15       		.uleb128 0x15
+ 1724 05db 01       		.uleb128 0x1
+ 1725 05dc 53       		.byte	0x53
+ 1726 05dd 02       		.uleb128 0x2
+ 1727 05de 91       		.byte	0x91
+ 1728 05df 74       		.sleb128 -12
+ 1729 05e0 15       		.uleb128 0x15
+ 1730 05e1 02       		.uleb128 0x2
+ 1731 05e2 7D       		.byte	0x7d
+ 1732 05e3 00       		.sleb128 0
+ 1733 05e4 01       		.uleb128 0x1
+ 1734 05e5 34       		.byte	0x34
+ 1735 05e6 00       		.byte	0
+ 1736 05e7 00       		.byte	0
+ 1737 05e8 19       		.uleb128 0x19
+ 1738 05e9 53050000 		.4byte	.LASF57
+ 1739 05ed 01       		.byte	0x1
+ 1740 05ee 7D       		.byte	0x7d
+ 1741 05ef 5D000000 		.4byte	0x5d
+ 1742 05f3 00000000 		.4byte	.LFB18
+ 1743 05f7 E0020000 		.4byte	.LFE18-.LFB18
+ 1744 05fb 01       		.uleb128 0x1
+ 1745 05fc 9C       		.byte	0x9c
+ 1746 05fd F0090000 		.4byte	0x9f0
+ 1747 0601 13       		.uleb128 0x13
+ 1748 0602 63747800 		.ascii	"ctx\000"
+ 1749 0606 01       		.byte	0x1
+ 1750 0607 7D       		.byte	0x7d
+ 1751 0608 D5020000 		.4byte	0x2d5
+ 1752 060c 23020000 		.4byte	.LLST14
+ 1753 0610 13       		.uleb128 0x13
+ 1754 0611 62756600 		.ascii	"buf\000"
+ 1755 0615 01       		.byte	0x1
+ 1756 0616 7D       		.byte	0x7d
+ 1757 0617 AC000000 		.4byte	0xac
+ 1758 061b 68020000 		.4byte	.LLST15
+ 1759 061f 1A       		.uleb128 0x1a
+ 1760 0620 58060000 		.4byte	.LASF58
+ 1761 0624 01       		.byte	0x1
+ 1762 0625 7D       		.byte	0x7d
+ 1763 0626 6B000000 		.4byte	0x6b
+ 1764 062a 88020000 		.4byte	.LLST16
+ 1765 062e 1A       		.uleb128 0x1a
+ 1766 062f 16000000 		.4byte	.LASF59
+ 1767 0633 01       		.byte	0x1
+ 1768 0634 7E       		.byte	0x7e
+ 1769 0635 0B020000 		.4byte	0x20b
+ 1770 0639 A8020000 		.4byte	.LLST17
+ 1771 063d 18       		.uleb128 0x18
+ 1772 063e 4D040000 		.4byte	.LASF60
+ 1773 0642 01       		.byte	0x1
+ 1774 0643 7F       		.byte	0x7f
+ 1775 0644 5F010000 		.4byte	0x15f
+ 1776 0648 02       		.uleb128 0x2
+ 1777 0649 91       		.byte	0x91
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 37
+
+
+ 1778 064a 00       		.sleb128 0
+ 1779 064b 1C       		.uleb128 0x1c
+ 1780 064c 72657400 		.ascii	"ret\000"
+ 1781 0650 01       		.byte	0x1
+ 1782 0651 81       		.byte	0x81
+ 1783 0652 5D000000 		.4byte	0x5d
+ 1784 0656 ED020000 		.4byte	.LLST18
+ 1785 065a 1D       		.uleb128 0x1d
+ 1786 065b A0030000 		.4byte	.LASF61
+ 1787 065f 01       		.byte	0x1
+ 1788 0660 82       		.byte	0x82
+ 1789 0661 61010000 		.4byte	0x161
+ 1790 0665 02       		.uleb128 0x2
+ 1791 0666 91       		.byte	0x91
+ 1792 0667 64       		.sleb128 -28
+ 1793 0668 1D       		.uleb128 0x1d
+ 1794 0669 92010000 		.4byte	.LASF62
+ 1795 066d 01       		.byte	0x1
+ 1796 066e 83       		.byte	0x83
+ 1797 066f 6B000000 		.4byte	0x6b
+ 1798 0673 02       		.uleb128 0x2
+ 1799 0674 91       		.byte	0x91
+ 1800 0675 60       		.sleb128 -32
+ 1801 0676 1B       		.uleb128 0x1b
+ 1802 0677 6300     		.ascii	"c\000"
+ 1803 0679 01       		.byte	0x1
+ 1804 067a 84       		.byte	0x84
+ 1805 067b AC000000 		.4byte	0xac
+ 1806 067f 02       		.uleb128 0x2
+ 1807 0680 91       		.byte	0x91
+ 1808 0681 5C       		.sleb128 -36
+ 1809 0682 1B       		.uleb128 0x1b
+ 1810 0683 633200   		.ascii	"c2\000"
+ 1811 0686 01       		.byte	0x1
+ 1812 0687 84       		.byte	0x84
+ 1813 0688 AC000000 		.4byte	0xac
+ 1814 068c 02       		.uleb128 0x2
+ 1815 068d 91       		.byte	0x91
+ 1816 068e 58       		.sleb128 -40
+ 1817 068f 1D       		.uleb128 0x1d
+ 1818 0690 9B030000 		.4byte	.LASF63
+ 1819 0694 01       		.byte	0x1
+ 1820 0695 85       		.byte	0x85
+ 1821 0696 F0090000 		.4byte	0x9f0
+ 1822 069a 03       		.uleb128 0x3
+ 1823 069b 91       		.byte	0x91
+ 1824 069c 987F     		.sleb128 -104
+ 1825 069e 1B       		.uleb128 0x1b
+ 1826 069f 73696700 		.ascii	"sig\000"
+ 1827 06a3 01       		.byte	0x1
+ 1828 06a4 86       		.byte	0x86
+ 1829 06a5 000A0000 		.4byte	0xa00
+ 1830 06a9 03       		.uleb128 0x3
+ 1831 06aa 91       		.byte	0x91
+ 1832 06ab 9877     		.sleb128 -1128
+ 1833 06ad 1D       		.uleb128 0x1d
+ 1834 06ae D9020000 		.4byte	.LASF64
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 38
+
+
+ 1835 06b2 01       		.byte	0x1
+ 1836 06b3 87       		.byte	0x87
+ 1837 06b4 110A0000 		.4byte	0xa11
+ 1838 06b8 03       		.uleb128 0x3
+ 1839 06b9 91       		.byte	0x91
+ 1840 06ba 9867     		.sleb128 -3176
+ 1841 06bc 1E       		.uleb128 0x1e
+ 1842 06bd C6020000 		.4byte	.LASF65
+ 1843 06c1 01       		.byte	0x1
+ 1844 06c2 88       		.byte	0x88
+ 1845 06c3 6B000000 		.4byte	0x6b
+ 1846 06c7 13040000 		.4byte	.LLST19
+ 1847 06cb 1E       		.uleb128 0x1e
+ 1848 06cc 9E050000 		.4byte	.LASF66
+ 1849 06d0 01       		.byte	0x1
+ 1850 06d1 88       		.byte	0x88
+ 1851 06d2 6B000000 		.4byte	0x6b
+ 1852 06d6 3E040000 		.4byte	.LLST20
+ 1853 06da 1D       		.uleb128 0x1d
+ 1854 06db C0060000 		.4byte	.LASF67
+ 1855 06df 01       		.byte	0x1
+ 1856 06e0 88       		.byte	0x88
+ 1857 06e1 6B000000 		.4byte	0x6b
+ 1858 06e5 03       		.uleb128 0x3
+ 1859 06e6 91       		.byte	0x91
+ 1860 06e7 9467     		.sleb128 -3180
+ 1861 06e9 1C       		.uleb128 0x1c
+ 1862 06ea 6C656E00 		.ascii	"len\000"
+ 1863 06ee 01       		.byte	0x1
+ 1864 06ef 89       		.byte	0x89
+ 1865 06f0 6B000000 		.4byte	0x6b
+ 1866 06f4 7F040000 		.4byte	.LLST21
+ 1867 06f8 1E       		.uleb128 0x1e
+ 1868 06f9 BD050000 		.4byte	.LASF68
+ 1869 06fd 01       		.byte	0x1
+ 1870 06fe 8A       		.byte	0x8a
+ 1871 06ff AA010000 		.4byte	0x1aa
+ 1872 0703 E1040000 		.4byte	.LLST22
+ 1873 0707 16       		.uleb128 0x16
+ 1874 0708 32000000 		.4byte	.LVL37
+ 1875 070c 630B0000 		.4byte	0xb63
+ 1876 0710 22070000 		.4byte	0x722
+ 1877 0714 15       		.uleb128 0x15
+ 1878 0715 01       		.uleb128 0x1
+ 1879 0716 50       		.byte	0x50
+ 1880 0717 02       		.uleb128 0x2
+ 1881 0718 91       		.byte	0x91
+ 1882 0719 5C       		.sleb128 -36
+ 1883 071a 15       		.uleb128 0x15
+ 1884 071b 01       		.uleb128 0x1
+ 1885 071c 51       		.byte	0x51
+ 1886 071d 03       		.uleb128 0x3
+ 1887 071e 91       		.byte	0x91
+ 1888 071f 9867     		.sleb128 -3176
+ 1889 0721 00       		.byte	0
+ 1890 0722 16       		.uleb128 0x16
+ 1891 0723 4C000000 		.4byte	.LVL41
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 39
+
+
+ 1892 0727 6F0B0000 		.4byte	0xb6f
+ 1893 072b 43070000 		.4byte	0x743
+ 1894 072f 15       		.uleb128 0x15
+ 1895 0730 01       		.uleb128 0x1
+ 1896 0731 50       		.byte	0x50
+ 1897 0732 02       		.uleb128 0x2
+ 1898 0733 91       		.byte	0x91
+ 1899 0734 5C       		.sleb128 -36
+ 1900 0735 15       		.uleb128 0x15
+ 1901 0736 01       		.uleb128 0x1
+ 1902 0737 51       		.byte	0x51
+ 1903 0738 03       		.uleb128 0x3
+ 1904 0739 91       		.byte	0x91
+ 1905 073a 9867     		.sleb128 -3176
+ 1906 073c 15       		.uleb128 0x15
+ 1907 073d 01       		.uleb128 0x1
+ 1908 073e 52       		.byte	0x52
+ 1909 073f 02       		.uleb128 0x2
+ 1910 0740 74       		.byte	0x74
+ 1911 0741 00       		.sleb128 0
+ 1912 0742 00       		.byte	0
+ 1913 0743 16       		.uleb128 0x16
+ 1914 0744 64000000 		.4byte	.LVL44
+ 1915 0748 7A0B0000 		.4byte	0xb7a
+ 1916 074c 64070000 		.4byte	0x764
+ 1917 0750 15       		.uleb128 0x15
+ 1918 0751 01       		.uleb128 0x1
+ 1919 0752 50       		.byte	0x50
+ 1920 0753 02       		.uleb128 0x2
+ 1921 0754 91       		.byte	0x91
+ 1922 0755 5C       		.sleb128 -36
+ 1923 0756 15       		.uleb128 0x15
+ 1924 0757 01       		.uleb128 0x1
+ 1925 0758 51       		.byte	0x51
+ 1926 0759 03       		.uleb128 0x3
+ 1927 075a 91       		.byte	0x91
+ 1928 075b 9867     		.sleb128 -3176
+ 1929 075d 15       		.uleb128 0x15
+ 1930 075e 01       		.uleb128 0x1
+ 1931 075f 52       		.byte	0x52
+ 1932 0760 02       		.uleb128 0x2
+ 1933 0761 08       		.byte	0x8
+ 1934 0762 30       		.byte	0x30
+ 1935 0763 00       		.byte	0
+ 1936 0764 16       		.uleb128 0x16
+ 1937 0765 7C000000 		.4byte	.LVL47
+ 1938 0769 6F0B0000 		.4byte	0xb6f
+ 1939 076d 85070000 		.4byte	0x785
+ 1940 0771 15       		.uleb128 0x15
+ 1941 0772 01       		.uleb128 0x1
+ 1942 0773 50       		.byte	0x50
+ 1943 0774 02       		.uleb128 0x2
+ 1944 0775 91       		.byte	0x91
+ 1945 0776 5C       		.sleb128 -36
+ 1946 0777 15       		.uleb128 0x15
+ 1947 0778 01       		.uleb128 0x1
+ 1948 0779 51       		.byte	0x51
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 40
+
+
+ 1949 077a 03       		.uleb128 0x3
+ 1950 077b 91       		.byte	0x91
+ 1951 077c 9867     		.sleb128 -3176
+ 1952 077e 15       		.uleb128 0x15
+ 1953 077f 01       		.uleb128 0x1
+ 1954 0780 52       		.byte	0x52
+ 1955 0781 02       		.uleb128 0x2
+ 1956 0782 74       		.byte	0x74
+ 1957 0783 00       		.sleb128 0
+ 1958 0784 00       		.byte	0
+ 1959 0785 16       		.uleb128 0x16
+ 1960 0786 94000000 		.4byte	.LVL50
+ 1961 078a 7A0B0000 		.4byte	0xb7a
+ 1962 078e A6070000 		.4byte	0x7a6
+ 1963 0792 15       		.uleb128 0x15
+ 1964 0793 01       		.uleb128 0x1
+ 1965 0794 50       		.byte	0x50
+ 1966 0795 02       		.uleb128 0x2
+ 1967 0796 91       		.byte	0x91
+ 1968 0797 5C       		.sleb128 -36
+ 1969 0798 15       		.uleb128 0x15
+ 1970 0799 01       		.uleb128 0x1
+ 1971 079a 51       		.byte	0x51
+ 1972 079b 03       		.uleb128 0x3
+ 1973 079c 91       		.byte	0x91
+ 1974 079d 9867     		.sleb128 -3176
+ 1975 079f 15       		.uleb128 0x15
+ 1976 07a0 01       		.uleb128 0x1
+ 1977 07a1 52       		.byte	0x52
+ 1978 07a2 02       		.uleb128 0x2
+ 1979 07a3 08       		.byte	0x8
+ 1980 07a4 31       		.byte	0x31
+ 1981 07a5 00       		.byte	0
+ 1982 07a6 16       		.uleb128 0x16
+ 1983 07a7 AE000000 		.4byte	.LVL53
+ 1984 07ab 850B0000 		.4byte	0xb85
+ 1985 07af D0070000 		.4byte	0x7d0
+ 1986 07b3 15       		.uleb128 0x15
+ 1987 07b4 01       		.uleb128 0x1
+ 1988 07b5 50       		.byte	0x50
+ 1989 07b6 03       		.uleb128 0x3
+ 1990 07b7 76       		.byte	0x76
+ 1991 07b8 DC18     		.sleb128 3164
+ 1992 07ba 15       		.uleb128 0x15
+ 1993 07bb 01       		.uleb128 0x1
+ 1994 07bc 51       		.byte	0x51
+ 1995 07bd 03       		.uleb128 0x3
+ 1996 07be 91       		.byte	0x91
+ 1997 07bf 9867     		.sleb128 -3176
+ 1998 07c1 15       		.uleb128 0x15
+ 1999 07c2 01       		.uleb128 0x1
+ 2000 07c3 52       		.byte	0x52
+ 2001 07c4 05       		.uleb128 0x5
+ 2002 07c5 03       		.byte	0x3
+ 2003 07c6 10000000 		.4byte	.LC4
+ 2004 07ca 15       		.uleb128 0x15
+ 2005 07cb 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 41
+
+
+ 2006 07cc 53       		.byte	0x53
+ 2007 07cd 01       		.uleb128 0x1
+ 2008 07ce 39       		.byte	0x39
+ 2009 07cf 00       		.byte	0
+ 2010 07d0 16       		.uleb128 0x16
+ 2011 07d1 C6000000 		.4byte	.LVL56
+ 2012 07d5 6F0B0000 		.4byte	0xb6f
+ 2013 07d9 F2070000 		.4byte	0x7f2
+ 2014 07dd 15       		.uleb128 0x15
+ 2015 07de 01       		.uleb128 0x1
+ 2016 07df 50       		.byte	0x50
+ 2017 07e0 03       		.uleb128 0x3
+ 2018 07e1 76       		.byte	0x76
+ 2019 07e2 DC18     		.sleb128 3164
+ 2020 07e4 15       		.uleb128 0x15
+ 2021 07e5 01       		.uleb128 0x1
+ 2022 07e6 51       		.byte	0x51
+ 2023 07e7 03       		.uleb128 0x3
+ 2024 07e8 91       		.byte	0x91
+ 2025 07e9 9867     		.sleb128 -3176
+ 2026 07eb 15       		.uleb128 0x15
+ 2027 07ec 01       		.uleb128 0x1
+ 2028 07ed 52       		.byte	0x52
+ 2029 07ee 02       		.uleb128 0x2
+ 2030 07ef 74       		.byte	0x74
+ 2031 07f0 00       		.sleb128 0
+ 2032 07f1 00       		.byte	0
+ 2033 07f2 16       		.uleb128 0x16
+ 2034 07f3 DE000000 		.4byte	.LVL59
+ 2035 07f7 7A0B0000 		.4byte	0xb7a
+ 2036 07fb 14080000 		.4byte	0x814
+ 2037 07ff 15       		.uleb128 0x15
+ 2038 0800 01       		.uleb128 0x1
+ 2039 0801 50       		.byte	0x50
+ 2040 0802 03       		.uleb128 0x3
+ 2041 0803 76       		.byte	0x76
+ 2042 0804 DC18     		.sleb128 3164
+ 2043 0806 15       		.uleb128 0x15
+ 2044 0807 01       		.uleb128 0x1
+ 2045 0808 51       		.byte	0x51
+ 2046 0809 03       		.uleb128 0x3
+ 2047 080a 91       		.byte	0x91
+ 2048 080b 9867     		.sleb128 -3176
+ 2049 080d 15       		.uleb128 0x15
+ 2050 080e 01       		.uleb128 0x1
+ 2051 080f 52       		.byte	0x52
+ 2052 0810 02       		.uleb128 0x2
+ 2053 0811 08       		.byte	0x8
+ 2054 0812 30       		.byte	0x30
+ 2055 0813 00       		.byte	0
+ 2056 0814 16       		.uleb128 0x16
+ 2057 0815 F6000000 		.4byte	.LVL62
+ 2058 0819 6F0B0000 		.4byte	0xb6f
+ 2059 081d 35080000 		.4byte	0x835
+ 2060 0821 15       		.uleb128 0x15
+ 2061 0822 01       		.uleb128 0x1
+ 2062 0823 50       		.byte	0x50
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 42
+
+
+ 2063 0824 02       		.uleb128 0x2
+ 2064 0825 91       		.byte	0x91
+ 2065 0826 5C       		.sleb128 -36
+ 2066 0827 15       		.uleb128 0x15
+ 2067 0828 01       		.uleb128 0x1
+ 2068 0829 51       		.byte	0x51
+ 2069 082a 03       		.uleb128 0x3
+ 2070 082b 91       		.byte	0x91
+ 2071 082c 9867     		.sleb128 -3176
+ 2072 082e 15       		.uleb128 0x15
+ 2073 082f 01       		.uleb128 0x1
+ 2074 0830 52       		.byte	0x52
+ 2075 0831 02       		.uleb128 0x2
+ 2076 0832 76       		.byte	0x76
+ 2077 0833 00       		.sleb128 0
+ 2078 0834 00       		.byte	0
+ 2079 0835 16       		.uleb128 0x16
+ 2080 0836 0E010000 		.4byte	.LVL65
+ 2081 083a 7A0B0000 		.4byte	0xb7a
+ 2082 083e 56080000 		.4byte	0x856
+ 2083 0842 15       		.uleb128 0x15
+ 2084 0843 01       		.uleb128 0x1
+ 2085 0844 50       		.byte	0x50
+ 2086 0845 02       		.uleb128 0x2
+ 2087 0846 91       		.byte	0x91
+ 2088 0847 5C       		.sleb128 -36
+ 2089 0848 15       		.uleb128 0x15
+ 2090 0849 01       		.uleb128 0x1
+ 2091 084a 51       		.byte	0x51
+ 2092 084b 03       		.uleb128 0x3
+ 2093 084c 91       		.byte	0x91
+ 2094 084d 9867     		.sleb128 -3176
+ 2095 084f 15       		.uleb128 0x15
+ 2096 0850 01       		.uleb128 0x1
+ 2097 0851 52       		.byte	0x52
+ 2098 0852 02       		.uleb128 0x2
+ 2099 0853 09       		.byte	0x9
+ 2100 0854 A0       		.byte	0xa0
+ 2101 0855 00       		.byte	0
+ 2102 0856 16       		.uleb128 0x16
+ 2103 0857 2A010000 		.4byte	.LVL68
+ 2104 085b 900B0000 		.4byte	0xb90
+ 2105 085f 6B080000 		.4byte	0x86b
+ 2106 0863 15       		.uleb128 0x15
+ 2107 0864 01       		.uleb128 0x1
+ 2108 0865 51       		.byte	0x51
+ 2109 0866 03       		.uleb128 0x3
+ 2110 0867 91       		.byte	0x91
+ 2111 0868 9867     		.sleb128 -3176
+ 2112 086a 00       		.byte	0
+ 2113 086b 16       		.uleb128 0x16
+ 2114 086c 50010000 		.4byte	.LVL72
+ 2115 0870 9C0B0000 		.4byte	0xb9c
+ 2116 0874 86080000 		.4byte	0x886
+ 2117 0878 15       		.uleb128 0x15
+ 2118 0879 01       		.uleb128 0x1
+ 2119 087a 50       		.byte	0x50
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 43
+
+
+ 2120 087b 02       		.uleb128 0x2
+ 2121 087c 91       		.byte	0x91
+ 2122 087d 5C       		.sleb128 -36
+ 2123 087e 15       		.uleb128 0x15
+ 2124 087f 01       		.uleb128 0x1
+ 2125 0880 51       		.byte	0x51
+ 2126 0881 03       		.uleb128 0x3
+ 2127 0882 91       		.byte	0x91
+ 2128 0883 9867     		.sleb128 -3176
+ 2129 0885 00       		.byte	0
+ 2130 0886 16       		.uleb128 0x16
+ 2131 0887 68010000 		.4byte	.LVL75
+ 2132 088b A80B0000 		.4byte	0xba8
+ 2133 088f A6080000 		.4byte	0x8a6
+ 2134 0893 15       		.uleb128 0x15
+ 2135 0894 01       		.uleb128 0x1
+ 2136 0895 50       		.byte	0x50
+ 2137 0896 02       		.uleb128 0x2
+ 2138 0897 91       		.byte	0x91
+ 2139 0898 5C       		.sleb128 -36
+ 2140 0899 15       		.uleb128 0x15
+ 2141 089a 01       		.uleb128 0x1
+ 2142 089b 51       		.byte	0x51
+ 2143 089c 03       		.uleb128 0x3
+ 2144 089d 91       		.byte	0x91
+ 2145 089e 9867     		.sleb128 -3176
+ 2146 08a0 15       		.uleb128 0x15
+ 2147 08a1 01       		.uleb128 0x1
+ 2148 08a2 52       		.byte	0x52
+ 2149 08a3 01       		.uleb128 0x1
+ 2150 08a4 30       		.byte	0x30
+ 2151 08a5 00       		.byte	0
+ 2152 08a6 16       		.uleb128 0x16
+ 2153 08a7 80010000 		.4byte	.LVL78
+ 2154 08ab 6F0B0000 		.4byte	0xb6f
+ 2155 08af C7080000 		.4byte	0x8c7
+ 2156 08b3 15       		.uleb128 0x15
+ 2157 08b4 01       		.uleb128 0x1
+ 2158 08b5 50       		.byte	0x50
+ 2159 08b6 02       		.uleb128 0x2
+ 2160 08b7 91       		.byte	0x91
+ 2161 08b8 5C       		.sleb128 -36
+ 2162 08b9 15       		.uleb128 0x15
+ 2163 08ba 01       		.uleb128 0x1
+ 2164 08bb 51       		.byte	0x51
+ 2165 08bc 03       		.uleb128 0x3
+ 2166 08bd 91       		.byte	0x91
+ 2167 08be 9867     		.sleb128 -3176
+ 2168 08c0 15       		.uleb128 0x15
+ 2169 08c1 01       		.uleb128 0x1
+ 2170 08c2 52       		.byte	0x52
+ 2171 08c3 02       		.uleb128 0x2
+ 2172 08c4 74       		.byte	0x74
+ 2173 08c5 00       		.sleb128 0
+ 2174 08c6 00       		.byte	0
+ 2175 08c7 16       		.uleb128 0x16
+ 2176 08c8 98010000 		.4byte	.LVL81
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 44
+
+
+ 2177 08cc 7A0B0000 		.4byte	0xb7a
+ 2178 08d0 E8080000 		.4byte	0x8e8
+ 2179 08d4 15       		.uleb128 0x15
+ 2180 08d5 01       		.uleb128 0x1
+ 2181 08d6 50       		.byte	0x50
+ 2182 08d7 02       		.uleb128 0x2
+ 2183 08d8 91       		.byte	0x91
+ 2184 08d9 5C       		.sleb128 -36
+ 2185 08da 15       		.uleb128 0x15
+ 2186 08db 01       		.uleb128 0x1
+ 2187 08dc 51       		.byte	0x51
+ 2188 08dd 03       		.uleb128 0x3
+ 2189 08de 91       		.byte	0x91
+ 2190 08df 9867     		.sleb128 -3176
+ 2191 08e1 15       		.uleb128 0x15
+ 2192 08e2 01       		.uleb128 0x1
+ 2193 08e3 52       		.byte	0x52
+ 2194 08e4 02       		.uleb128 0x2
+ 2195 08e5 08       		.byte	0x8
+ 2196 08e6 30       		.byte	0x30
+ 2197 08e7 00       		.byte	0
+ 2198 08e8 1F       		.uleb128 0x1f
+ 2199 08e9 A6010000 		.4byte	.LVL84
+ 2200 08ed B30B0000 		.4byte	0xbb3
+ 2201 08f1 16       		.uleb128 0x16
+ 2202 08f2 BA010000 		.4byte	.LVL85
+ 2203 08f6 BE0B0000 		.4byte	0xbbe
+ 2204 08fa 0C090000 		.4byte	0x90c
+ 2205 08fe 15       		.uleb128 0x15
+ 2206 08ff 01       		.uleb128 0x1
+ 2207 0900 52       		.byte	0x52
+ 2208 0901 02       		.uleb128 0x2
+ 2209 0902 74       		.byte	0x74
+ 2210 0903 00       		.sleb128 0
+ 2211 0904 15       		.uleb128 0x15
+ 2212 0905 01       		.uleb128 0x1
+ 2213 0906 53       		.byte	0x53
+ 2214 0907 03       		.uleb128 0x3
+ 2215 0908 91       		.byte	0x91
+ 2216 0909 987F     		.sleb128 -104
+ 2217 090b 00       		.byte	0
+ 2218 090c 16       		.uleb128 0x16
+ 2219 090d E2010000 		.4byte	.LVL86
+ 2220 0911 CA0B0000 		.4byte	0xbca
+ 2221 0915 3D090000 		.4byte	0x93d
+ 2222 0919 15       		.uleb128 0x15
+ 2223 091a 01       		.uleb128 0x1
+ 2224 091b 52       		.byte	0x52
+ 2225 091c 03       		.uleb128 0x3
+ 2226 091d 91       		.byte	0x91
+ 2227 091e 987F     		.sleb128 -104
+ 2228 0920 15       		.uleb128 0x15
+ 2229 0921 01       		.uleb128 0x1
+ 2230 0922 53       		.byte	0x53
+ 2231 0923 01       		.uleb128 0x1
+ 2232 0924 30       		.byte	0x30
+ 2233 0925 15       		.uleb128 0x15
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 45
+
+
+ 2234 0926 02       		.uleb128 0x2
+ 2235 0927 7D       		.byte	0x7d
+ 2236 0928 00       		.sleb128 0
+ 2237 0929 03       		.uleb128 0x3
+ 2238 092a 91       		.byte	0x91
+ 2239 092b 9877     		.sleb128 -1128
+ 2240 092d 15       		.uleb128 0x15
+ 2241 092e 02       		.uleb128 0x2
+ 2242 092f 7D       		.byte	0x7d
+ 2243 0930 04       		.sleb128 4
+ 2244 0931 03       		.uleb128 0x3
+ 2245 0932 91       		.byte	0x91
+ 2246 0933 9467     		.sleb128 -3180
+ 2247 0935 15       		.uleb128 0x15
+ 2248 0936 02       		.uleb128 0x2
+ 2249 0937 7D       		.byte	0x7d
+ 2250 0938 08       		.sleb128 8
+ 2251 0939 02       		.uleb128 0x2
+ 2252 093a 75       		.byte	0x75
+ 2253 093b 00       		.sleb128 0
+ 2254 093c 00       		.byte	0
+ 2255 093d 16       		.uleb128 0x16
+ 2256 093e EE010000 		.4byte	.LVL88
+ 2257 0942 D60B0000 		.4byte	0xbd6
+ 2258 0946 50090000 		.4byte	0x950
+ 2259 094a 15       		.uleb128 0x15
+ 2260 094b 01       		.uleb128 0x1
+ 2261 094c 51       		.byte	0x51
+ 2262 094d 01       		.uleb128 0x1
+ 2263 094e 31       		.byte	0x31
+ 2264 094f 00       		.byte	0
+ 2265 0950 16       		.uleb128 0x16
+ 2266 0951 FA010000 		.4byte	.LVL89
+ 2267 0955 D60B0000 		.4byte	0xbd6
+ 2268 0959 63090000 		.4byte	0x963
+ 2269 095d 15       		.uleb128 0x15
+ 2270 095e 01       		.uleb128 0x1
+ 2271 095f 51       		.byte	0x51
+ 2272 0960 01       		.uleb128 0x1
+ 2273 0961 34       		.byte	0x34
+ 2274 0962 00       		.byte	0
+ 2275 0963 16       		.uleb128 0x16
+ 2276 0964 18020000 		.4byte	.LVL91
+ 2277 0968 E20B0000 		.4byte	0xbe2
+ 2278 096c 7D090000 		.4byte	0x97d
+ 2279 0970 15       		.uleb128 0x15
+ 2280 0971 01       		.uleb128 0x1
+ 2281 0972 52       		.byte	0x52
+ 2282 0973 02       		.uleb128 0x2
+ 2283 0974 91       		.byte	0x91
+ 2284 0975 64       		.sleb128 -28
+ 2285 0976 15       		.uleb128 0x15
+ 2286 0977 01       		.uleb128 0x1
+ 2287 0978 53       		.byte	0x53
+ 2288 0979 02       		.uleb128 0x2
+ 2289 097a 91       		.byte	0x91
+ 2290 097b 60       		.sleb128 -32
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 46
+
+
+ 2291 097c 00       		.byte	0
+ 2292 097d 16       		.uleb128 0x16
+ 2293 097e 52020000 		.4byte	.LVL94
+ 2294 0982 EE0B0000 		.4byte	0xbee
+ 2295 0986 9F090000 		.4byte	0x99f
+ 2296 098a 15       		.uleb128 0x15
+ 2297 098b 01       		.uleb128 0x1
+ 2298 098c 50       		.byte	0x50
+ 2299 098d 02       		.uleb128 0x2
+ 2300 098e 91       		.byte	0x91
+ 2301 098f 58       		.sleb128 -40
+ 2302 0990 15       		.uleb128 0x15
+ 2303 0991 01       		.uleb128 0x1
+ 2304 0992 51       		.byte	0x51
+ 2305 0993 02       		.uleb128 0x2
+ 2306 0994 76       		.byte	0x76
+ 2307 0995 00       		.sleb128 0
+ 2308 0996 15       		.uleb128 0x15
+ 2309 0997 02       		.uleb128 0x2
+ 2310 0998 7D       		.byte	0x7d
+ 2311 0999 00       		.sleb128 0
+ 2312 099a 03       		.uleb128 0x3
+ 2313 099b 91       		.byte	0x91
+ 2314 099c 9877     		.sleb128 -1128
+ 2315 099e 00       		.byte	0
+ 2316 099f 16       		.uleb128 0x16
+ 2317 09a0 7A020000 		.4byte	.LVL98
+ 2318 09a4 FA0B0000 		.4byte	0xbfa
+ 2319 09a8 B3090000 		.4byte	0x9b3
+ 2320 09ac 15       		.uleb128 0x15
+ 2321 09ad 01       		.uleb128 0x1
+ 2322 09ae 52       		.byte	0x52
+ 2323 09af 02       		.uleb128 0x2
+ 2324 09b0 74       		.byte	0x74
+ 2325 09b1 00       		.sleb128 0
+ 2326 09b2 00       		.byte	0
+ 2327 09b3 16       		.uleb128 0x16
+ 2328 09b4 8C020000 		.4byte	.LVL100
+ 2329 09b8 6F0B0000 		.4byte	0xb6f
+ 2330 09bc D3090000 		.4byte	0x9d3
+ 2331 09c0 15       		.uleb128 0x15
+ 2332 09c1 01       		.uleb128 0x1
+ 2333 09c2 50       		.byte	0x50
+ 2334 09c3 02       		.uleb128 0x2
+ 2335 09c4 91       		.byte	0x91
+ 2336 09c5 58       		.sleb128 -40
+ 2337 09c6 15       		.uleb128 0x15
+ 2338 09c7 01       		.uleb128 0x1
+ 2339 09c8 51       		.byte	0x51
+ 2340 09c9 02       		.uleb128 0x2
+ 2341 09ca 76       		.byte	0x76
+ 2342 09cb 00       		.sleb128 0
+ 2343 09cc 15       		.uleb128 0x15
+ 2344 09cd 01       		.uleb128 0x1
+ 2345 09ce 52       		.byte	0x52
+ 2346 09cf 02       		.uleb128 0x2
+ 2347 09d0 74       		.byte	0x74
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 47
+
+
+ 2348 09d1 00       		.sleb128 0
+ 2349 09d2 00       		.byte	0
+ 2350 09d3 14       		.uleb128 0x14
+ 2351 09d4 A2020000 		.4byte	.LVL103
+ 2352 09d8 7A0B0000 		.4byte	0xb7a
+ 2353 09dc 15       		.uleb128 0x15
+ 2354 09dd 01       		.uleb128 0x1
+ 2355 09de 50       		.byte	0x50
+ 2356 09df 02       		.uleb128 0x2
+ 2357 09e0 91       		.byte	0x91
+ 2358 09e1 58       		.sleb128 -40
+ 2359 09e2 15       		.uleb128 0x15
+ 2360 09e3 01       		.uleb128 0x1
+ 2361 09e4 51       		.byte	0x51
+ 2362 09e5 02       		.uleb128 0x2
+ 2363 09e6 76       		.byte	0x76
+ 2364 09e7 00       		.sleb128 0
+ 2365 09e8 15       		.uleb128 0x15
+ 2366 09e9 01       		.uleb128 0x1
+ 2367 09ea 52       		.byte	0x52
+ 2368 09eb 02       		.uleb128 0x2
+ 2369 09ec 08       		.byte	0x8
+ 2370 09ed 30       		.byte	0x30
+ 2371 09ee 00       		.byte	0
+ 2372 09ef 00       		.byte	0
+ 2373 09f0 10       		.uleb128 0x10
+ 2374 09f1 2C000000 		.4byte	0x2c
+ 2375 09f5 000A0000 		.4byte	0xa00
+ 2376 09f9 11       		.uleb128 0x11
+ 2377 09fa 7E020000 		.4byte	0x27e
+ 2378 09fe 3F       		.byte	0x3f
+ 2379 09ff 00       		.byte	0
+ 2380 0a00 10       		.uleb128 0x10
+ 2381 0a01 2C000000 		.4byte	0x2c
+ 2382 0a05 110A0000 		.4byte	0xa11
+ 2383 0a09 20       		.uleb128 0x20
+ 2384 0a0a 7E020000 		.4byte	0x27e
+ 2385 0a0e FF03     		.2byte	0x3ff
+ 2386 0a10 00       		.byte	0
+ 2387 0a11 10       		.uleb128 0x10
+ 2388 0a12 2C000000 		.4byte	0x2c
+ 2389 0a16 220A0000 		.4byte	0xa22
+ 2390 0a1a 20       		.uleb128 0x20
+ 2391 0a1b 7E020000 		.4byte	0x27e
+ 2392 0a1f FF07     		.2byte	0x7ff
+ 2393 0a21 00       		.byte	0
+ 2394 0a22 19       		.uleb128 0x19
+ 2395 0a23 C8060000 		.4byte	.LASF69
+ 2396 0a27 01       		.byte	0x1
+ 2397 0a28 ED       		.byte	0xed
+ 2398 0a29 5D000000 		.4byte	0x5d
+ 2399 0a2d 00000000 		.4byte	.LFB19
+ 2400 0a31 5C000000 		.4byte	.LFE19-.LFB19
+ 2401 0a35 01       		.uleb128 0x1
+ 2402 0a36 9C       		.byte	0x9c
+ 2403 0a37 0F0B0000 		.4byte	0xb0f
+ 2404 0a3b 13       		.uleb128 0x13
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 48
+
+
+ 2405 0a3c 63747800 		.ascii	"ctx\000"
+ 2406 0a40 01       		.byte	0x1
+ 2407 0a41 ED       		.byte	0xed
+ 2408 0a42 D5020000 		.4byte	0x2d5
+ 2409 0a46 F4040000 		.4byte	.LLST23
+ 2410 0a4a 13       		.uleb128 0x13
+ 2411 0a4b 62756600 		.ascii	"buf\000"
+ 2412 0a4f 01       		.byte	0x1
+ 2413 0a50 ED       		.byte	0xed
+ 2414 0a51 AC000000 		.4byte	0xac
+ 2415 0a55 15050000 		.4byte	.LLST24
+ 2416 0a59 1A       		.uleb128 0x1a
+ 2417 0a5a 58060000 		.4byte	.LASF58
+ 2418 0a5e 01       		.byte	0x1
+ 2419 0a5f ED       		.byte	0xed
+ 2420 0a60 6B000000 		.4byte	0x6b
+ 2421 0a64 41050000 		.4byte	.LLST25
+ 2422 0a68 1A       		.uleb128 0x1a
+ 2423 0a69 16000000 		.4byte	.LASF59
+ 2424 0a6d 01       		.byte	0x1
+ 2425 0a6e EE       		.byte	0xee
+ 2426 0a6f 0B020000 		.4byte	0x20b
+ 2427 0a73 6D050000 		.4byte	.LLST26
+ 2428 0a77 18       		.uleb128 0x18
+ 2429 0a78 4D040000 		.4byte	.LASF60
+ 2430 0a7c 01       		.byte	0x1
+ 2431 0a7d EF       		.byte	0xef
+ 2432 0a7e 5F010000 		.4byte	0x15f
+ 2433 0a82 02       		.uleb128 0x2
+ 2434 0a83 91       		.byte	0x91
+ 2435 0a84 00       		.sleb128 0
+ 2436 0a85 1C       		.uleb128 0x1c
+ 2437 0a86 72657400 		.ascii	"ret\000"
+ 2438 0a8a 01       		.byte	0x1
+ 2439 0a8b F1       		.byte	0xf1
+ 2440 0a8c 5D000000 		.4byte	0x5d
+ 2441 0a90 8E050000 		.4byte	.LLST27
+ 2442 0a94 1D       		.uleb128 0x1d
+ 2443 0a95 CA010000 		.4byte	.LASF70
+ 2444 0a99 01       		.byte	0x1
+ 2445 0a9a F2       		.byte	0xf2
+ 2446 0a9b 0F0B0000 		.4byte	0xb0f
+ 2447 0a9f 03       		.uleb128 0x3
+ 2448 0aa0 91       		.byte	0x91
+ 2449 0aa1 F05F     		.sleb128 -4112
+ 2450 0aa3 1D       		.uleb128 0x1d
+ 2451 0aa4 B1020000 		.4byte	.LASF71
+ 2452 0aa8 01       		.byte	0x1
+ 2453 0aa9 F3       		.byte	0xf3
+ 2454 0aaa 6B000000 		.4byte	0x6b
+ 2455 0aae 03       		.uleb128 0x3
+ 2456 0aaf 91       		.byte	0x91
+ 2457 0ab0 EC5F     		.sleb128 -4116
+ 2458 0ab2 16       		.uleb128 0x16
+ 2459 0ab3 20000000 		.4byte	.LVL113
+ 2460 0ab7 E8050000 		.4byte	0x5e8
+ 2461 0abb DC0A0000 		.4byte	0xadc
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 49
+
+
+ 2462 0abf 15       		.uleb128 0x15
+ 2463 0ac0 01       		.uleb128 0x1
+ 2464 0ac1 50       		.byte	0x50
+ 2465 0ac2 03       		.uleb128 0x3
+ 2466 0ac3 F3       		.byte	0xf3
+ 2467 0ac4 01       		.uleb128 0x1
+ 2468 0ac5 50       		.byte	0x50
+ 2469 0ac6 15       		.uleb128 0x15
+ 2470 0ac7 01       		.uleb128 0x1
+ 2471 0ac8 51       		.byte	0x51
+ 2472 0ac9 03       		.uleb128 0x3
+ 2473 0aca 91       		.byte	0x91
+ 2474 0acb F05F     		.sleb128 -4112
+ 2475 0acd 15       		.uleb128 0x15
+ 2476 0ace 01       		.uleb128 0x1
+ 2477 0acf 52       		.byte	0x52
+ 2478 0ad0 03       		.uleb128 0x3
+ 2479 0ad1 0A       		.byte	0xa
+ 2480 0ad2 0010     		.2byte	0x1000
+ 2481 0ad4 15       		.uleb128 0x15
+ 2482 0ad5 01       		.uleb128 0x1
+ 2483 0ad6 53       		.byte	0x53
+ 2484 0ad7 03       		.uleb128 0x3
+ 2485 0ad8 F3       		.byte	0xf3
+ 2486 0ad9 01       		.uleb128 0x1
+ 2487 0ada 53       		.byte	0x53
+ 2488 0adb 00       		.byte	0
+ 2489 0adc 14       		.uleb128 0x14
+ 2490 0add 42000000 		.4byte	.LVL115
+ 2491 0ae1 030C0000 		.4byte	0xc03
+ 2492 0ae5 15       		.uleb128 0x15
+ 2493 0ae6 01       		.uleb128 0x1
+ 2494 0ae7 50       		.byte	0x50
+ 2495 0ae8 05       		.uleb128 0x5
+ 2496 0ae9 03       		.byte	0x3
+ 2497 0aea 40000000 		.4byte	.LC8
+ 2498 0aee 15       		.uleb128 0x15
+ 2499 0aef 01       		.uleb128 0x1
+ 2500 0af0 51       		.byte	0x51
+ 2501 0af1 05       		.uleb128 0x5
+ 2502 0af2 03       		.byte	0x3
+ 2503 0af3 1C000000 		.4byte	.LC6
+ 2504 0af7 15       		.uleb128 0x15
+ 2505 0af8 02       		.uleb128 0x2
+ 2506 0af9 7D       		.byte	0x7d
+ 2507 0afa 00       		.sleb128 0
+ 2508 0afb 02       		.uleb128 0x2
+ 2509 0afc 74       		.byte	0x74
+ 2510 0afd 00       		.sleb128 0
+ 2511 0afe 15       		.uleb128 0x15
+ 2512 0aff 02       		.uleb128 0x2
+ 2513 0b00 7D       		.byte	0x7d
+ 2514 0b01 04       		.sleb128 4
+ 2515 0b02 02       		.uleb128 0x2
+ 2516 0b03 75       		.byte	0x75
+ 2517 0b04 00       		.sleb128 0
+ 2518 0b05 15       		.uleb128 0x15
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 50
+
+
+ 2519 0b06 02       		.uleb128 0x2
+ 2520 0b07 7D       		.byte	0x7d
+ 2521 0b08 08       		.sleb128 8
+ 2522 0b09 03       		.uleb128 0x3
+ 2523 0b0a 91       		.byte	0x91
+ 2524 0b0b EC5F     		.sleb128 -4116
+ 2525 0b0d 00       		.byte	0
+ 2526 0b0e 00       		.byte	0
+ 2527 0b0f 10       		.uleb128 0x10
+ 2528 0b10 2C000000 		.4byte	0x2c
+ 2529 0b14 200B0000 		.4byte	0xb20
+ 2530 0b18 20       		.uleb128 0x20
+ 2531 0b19 7E020000 		.4byte	0x27e
+ 2532 0b1d FF0F     		.2byte	0xfff
+ 2533 0b1f 00       		.byte	0
+ 2534 0b20 21       		.uleb128 0x21
+ 2535 0b21 B6020000 		.4byte	.LASF90
+ 2536 0b25 B6020000 		.4byte	.LASF90
+ 2537 0b29 22       		.uleb128 0x22
+ 2538 0b2a 9C000000 		.4byte	.LASF72
+ 2539 0b2e 9C000000 		.4byte	.LASF72
+ 2540 0b32 02       		.byte	0x2
+ 2541 0b33 6001     		.2byte	0x160
+ 2542 0b35 23       		.uleb128 0x23
+ 2543 0b36 3C030000 		.4byte	.LASF73
+ 2544 0b3a 3C030000 		.4byte	.LASF73
+ 2545 0b3e 07       		.byte	0x7
+ 2546 0b3f 42       		.byte	0x42
+ 2547 0b40 22       		.uleb128 0x22
+ 2548 0b41 87040000 		.4byte	.LASF74
+ 2549 0b45 87040000 		.4byte	.LASF74
+ 2550 0b49 08       		.byte	0x8
+ 2551 0b4a 3401     		.2byte	0x134
+ 2552 0b4c 22       		.uleb128 0x22
+ 2553 0b4d 80030000 		.4byte	.LASF75
+ 2554 0b51 80030000 		.4byte	.LASF75
+ 2555 0b55 08       		.byte	0x8
+ 2556 0b56 3501     		.2byte	0x135
+ 2557 0b58 23       		.uleb128 0x23
+ 2558 0b59 A3060000 		.4byte	.LASF76
+ 2559 0b5d A3060000 		.4byte	.LASF76
+ 2560 0b61 09       		.byte	0x9
+ 2561 0b62 C5       		.byte	0xc5
+ 2562 0b63 22       		.uleb128 0x22
+ 2563 0b64 00050000 		.4byte	.LASF77
+ 2564 0b68 00050000 		.4byte	.LASF77
+ 2565 0b6c 08       		.byte	0x8
+ 2566 0b6d 3801     		.2byte	0x138
+ 2567 0b6f 23       		.uleb128 0x23
+ 2568 0b70 EE060000 		.4byte	.LASF78
+ 2569 0b74 EE060000 		.4byte	.LASF78
+ 2570 0b78 09       		.byte	0x9
+ 2571 0b79 2E       		.byte	0x2e
+ 2572 0b7a 23       		.uleb128 0x23
+ 2573 0b7b 41020000 		.4byte	.LASF79
+ 2574 0b7f 41020000 		.4byte	.LASF79
+ 2575 0b83 09       		.byte	0x9
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 51
+
+
+ 2576 0b84 3A       		.byte	0x3a
+ 2577 0b85 23       		.uleb128 0x23
+ 2578 0b86 95070000 		.4byte	.LASF80
+ 2579 0b8a 95070000 		.4byte	.LASF80
+ 2580 0b8e 09       		.byte	0x9
+ 2581 0b8f 6F       		.byte	0x6f
+ 2582 0b90 22       		.uleb128 0x22
+ 2583 0b91 41070000 		.4byte	.LASF81
+ 2584 0b95 41070000 		.4byte	.LASF81
+ 2585 0b99 05       		.byte	0x5
+ 2586 0b9a 7202     		.2byte	0x272
+ 2587 0b9c 22       		.uleb128 0x22
+ 2588 0b9d E7010000 		.4byte	.LASF82
+ 2589 0ba1 E7010000 		.4byte	.LASF82
+ 2590 0ba5 08       		.byte	0x8
+ 2591 0ba6 3A01     		.2byte	0x13a
+ 2592 0ba8 23       		.uleb128 0x23
+ 2593 0ba9 85000000 		.4byte	.LASF83
+ 2594 0bad 85000000 		.4byte	.LASF83
+ 2595 0bb1 09       		.byte	0x9
+ 2596 0bb2 99       		.byte	0x99
+ 2597 0bb3 23       		.uleb128 0x23
+ 2598 0bb4 5D070000 		.4byte	.LASF84
+ 2599 0bb8 5D070000 		.4byte	.LASF84
+ 2600 0bbc 04       		.byte	0x4
+ 2601 0bbd 7E       		.byte	0x7e
+ 2602 0bbe 22       		.uleb128 0x22
+ 2603 0bbf CE020000 		.4byte	.LASF85
+ 2604 0bc3 CE020000 		.4byte	.LASF85
+ 2605 0bc7 04       		.byte	0x4
+ 2606 0bc8 4801     		.2byte	0x148
+ 2607 0bca 22       		.uleb128 0x22
+ 2608 0bcb 56000000 		.4byte	.LASF86
+ 2609 0bcf 56000000 		.4byte	.LASF86
+ 2610 0bd3 05       		.byte	0x5
+ 2611 0bd4 8F01     		.2byte	0x18f
+ 2612 0bd6 22       		.uleb128 0x22
+ 2613 0bd7 1E030000 		.4byte	.LASF87
+ 2614 0bdb 1E030000 		.4byte	.LASF87
+ 2615 0bdf 05       		.byte	0x5
+ 2616 0be0 1D01     		.2byte	0x11d
+ 2617 0be2 22       		.uleb128 0x22
+ 2618 0be3 66000000 		.4byte	.LASF88
+ 2619 0be7 66000000 		.4byte	.LASF88
+ 2620 0beb 0A       		.byte	0xa
+ 2621 0bec 1102     		.2byte	0x211
+ 2622 0bee 22       		.uleb128 0x22
+ 2623 0bef 60020000 		.4byte	.LASF89
+ 2624 0bf3 60020000 		.4byte	.LASF89
+ 2625 0bf7 08       		.byte	0x8
+ 2626 0bf8 3C01     		.2byte	0x13c
+ 2627 0bfa 21       		.uleb128 0x21
+ 2628 0bfb 9E010000 		.4byte	.LASF91
+ 2629 0bff 9E010000 		.4byte	.LASF91
+ 2630 0c03 23       		.uleb128 0x23
+ 2631 0c04 D3050000 		.4byte	.LASF92
+ 2632 0c08 D3050000 		.4byte	.LASF92
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 52
+
+
+ 2633 0c0c 0B       		.byte	0xb
+ 2634 0c0d 79       		.byte	0x79
+ 2635 0c0e 00       		.byte	0
+ 2636              		.section	.debug_abbrev,"",%progbits
+ 2637              	.Ldebug_abbrev0:
+ 2638 0000 01       		.uleb128 0x1
+ 2639 0001 11       		.uleb128 0x11
+ 2640 0002 01       		.byte	0x1
+ 2641 0003 25       		.uleb128 0x25
+ 2642 0004 0E       		.uleb128 0xe
+ 2643 0005 13       		.uleb128 0x13
+ 2644 0006 0B       		.uleb128 0xb
+ 2645 0007 03       		.uleb128 0x3
+ 2646 0008 0E       		.uleb128 0xe
+ 2647 0009 1B       		.uleb128 0x1b
+ 2648 000a 0E       		.uleb128 0xe
+ 2649 000b 55       		.uleb128 0x55
+ 2650 000c 17       		.uleb128 0x17
+ 2651 000d 11       		.uleb128 0x11
+ 2652 000e 01       		.uleb128 0x1
+ 2653 000f 10       		.uleb128 0x10
+ 2654 0010 17       		.uleb128 0x17
+ 2655 0011 00       		.byte	0
+ 2656 0012 00       		.byte	0
+ 2657 0013 02       		.uleb128 0x2
+ 2658 0014 24       		.uleb128 0x24
+ 2659 0015 00       		.byte	0
+ 2660 0016 0B       		.uleb128 0xb
+ 2661 0017 0B       		.uleb128 0xb
+ 2662 0018 3E       		.uleb128 0x3e
+ 2663 0019 0B       		.uleb128 0xb
+ 2664 001a 03       		.uleb128 0x3
+ 2665 001b 0E       		.uleb128 0xe
+ 2666 001c 00       		.byte	0
+ 2667 001d 00       		.byte	0
+ 2668 001e 03       		.uleb128 0x3
+ 2669 001f 24       		.uleb128 0x24
+ 2670 0020 00       		.byte	0
+ 2671 0021 0B       		.uleb128 0xb
+ 2672 0022 0B       		.uleb128 0xb
+ 2673 0023 3E       		.uleb128 0x3e
+ 2674 0024 0B       		.uleb128 0xb
+ 2675 0025 03       		.uleb128 0x3
+ 2676 0026 08       		.uleb128 0x8
+ 2677 0027 00       		.byte	0
+ 2678 0028 00       		.byte	0
+ 2679 0029 04       		.uleb128 0x4
+ 2680 002a 16       		.uleb128 0x16
+ 2681 002b 00       		.byte	0
+ 2682 002c 03       		.uleb128 0x3
+ 2683 002d 0E       		.uleb128 0xe
+ 2684 002e 3A       		.uleb128 0x3a
+ 2685 002f 0B       		.uleb128 0xb
+ 2686 0030 3B       		.uleb128 0x3b
+ 2687 0031 0B       		.uleb128 0xb
+ 2688 0032 49       		.uleb128 0x49
+ 2689 0033 13       		.uleb128 0x13
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 53
+
+
+ 2690 0034 00       		.byte	0
+ 2691 0035 00       		.byte	0
+ 2692 0036 05       		.uleb128 0x5
+ 2693 0037 13       		.uleb128 0x13
+ 2694 0038 01       		.byte	0x1
+ 2695 0039 03       		.uleb128 0x3
+ 2696 003a 0E       		.uleb128 0xe
+ 2697 003b 0B       		.uleb128 0xb
+ 2698 003c 0B       		.uleb128 0xb
+ 2699 003d 3A       		.uleb128 0x3a
+ 2700 003e 0B       		.uleb128 0xb
+ 2701 003f 3B       		.uleb128 0x3b
+ 2702 0040 0B       		.uleb128 0xb
+ 2703 0041 01       		.uleb128 0x1
+ 2704 0042 13       		.uleb128 0x13
+ 2705 0043 00       		.byte	0
+ 2706 0044 00       		.byte	0
+ 2707 0045 06       		.uleb128 0x6
+ 2708 0046 0D       		.uleb128 0xd
+ 2709 0047 00       		.byte	0
+ 2710 0048 03       		.uleb128 0x3
+ 2711 0049 08       		.uleb128 0x8
+ 2712 004a 3A       		.uleb128 0x3a
+ 2713 004b 0B       		.uleb128 0xb
+ 2714 004c 3B       		.uleb128 0x3b
+ 2715 004d 0B       		.uleb128 0xb
+ 2716 004e 49       		.uleb128 0x49
+ 2717 004f 13       		.uleb128 0x13
+ 2718 0050 38       		.uleb128 0x38
+ 2719 0051 0B       		.uleb128 0xb
+ 2720 0052 00       		.byte	0
+ 2721 0053 00       		.byte	0
+ 2722 0054 07       		.uleb128 0x7
+ 2723 0055 0F       		.uleb128 0xf
+ 2724 0056 00       		.byte	0
+ 2725 0057 0B       		.uleb128 0xb
+ 2726 0058 0B       		.uleb128 0xb
+ 2727 0059 49       		.uleb128 0x49
+ 2728 005a 13       		.uleb128 0x13
+ 2729 005b 00       		.byte	0
+ 2730 005c 00       		.byte	0
+ 2731 005d 08       		.uleb128 0x8
+ 2732 005e 0D       		.uleb128 0xd
+ 2733 005f 00       		.byte	0
+ 2734 0060 03       		.uleb128 0x3
+ 2735 0061 0E       		.uleb128 0xe
+ 2736 0062 3A       		.uleb128 0x3a
+ 2737 0063 0B       		.uleb128 0xb
+ 2738 0064 3B       		.uleb128 0x3b
+ 2739 0065 0B       		.uleb128 0xb
+ 2740 0066 49       		.uleb128 0x49
+ 2741 0067 13       		.uleb128 0x13
+ 2742 0068 38       		.uleb128 0x38
+ 2743 0069 0B       		.uleb128 0xb
+ 2744 006a 00       		.byte	0
+ 2745 006b 00       		.byte	0
+ 2746 006c 09       		.uleb128 0x9
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 54
+
+
+ 2747 006d 04       		.uleb128 0x4
+ 2748 006e 01       		.byte	0x1
+ 2749 006f 0B       		.uleb128 0xb
+ 2750 0070 0B       		.uleb128 0xb
+ 2751 0071 49       		.uleb128 0x49
+ 2752 0072 13       		.uleb128 0x13
+ 2753 0073 3A       		.uleb128 0x3a
+ 2754 0074 0B       		.uleb128 0xb
+ 2755 0075 3B       		.uleb128 0x3b
+ 2756 0076 0B       		.uleb128 0xb
+ 2757 0077 01       		.uleb128 0x1
+ 2758 0078 13       		.uleb128 0x13
+ 2759 0079 00       		.byte	0
+ 2760 007a 00       		.byte	0
+ 2761 007b 0A       		.uleb128 0xa
+ 2762 007c 28       		.uleb128 0x28
+ 2763 007d 00       		.byte	0
+ 2764 007e 03       		.uleb128 0x3
+ 2765 007f 0E       		.uleb128 0xe
+ 2766 0080 1C       		.uleb128 0x1c
+ 2767 0081 0B       		.uleb128 0xb
+ 2768 0082 00       		.byte	0
+ 2769 0083 00       		.byte	0
+ 2770 0084 0B       		.uleb128 0xb
+ 2771 0085 0F       		.uleb128 0xf
+ 2772 0086 00       		.byte	0
+ 2773 0087 0B       		.uleb128 0xb
+ 2774 0088 0B       		.uleb128 0xb
+ 2775 0089 00       		.byte	0
+ 2776 008a 00       		.byte	0
+ 2777 008b 0C       		.uleb128 0xc
+ 2778 008c 26       		.uleb128 0x26
+ 2779 008d 00       		.byte	0
+ 2780 008e 49       		.uleb128 0x49
+ 2781 008f 13       		.uleb128 0x13
+ 2782 0090 00       		.byte	0
+ 2783 0091 00       		.byte	0
+ 2784 0092 0D       		.uleb128 0xd
+ 2785 0093 13       		.uleb128 0x13
+ 2786 0094 00       		.byte	0
+ 2787 0095 03       		.uleb128 0x3
+ 2788 0096 0E       		.uleb128 0xe
+ 2789 0097 3C       		.uleb128 0x3c
+ 2790 0098 19       		.uleb128 0x19
+ 2791 0099 00       		.byte	0
+ 2792 009a 00       		.byte	0
+ 2793 009b 0E       		.uleb128 0xe
+ 2794 009c 15       		.uleb128 0x15
+ 2795 009d 01       		.byte	0x1
+ 2796 009e 27       		.uleb128 0x27
+ 2797 009f 19       		.uleb128 0x19
+ 2798 00a0 49       		.uleb128 0x49
+ 2799 00a1 13       		.uleb128 0x13
+ 2800 00a2 01       		.uleb128 0x1
+ 2801 00a3 13       		.uleb128 0x13
+ 2802 00a4 00       		.byte	0
+ 2803 00a5 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 55
+
+
+ 2804 00a6 0F       		.uleb128 0xf
+ 2805 00a7 05       		.uleb128 0x5
+ 2806 00a8 00       		.byte	0
+ 2807 00a9 49       		.uleb128 0x49
+ 2808 00aa 13       		.uleb128 0x13
+ 2809 00ab 00       		.byte	0
+ 2810 00ac 00       		.byte	0
+ 2811 00ad 10       		.uleb128 0x10
+ 2812 00ae 01       		.uleb128 0x1
+ 2813 00af 01       		.byte	0x1
+ 2814 00b0 49       		.uleb128 0x49
+ 2815 00b1 13       		.uleb128 0x13
+ 2816 00b2 01       		.uleb128 0x1
+ 2817 00b3 13       		.uleb128 0x13
+ 2818 00b4 00       		.byte	0
+ 2819 00b5 00       		.byte	0
+ 2820 00b6 11       		.uleb128 0x11
+ 2821 00b7 21       		.uleb128 0x21
+ 2822 00b8 00       		.byte	0
+ 2823 00b9 49       		.uleb128 0x49
+ 2824 00ba 13       		.uleb128 0x13
+ 2825 00bb 2F       		.uleb128 0x2f
+ 2826 00bc 0B       		.uleb128 0xb
+ 2827 00bd 00       		.byte	0
+ 2828 00be 00       		.byte	0
+ 2829 00bf 12       		.uleb128 0x12
+ 2830 00c0 2E       		.uleb128 0x2e
+ 2831 00c1 01       		.byte	0x1
+ 2832 00c2 3F       		.uleb128 0x3f
+ 2833 00c3 19       		.uleb128 0x19
+ 2834 00c4 03       		.uleb128 0x3
+ 2835 00c5 0E       		.uleb128 0xe
+ 2836 00c6 3A       		.uleb128 0x3a
+ 2837 00c7 0B       		.uleb128 0xb
+ 2838 00c8 3B       		.uleb128 0x3b
+ 2839 00c9 0B       		.uleb128 0xb
+ 2840 00ca 27       		.uleb128 0x27
+ 2841 00cb 19       		.uleb128 0x19
+ 2842 00cc 11       		.uleb128 0x11
+ 2843 00cd 01       		.uleb128 0x1
+ 2844 00ce 12       		.uleb128 0x12
+ 2845 00cf 06       		.uleb128 0x6
+ 2846 00d0 40       		.uleb128 0x40
+ 2847 00d1 18       		.uleb128 0x18
+ 2848 00d2 9742     		.uleb128 0x2117
+ 2849 00d4 19       		.uleb128 0x19
+ 2850 00d5 01       		.uleb128 0x1
+ 2851 00d6 13       		.uleb128 0x13
+ 2852 00d7 00       		.byte	0
+ 2853 00d8 00       		.byte	0
+ 2854 00d9 13       		.uleb128 0x13
+ 2855 00da 05       		.uleb128 0x5
+ 2856 00db 00       		.byte	0
+ 2857 00dc 03       		.uleb128 0x3
+ 2858 00dd 08       		.uleb128 0x8
+ 2859 00de 3A       		.uleb128 0x3a
+ 2860 00df 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 56
+
+
+ 2861 00e0 3B       		.uleb128 0x3b
+ 2862 00e1 0B       		.uleb128 0xb
+ 2863 00e2 49       		.uleb128 0x49
+ 2864 00e3 13       		.uleb128 0x13
+ 2865 00e4 02       		.uleb128 0x2
+ 2866 00e5 17       		.uleb128 0x17
+ 2867 00e6 00       		.byte	0
+ 2868 00e7 00       		.byte	0
+ 2869 00e8 14       		.uleb128 0x14
+ 2870 00e9 898201   		.uleb128 0x4109
+ 2871 00ec 01       		.byte	0x1
+ 2872 00ed 11       		.uleb128 0x11
+ 2873 00ee 01       		.uleb128 0x1
+ 2874 00ef 31       		.uleb128 0x31
+ 2875 00f0 13       		.uleb128 0x13
+ 2876 00f1 00       		.byte	0
+ 2877 00f2 00       		.byte	0
+ 2878 00f3 15       		.uleb128 0x15
+ 2879 00f4 8A8201   		.uleb128 0x410a
+ 2880 00f7 00       		.byte	0
+ 2881 00f8 02       		.uleb128 0x2
+ 2882 00f9 18       		.uleb128 0x18
+ 2883 00fa 9142     		.uleb128 0x2111
+ 2884 00fc 18       		.uleb128 0x18
+ 2885 00fd 00       		.byte	0
+ 2886 00fe 00       		.byte	0
+ 2887 00ff 16       		.uleb128 0x16
+ 2888 0100 898201   		.uleb128 0x4109
+ 2889 0103 01       		.byte	0x1
+ 2890 0104 11       		.uleb128 0x11
+ 2891 0105 01       		.uleb128 0x1
+ 2892 0106 31       		.uleb128 0x31
+ 2893 0107 13       		.uleb128 0x13
+ 2894 0108 01       		.uleb128 0x1
+ 2895 0109 13       		.uleb128 0x13
+ 2896 010a 00       		.byte	0
+ 2897 010b 00       		.byte	0
+ 2898 010c 17       		.uleb128 0x17
+ 2899 010d 05       		.uleb128 0x5
+ 2900 010e 00       		.byte	0
+ 2901 010f 03       		.uleb128 0x3
+ 2902 0110 08       		.uleb128 0x8
+ 2903 0111 3A       		.uleb128 0x3a
+ 2904 0112 0B       		.uleb128 0xb
+ 2905 0113 3B       		.uleb128 0x3b
+ 2906 0114 0B       		.uleb128 0xb
+ 2907 0115 49       		.uleb128 0x49
+ 2908 0116 13       		.uleb128 0x13
+ 2909 0117 02       		.uleb128 0x2
+ 2910 0118 18       		.uleb128 0x18
+ 2911 0119 00       		.byte	0
+ 2912 011a 00       		.byte	0
+ 2913 011b 18       		.uleb128 0x18
+ 2914 011c 05       		.uleb128 0x5
+ 2915 011d 00       		.byte	0
+ 2916 011e 03       		.uleb128 0x3
+ 2917 011f 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 57
+
+
+ 2918 0120 3A       		.uleb128 0x3a
+ 2919 0121 0B       		.uleb128 0xb
+ 2920 0122 3B       		.uleb128 0x3b
+ 2921 0123 0B       		.uleb128 0xb
+ 2922 0124 49       		.uleb128 0x49
+ 2923 0125 13       		.uleb128 0x13
+ 2924 0126 02       		.uleb128 0x2
+ 2925 0127 18       		.uleb128 0x18
+ 2926 0128 00       		.byte	0
+ 2927 0129 00       		.byte	0
+ 2928 012a 19       		.uleb128 0x19
+ 2929 012b 2E       		.uleb128 0x2e
+ 2930 012c 01       		.byte	0x1
+ 2931 012d 3F       		.uleb128 0x3f
+ 2932 012e 19       		.uleb128 0x19
+ 2933 012f 03       		.uleb128 0x3
+ 2934 0130 0E       		.uleb128 0xe
+ 2935 0131 3A       		.uleb128 0x3a
+ 2936 0132 0B       		.uleb128 0xb
+ 2937 0133 3B       		.uleb128 0x3b
+ 2938 0134 0B       		.uleb128 0xb
+ 2939 0135 27       		.uleb128 0x27
+ 2940 0136 19       		.uleb128 0x19
+ 2941 0137 49       		.uleb128 0x49
+ 2942 0138 13       		.uleb128 0x13
+ 2943 0139 11       		.uleb128 0x11
+ 2944 013a 01       		.uleb128 0x1
+ 2945 013b 12       		.uleb128 0x12
+ 2946 013c 06       		.uleb128 0x6
+ 2947 013d 40       		.uleb128 0x40
+ 2948 013e 18       		.uleb128 0x18
+ 2949 013f 9742     		.uleb128 0x2117
+ 2950 0141 19       		.uleb128 0x19
+ 2951 0142 01       		.uleb128 0x1
+ 2952 0143 13       		.uleb128 0x13
+ 2953 0144 00       		.byte	0
+ 2954 0145 00       		.byte	0
+ 2955 0146 1A       		.uleb128 0x1a
+ 2956 0147 05       		.uleb128 0x5
+ 2957 0148 00       		.byte	0
+ 2958 0149 03       		.uleb128 0x3
+ 2959 014a 0E       		.uleb128 0xe
+ 2960 014b 3A       		.uleb128 0x3a
+ 2961 014c 0B       		.uleb128 0xb
+ 2962 014d 3B       		.uleb128 0x3b
+ 2963 014e 0B       		.uleb128 0xb
+ 2964 014f 49       		.uleb128 0x49
+ 2965 0150 13       		.uleb128 0x13
+ 2966 0151 02       		.uleb128 0x2
+ 2967 0152 17       		.uleb128 0x17
+ 2968 0153 00       		.byte	0
+ 2969 0154 00       		.byte	0
+ 2970 0155 1B       		.uleb128 0x1b
+ 2971 0156 34       		.uleb128 0x34
+ 2972 0157 00       		.byte	0
+ 2973 0158 03       		.uleb128 0x3
+ 2974 0159 08       		.uleb128 0x8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 58
+
+
+ 2975 015a 3A       		.uleb128 0x3a
+ 2976 015b 0B       		.uleb128 0xb
+ 2977 015c 3B       		.uleb128 0x3b
+ 2978 015d 0B       		.uleb128 0xb
+ 2979 015e 49       		.uleb128 0x49
+ 2980 015f 13       		.uleb128 0x13
+ 2981 0160 02       		.uleb128 0x2
+ 2982 0161 18       		.uleb128 0x18
+ 2983 0162 00       		.byte	0
+ 2984 0163 00       		.byte	0
+ 2985 0164 1C       		.uleb128 0x1c
+ 2986 0165 34       		.uleb128 0x34
+ 2987 0166 00       		.byte	0
+ 2988 0167 03       		.uleb128 0x3
+ 2989 0168 08       		.uleb128 0x8
+ 2990 0169 3A       		.uleb128 0x3a
+ 2991 016a 0B       		.uleb128 0xb
+ 2992 016b 3B       		.uleb128 0x3b
+ 2993 016c 0B       		.uleb128 0xb
+ 2994 016d 49       		.uleb128 0x49
+ 2995 016e 13       		.uleb128 0x13
+ 2996 016f 02       		.uleb128 0x2
+ 2997 0170 17       		.uleb128 0x17
+ 2998 0171 00       		.byte	0
+ 2999 0172 00       		.byte	0
+ 3000 0173 1D       		.uleb128 0x1d
+ 3001 0174 34       		.uleb128 0x34
+ 3002 0175 00       		.byte	0
+ 3003 0176 03       		.uleb128 0x3
+ 3004 0177 0E       		.uleb128 0xe
+ 3005 0178 3A       		.uleb128 0x3a
+ 3006 0179 0B       		.uleb128 0xb
+ 3007 017a 3B       		.uleb128 0x3b
+ 3008 017b 0B       		.uleb128 0xb
+ 3009 017c 49       		.uleb128 0x49
+ 3010 017d 13       		.uleb128 0x13
+ 3011 017e 02       		.uleb128 0x2
+ 3012 017f 18       		.uleb128 0x18
+ 3013 0180 00       		.byte	0
+ 3014 0181 00       		.byte	0
+ 3015 0182 1E       		.uleb128 0x1e
+ 3016 0183 34       		.uleb128 0x34
+ 3017 0184 00       		.byte	0
+ 3018 0185 03       		.uleb128 0x3
+ 3019 0186 0E       		.uleb128 0xe
+ 3020 0187 3A       		.uleb128 0x3a
+ 3021 0188 0B       		.uleb128 0xb
+ 3022 0189 3B       		.uleb128 0x3b
+ 3023 018a 0B       		.uleb128 0xb
+ 3024 018b 49       		.uleb128 0x49
+ 3025 018c 13       		.uleb128 0x13
+ 3026 018d 02       		.uleb128 0x2
+ 3027 018e 17       		.uleb128 0x17
+ 3028 018f 00       		.byte	0
+ 3029 0190 00       		.byte	0
+ 3030 0191 1F       		.uleb128 0x1f
+ 3031 0192 898201   		.uleb128 0x4109
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 59
+
+
+ 3032 0195 00       		.byte	0
+ 3033 0196 11       		.uleb128 0x11
+ 3034 0197 01       		.uleb128 0x1
+ 3035 0198 31       		.uleb128 0x31
+ 3036 0199 13       		.uleb128 0x13
+ 3037 019a 00       		.byte	0
+ 3038 019b 00       		.byte	0
+ 3039 019c 20       		.uleb128 0x20
+ 3040 019d 21       		.uleb128 0x21
+ 3041 019e 00       		.byte	0
+ 3042 019f 49       		.uleb128 0x49
+ 3043 01a0 13       		.uleb128 0x13
+ 3044 01a1 2F       		.uleb128 0x2f
+ 3045 01a2 05       		.uleb128 0x5
+ 3046 01a3 00       		.byte	0
+ 3047 01a4 00       		.byte	0
+ 3048 01a5 21       		.uleb128 0x21
+ 3049 01a6 2E       		.uleb128 0x2e
+ 3050 01a7 00       		.byte	0
+ 3051 01a8 3F       		.uleb128 0x3f
+ 3052 01a9 19       		.uleb128 0x19
+ 3053 01aa 3C       		.uleb128 0x3c
+ 3054 01ab 19       		.uleb128 0x19
+ 3055 01ac 6E       		.uleb128 0x6e
+ 3056 01ad 0E       		.uleb128 0xe
+ 3057 01ae 03       		.uleb128 0x3
+ 3058 01af 0E       		.uleb128 0xe
+ 3059 01b0 00       		.byte	0
+ 3060 01b1 00       		.byte	0
+ 3061 01b2 22       		.uleb128 0x22
+ 3062 01b3 2E       		.uleb128 0x2e
+ 3063 01b4 00       		.byte	0
+ 3064 01b5 3F       		.uleb128 0x3f
+ 3065 01b6 19       		.uleb128 0x19
+ 3066 01b7 3C       		.uleb128 0x3c
+ 3067 01b8 19       		.uleb128 0x19
+ 3068 01b9 6E       		.uleb128 0x6e
+ 3069 01ba 0E       		.uleb128 0xe
+ 3070 01bb 03       		.uleb128 0x3
+ 3071 01bc 0E       		.uleb128 0xe
+ 3072 01bd 3A       		.uleb128 0x3a
+ 3073 01be 0B       		.uleb128 0xb
+ 3074 01bf 3B       		.uleb128 0x3b
+ 3075 01c0 05       		.uleb128 0x5
+ 3076 01c1 00       		.byte	0
+ 3077 01c2 00       		.byte	0
+ 3078 01c3 23       		.uleb128 0x23
+ 3079 01c4 2E       		.uleb128 0x2e
+ 3080 01c5 00       		.byte	0
+ 3081 01c6 3F       		.uleb128 0x3f
+ 3082 01c7 19       		.uleb128 0x19
+ 3083 01c8 3C       		.uleb128 0x3c
+ 3084 01c9 19       		.uleb128 0x19
+ 3085 01ca 6E       		.uleb128 0x6e
+ 3086 01cb 0E       		.uleb128 0xe
+ 3087 01cc 03       		.uleb128 0x3
+ 3088 01cd 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 60
+
+
+ 3089 01ce 3A       		.uleb128 0x3a
+ 3090 01cf 0B       		.uleb128 0xb
+ 3091 01d0 3B       		.uleb128 0x3b
+ 3092 01d1 0B       		.uleb128 0xb
+ 3093 01d2 00       		.byte	0
+ 3094 01d3 00       		.byte	0
+ 3095 01d4 00       		.byte	0
+ 3096              		.section	.debug_loc,"",%progbits
+ 3097              	.Ldebug_loc0:
+ 3098              	.LLST0:
+ 3099 0000 00000000 		.4byte	.LVL0
+ 3100 0004 09000000 		.4byte	.LVL1-1
+ 3101 0008 0100     		.2byte	0x1
+ 3102 000a 50       		.byte	0x50
+ 3103 000b 09000000 		.4byte	.LVL1-1
+ 3104 000f 0C000000 		.4byte	.LFE10
+ 3105 0013 0400     		.2byte	0x4
+ 3106 0015 F3       		.byte	0xf3
+ 3107 0016 01       		.uleb128 0x1
+ 3108 0017 50       		.byte	0x50
+ 3109 0018 9F       		.byte	0x9f
+ 3110 0019 00000000 		.4byte	0
+ 3111 001d 00000000 		.4byte	0
+ 3112              	.LLST1:
+ 3113 0021 00000000 		.4byte	.LVL2
+ 3114 0025 06000000 		.4byte	.LVL3
+ 3115 0029 0100     		.2byte	0x1
+ 3116 002b 50       		.byte	0x50
+ 3117 002c 06000000 		.4byte	.LVL3
+ 3118 0030 1A000000 		.4byte	.LVL7
+ 3119 0034 0100     		.2byte	0x1
+ 3120 0036 54       		.byte	0x54
+ 3121 0037 1A000000 		.4byte	.LVL7
+ 3122 003b 1C000000 		.4byte	.LFE11
+ 3123 003f 0400     		.2byte	0x4
+ 3124 0041 F3       		.byte	0xf3
+ 3125 0042 01       		.uleb128 0x1
+ 3126 0043 50       		.byte	0x50
+ 3127 0044 9F       		.byte	0x9f
+ 3128 0045 00000000 		.4byte	0
+ 3129 0049 00000000 		.4byte	0
+ 3130              	.LLST2:
+ 3131 004d 00000000 		.4byte	.LVL10
+ 3132 0051 04000000 		.4byte	.LVL11
+ 3133 0055 0100     		.2byte	0x1
+ 3134 0057 50       		.byte	0x50
+ 3135 0058 04000000 		.4byte	.LVL11
+ 3136 005c 07000000 		.4byte	.LVL12-1
+ 3137 0060 0300     		.2byte	0x3
+ 3138 0062 70       		.byte	0x70
+ 3139 0063 7C       		.sleb128 -4
+ 3140 0064 9F       		.byte	0x9f
+ 3141 0065 07000000 		.4byte	.LVL12-1
+ 3142 0069 0A000000 		.4byte	.LFE14
+ 3143 006d 0400     		.2byte	0x4
+ 3144 006f F3       		.byte	0xf3
+ 3145 0070 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 61
+
+
+ 3146 0071 50       		.byte	0x50
+ 3147 0072 9F       		.byte	0x9f
+ 3148 0073 00000000 		.4byte	0
+ 3149 0077 00000000 		.4byte	0
+ 3150              	.LLST3:
+ 3151 007b 00000000 		.4byte	.LVL10
+ 3152 007f 07000000 		.4byte	.LVL12-1
+ 3153 0083 0100     		.2byte	0x1
+ 3154 0085 51       		.byte	0x51
+ 3155 0086 07000000 		.4byte	.LVL12-1
+ 3156 008a 0A000000 		.4byte	.LFE14
+ 3157 008e 0400     		.2byte	0x4
+ 3158 0090 F3       		.byte	0xf3
+ 3159 0091 01       		.uleb128 0x1
+ 3160 0092 51       		.byte	0x51
+ 3161 0093 9F       		.byte	0x9f
+ 3162 0094 00000000 		.4byte	0
+ 3163 0098 00000000 		.4byte	0
+ 3164              	.LLST4:
+ 3165 009c 00000000 		.4byte	.LVL13
+ 3166 00a0 06000000 		.4byte	.LVL14
+ 3167 00a4 0100     		.2byte	0x1
+ 3168 00a6 50       		.byte	0x50
+ 3169 00a7 06000000 		.4byte	.LVL14
+ 3170 00ab 11000000 		.4byte	.LVL16-1
+ 3171 00af 0300     		.2byte	0x3
+ 3172 00b1 70       		.byte	0x70
+ 3173 00b2 74       		.sleb128 -12
+ 3174 00b3 9F       		.byte	0x9f
+ 3175 00b4 11000000 		.4byte	.LVL16-1
+ 3176 00b8 16000000 		.4byte	.LFE15
+ 3177 00bc 0400     		.2byte	0x4
+ 3178 00be F3       		.byte	0xf3
+ 3179 00bf 01       		.uleb128 0x1
+ 3180 00c0 50       		.byte	0x50
+ 3181 00c1 9F       		.byte	0x9f
+ 3182 00c2 00000000 		.4byte	0
+ 3183 00c6 00000000 		.4byte	0
+ 3184              	.LLST5:
+ 3185 00ca 00000000 		.4byte	.LVL13
+ 3186 00ce 11000000 		.4byte	.LVL16-1
+ 3187 00d2 0100     		.2byte	0x1
+ 3188 00d4 51       		.byte	0x51
+ 3189 00d5 11000000 		.4byte	.LVL16-1
+ 3190 00d9 16000000 		.4byte	.LFE15
+ 3191 00dd 0400     		.2byte	0x4
+ 3192 00df F3       		.byte	0xf3
+ 3193 00e0 01       		.uleb128 0x1
+ 3194 00e1 51       		.byte	0x51
+ 3195 00e2 9F       		.byte	0x9f
+ 3196 00e3 00000000 		.4byte	0
+ 3197 00e7 00000000 		.4byte	0
+ 3198              	.LLST6:
+ 3199 00eb 00000000 		.4byte	.LVL13
+ 3200 00ef 11000000 		.4byte	.LVL16-1
+ 3201 00f3 0100     		.2byte	0x1
+ 3202 00f5 52       		.byte	0x52
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 62
+
+
+ 3203 00f6 11000000 		.4byte	.LVL16-1
+ 3204 00fa 16000000 		.4byte	.LFE15
+ 3205 00fe 0400     		.2byte	0x4
+ 3206 0100 F3       		.byte	0xf3
+ 3207 0101 01       		.uleb128 0x1
+ 3208 0102 52       		.byte	0x52
+ 3209 0103 9F       		.byte	0x9f
+ 3210 0104 00000000 		.4byte	0
+ 3211 0108 00000000 		.4byte	0
+ 3212              	.LLST7:
+ 3213 010c 00000000 		.4byte	.LVL13
+ 3214 0110 0E000000 		.4byte	.LVL15
+ 3215 0114 0100     		.2byte	0x1
+ 3216 0116 53       		.byte	0x53
+ 3217 0117 0E000000 		.4byte	.LVL15
+ 3218 011b 11000000 		.4byte	.LVL16-1
+ 3219 011f 0200     		.2byte	0x2
+ 3220 0121 7D       		.byte	0x7d
+ 3221 0122 00       		.sleb128 0
+ 3222 0123 11000000 		.4byte	.LVL16-1
+ 3223 0127 16000000 		.4byte	.LFE15
+ 3224 012b 0400     		.2byte	0x4
+ 3225 012d F3       		.byte	0xf3
+ 3226 012e 01       		.uleb128 0x1
+ 3227 012f 53       		.byte	0x53
+ 3228 0130 9F       		.byte	0x9f
+ 3229 0131 00000000 		.4byte	0
+ 3230 0135 00000000 		.4byte	0
+ 3231              	.LLST8:
+ 3232 0139 00000000 		.4byte	.LVL17
+ 3233 013d 16000000 		.4byte	.LVL19
+ 3234 0141 0100     		.2byte	0x1
+ 3235 0143 50       		.byte	0x50
+ 3236 0144 16000000 		.4byte	.LVL19
+ 3237 0148 30000000 		.4byte	.LVL23
+ 3238 014c 0100     		.2byte	0x1
+ 3239 014e 54       		.byte	0x54
+ 3240 014f 30000000 		.4byte	.LVL23
+ 3241 0153 38000000 		.4byte	.LFE16
+ 3242 0157 0400     		.2byte	0x4
+ 3243 0159 F3       		.byte	0xf3
+ 3244 015a 01       		.uleb128 0x1
+ 3245 015b 50       		.byte	0x50
+ 3246 015c 9F       		.byte	0x9f
+ 3247 015d 00000000 		.4byte	0
+ 3248 0161 00000000 		.4byte	0
+ 3249              	.LLST9:
+ 3250 0165 00000000 		.4byte	.LVL17
+ 3251 0169 14000000 		.4byte	.LVL18
+ 3252 016d 0100     		.2byte	0x1
+ 3253 016f 51       		.byte	0x51
+ 3254 0170 14000000 		.4byte	.LVL18
+ 3255 0174 19000000 		.4byte	.LVL20-1
+ 3256 0178 0200     		.2byte	0x2
+ 3257 017a 72       		.byte	0x72
+ 3258 017b 00       		.sleb128 0
+ 3259 017c 19000000 		.4byte	.LVL20-1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 63
+
+
+ 3260 0180 38000000 		.4byte	.LFE16
+ 3261 0184 0200     		.2byte	0x2
+ 3262 0186 91       		.byte	0x91
+ 3263 0187 6F       		.sleb128 -17
+ 3264 0188 00000000 		.4byte	0
+ 3265 018c 00000000 		.4byte	0
+ 3266              	.LLST10:
+ 3267 0190 1A000000 		.4byte	.LVL20
+ 3268 0194 2A000000 		.4byte	.LVL21
+ 3269 0198 0100     		.2byte	0x1
+ 3270 019a 50       		.byte	0x50
+ 3271 019b 2E000000 		.4byte	.LVL22
+ 3272 019f 38000000 		.4byte	.LFE16
+ 3273 01a3 0100     		.2byte	0x1
+ 3274 01a5 50       		.byte	0x50
+ 3275 01a6 00000000 		.4byte	0
+ 3276 01aa 00000000 		.4byte	0
+ 3277              	.LLST11:
+ 3278 01ae 00000000 		.4byte	.LVL24
+ 3279 01b2 16000000 		.4byte	.LVL26
+ 3280 01b6 0100     		.2byte	0x1
+ 3281 01b8 50       		.byte	0x50
+ 3282 01b9 16000000 		.4byte	.LVL26
+ 3283 01bd 30000000 		.4byte	.LVL30
+ 3284 01c1 0100     		.2byte	0x1
+ 3285 01c3 54       		.byte	0x54
+ 3286 01c4 30000000 		.4byte	.LVL30
+ 3287 01c8 38000000 		.4byte	.LFE17
+ 3288 01cc 0400     		.2byte	0x4
+ 3289 01ce F3       		.byte	0xf3
+ 3290 01cf 01       		.uleb128 0x1
+ 3291 01d0 50       		.byte	0x50
+ 3292 01d1 9F       		.byte	0x9f
+ 3293 01d2 00000000 		.4byte	0
+ 3294 01d6 00000000 		.4byte	0
+ 3295              	.LLST12:
+ 3296 01da 00000000 		.4byte	.LVL24
+ 3297 01de 14000000 		.4byte	.LVL25
+ 3298 01e2 0100     		.2byte	0x1
+ 3299 01e4 51       		.byte	0x51
+ 3300 01e5 14000000 		.4byte	.LVL25
+ 3301 01e9 19000000 		.4byte	.LVL27-1
+ 3302 01ed 0200     		.2byte	0x2
+ 3303 01ef 72       		.byte	0x72
+ 3304 01f0 00       		.sleb128 0
+ 3305 01f1 19000000 		.4byte	.LVL27-1
+ 3306 01f5 38000000 		.4byte	.LFE17
+ 3307 01f9 0200     		.2byte	0x2
+ 3308 01fb 91       		.byte	0x91
+ 3309 01fc 6F       		.sleb128 -17
+ 3310 01fd 00000000 		.4byte	0
+ 3311 0201 00000000 		.4byte	0
+ 3312              	.LLST13:
+ 3313 0205 1A000000 		.4byte	.LVL27
+ 3314 0209 2A000000 		.4byte	.LVL28
+ 3315 020d 0100     		.2byte	0x1
+ 3316 020f 50       		.byte	0x50
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 64
+
+
+ 3317 0210 2E000000 		.4byte	.LVL29
+ 3318 0214 38000000 		.4byte	.LFE17
+ 3319 0218 0100     		.2byte	0x1
+ 3320 021a 50       		.byte	0x50
+ 3321 021b 00000000 		.4byte	0
+ 3322 021f 00000000 		.4byte	0
+ 3323              	.LLST14:
+ 3324 0223 00000000 		.4byte	.LVL31
+ 3325 0227 2C000000 		.4byte	.LVL36
+ 3326 022b 0100     		.2byte	0x1
+ 3327 022d 50       		.byte	0x50
+ 3328 022e 2C000000 		.4byte	.LVL36
+ 3329 0232 20020000 		.4byte	.LVL92
+ 3330 0236 0100     		.2byte	0x1
+ 3331 0238 57       		.byte	0x57
+ 3332 0239 20020000 		.4byte	.LVL92
+ 3333 023d AA020000 		.4byte	.LVL105
+ 3334 0241 0400     		.2byte	0x4
+ 3335 0243 F3       		.byte	0xf3
+ 3336 0244 01       		.uleb128 0x1
+ 3337 0245 50       		.byte	0x50
+ 3338 0246 9F       		.byte	0x9f
+ 3339 0247 AA020000 		.4byte	.LVL105
+ 3340 024b B0020000 		.4byte	.LVL107
+ 3341 024f 0100     		.2byte	0x1
+ 3342 0251 57       		.byte	0x57
+ 3343 0252 B0020000 		.4byte	.LVL107
+ 3344 0256 E0020000 		.4byte	.LFE18
+ 3345 025a 0400     		.2byte	0x4
+ 3346 025c F3       		.byte	0xf3
+ 3347 025d 01       		.uleb128 0x1
+ 3348 025e 50       		.byte	0x50
+ 3349 025f 9F       		.byte	0x9f
+ 3350 0260 00000000 		.4byte	0
+ 3351 0264 00000000 		.4byte	0
+ 3352              	.LLST15:
+ 3353 0268 00000000 		.4byte	.LVL31
+ 3354 026c 16000000 		.4byte	.LVL34
+ 3355 0270 0100     		.2byte	0x1
+ 3356 0272 51       		.byte	0x51
+ 3357 0273 16000000 		.4byte	.LVL34
+ 3358 0277 E0020000 		.4byte	.LFE18
+ 3359 027b 0300     		.2byte	0x3
+ 3360 027d 91       		.byte	0x91
+ 3361 027e 8867     		.sleb128 -3192
+ 3362 0280 00000000 		.4byte	0
+ 3363 0284 00000000 		.4byte	0
+ 3364              	.LLST16:
+ 3365 0288 00000000 		.4byte	.LVL31
+ 3366 028c 12000000 		.4byte	.LVL33
+ 3367 0290 0100     		.2byte	0x1
+ 3368 0292 52       		.byte	0x52
+ 3369 0293 12000000 		.4byte	.LVL33
+ 3370 0297 E0020000 		.4byte	.LFE18
+ 3371 029b 0300     		.2byte	0x3
+ 3372 029d 91       		.byte	0x91
+ 3373 029e 8C67     		.sleb128 -3188
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 65
+
+
+ 3374 02a0 00000000 		.4byte	0
+ 3375 02a4 00000000 		.4byte	0
+ 3376              	.LLST17:
+ 3377 02a8 00000000 		.4byte	.LVL31
+ 3378 02ac 10000000 		.4byte	.LVL32
+ 3379 02b0 0100     		.2byte	0x1
+ 3380 02b2 53       		.byte	0x53
+ 3381 02b3 10000000 		.4byte	.LVL32
+ 3382 02b7 54020000 		.4byte	.LVL95
+ 3383 02bb 0100     		.2byte	0x1
+ 3384 02bd 55       		.byte	0x55
+ 3385 02be 54020000 		.4byte	.LVL95
+ 3386 02c2 AA020000 		.4byte	.LVL105
+ 3387 02c6 0400     		.2byte	0x4
+ 3388 02c8 F3       		.byte	0xf3
+ 3389 02c9 01       		.uleb128 0x1
+ 3390 02ca 53       		.byte	0x53
+ 3391 02cb 9F       		.byte	0x9f
+ 3392 02cc AA020000 		.4byte	.LVL105
+ 3393 02d0 B0020000 		.4byte	.LVL107
+ 3394 02d4 0100     		.2byte	0x1
+ 3395 02d6 55       		.byte	0x55
+ 3396 02d7 B0020000 		.4byte	.LVL107
+ 3397 02db E0020000 		.4byte	.LFE18
+ 3398 02df 0400     		.2byte	0x4
+ 3399 02e1 F3       		.byte	0xf3
+ 3400 02e2 01       		.uleb128 0x1
+ 3401 02e3 53       		.byte	0x53
+ 3402 02e4 9F       		.byte	0x9f
+ 3403 02e5 00000000 		.4byte	0
+ 3404 02e9 00000000 		.4byte	0
+ 3405              	.LLST18:
+ 3406 02ed 34000000 		.4byte	.LVL38
+ 3407 02f1 42000000 		.4byte	.LVL40
+ 3408 02f5 0100     		.2byte	0x1
+ 3409 02f7 50       		.byte	0x50
+ 3410 02f8 42000000 		.4byte	.LVL40
+ 3411 02fc 4B000000 		.4byte	.LVL41-1
+ 3412 0300 0100     		.2byte	0x1
+ 3413 0302 52       		.byte	0x52
+ 3414 0303 4B000000 		.4byte	.LVL41-1
+ 3415 0307 4C000000 		.4byte	.LVL41
+ 3416 030b 0100     		.2byte	0x1
+ 3417 030d 54       		.byte	0x54
+ 3418 030e 4C000000 		.4byte	.LVL41
+ 3419 0312 5A000000 		.4byte	.LVL43
+ 3420 0316 0100     		.2byte	0x1
+ 3421 0318 50       		.byte	0x50
+ 3422 0319 64000000 		.4byte	.LVL44
+ 3423 031d 72000000 		.4byte	.LVL46
+ 3424 0321 0100     		.2byte	0x1
+ 3425 0323 50       		.byte	0x50
+ 3426 0324 7C000000 		.4byte	.LVL47
+ 3427 0328 8A000000 		.4byte	.LVL49
+ 3428 032c 0100     		.2byte	0x1
+ 3429 032e 50       		.byte	0x50
+ 3430 032f 94000000 		.4byte	.LVL50
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 66
+
+
+ 3431 0333 A4000000 		.4byte	.LVL52
+ 3432 0337 0100     		.2byte	0x1
+ 3433 0339 50       		.byte	0x50
+ 3434 033a AE000000 		.4byte	.LVL53
+ 3435 033e BC000000 		.4byte	.LVL55
+ 3436 0342 0100     		.2byte	0x1
+ 3437 0344 50       		.byte	0x50
+ 3438 0345 C6000000 		.4byte	.LVL56
+ 3439 0349 D4000000 		.4byte	.LVL58
+ 3440 034d 0100     		.2byte	0x1
+ 3441 034f 50       		.byte	0x50
+ 3442 0350 DE000000 		.4byte	.LVL59
+ 3443 0354 EC000000 		.4byte	.LVL61
+ 3444 0358 0100     		.2byte	0x1
+ 3445 035a 50       		.byte	0x50
+ 3446 035b F6000000 		.4byte	.LVL62
+ 3447 035f 04010000 		.4byte	.LVL64
+ 3448 0363 0100     		.2byte	0x1
+ 3449 0365 50       		.byte	0x50
+ 3450 0366 0E010000 		.4byte	.LVL65
+ 3451 036a 26010000 		.4byte	.LVL67
+ 3452 036e 0100     		.2byte	0x1
+ 3453 0370 50       		.byte	0x50
+ 3454 0371 2A010000 		.4byte	.LVL68
+ 3455 0375 4A010000 		.4byte	.LVL71
+ 3456 0379 0100     		.2byte	0x1
+ 3457 037b 50       		.byte	0x50
+ 3458 037c 50010000 		.4byte	.LVL72
+ 3459 0380 5E010000 		.4byte	.LVL74
+ 3460 0384 0100     		.2byte	0x1
+ 3461 0386 50       		.byte	0x50
+ 3462 0387 68010000 		.4byte	.LVL75
+ 3463 038b 76010000 		.4byte	.LVL77
+ 3464 038f 0100     		.2byte	0x1
+ 3465 0391 50       		.byte	0x50
+ 3466 0392 80010000 		.4byte	.LVL78
+ 3467 0396 8E010000 		.4byte	.LVL80
+ 3468 039a 0100     		.2byte	0x1
+ 3469 039c 50       		.byte	0x50
+ 3470 039d 98010000 		.4byte	.LVL81
+ 3471 03a1 A2010000 		.4byte	.LVL83
+ 3472 03a5 0100     		.2byte	0x1
+ 3473 03a7 50       		.byte	0x50
+ 3474 03a8 E2010000 		.4byte	.LVL86
+ 3475 03ac EA010000 		.4byte	.LVL87
+ 3476 03b0 0100     		.2byte	0x1
+ 3477 03b2 50       		.byte	0x50
+ 3478 03b3 18020000 		.4byte	.LVL91
+ 3479 03b7 4C020000 		.4byte	.LVL93
+ 3480 03bb 0100     		.2byte	0x1
+ 3481 03bd 50       		.byte	0x50
+ 3482 03be 54020000 		.4byte	.LVL95
+ 3483 03c2 60020000 		.4byte	.LVL97
+ 3484 03c6 0100     		.2byte	0x1
+ 3485 03c8 50       		.byte	0x50
+ 3486 03c9 60020000 		.4byte	.LVL97
+ 3487 03cd 8C020000 		.4byte	.LVL100
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 67
+
+
+ 3488 03d1 0100     		.2byte	0x1
+ 3489 03d3 55       		.byte	0x55
+ 3490 03d4 8C020000 		.4byte	.LVL100
+ 3491 03d8 98020000 		.4byte	.LVL102
+ 3492 03dc 0100     		.2byte	0x1
+ 3493 03de 50       		.byte	0x50
+ 3494 03df A2020000 		.4byte	.LVL103
+ 3495 03e3 A8020000 		.4byte	.LVL104
+ 3496 03e7 0100     		.2byte	0x1
+ 3497 03e9 50       		.byte	0x50
+ 3498 03ea AA020000 		.4byte	.LVL105
+ 3499 03ee AC020000 		.4byte	.LVL106
+ 3500 03f2 0100     		.2byte	0x1
+ 3501 03f4 50       		.byte	0x50
+ 3502 03f5 B0020000 		.4byte	.LVL107
+ 3503 03f9 B2020000 		.4byte	.LVL108
+ 3504 03fd 0100     		.2byte	0x1
+ 3505 03ff 50       		.byte	0x50
+ 3506 0400 B2020000 		.4byte	.LVL108
+ 3507 0404 B6020000 		.4byte	.LVL109
+ 3508 0408 0100     		.2byte	0x1
+ 3509 040a 55       		.byte	0x55
+ 3510 040b 00000000 		.4byte	0
+ 3511 040f 00000000 		.4byte	0
+ 3512              	.LLST19:
+ 3513 0413 1C000000 		.4byte	.LVL35
+ 3514 0417 30010000 		.4byte	.LVL69
+ 3515 041b 0200     		.2byte	0x2
+ 3516 041d 30       		.byte	0x30
+ 3517 041e 9F       		.byte	0x9f
+ 3518 041f 30010000 		.4byte	.LVL69
+ 3519 0423 4A010000 		.4byte	.LVL71
+ 3520 0427 0100     		.2byte	0x1
+ 3521 0429 50       		.byte	0x50
+ 3522 042a AA020000 		.4byte	.LVL105
+ 3523 042e AC020000 		.4byte	.LVL106
+ 3524 0432 0200     		.2byte	0x2
+ 3525 0434 30       		.byte	0x30
+ 3526 0435 9F       		.byte	0x9f
+ 3527 0436 00000000 		.4byte	0
+ 3528 043a 00000000 		.4byte	0
+ 3529              	.LLST20:
+ 3530 043e 1C000000 		.4byte	.LVL35
+ 3531 0442 56020000 		.4byte	.LVL96
+ 3532 0446 0200     		.2byte	0x2
+ 3533 0448 30       		.byte	0x30
+ 3534 0449 9F       		.byte	0x9f
+ 3535 044a 56020000 		.4byte	.LVL96
+ 3536 044e 60020000 		.4byte	.LVL97
+ 3537 0452 0100     		.2byte	0x1
+ 3538 0454 50       		.byte	0x50
+ 3539 0455 60020000 		.4byte	.LVL97
+ 3540 0459 AA020000 		.4byte	.LVL105
+ 3541 045d 0100     		.2byte	0x1
+ 3542 045f 55       		.byte	0x55
+ 3543 0460 AA020000 		.4byte	.LVL105
+ 3544 0464 B2020000 		.4byte	.LVL108
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 68
+
+
+ 3545 0468 0200     		.2byte	0x2
+ 3546 046a 30       		.byte	0x30
+ 3547 046b 9F       		.byte	0x9f
+ 3548 046c B2020000 		.4byte	.LVL108
+ 3549 0470 B6020000 		.4byte	.LVL109
+ 3550 0474 0100     		.2byte	0x1
+ 3551 0476 55       		.byte	0x55
+ 3552 0477 00000000 		.4byte	0
+ 3553 047b 00000000 		.4byte	0
+ 3554              	.LLST21:
+ 3555 047f 1C000000 		.4byte	.LVL35
+ 3556 0483 3A000000 		.4byte	.LVL39
+ 3557 0487 0200     		.2byte	0x2
+ 3558 0489 30       		.byte	0x30
+ 3559 048a 9F       		.byte	0x9f
+ 3560 048b 3A000000 		.4byte	.LVL39
+ 3561 048f 42000000 		.4byte	.LVL40
+ 3562 0493 0100     		.2byte	0x1
+ 3563 0495 50       		.byte	0x50
+ 3564 0496 42000000 		.4byte	.LVL40
+ 3565 049a 4B000000 		.4byte	.LVL41-1
+ 3566 049e 0100     		.2byte	0x1
+ 3567 04a0 52       		.byte	0x52
+ 3568 04a1 4B000000 		.4byte	.LVL41-1
+ 3569 04a5 E6000000 		.4byte	.LVL60
+ 3570 04a9 0100     		.2byte	0x1
+ 3571 04ab 54       		.byte	0x54
+ 3572 04ac E6000000 		.4byte	.LVL60
+ 3573 04b0 FE000000 		.4byte	.LVL63
+ 3574 04b4 0100     		.2byte	0x1
+ 3575 04b6 56       		.byte	0x56
+ 3576 04b7 FE000000 		.4byte	.LVL63
+ 3577 04bb A8020000 		.4byte	.LVL104
+ 3578 04bf 0100     		.2byte	0x1
+ 3579 04c1 54       		.byte	0x54
+ 3580 04c2 AA020000 		.4byte	.LVL105
+ 3581 04c6 AC020000 		.4byte	.LVL106
+ 3582 04ca 0200     		.2byte	0x2
+ 3583 04cc 30       		.byte	0x30
+ 3584 04cd 9F       		.byte	0x9f
+ 3585 04ce AC020000 		.4byte	.LVL106
+ 3586 04d2 B6020000 		.4byte	.LVL109
+ 3587 04d6 0100     		.2byte	0x1
+ 3588 04d8 54       		.byte	0x54
+ 3589 04d9 00000000 		.4byte	0
+ 3590 04dd 00000000 		.4byte	0
+ 3591              	.LLST22:
+ 3592 04e1 04020000 		.4byte	.LVL90
+ 3593 04e5 17020000 		.4byte	.LVL91-1
+ 3594 04e9 0100     		.2byte	0x1
+ 3595 04eb 50       		.byte	0x50
+ 3596 04ec 00000000 		.4byte	0
+ 3597 04f0 00000000 		.4byte	0
+ 3598              	.LLST23:
+ 3599 04f4 00000000 		.4byte	.LVL110
+ 3600 04f8 1F000000 		.4byte	.LVL113-1
+ 3601 04fc 0100     		.2byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 69
+
+
+ 3602 04fe 50       		.byte	0x50
+ 3603 04ff 1F000000 		.4byte	.LVL113-1
+ 3604 0503 5C000000 		.4byte	.LFE19
+ 3605 0507 0400     		.2byte	0x4
+ 3606 0509 F3       		.byte	0xf3
+ 3607 050a 01       		.uleb128 0x1
+ 3608 050b 50       		.byte	0x50
+ 3609 050c 9F       		.byte	0x9f
+ 3610 050d 00000000 		.4byte	0
+ 3611 0511 00000000 		.4byte	0
+ 3612              	.LLST24:
+ 3613 0515 00000000 		.4byte	.LVL110
+ 3614 0519 1C000000 		.4byte	.LVL112
+ 3615 051d 0100     		.2byte	0x1
+ 3616 051f 51       		.byte	0x51
+ 3617 0520 1C000000 		.4byte	.LVL112
+ 3618 0524 46000000 		.4byte	.LVL116
+ 3619 0528 0100     		.2byte	0x1
+ 3620 052a 54       		.byte	0x54
+ 3621 052b 46000000 		.4byte	.LVL116
+ 3622 052f 5C000000 		.4byte	.LFE19
+ 3623 0533 0400     		.2byte	0x4
+ 3624 0535 F3       		.byte	0xf3
+ 3625 0536 01       		.uleb128 0x1
+ 3626 0537 51       		.byte	0x51
+ 3627 0538 9F       		.byte	0x9f
+ 3628 0539 00000000 		.4byte	0
+ 3629 053d 00000000 		.4byte	0
+ 3630              	.LLST25:
+ 3631 0541 00000000 		.4byte	.LVL110
+ 3632 0545 0C000000 		.4byte	.LVL111
+ 3633 0549 0100     		.2byte	0x1
+ 3634 054b 52       		.byte	0x52
+ 3635 054c 0C000000 		.4byte	.LVL111
+ 3636 0550 46000000 		.4byte	.LVL117
+ 3637 0554 0100     		.2byte	0x1
+ 3638 0556 55       		.byte	0x55
+ 3639 0557 46000000 		.4byte	.LVL117
+ 3640 055b 5C000000 		.4byte	.LFE19
+ 3641 055f 0400     		.2byte	0x4
+ 3642 0561 F3       		.byte	0xf3
+ 3643 0562 01       		.uleb128 0x1
+ 3644 0563 52       		.byte	0x52
+ 3645 0564 9F       		.byte	0x9f
+ 3646 0565 00000000 		.4byte	0
+ 3647 0569 00000000 		.4byte	0
+ 3648              	.LLST26:
+ 3649 056d 00000000 		.4byte	.LVL110
+ 3650 0571 1F000000 		.4byte	.LVL113-1
+ 3651 0575 0100     		.2byte	0x1
+ 3652 0577 53       		.byte	0x53
+ 3653 0578 1F000000 		.4byte	.LVL113-1
+ 3654 057c 5C000000 		.4byte	.LFE19
+ 3655 0580 0400     		.2byte	0x4
+ 3656 0582 F3       		.byte	0xf3
+ 3657 0583 01       		.uleb128 0x1
+ 3658 0584 53       		.byte	0x53
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 70
+
+
+ 3659 0585 9F       		.byte	0x9f
+ 3660 0586 00000000 		.4byte	0
+ 3661 058a 00000000 		.4byte	0
+ 3662              	.LLST27:
+ 3663 058e 20000000 		.4byte	.LVL113
+ 3664 0592 3E000000 		.4byte	.LVL114
+ 3665 0596 0100     		.2byte	0x1
+ 3666 0598 50       		.byte	0x50
+ 3667 0599 3E000000 		.4byte	.LVL114
+ 3668 059d 41000000 		.4byte	.LVL115-1
+ 3669 05a1 0100     		.2byte	0x1
+ 3670 05a3 53       		.byte	0x53
+ 3671 05a4 42000000 		.4byte	.LVL115
+ 3672 05a8 5C000000 		.4byte	.LFE19
+ 3673 05ac 0100     		.2byte	0x1
+ 3674 05ae 50       		.byte	0x50
+ 3675 05af 00000000 		.4byte	0
+ 3676 05b3 00000000 		.4byte	0
+ 3677              		.section	.debug_aranges,"",%progbits
+ 3678 0000 64000000 		.4byte	0x64
+ 3679 0004 0200     		.2byte	0x2
+ 3680 0006 00000000 		.4byte	.Ldebug_info0
+ 3681 000a 04       		.byte	0x4
+ 3682 000b 00       		.byte	0
+ 3683 000c 0000     		.2byte	0
+ 3684 000e 0000     		.2byte	0
+ 3685 0010 00000000 		.4byte	.LFB10
+ 3686 0014 0C000000 		.4byte	.LFE10-.LFB10
+ 3687 0018 00000000 		.4byte	.LFB11
+ 3688 001c 1C000000 		.4byte	.LFE11-.LFB11
+ 3689 0020 00000000 		.4byte	.LFB12
+ 3690 0024 04000000 		.4byte	.LFE12-.LFB12
+ 3691 0028 00000000 		.4byte	.LFB13
+ 3692 002c 04000000 		.4byte	.LFE13-.LFB13
+ 3693 0030 00000000 		.4byte	.LFB14
+ 3694 0034 0A000000 		.4byte	.LFE14-.LFB14
+ 3695 0038 00000000 		.4byte	.LFB15
+ 3696 003c 16000000 		.4byte	.LFE15-.LFB15
+ 3697 0040 00000000 		.4byte	.LFB16
+ 3698 0044 38000000 		.4byte	.LFE16-.LFB16
+ 3699 0048 00000000 		.4byte	.LFB17
+ 3700 004c 38000000 		.4byte	.LFE17-.LFB17
+ 3701 0050 00000000 		.4byte	.LFB18
+ 3702 0054 E0020000 		.4byte	.LFE18-.LFB18
+ 3703 0058 00000000 		.4byte	.LFB19
+ 3704 005c 5C000000 		.4byte	.LFE19-.LFB19
+ 3705 0060 00000000 		.4byte	0
+ 3706 0064 00000000 		.4byte	0
+ 3707              		.section	.debug_ranges,"",%progbits
+ 3708              	.Ldebug_ranges0:
+ 3709 0000 00000000 		.4byte	.LFB10
+ 3710 0004 0C000000 		.4byte	.LFE10
+ 3711 0008 00000000 		.4byte	.LFB11
+ 3712 000c 1C000000 		.4byte	.LFE11
+ 3713 0010 00000000 		.4byte	.LFB12
+ 3714 0014 04000000 		.4byte	.LFE12
+ 3715 0018 00000000 		.4byte	.LFB13
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 71
+
+
+ 3716 001c 04000000 		.4byte	.LFE13
+ 3717 0020 00000000 		.4byte	.LFB14
+ 3718 0024 0A000000 		.4byte	.LFE14
+ 3719 0028 00000000 		.4byte	.LFB15
+ 3720 002c 16000000 		.4byte	.LFE15
+ 3721 0030 00000000 		.4byte	.LFB16
+ 3722 0034 38000000 		.4byte	.LFE16
+ 3723 0038 00000000 		.4byte	.LFB17
+ 3724 003c 38000000 		.4byte	.LFE17
+ 3725 0040 00000000 		.4byte	.LFB18
+ 3726 0044 E0020000 		.4byte	.LFE18
+ 3727 0048 00000000 		.4byte	.LFB19
+ 3728 004c 5C000000 		.4byte	.LFE19
+ 3729 0050 00000000 		.4byte	0
+ 3730 0054 00000000 		.4byte	0
+ 3731              		.section	.debug_line,"",%progbits
+ 3732              	.Ldebug_line0:
+ 3733 0000 AD020000 		.section	.debug_str,"MS",%progbits,1
+ 3733      02005001 
+ 3733      00000201 
+ 3733      FB0E0D00 
+ 3733      01010101 
+ 3734              	.LASF33:
+ 3735 0000 4D424544 		.ascii	"MBEDTLS_PK_RSASSA_PSS\000"
+ 3735      544C535F 
+ 3735      504B5F52 
+ 3735      53415353 
+ 3735      415F5053 
+ 3736              	.LASF59:
+ 3737 0016 665F726E 		.ascii	"f_rng\000"
+ 3737      6700
+ 3738              	.LASF32:
+ 3739 001c 4D424544 		.ascii	"MBEDTLS_PK_RSA_ALT\000"
+ 3739      544C535F 
+ 3739      504B5F52 
+ 3739      53415F41 
+ 3739      4C5400
+ 3740              	.LASF55:
+ 3741 002f 6D626564 		.ascii	"mbedtls_x509write_csr_set_ns_cert_type\000"
+ 3741      746C735F 
+ 3741      78353039 
+ 3741      77726974 
+ 3741      655F6373 
+ 3742              	.LASF86:
+ 3743 0056 6D626564 		.ascii	"mbedtls_pk_sign\000"
+ 3743      746C735F 
+ 3743      706B5F73 
+ 3743      69676E00 
+ 3744              	.LASF88:
+ 3745 0066 6D626564 		.ascii	"mbedtls_oid_get_oid_by_sig_alg\000"
+ 3745      746C735F 
+ 3745      6F69645F 
+ 3745      6765745F 
+ 3745      6F69645F 
+ 3746              	.LASF83:
+ 3747 0085 6D626564 		.ascii	"mbedtls_asn1_write_int\000"
+ 3747      746C735F 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 72
+
+
+ 3747      61736E31 
+ 3747      5F777269 
+ 3747      74655F69 
+ 3748              	.LASF72:
+ 3749 009c 6D626564 		.ascii	"mbedtls_asn1_free_named_data_list\000"
+ 3749      746C735F 
+ 3749      61736E31 
+ 3749      5F667265 
+ 3749      655F6E61 
+ 3750              	.LASF56:
+ 3751 00be 6E735F63 		.ascii	"ns_cert_type\000"
+ 3751      6572745F 
+ 3751      74797065 
+ 3751      00
+ 3752              	.LASF10:
+ 3753 00cb 73697A65 		.ascii	"size_t\000"
+ 3753      5F7400
+ 3754              	.LASF42:
+ 3755 00d2 65787465 		.ascii	"extensions\000"
+ 3755      6E73696F 
+ 3755      6E7300
+ 3756              	.LASF43:
+ 3757 00dd 73697A65 		.ascii	"sizetype\000"
+ 3757      74797065 
+ 3757      00
+ 3758              	.LASF93:
+ 3759 00e6 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 3759      43313120 
+ 3759      352E342E 
+ 3759      31203230 
+ 3759      31363036 
+ 3760 0119 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 3760      20726576 
+ 3760      6973696F 
+ 3760      6E203233 
+ 3760      37373135 
+ 3761 014c 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 3761      67202D66 
+ 3761      66756E63 
+ 3761      74696F6E 
+ 3761      2D736563 
+ 3762              	.LASF40:
+ 3763 0178 7375626A 		.ascii	"subject\000"
+ 3763      65637400 
+ 3764              	.LASF23:
+ 3765 0180 4D424544 		.ascii	"MBEDTLS_MD_SHA512\000"
+ 3765      544C535F 
+ 3765      4D445F53 
+ 3765      48413531 
+ 3765      3200
+ 3766              	.LASF62:
+ 3767 0192 7369675F 		.ascii	"sig_oid_len\000"
+ 3767      6F69645F 
+ 3767      6C656E00 
+ 3768              	.LASF91:
+ 3769 019e 6D656D63 		.ascii	"memcpy\000"
+ 3769      707900
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 73
+
+
+ 3770              	.LASF44:
+ 3771 01a5 6D626564 		.ascii	"mbedtls_x509write_csr_init\000"
+ 3771      746C735F 
+ 3771      78353039 
+ 3771      77726974 
+ 3771      655F6373 
+ 3772              	.LASF2:
+ 3773 01c0 73686F72 		.ascii	"short int\000"
+ 3773      7420696E 
+ 3773      7400
+ 3774              	.LASF70:
+ 3775 01ca 6F757470 		.ascii	"output_buf\000"
+ 3775      75745F62 
+ 3775      756600
+ 3776              	.LASF25:
+ 3777 01d5 6D626564 		.ascii	"mbedtls_md_type_t\000"
+ 3777      746C735F 
+ 3777      6D645F74 
+ 3777      7970655F 
+ 3777      7400
+ 3778              	.LASF82:
+ 3779 01e7 6D626564 		.ascii	"mbedtls_x509_write_names\000"
+ 3779      746C735F 
+ 3779      78353039 
+ 3779      5F777269 
+ 3779      74655F6E 
+ 3780              	.LASF49:
+ 3781 0200 6D626564 		.ascii	"mbedtls_x509write_csr_set_subject_name\000"
+ 3781      746C735F 
+ 3781      78353039 
+ 3781      77726974 
+ 3781      655F6373 
+ 3782              	.LASF34:
+ 3783 0227 6D626564 		.ascii	"mbedtls_pk_type_t\000"
+ 3783      746C735F 
+ 3783      706B5F74 
+ 3783      7970655F 
+ 3783      7400
+ 3784              	.LASF52:
+ 3785 0239 76616C5F 		.ascii	"val_len\000"
+ 3785      6C656E00 
+ 3786              	.LASF79:
+ 3787 0241 6D626564 		.ascii	"mbedtls_asn1_write_tag\000"
+ 3787      746C735F 
+ 3787      61736E31 
+ 3787      5F777269 
+ 3787      74655F74 
+ 3788              	.LASF37:
+ 3789 0258 706B5F69 		.ascii	"pk_info\000"
+ 3789      6E666F00 
+ 3790              	.LASF89:
+ 3791 0260 6D626564 		.ascii	"mbedtls_x509_write_sig\000"
+ 3791      746C735F 
+ 3791      78353039 
+ 3791      5F777269 
+ 3791      74655F73 
+ 3792              	.LASF94:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 74
+
+
+ 3793 0277 536F7572 		.ascii	"Source\\mbedtls_open\\library\\x509write_csr.c\000"
+ 3793      63655C6D 
+ 3793      62656474 
+ 3793      6C735F6F 
+ 3793      70656E5C 
+ 3794              	.LASF6:
+ 3795 02a3 6C6F6E67 		.ascii	"long long int\000"
+ 3795      206C6F6E 
+ 3795      6720696E 
+ 3795      7400
+ 3796              	.LASF71:
+ 3797 02b1 6F6C656E 		.ascii	"olen\000"
+ 3797      00
+ 3798              	.LASF90:
+ 3799 02b6 6D656D73 		.ascii	"memset\000"
+ 3799      657400
+ 3800              	.LASF4:
+ 3801 02bd 6C6F6E67 		.ascii	"long int\000"
+ 3801      20696E74 
+ 3801      00
+ 3802              	.LASF65:
+ 3803 02c6 7075625F 		.ascii	"pub_len\000"
+ 3803      6C656E00 
+ 3804              	.LASF85:
+ 3805 02ce 6D626564 		.ascii	"mbedtls_md\000"
+ 3805      746C735F 
+ 3805      6D6400
+ 3806              	.LASF64:
+ 3807 02d9 746D705F 		.ascii	"tmp_buf\000"
+ 3807      62756600 
+ 3808              	.LASF47:
+ 3809 02e1 6D626564 		.ascii	"mbedtls_x509write_csr_set_key\000"
+ 3809      746C735F 
+ 3809      78353039 
+ 3809      77726974 
+ 3809      655F6373 
+ 3810              	.LASF29:
+ 3811 02ff 4D424544 		.ascii	"MBEDTLS_PK_ECKEY\000"
+ 3811      544C535F 
+ 3811      504B5F45 
+ 3811      434B4559 
+ 3811      00
+ 3812              	.LASF1:
+ 3813 0310 756E7369 		.ascii	"unsigned char\000"
+ 3813      676E6564 
+ 3813      20636861 
+ 3813      7200
+ 3814              	.LASF87:
+ 3815 031e 6D626564 		.ascii	"mbedtls_pk_can_do\000"
+ 3815      746C735F 
+ 3815      706B5F63 
+ 3815      616E5F64 
+ 3815      6F00
+ 3816              	.LASF9:
+ 3817 0330 6C6F6E67 		.ascii	"long double\000"
+ 3817      20646F75 
+ 3817      626C6500 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 75
+
+
+ 3818              	.LASF73:
+ 3819 033c 6D626564 		.ascii	"mbedtls_platform_zeroize\000"
+ 3819      746C735F 
+ 3819      706C6174 
+ 3819      666F726D 
+ 3819      5F7A6572 
+ 3820              	.LASF27:
+ 3821 0355 4D424544 		.ascii	"MBEDTLS_PK_NONE\000"
+ 3821      544C535F 
+ 3821      504B5F4E 
+ 3821      4F4E4500 
+ 3822              	.LASF30:
+ 3823 0365 4D424544 		.ascii	"MBEDTLS_PK_ECKEY_DH\000"
+ 3823      544C535F 
+ 3823      504B5F45 
+ 3823      434B4559 
+ 3823      5F444800 
+ 3824              	.LASF38:
+ 3825 0379 706B5F63 		.ascii	"pk_ctx\000"
+ 3825      747800
+ 3826              	.LASF75:
+ 3827 0380 6D626564 		.ascii	"mbedtls_x509_set_extension\000"
+ 3827      746C735F 
+ 3827      78353039 
+ 3827      5F736574 
+ 3827      5F657874 
+ 3828              	.LASF63:
+ 3829 039b 68617368 		.ascii	"hash\000"
+ 3829      00
+ 3830              	.LASF61:
+ 3831 03a0 7369675F 		.ascii	"sig_oid\000"
+ 3831      6F696400 
+ 3832              	.LASF95:
+ 3833 03a8 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 3833      73657273 
+ 3833      5C506875 
+ 3833      6F6E675C 
+ 3833      446F6375 
+ 3834 03d6 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 3834      6F742D73 
+ 3834      646B2D69 
+ 3834      6F742D64 
+ 3834      65765C50 
+ 3835 0407 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 3835      494F542D 
+ 3835      4875622D 
+ 3835      44656D6F 
+ 3835      5C50534F 
+ 3836 0439 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 3836      2D487562 
+ 3836      2D44656D 
+ 3836      6F2E6379 
+ 3836      64736E00 
+ 3837              	.LASF60:
+ 3838 044d 705F726E 		.ascii	"p_rng\000"
+ 3838      6700
+ 3839              	.LASF41:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 76
+
+
+ 3840 0453 6D645F61 		.ascii	"md_alg\000"
+ 3840      6C6700
+ 3841              	.LASF7:
+ 3842 045a 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 3842      206C6F6E 
+ 3842      6720756E 
+ 3842      7369676E 
+ 3842      65642069 
+ 3843              	.LASF39:
+ 3844 0471 6D626564 		.ascii	"mbedtls_x509write_csr\000"
+ 3844      746C735F 
+ 3844      78353039 
+ 3844      77726974 
+ 3844      655F6373 
+ 3845              	.LASF74:
+ 3846 0487 6D626564 		.ascii	"mbedtls_x509_string_to_names\000"
+ 3846      746C735F 
+ 3846      78353039 
+ 3846      5F737472 
+ 3846      696E675F 
+ 3847              	.LASF53:
+ 3848 04a4 6D626564 		.ascii	"mbedtls_x509write_csr_set_key_usage\000"
+ 3848      746C735F 
+ 3848      78353039 
+ 3848      77726974 
+ 3848      655F6373 
+ 3849              	.LASF8:
+ 3850 04c8 756E7369 		.ascii	"unsigned int\000"
+ 3850      676E6564 
+ 3850      20696E74 
+ 3850      00
+ 3851              	.LASF21:
+ 3852 04d5 4D424544 		.ascii	"MBEDTLS_MD_SHA256\000"
+ 3852      544C535F 
+ 3852      4D445F53 
+ 3852      48413235 
+ 3852      3600
+ 3853              	.LASF11:
+ 3854 04e7 6D626564 		.ascii	"mbedtls_asn1_buf\000"
+ 3854      746C735F 
+ 3854      61736E31 
+ 3854      5F627566 
+ 3854      00
+ 3855              	.LASF51:
+ 3856 04f8 6F69645F 		.ascii	"oid_len\000"
+ 3856      6C656E00 
+ 3857              	.LASF77:
+ 3858 0500 6D626564 		.ascii	"mbedtls_x509_write_extensions\000"
+ 3858      746C735F 
+ 3858      78353039 
+ 3858      5F777269 
+ 3858      74655F65 
+ 3859              	.LASF28:
+ 3860 051e 4D424544 		.ascii	"MBEDTLS_PK_RSA\000"
+ 3860      544C535F 
+ 3860      504B5F52 
+ 3860      534100
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 77
+
+
+ 3861              	.LASF46:
+ 3862 052d 6D626564 		.ascii	"mbedtls_x509write_csr_set_md_alg\000"
+ 3862      746C735F 
+ 3862      78353039 
+ 3862      77726974 
+ 3862      655F6373 
+ 3863              	.LASF26:
+ 3864 054e 63686172 		.ascii	"char\000"
+ 3864      00
+ 3865              	.LASF57:
+ 3866 0553 6D626564 		.ascii	"mbedtls_x509write_csr_der\000"
+ 3866      746C735F 
+ 3866      78353039 
+ 3866      77726974 
+ 3866      655F6373 
+ 3867              	.LASF12:
+ 3868 056d 6D626564 		.ascii	"mbedtls_asn1_named_data\000"
+ 3868      746C735F 
+ 3868      61736E31 
+ 3868      5F6E616D 
+ 3868      65645F64 
+ 3869              	.LASF54:
+ 3870 0585 6B65795F 		.ascii	"key_usage\000"
+ 3870      75736167 
+ 3870      6500
+ 3871              	.LASF16:
+ 3872 058f 4D424544 		.ascii	"MBEDTLS_MD_MD2\000"
+ 3872      544C535F 
+ 3872      4D445F4D 
+ 3872      443200
+ 3873              	.LASF66:
+ 3874 059e 7369675F 		.ascii	"sig_and_oid_len\000"
+ 3874      616E645F 
+ 3874      6F69645F 
+ 3874      6C656E00 
+ 3875              	.LASF18:
+ 3876 05ae 4D424544 		.ascii	"MBEDTLS_MD_MD5\000"
+ 3876      544C535F 
+ 3876      4D445F4D 
+ 3876      443500
+ 3877              	.LASF68:
+ 3878 05bd 706B5F61 		.ascii	"pk_alg\000"
+ 3878      6C6700
+ 3879              	.LASF17:
+ 3880 05c4 4D424544 		.ascii	"MBEDTLS_MD_MD4\000"
+ 3880      544C535F 
+ 3880      4D445F4D 
+ 3880      443400
+ 3881              	.LASF92:
+ 3882 05d3 6D626564 		.ascii	"mbedtls_pem_write_buffer\000"
+ 3882      746C735F 
+ 3882      70656D5F 
+ 3882      77726974 
+ 3882      655F6275 
+ 3883              	.LASF3:
+ 3884 05ec 73686F72 		.ascii	"short unsigned int\000"
+ 3884      7420756E 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 78
+
+
+ 3884      7369676E 
+ 3884      65642069 
+ 3884      6E7400
+ 3885              	.LASF35:
+ 3886 05ff 6D626564 		.ascii	"mbedtls_pk_info_t\000"
+ 3886      746C735F 
+ 3886      706B5F69 
+ 3886      6E666F5F 
+ 3886      7400
+ 3887              	.LASF5:
+ 3888 0611 6C6F6E67 		.ascii	"long unsigned int\000"
+ 3888      20756E73 
+ 3888      69676E65 
+ 3888      6420696E 
+ 3888      7400
+ 3889              	.LASF20:
+ 3890 0623 4D424544 		.ascii	"MBEDTLS_MD_SHA224\000"
+ 3890      544C535F 
+ 3890      4D445F53 
+ 3890      48413232 
+ 3890      3400
+ 3891              	.LASF19:
+ 3892 0635 4D424544 		.ascii	"MBEDTLS_MD_SHA1\000"
+ 3892      544C535F 
+ 3892      4D445F53 
+ 3892      48413100 
+ 3893              	.LASF36:
+ 3894 0645 6D626564 		.ascii	"mbedtls_pk_context\000"
+ 3894      746C735F 
+ 3894      706B5F63 
+ 3894      6F6E7465 
+ 3894      787400
+ 3895              	.LASF58:
+ 3896 0658 73697A65 		.ascii	"size\000"
+ 3896      00
+ 3897              	.LASF48:
+ 3898 065d 7375626A 		.ascii	"subject_name\000"
+ 3898      6563745F 
+ 3898      6E616D65 
+ 3898      00
+ 3899              	.LASF24:
+ 3900 066a 4D424544 		.ascii	"MBEDTLS_MD_RIPEMD160\000"
+ 3900      544C535F 
+ 3900      4D445F52 
+ 3900      4950454D 
+ 3900      44313630 
+ 3901              	.LASF50:
+ 3902 067f 6D626564 		.ascii	"mbedtls_x509write_csr_set_extension\000"
+ 3902      746C735F 
+ 3902      78353039 
+ 3902      77726974 
+ 3902      655F6373 
+ 3903              	.LASF76:
+ 3904 06a3 6D626564 		.ascii	"mbedtls_asn1_write_bitstring\000"
+ 3904      746C735F 
+ 3904      61736E31 
+ 3904      5F777269 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 79
+
+
+ 3904      74655F62 
+ 3905              	.LASF67:
+ 3906 06c0 7369675F 		.ascii	"sig_len\000"
+ 3906      6C656E00 
+ 3907              	.LASF69:
+ 3908 06c8 6D626564 		.ascii	"mbedtls_x509write_csr_pem\000"
+ 3908      746C735F 
+ 3908      78353039 
+ 3908      77726974 
+ 3908      655F6373 
+ 3909              	.LASF0:
+ 3910 06e2 7369676E 		.ascii	"signed char\000"
+ 3910      65642063 
+ 3910      68617200 
+ 3911              	.LASF78:
+ 3912 06ee 6D626564 		.ascii	"mbedtls_asn1_write_len\000"
+ 3912      746C735F 
+ 3912      61736E31 
+ 3912      5F777269 
+ 3912      74655F6C 
+ 3913              	.LASF15:
+ 3914 0705 4D424544 		.ascii	"MBEDTLS_MD_NONE\000"
+ 3914      544C535F 
+ 3914      4D445F4E 
+ 3914      4F4E4500 
+ 3915              	.LASF45:
+ 3916 0715 6D626564 		.ascii	"mbedtls_x509write_csr_free\000"
+ 3916      746C735F 
+ 3916      78353039 
+ 3916      77726974 
+ 3916      655F6373 
+ 3917              	.LASF31:
+ 3918 0730 4D424544 		.ascii	"MBEDTLS_PK_ECDSA\000"
+ 3918      544C535F 
+ 3918      504B5F45 
+ 3918      43445341 
+ 3918      00
+ 3919              	.LASF81:
+ 3920 0741 6D626564 		.ascii	"mbedtls_pk_write_pubkey_der\000"
+ 3920      746C735F 
+ 3920      706B5F77 
+ 3920      72697465 
+ 3920      5F707562 
+ 3921              	.LASF84:
+ 3922 075d 6D626564 		.ascii	"mbedtls_md_info_from_type\000"
+ 3922      746C735F 
+ 3922      6D645F69 
+ 3922      6E666F5F 
+ 3922      66726F6D 
+ 3923              	.LASF22:
+ 3924 0777 4D424544 		.ascii	"MBEDTLS_MD_SHA384\000"
+ 3924      544C535F 
+ 3924      4D445F53 
+ 3924      48413338 
+ 3924      3400
+ 3925              	.LASF14:
+ 3926 0789 6E657874 		.ascii	"next_merged\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccqxmzYk.s 			page 80
+
+
+ 3926      5F6D6572 
+ 3926      67656400 
+ 3927              	.LASF80:
+ 3928 0795 6D626564 		.ascii	"mbedtls_asn1_write_oid\000"
+ 3928      746C735F 
+ 3928      61736E31 
+ 3928      5F777269 
+ 3928      74655F6F 
+ 3929              	.LASF13:
+ 3930 07ac 6E657874 		.ascii	"next\000"
+ 3930      00
+ 3931              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

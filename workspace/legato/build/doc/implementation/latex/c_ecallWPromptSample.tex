@@ -1,0 +1,442 @@
+
+\begin{DoxyCodeInclude}
+\textcolor{comment}{ /**}
+\textcolor{comment}{  * This module implements the le\_ecall's test with a local voice prompt.}
+\textcolor{comment}{  *}
+\textcolor{comment}{ * You must issue the following commands:}
+\textcolor{comment}{ * @verbatim}
+\textcolor{comment}{   $ app start eCallWPrompt}
+\textcolor{comment}{   $ app runProc eCallWPrompt --exe=eCallWPrompt -- <PSAP number>}
+\textcolor{comment}{   @endverbatim}
+\textcolor{comment}{}
+\textcolor{comment}{  * Copyright (C) Sierra Wireless Inc.}
+\textcolor{comment}{  *}
+\textcolor{comment}{  */}
+
+\textcolor{preprocessor}{#include "\hyperlink{legato_8h}{legato.h}"}
+\textcolor{preprocessor}{#include "interfaces.h"}
+
+\textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{char} *                     PsapNumber = NULL;
+\textcolor{keyword}{static} \hyperlink{le__ecall__interface_8h_a8536728653b7b3cdd6b298c6e7b67705}{le\_ecall\_CallRef\_t}               LastTestECallRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t}             FeOutRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t}             FileAudioRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_ab819480f4ce3f36e62b6a4e327668304}{le\_audio\_ConnectorRef\_t}          AudioOutputConnectorRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a390b011cbb6f745c46e861d315af0bbe}{le\_audio\_MediaHandlerRef\_t}       MediaHandlerRef = NULL;
+\textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{char}                       AudioFilePath[] = \textcolor{stringliteral}{"/male.wav"};
+\textcolor{keyword}{static} \textcolor{keywordtype}{int}                              AudioFileFd = -1;
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Function to disconnect audio streams.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} DisconnectAudio
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordflow}{if}(AudioOutputConnectorRef)
+    \{
+        \textcolor{keywordflow}{if}(FileAudioRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, FileAudioRef, AudioOutputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioOutputConnectorRef, FileAudioRef);
+        \}
+        \textcolor{keywordflow}{if}(FeOutRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, FeOutRef, AudioOutputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioOutputConnectorRef, FeOutRef);
+        \}
+    \}
+
+    \textcolor{keywordflow}{if}(AudioOutputConnectorRef)
+    \{
+        \hyperlink{le__audio__interface_8h_a3f40b13ff980040503927f59bb3e86a9}{le\_audio\_DeleteConnector}(AudioOutputConnectorRef);
+        AudioOutputConnectorRef = NULL;
+    \}
+
+    \textcolor{keywordflow}{if}(FileAudioRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(FileAudioRef);
+        FileAudioRef = NULL;
+    \}
+
+    \textcolor{keywordflow}{if}(FeOutRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(FeOutRef);
+        FeOutRef = NULL;
+    \}
+
+    \textcolor{comment}{// Closing AudioFileFd is unnecessary since the messaging infrastructure underneath}
+    \textcolor{comment}{// le\_audio\_xxx APIs that use it would close it.}
+\}
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Handler function for Audio Stream Event Notifications.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} MyMediaEventHandler
+(
+    \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t}          streamRef,
+    \hyperlink{le__audio__interface_8h_aaf870f5f30f4f6f65efb873c5d0cb5f1}{le\_audio\_MediaEvent\_t}          event,
+    \textcolor{keywordtype}{void}*                         contextPtr
+)
+\{
+    \textcolor{keywordflow}{switch}(event)
+    \{
+        \textcolor{keywordflow}{case} \hyperlink{le__audio__interface_8h_aaf870f5f30f4f6f65efb873c5d0cb5f1a7dbc0c9a2c3839d3db974c5aa5be344d}{LE\_AUDIO\_MEDIA\_ENDED}:
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"File event is LE\_AUDIO\_MEDIA\_ENDED."});
+
+            \textcolor{keywordflow}{if} (\hyperlink{le__audio__interface_8h_aea2c5d0b394cfab87503639c534300c9}{le\_audio\_PlayFile}(FileAudioRef, \hyperlink{le__audio__interface_8h_a374c2f62ec5b8a92dd1de6fcb449fafe}{LE\_AUDIO\_NO\_FD}) != LE\_OK)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to play the file"});
+                \textcolor{keywordflow}{return};
+            \}
+            \textcolor{keywordflow}{else}
+            \{
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"file is now playing."});
+            \}
+            \textcolor{keywordflow}{break};
+
+        \textcolor{keywordflow}{case} \hyperlink{le__audio__interface_8h_aaf870f5f30f4f6f65efb873c5d0cb5f1a5f7de6714ea54f09d036a87dd1c63a50}{LE\_AUDIO\_MEDIA\_ERROR}:
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"File event is LE\_AUDIO\_MEDIA\_ERROR."});
+            \textcolor{keywordflow}{break};
+
+        \textcolor{keywordflow}{case} \hyperlink{le__audio__interface_8h_aaf870f5f30f4f6f65efb873c5d0cb5f1a06883432159e9e69637fbe5eefd59159}{LE\_AUDIO\_MEDIA\_NO\_MORE\_SAMPLES}:
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"File event is LE\_AUDIO\_MEDIA\_NO\_MORE\_SAMPLES."});
+        \textcolor{keywordflow}{break};
+        \textcolor{keywordflow}{default}:
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"File event is %d"}, event);
+        \textcolor{keywordflow}{break};
+    \}
+\}
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Function to connect audio streams.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudio
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{comment}{// Open and connect an output stream.}
+    \textcolor{comment}{// Redirect audio to the in-built Speaker.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_a5c19afce44021c4abf6193707317f8de}{le\_audio\_OpenSpeaker}();
+    \textcolor{keywordflow}{if} (FeOutRef == NULL)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"OpenSpeaker returns NULL!"});
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Switching to I2S interface..."});
+        \textcolor{comment}{// Redirect audio to the I2S interface.}
+        FeOutRef = \hyperlink{le__audio__interface_8h_a2633c1368adf60e342d7cadbbfa6278b}{le\_audio\_OpenI2sTx}(\hyperlink{le__audio__interface_8h_a94794180ed71a84bd26a1f525858f252a6ce77f5f956b203e15f662900a5103dd}{LE\_AUDIO\_I2S\_STEREO});
+        \textcolor{keywordflow}{if} (FeOutRef==NULL)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"OpenI2sTx returns NULL!"});
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Open I2S: FeOutRef.%p"}, FeOutRef);
+        \}
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Open Speaker: FeOutRef.%p"}, FeOutRef);
+    \}
+
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef==NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+    \{
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((\hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef) != 
+      LE\_OK),
+                    \textcolor{stringliteral}{"Failed to connect I2S TX on Output connector!"});
+    \}
+
+    FileAudioRef = \hyperlink{le__audio__interface_8h_a92eb1b6377f50ff07b97c5b8546f01ec}{le\_audio\_OpenPlayer}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FileAudioRef==NULL), \textcolor{stringliteral}{"OpenFilePlayback returns NULL!"});
+
+    MediaHandlerRef = \hyperlink{le__audio__interface_8h_a9996ac9d23333cf8219f28b69cac4f81}{le\_audio\_AddMediaHandler}(FileAudioRef,
+                                                MyMediaEventHandler,
+                                                NULL);
+
+    \textcolor{keywordflow}{if}(\hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FileAudioRef) != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to connect FilePlayback on output connector!"});
+        \textcolor{keywordflow}{return};
+    \}
+
+    \textcolor{keywordflow}{if} ((AudioFileFd=open(AudioFilePath, O\_RDONLY)) == -1)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Open file %s failure: errno.%d (%s)"},  AudioFilePath, 
+      \hyperlink{supervisor_8c_a0a4ccfdbe1cf7b37afc60d34e748b066}{errno}, strerror(\hyperlink{supervisor_8c_a0a4ccfdbe1cf7b37afc60d34e748b066}{errno}));
+        DisconnectAudio();
+        \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(0);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Open file %s with AudioFileFd.%d"},  AudioFilePath, AudioFileFd);
+    \}
+
+    \textcolor{keywordflow}{if} (\hyperlink{le__audio__interface_8h_aea2c5d0b394cfab87503639c534300c9}{le\_audio\_PlayFile}(FileAudioRef, AudioFileFd) != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to play the file"});
+        \textcolor{keywordflow}{return};
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Handler function for eCall state Notifications.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} MyECallEventHandler
+(
+    \hyperlink{le__ecall__interface_8h_a8536728653b7b3cdd6b298c6e7b67705}{le\_ecall\_CallRef\_t}  eCallRef,
+    \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dd}{le\_ecall\_State\_t}    state,
+    \textcolor{keywordtype}{void}*               contextPtr
+)
+\{
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall TEST: New eCall state: %d for eCall ref.%p"}, state, eCallRef);
+
+    \textcolor{keywordflow}{switch}(state)
+    \{
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda94ba7aacca9dfe74c4733515a7ba2c5e}{LE\_ECALL\_STATE\_STARTED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_STARTED."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda974a4cdcc060be69502b2eae59962a45}{LE\_ECALL\_STATE\_CONNECTED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Mute audio interface and voice prompt."});
+            \hyperlink{le__audio__interface_8h_a147e97c49dbc003f63df78f97d5fca32}{le\_audio\_Mute}(FeOutRef);
+            \hyperlink{le__audio__interface_8h_a147e97c49dbc003f63df78f97d5fca32}{le\_audio\_Mute}(FileAudioRef);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_CONNECTED."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda085024eb3cca6b48f024f368c6b0f757}{LE\_ECALL\_STATE\_DISCONNECTED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_DISCONNECTED."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07ddafeaa941937f098a5d6cc913f9ee2b32f}{LE\_ECALL\_STATE\_WAITING\_PSAP\_START\_IND}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_WAITING\_PSAP\_START\_IND."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda2660c7eedfd850b845f0ece7899d5454}{LE\_ECALL\_STATE\_PSAP\_START\_IND\_RECEIVED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_PSAP\_START\_IND\_RECEIVED."});
+            \textcolor{keywordflow}{if} (\hyperlink{le__ecall__interface_8h_a344e4c29208e576e81dda113f786529e}{le\_ecall\_SendMsd}(eCallRef) != LE\_OK)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Could not send the MSD"});
+            \}
+
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda0e8c495854c6fe3f9fe9285554704572}{LE\_ECALL\_STATE\_MSD\_TX\_STARTED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_MSD\_TX\_STARTED."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda8699c87772e74835e38573fc9830dba5}{LE\_ECALL\_STATE\_LLNACK\_RECEIVED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_LLNACK\_RECEIVED."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda0410bf309197a2f26910062efb56ed0e}{LE\_ECALL\_STATE\_LLACK\_RECEIVED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_LLACK\_RECEIVED."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07ddae9346b115da82c9583f057ba12d8faa9}{LE\_ECALL\_STATE\_MSD\_TX\_COMPLETED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_MSD\_TX\_COMPLETED."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda3654bda55c075297e9111acafa90a2bb}{LE\_ECALL\_STATE\_MSD\_TX\_FAILED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_MSD\_TX\_FAILED."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda5a54611736c5cf7131cc196c694d8060}{LE\_ECALL\_STATE\_ALACK\_RECEIVED\_POSITIVE}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_ALACK\_RECEIVED\_POSITIVE."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda2b28ed16149c54b6b3d9c57dea4a748f}{LE\_ECALL\_STATE\_ALACK\_RECEIVED\_CLEAR\_DOWN}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_ALACK\_RECEIVED\_CLEAR\_DOWN."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda28740cfb795561c243501bff53343175}{LE\_ECALL\_STATE\_STOPPED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_STOPPED."});
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Unmute audio interface and voice prompt."});
+            \hyperlink{le__audio__interface_8h_adad24547293481964039efe56bc14e2b}{le\_audio\_Unmute}(FeOutRef);
+            \hyperlink{le__audio__interface_8h_adad24547293481964039efe56bc14e2b}{le\_audio\_Unmute}(FileAudioRef);
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda71a12603e5a05716c7579e12f6f85734}{LE\_ECALL\_STATE\_RESET}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_RESET."});
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Unmute audio interface and voice prompt."});
+            \hyperlink{le__audio__interface_8h_adad24547293481964039efe56bc14e2b}{le\_audio\_Unmute}(FeOutRef);
+            \hyperlink{le__audio__interface_8h_adad24547293481964039efe56bc14e2b}{le\_audio\_Unmute}(FileAudioRef);
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda40cb68755482f2068f414e4bd1d2bf13}{LE\_ECALL\_STATE\_COMPLETED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_COMPLETED."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda5275385371c51e441a9eb97626c271b4}{LE\_ECALL\_STATE\_FAILED}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_FAILED."});
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Unmute audio interface and voice prompt."});
+            \hyperlink{le__audio__interface_8h_adad24547293481964039efe56bc14e2b}{le\_audio\_Unmute}(FeOutRef);
+            \hyperlink{le__audio__interface_8h_adad24547293481964039efe56bc14e2b}{le\_audio\_Unmute}(FileAudioRef);
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07ddac5c297a2a70f2490f4f65d72b3a74481}{LE\_ECALL\_STATE\_END\_OF\_REDIAL\_PERIOD}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"eCall state is LE\_ECALL\_STATE\_END\_OF\_REDIAL\_PERIOD."});
+            \textcolor{keywordflow}{break};
+        \}
+        \textcolor{keywordflow}{case} \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda5c06f82cbeeebb121ab56920a67dbc91}{LE\_ECALL\_STATE\_UNKNOWN}:
+        \textcolor{keywordflow}{default}:
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Unknown eCall state."});
+            \textcolor{keywordflow}{break};
+        \}
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Create and start a test eCall.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} StartTestECall
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dd}{le\_ecall\_State\_t}                   state = 
+      \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda5c06f82cbeeebb121ab56920a67dbc91}{LE\_ECALL\_STATE\_UNKNOWN};
+    \hyperlink{le__ecall__interface_8h_a7e915557fce85b9b82017a80c0d32ddd}{le\_ecall\_StateChangeHandlerRef\_t}   stateChangeHandlerRef = 0x00;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start StartTestECall"});
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((stateChangeHandlerRef = \hyperlink{le__ecall__interface_8h_a453b64579f2884f1d26981bca38a201c}{le\_ecall\_AddStateChangeHandler}
+      (MyECallEventHandler, NULL)) != NULL);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__ecall__interface_8h_abf9c09914c55cdbe72df1433f60f6e51}{le\_ecall\_SetPsapNumber}(PsapNumber) == LE\_OK);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__ecall__interface_8h_a00d3dbc99884375cf2487d6640767c40}{le\_ecall\_SetMsdTxMode}(
+      \hyperlink{le__ecall__interface_8h_adbaa600a7ab66371afddb909b1a113bdafe1cddc2df801a67c7f02020c0dd1127}{LE\_ECALL\_TX\_MODE\_PUSH}) == LE\_OK);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LastTestECallRef=\hyperlink{le__ecall__interface_8h_aad7fa3b34d9d72a2f1d4baa681ba25cc}{le\_ecall\_Create}()) != NULL);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__ecall__interface_8h_a2b56b7b7fd7f936c144d30eba7815908}{le\_ecall\_SetMsdPosition}(LastTestECallRef, \textcolor{keyword}{true}, +48898064, +2
+      218092, 0) == LE\_OK);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__ecall__interface_8h_af3cfea09eea1b1ba39648798070ad139}{le\_ecall\_SetMsdPositionN1}(LastTestECallRef, 0, 11) == LE\_OK
+      );
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__ecall__interface_8h_a6b25b9b242ba114f31ae2f853070bf11}{le\_ecall\_SetMsdPositionN2}(LastTestECallRef, -22, -33) == 
+      LE\_OK);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__ecall__interface_8h_a8c009bb03d61dcd0ffbd9e986b692a85}{le\_ecall\_SetMsdPassengersCount}(LastTestECallRef, 3) ==
+       LE\_OK);
+
+    ConnectAudio();
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__ecall__interface_8h_aa5d23a1bea370b1ae29fc52d7a89d947}{le\_ecall\_StartTest}(LastTestECallRef) == LE\_OK);
+
+    state=\hyperlink{le__ecall__interface_8h_a7881e794b9249222edde10f76d7663c9}{le\_ecall\_GetState}(LastTestECallRef);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(((state>=\hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda94ba7aacca9dfe74c4733515a7ba2c5e}{LE\_ECALL\_STATE\_STARTED}) && (state<=
+      \hyperlink{le__ecall__interface_8h_a233609e4724e549a1405f9177c0a07dda5275385371c51e441a9eb97626c271b4}{LE\_ECALL\_STATE\_FAILED})));
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * The signal event handler function for SIGINT/SIGTERM when process dies.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} SigHandler
+(
+    \textcolor{keywordtype}{int} sigNum
+)
+\{
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"End and delete last test eCall"});
+    \hyperlink{le__ecall__interface_8h_a85800c86f9709fb7baa7219cc762181c}{le\_ecall\_End}(LastTestECallRef);
+    \hyperlink{le__ecall__interface_8h_af1221deb68c46912748f65505b3e4919}{le\_ecall\_Delete}(LastTestECallRef);
+    DisconnectAudio();
+    \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_SUCCESS);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Helper.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintUsage()
+\{
+    \textcolor{keywordtype}{int} idx;
+    \textcolor{keywordtype}{bool} sandboxed = (getuid() != 0);
+    \textcolor{keyword}{const} \textcolor{keywordtype}{char} * usagePtr[] = \{
+            \textcolor{stringliteral}{"Usage of the eCallWPrompt is:"},
+            \textcolor{stringliteral}{"   eCallWPrompt <PSAP number>"},
+    \};
+
+    \textcolor{keywordflow}{for}(idx = 0; idx < \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{NUM\_ARRAY\_MEMBERS}(usagePtr); idx++)
+    \{
+        \textcolor{keywordflow}{if}(sandboxed)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"%s"}, usagePtr[idx]);
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            fprintf(stderr, \textcolor{stringliteral}{"%s\(\backslash\)n"}, usagePtr[idx]);
+        \}
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * App init.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\hyperlink{le__event_loop_8h_abdb9187a56836a93d19cc793cbd4b7ec}{COMPONENT\_INIT}
+\{
+    \textcolor{keywordflow}{if} (\hyperlink{le__args_8h_a6fbbeb423104e6eb92fe47ef42b7310a}{le\_arg\_NumArgs}() == 1)
+    \{
+        \textcolor{comment}{// Register a signal event handler for SIGINT when user interrupts/terminates process}
+        \hyperlink{wifi_ap_test_8c_a8db34e235c60f54c3df89f2b6b8ca3ed}{signal}(SIGINT, SigHandler);
+
+        PsapNumber = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(0);
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== Start eCallWPrompt Test with PSAP.%s========"},
+                PsapNumber);
+
+        StartTestECall();
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== eCallWPrompt Test SUCCESS ========"});
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        PrintUsage();
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"EXIT eCallWPrompt"});
+        \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+    \}
+\}
+\end{DoxyCodeInclude}
+ 

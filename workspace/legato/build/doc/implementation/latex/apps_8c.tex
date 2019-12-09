@@ -1,0 +1,1545 @@
+\hypertarget{apps_8c}{}\section{framework/daemons/linux/supervisor/apps.c File Reference}
+\label{apps_8c}\index{framework/daemons/linux/supervisor/apps.\+c@{framework/daemons/linux/supervisor/apps.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}apps.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}app.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}interfaces.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}wait.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}supervisor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sys\+Paths.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}properties.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}smack.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}cgroups.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}installer.\+h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_app_container__t}{App\+Container\+\_\+t}
+\item 
+struct \hyperlink{struct_app_proc_container__t}{App\+Proc\+Container\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{apps_8c_a13e211203a7fa325363f93debb67a41e}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST}~\char`\"{}apps\char`\"{}
+\item 
+\#define \hyperlink{apps_8c_aac868d3ff2cad2d1873b0598db0f07cf}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL}~\char`\"{}start\+Manual\char`\"{}
+\item 
+\#define \hyperlink{apps_8c_ac07be121fb3dc69f7fcb1a02bba94a37}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED}~\char`\"{}sandboxed\char`\"{}
+\item 
+\#define \hyperlink{apps_8c_a243cf58f6cf14a6079e5547f0d497169}{A\+P\+P\+S\+T\+O\+P\+\_\+\+S\+E\+R\+V\+E\+R\+\_\+\+S\+O\+C\+K\+E\+T\+\_\+\+N\+A\+ME}~\hyperlink{le__basics_8h_a3428692efe6051ef30016ffde1a9f7bb}{S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+D\+IR) \char`\"{}App\+Stop\+Server\char`\"{}
+\item 
+\#define \hyperlink{apps_8c_a8b8cc9e4f25f95da6d83a2dd26cde0e8}{Max\+Retry\+Count}~10
+\item 
+\#define \hyperlink{apps_8c_aacef7e5bc96bb627dea28b71ffe92f69}{A\+P\+P\+\_\+\+I\+N\+F\+O\+\_\+\+F\+I\+LE}~\char`\"{}info.\+properties\char`\"{}
+\item 
+\#define \hyperlink{apps_8c_a8b0c9ebd30781fa360a42665a30f4912}{K\+E\+Y\+\_\+\+S\+T\+R\+\_\+\+M\+D5}~\char`\"{}app.\+md5\char`\"{}
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void}($\ast$ \hyperlink{apps_8c_af0ebf52286e44ef2ae18f2fa4f151e7b}{App\+Stop\+Handler\+\_\+t}) (struct App\+Container $\ast$app\+Container\+Ptr)
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a7be336a4c79e4176991f39315d2fd103}{Mark\+App\+As\+Stopped} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$param1\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$param2\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a177de333d0b5241d41faf75fb094feef}{Delete\+App\+Procs} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} client\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_afaf5be7ed4c1f25236ca63cb52c39f44}{Delete\+App} (\hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$app\+Container\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a04e4ec1142f3e12fbbbc24987a7a51b9}{Deactivate\+App\+Container} (\hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$app\+Container\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_adeddaa36c00e0c1a6af522f17a0b2972}{Restart\+App} (\hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$app\+Container\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a666b85ee681640b2e6d74b53144be5ec}{Respond\+To\+Stop\+App\+Cmd} (\hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$app\+Container\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a82d1ae80e1c74a7490ff3d98c3d50ef8}{Shutdown\+Next\+App} (\hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$app\+Container\+Ptr)
+\item 
+static \hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$ \hyperlink{apps_8c_a4cd43732bcb6769dfa33f842314bbac7}{Get\+Active\+App} (const char $\ast$app\+Name\+Ptr)
+\item 
+static \hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$ \hyperlink{apps_8c_a0f682e7dc90fa73c678e92c2b3aba951}{Get\+Inactive\+App} (const char $\ast$app\+Name\+Ptr)
+\item 
+static \hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$ \hyperlink{apps_8c_a3c30c35d45fb41b063aa5db1d0c5cf8a}{Get\+Active\+App\+With\+Proc} (pid\+\_\+t pid)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{apps_8c_a3c4aafe4e481f1b3d4afd429d6c08721}{Create\+App} (const char $\ast$app\+Name\+Ptr, \hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$$\ast$container\+Ptr\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{apps_8c_ad3609987431ca480bf80f1320a5cab34}{Start\+App} (\hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$app\+Container\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{apps_8c_a93c8f16ade37ac3ab6b3ea1cef6b2a68}{Launch\+App} (const char $\ast$app\+Name\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{apps_8c_a754593e71bb3279fc1d281a9078f2485}{Handle\+App\+Fault} (\hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$app\+Container\+Ptr, pid\+\_\+t proc\+Pid, int proc\+Exit\+Status)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_aa1a82dfdd7d615ed92c1433e4cd08541}{Delete\+Client\+App\+Procs} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a7e8202840a50bac148a078c456dd5025}{Deletes\+Inactive\+App} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_acedf0e27cf2c3ffb79cbcf829d3d8a74}{Deletes\+All\+Inactive\+App} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static bool \hyperlink{apps_8c_a99499b49359047f50b60643094650a7d}{Is\+App\+Proc\+Already\+Referenced} (\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref)
+\item 
+static bool \hyperlink{apps_8c_a6955d4c889cbf8871412b161eae228a8}{Is\+Proc\+Name\+Valid} (const char $\ast$proc\+Name\+Ptr)
+\item 
+static bool \hyperlink{apps_8c_a9c99d1e2d87831f30723926b16fd6d14}{Is\+App\+Name\+Valid} (const char $\ast$app\+Name\+Ptr)
+\item 
+static int \hyperlink{apps_8c_a117e27c1a598b1fee900d1e5006d249a}{Create\+App\+Stop\+Sv\+Socket} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a9d781dd54b987fc7f13cfb809f5e0fb3}{Wait\+App\+Stop\+Handler} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a20df48debcb50222f14d2a7fbf30203d}{Wait\+App\+Stop} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$param1\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$param2\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a3e6a8c1201d2417d28725501c67d16e2}{Wait\+App\+Stop\+Complete} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$param\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a354f54c5d1781dc826a947f23252b4d6}{App\+Stop\+Handler} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, short events)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_ab0c36a3853973cc6131d31f2cb4995c7}{Release\+App\+Ref} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$app\+Safe\+Ref, \hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$app\+Container\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a5c971c020a0ceb8e8608d5783a8fc261}{Release\+Client\+App\+Refs} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_aac6758221e4f25939a2670166e09b0f0}{Proc\+Block\+Handler} (pid\+\_\+t pid, const char $\ast$proc\+Name\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$app\+Safe\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a39787421de89d447b206d162fe06f3d2}{apps\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_ace2593c8a92bd8fd9ced79ddedf41fd1}{apps\+\_\+\+Shutdown} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_ae2c09a0d43d462f68f610c0d91bea017}{apps\+\_\+\+Set\+Shutdown\+Handler} (\hyperlink{apps_8h_a45cf014fa2b436256180a905a79ab284}{apps\+\_\+\+Shutdown\+Handler\+\_\+t} shutdown\+Handler)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a8f5e18e16a47bc87ce22e7712194bda3}{apps\+\_\+\+Auto\+Start} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{apps_8c_ae4914ff9f165ca01792d664e49fd968b}{apps\+\_\+\+Sig\+Child\+Handler} (pid\+\_\+t pid)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_ae68561e7f3df428f176523fe2bb93473}{apps\+\_\+\+Verify\+App\+Writeable\+Device\+Files} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$ \hyperlink{apps_8c_afdce3eea2d425a1f8ff2ebac5c46215c}{app\+Ctrl\+\_\+\+Get\+Ref} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_afc9868e31ee76f5456ec6792118343b5}{app\+Ctrl\+\_\+\+Release\+Ref} (\hyperlink{le__app_ctrl__interface_8h_a91f18fa2ac21dcea04769cdf57cb7a3f}{le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t} app\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a1e44fb5dfc1f4c86e071a94e16abd2d9}{app\+Ctrl\+\_\+\+Set\+Run} (\hyperlink{le__app_ctrl__interface_8h_a91f18fa2ac21dcea04769cdf57cb7a3f}{le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t} app\+Ref, const char $\ast$proc\+Name, bool run)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{apps_8c_a0dffbfc794578a16f9c13525c7490299}{app\+Ctrl\+\_\+\+Start} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name})
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{apps_8c_ac3ec26f286bd25a5d629112e5a6d4bb6}{app\+Ctrl\+\_\+\+Stop} (le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, \hyperlink{apps_8c_af0ebf52286e44ef2ae18f2fa4f151e7b}{App\+Stop\+Handler\+\_\+t} stop\+Handler)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a2811527163990063e5cc2b9f31105ca6}{le\+\_\+app\+Ctrl\+\_\+\+Get\+Ref} (le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a80619d009b90dc49c11cf557ceebf392}{le\+\_\+app\+Ctrl\+\_\+\+Release\+Ref} (le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, \hyperlink{le__app_ctrl__interface_8h_a91f18fa2ac21dcea04769cdf57cb7a3f}{le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t} app\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a2819bfcb98e75afefdb46023b3f98b4d}{le\+\_\+app\+Ctrl\+\_\+\+Set\+Run} (le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, \hyperlink{le__app_ctrl__interface_8h_a91f18fa2ac21dcea04769cdf57cb7a3f}{le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t} app\+Ref, const char $\ast$proc\+Name, bool run)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a2ce58932f8ae77626eca0d90f5be40db}{le\+\_\+app\+Ctrl\+\_\+\+Import} (le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, \hyperlink{le__app_ctrl__interface_8h_a91f18fa2ac21dcea04769cdf57cb7a3f}{le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t} app\+Ref, const char $\ast$path)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a296abb9f1261e860ffac8d2e1a3b9d58}{le\+\_\+app\+Ctrl\+\_\+\+Set\+Device\+Perm} (le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, \hyperlink{le__app_ctrl__interface_8h_a91f18fa2ac21dcea04769cdf57cb7a3f}{le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t} app\+Ref, const char $\ast$path, const char $\ast$permissions)
+\item 
+\hyperlink{le__app_ctrl__interface_8h_ae5de1d770cee03e790f9d9900fa2b1f2}{le\+\_\+app\+Ctrl\+\_\+\+Trace\+Attach\+Handler\+Ref\+\_\+t} \hyperlink{apps_8c_a61eef2118f65c5e1855c5b5b768a027a}{le\+\_\+app\+Ctrl\+\_\+\+Add\+Trace\+Attach\+Handler} (\hyperlink{le__app_ctrl__interface_8h_a91f18fa2ac21dcea04769cdf57cb7a3f}{le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t} app\+Ref, \hyperlink{le__app_ctrl__interface_8h_a71556a4ce496caa172e138e65eee656c}{le\+\_\+app\+Ctrl\+\_\+\+Trace\+Attach\+Handler\+Func\+\_\+t} attach\+To\+Pid\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a97fc925b782c9fd213c741fece156b4d}{le\+\_\+app\+Ctrl\+\_\+\+Remove\+Trace\+Attach\+Handler} (\hyperlink{le__app_ctrl__interface_8h_ae5de1d770cee03e790f9d9900fa2b1f2}{le\+\_\+app\+Ctrl\+\_\+\+Trace\+Attach\+Handler\+Ref\+\_\+t} add\+Handler\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_aa7fcc3e0e90afb3ca0e7ff82d8196a23}{le\+\_\+app\+Ctrl\+\_\+\+Trace\+Unblock} (le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, \hyperlink{le__app_ctrl__interface_8h_a91f18fa2ac21dcea04769cdf57cb7a3f}{le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t} app\+Ref, int32\+\_\+t pid)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_ac7d4e0cc089aff5962bf6dad4ef71503}{le\+\_\+app\+Ctrl\+\_\+\+Start} (le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_af544b1aaafc8ce1cbf751941604bcdba}{le\+\_\+app\+Ctrl\+\_\+\+Stop} (le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name})
+\item 
+\hyperlink{le__app_info__interface_8h_ab6c446f20ce5b10f1d560225a359ec8c}{le\+\_\+app\+Info\+\_\+\+State\+\_\+t} \hyperlink{apps_8c_a58c868b60a679fe7d63ab1e8286cfa94}{le\+\_\+app\+Info\+\_\+\+Get\+State} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name})
+\item 
+\hyperlink{le__app_info__interface_8h_a426a8f86552dfbc4094a025484b2b12c}{le\+\_\+app\+Info\+\_\+\+Proc\+State\+\_\+t} \hyperlink{apps_8c_a6857ca395b0fad4dab33291737755643}{le\+\_\+app\+Info\+\_\+\+Get\+Proc\+State} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, const char $\ast$proc\+Name)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{apps_8c_ad403b48535ca090859b8096c9cc051cc}{le\+\_\+app\+Info\+\_\+\+Get\+Name} (int32\+\_\+t pid, char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, size\+\_\+t app\+Name\+Num\+Elements)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{apps_8c_a4c905cdff5f1ef3c543db2a053d8b09a}{le\+\_\+app\+Info\+\_\+\+Get\+Hash} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, char $\ast$hash\+Str, size\+\_\+t hash\+Str\+Num\+Elements)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a096ab66a5a6b91dd895b73b135ca47e3}{wdog\+\_\+\+Watchdog\+Timed\+Out} (wdog\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, uint32\+\_\+t proc\+Id)
+\item 
+le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t \hyperlink{apps_8c_ad8ae70b0444be01b418e6859117491af}{le\+\_\+app\+Proc\+\_\+\+Create} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, const char $\ast$proc\+Name, const char $\ast$exec\+Path)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a653dd6a5ccfe03148326ba0ddf97150b}{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+In} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, int std\+In\+Fd)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a4ebde1675892edb909462004d0152782}{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Out} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, int std\+Out\+Fd)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a6a5df96a9f94f93cd2c63d99680d1221}{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Err} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, int std\+Err\+Fd)
+\item 
+le\+\_\+app\+Proc\+\_\+\+Stop\+Handler\+Ref\+\_\+t \hyperlink{apps_8c_ac1142e2fd9bc950d01682c3be6968acf}{le\+\_\+app\+Proc\+\_\+\+Add\+Stop\+Handler} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, le\+\_\+app\+Proc\+\_\+\+Stop\+Handler\+Func\+\_\+t handler\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_aec23ee557c01ac7ae7a7e99b236a43a2}{le\+\_\+app\+Proc\+\_\+\+Remove\+Stop\+Handler} (le\+\_\+app\+Proc\+\_\+\+Stop\+Handler\+Ref\+\_\+t add\+Handler\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a7777f9d7b5e78fff1bf9259cfe33ce1e}{le\+\_\+app\+Proc\+\_\+\+Add\+Arg} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, const char $\ast$arg)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_adcd9432aa4865015af3bdead6b97a5ab}{le\+\_\+app\+Proc\+\_\+\+Clear\+Args} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a67c2a246f592b928c3d10010ae712438}{le\+\_\+app\+Proc\+\_\+\+Set\+Priority} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, const char $\ast$priority)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a29b3b8529f3c4dc5580d8acd5d261957}{le\+\_\+app\+Proc\+\_\+\+Clear\+Priority} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a0a1d0c99b9f0c086b33c0efd2da8aada}{le\+\_\+app\+Proc\+\_\+\+Set\+Fault\+Action} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, le\+\_\+app\+Proc\+\_\+\+Fault\+Action\+\_\+t action)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_ab7a13e04ce14b0140a43d87e072d915c}{le\+\_\+app\+Proc\+\_\+\+Clear\+Fault\+Action} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{apps_8c_a6203aae500afb330a0ad99f55592066b}{le\+\_\+app\+Proc\+\_\+\+Start} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_ae6390153cad9389427bf5968f573808e}{le\+\_\+app\+Proc\+\_\+\+Delete} (le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_ac374b112085cec3408b87522bc1ae87f}{Log\+Deprecated\+Msg} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a463bc01d21d8f48c34691e30b2467443}{le\+\_\+sup\+\_\+ctrl\+\_\+\+Get\+App\+Ref} (le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_ab58b7c62f7a5886cf2dfb8b25e27717d}{le\+\_\+sup\+\_\+ctrl\+\_\+\+Release\+App\+Ref} (le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, le\+\_\+sup\+\_\+ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a0b0d1735cca5eb8c3e2b12f24fd31cd0}{le\+\_\+sup\+\_\+ctrl\+\_\+\+Set\+Run} (le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, le\+\_\+sup\+\_\+ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref, const char $\ast$proc\+Name, bool run)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_a9c06c4626b8786ed7668d19bebe75f6d}{le\+\_\+sup\+\_\+ctrl\+\_\+\+Start\+App} (le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_ae725574ce680e9da58338e87f61a3f11}{Respond\+To\+Stop\+App\+Cmd\+Deprecated} (\hyperlink{struct_app_container__t}{App\+Container\+\_\+t} $\ast$app\+Container\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{apps_8c_af3c9c89cefa7977afaf3fbc284ab19d3}{le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+App} (le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static int \hyperlink{apps_8c_ad74e08a9de4329e5dc9e41a32c299aeb}{App\+Stop\+Sv\+Socket\+Fd} = -\/1
+\item 
+static \hyperlink{le__fd_monitor_8h_a85048556f0b95147af81e76907895d42}{le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} \hyperlink{apps_8c_a6045bc92dc4740a2711418fd67f13544}{App\+Stop\+Sv\+Socket\+Fd\+Mon\+Ref} = N\+U\+LL
+\item 
+static \hyperlink{apps_8h_a45cf014fa2b436256180a905a79ab284}{apps\+\_\+\+Shutdown\+Handler\+\_\+t} \hyperlink{apps_8c_a3a7ffbbe26d36454541c607bf188c936}{All\+Apps\+Shutdown\+Handler} = N\+U\+LL
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{apps_8c_ab81ad3ac6fb7dfd6cb51baa0568f90f6}{App\+Container\+Pool}
+\item 
+static \hyperlink{le__safe_ref_8h_aaf8fb3412fb840cb50366856affaf69b}{le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} \hyperlink{apps_8c_af2349ccfaab92764d8aa944c5bfd41d2}{App\+Map}
+\item 
+static \hyperlink{le__safe_ref_8h_aaf8fb3412fb840cb50366856affaf69b}{le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} \hyperlink{apps_8c_ab6af6977fdf03a97e4180b5952d9631e}{App\+Attach\+Handler\+Map}
+\item 
+static \hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} \hyperlink{apps_8c_a3aa634a5e6b9849a1a4d04ead8078875}{Active\+Apps\+List} = \hyperlink{le__doubly_linked_list_8h_a68f28b61cdfd004591f24730b4d5a740}{L\+E\+\_\+\+D\+L\+S\+\_\+\+L\+I\+S\+T\+\_\+\+I\+N\+IT}
+\item 
+static \hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} \hyperlink{apps_8c_ad68957432f219828b6c83041d2e0df81}{Inactive\+Apps\+List} = \hyperlink{le__doubly_linked_list_8h_a68f28b61cdfd004591f24730b4d5a740}{L\+E\+\_\+\+D\+L\+S\+\_\+\+L\+I\+S\+T\+\_\+\+I\+N\+IT}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{apps_8c_a291276989ab8c21f1ad1f76f32241b7c}{App\+Proc\+Container\+Pool}
+\item 
+static \hyperlink{le__safe_ref_8h_aaf8fb3412fb840cb50366856affaf69b}{le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} \hyperlink{apps_8c_a440191c05f79159fa1d05bd6638c5321}{App\+Proc\+Map}
+\item 
+static const \hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t} \hyperlink{apps_8c_a7a68198f1a735a2e9f751eda2fd3bdf4}{Wait\+App\+Stop\+Timeout}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Module that handles all Legato applications within the Supervisor. This module also handles all app related I\+PC messages.
+
+
+\begin{DoxyItemize}
+\item \hyperlink{apps_8c_c_apps_applications}{Applications}
+\item \hyperlink{apps_8c_c_apps_appProcs}{Application Processes}
+\end{DoxyItemize}\hypertarget{apps_8c_c_apps_applications}{}\subsection{Applications}\label{apps_8c_c_apps_applications}
+Apps run in containers. The container for an app is created either when someone calls \hyperlink{apps_8c_a2811527163990063e5cc2b9f31105ca6}{le\+\_\+app\+Ctrl\+\_\+\+Get\+Ref()} or when the app is started, whichever comes first. An app can be started by either an \hyperlink{apps_8c_ac7d4e0cc089aff5962bf6dad4ef71503}{le\+\_\+app\+Ctrl\+\_\+\+Start()} I\+PC call or automatically on start-\/up using the \hyperlink{apps_8c_a8f5e18e16a47bc87ce22e7712194bda3}{apps\+\_\+\+Auto\+Start()} A\+PI.
+
+When an app\textquotesingle{}s container is created, a new app container object is created which contains a list link, an app stop handler reference and the app object (which is also instantiated). After the app container object is created, it is placed on the list of inactive apps, waiting to be started. If there are errors in creating the container, the container will be destroyed and an error will be reported in the log.
+
+When an inactive app is started, the app container is moved from the list of inactive apps to the list of active apps.
+
+An app can be stopped by either an I\+PC call, a shutdown of the framework or when the app terminates either normally or due to a fault action.
+
+The app\textquotesingle{}s stop handler is set by the I\+PC handler and/or the fault monitor to take appropriate actions when the app stops. This is done because application stops are generally asynchronous. For example, when an I\+PC commands an app to stop the I\+PC handler will set the app stop handler then initiate the app stop by calling \hyperlink{supervisor_2app_8c_a7b83caadf0b85c6053efe0b16639ee29}{app\+\_\+\+Stop()}. However, the app may not stop right away because all the processes in the app must first be killed and reaped. The state of the app must be checked within the S\+I\+G\+C\+H\+I\+LD handler. The S\+I\+G\+C\+H\+I\+LD handler will then call the app stop handler when the app has actually stopped.
+
+When an app has stopped it is popped off the active list and placed onto the inactive list of apps. When an app is restarted it is moved from the inactive list to the active list. This means we do not have to recreate app containers each time. App containers are only cleaned when the app is uninstalled.\hypertarget{apps_8c_c_apps_appProcs}{}\subsection{Application Processes}\label{apps_8c_c_apps_appProcs}
+Generally the processes in an application are encapsulated and handled by the application class in app.\+c. However, to support command line control of processes within applications, references to processes can be created and given to clients over the I\+PC A\+PI le\+\_\+app\+Proc.\+api.
+
+This A\+PI allows a client to get a reference to a configured process within an app, attached to the process\textquotesingle{}s standard streams, modify the process parameters (such as priority, etc.) and run the process within the app. Modifications to the process must not be persistent such that once the client disconnects and the process is started normally the modified parameters are not used. A configured process can only be reference by at most one client.
+
+The le\+\_\+app\+Proc.\+api also allows clients to create references to processes that are not configured for the app. This usage requires that the client provide an executable that is accessible by the app. The created process will run with default parameters (such as priority) unless specified by the client. These created processes are deleted as soon as the client disconnects so that when the app is started normally only the configured processes are run.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{apps.\+c@{apps.\+c}!A\+P\+P\+\_\+\+I\+N\+F\+O\+\_\+\+F\+I\+LE@{A\+P\+P\+\_\+\+I\+N\+F\+O\+\_\+\+F\+I\+LE}}
+\index{A\+P\+P\+\_\+\+I\+N\+F\+O\+\_\+\+F\+I\+LE@{A\+P\+P\+\_\+\+I\+N\+F\+O\+\_\+\+F\+I\+LE}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{A\+P\+P\+\_\+\+I\+N\+F\+O\+\_\+\+F\+I\+LE}{APP_INFO_FILE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\+P\+P\+\_\+\+I\+N\+F\+O\+\_\+\+F\+I\+LE~\char`\"{}info.\+properties\char`\"{}}\hypertarget{apps_8c_aacef7e5bc96bb627dea28b71ffe92f69}{}\label{apps_8c_aacef7e5bc96bb627dea28b71ffe92f69}
+\index{apps.\+c@{apps.\+c}!A\+P\+P\+S\+T\+O\+P\+\_\+\+S\+E\+R\+V\+E\+R\+\_\+\+S\+O\+C\+K\+E\+T\+\_\+\+N\+A\+ME@{A\+P\+P\+S\+T\+O\+P\+\_\+\+S\+E\+R\+V\+E\+R\+\_\+\+S\+O\+C\+K\+E\+T\+\_\+\+N\+A\+ME}}
+\index{A\+P\+P\+S\+T\+O\+P\+\_\+\+S\+E\+R\+V\+E\+R\+\_\+\+S\+O\+C\+K\+E\+T\+\_\+\+N\+A\+ME@{A\+P\+P\+S\+T\+O\+P\+\_\+\+S\+E\+R\+V\+E\+R\+\_\+\+S\+O\+C\+K\+E\+T\+\_\+\+N\+A\+ME}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{A\+P\+P\+S\+T\+O\+P\+\_\+\+S\+E\+R\+V\+E\+R\+\_\+\+S\+O\+C\+K\+E\+T\+\_\+\+N\+A\+ME}{APPSTOP_SERVER_SOCKET_NAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\+P\+P\+S\+T\+O\+P\+\_\+\+S\+E\+R\+V\+E\+R\+\_\+\+S\+O\+C\+K\+E\+T\+\_\+\+N\+A\+ME~{\bf S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+D\+IR) \char`\"{}App\+Stop\+Server\char`\"{}}\hypertarget{apps_8c_a243cf58f6cf14a6079e5547f0d497169}{}\label{apps_8c_a243cf58f6cf14a6079e5547f0d497169}
+The name of the socket for the App\+Stop Server and Client. \index{apps.\+c@{apps.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST}{CFG_NODE_APPS_LIST}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST~\char`\"{}apps\char`\"{}}\hypertarget{apps_8c_a13e211203a7fa325363f93debb67a41e}{}\label{apps_8c_a13e211203a7fa325363f93debb67a41e}
+The name of the node in the config tree that contains the list of all apps.
+
+If this entry in the config tree is missing or empty then no apps will be launched. \index{apps.\+c@{apps.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED}{CFG_NODE_SANDBOXED}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED~\char`\"{}sandboxed\char`\"{}}\hypertarget{apps_8c_ac07be121fb3dc69f7fcb1a02bba94a37}{}\label{apps_8c_ac07be121fb3dc69f7fcb1a02bba94a37}
+The name of the node in the config tree that states whether the application is sandboxed or not \index{apps.\+c@{apps.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL}{CFG_NODE_START_MANUAL}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL~\char`\"{}start\+Manual\char`\"{}}\hypertarget{apps_8c_aac868d3ff2cad2d1873b0598db0f07cf}{}\label{apps_8c_aac868d3ff2cad2d1873b0598db0f07cf}
+The name of the node in the config tree that contains the apps start\+Manual value, used to determine whether the app should be launched on system startup or if it should be deferred for manual launch later.
+
+The start\+Manual value is either true or false. If true the app will not be launched on startup.
+
+If this entry in the config tree is missing or is empty, automatic start will be used as the default. \index{apps.\+c@{apps.\+c}!K\+E\+Y\+\_\+\+S\+T\+R\+\_\+\+M\+D5@{K\+E\+Y\+\_\+\+S\+T\+R\+\_\+\+M\+D5}}
+\index{K\+E\+Y\+\_\+\+S\+T\+R\+\_\+\+M\+D5@{K\+E\+Y\+\_\+\+S\+T\+R\+\_\+\+M\+D5}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{K\+E\+Y\+\_\+\+S\+T\+R\+\_\+\+M\+D5}{KEY_STR_MD5}}]{\setlength{\rightskip}{0pt plus 5cm}\#define K\+E\+Y\+\_\+\+S\+T\+R\+\_\+\+M\+D5~\char`\"{}app.\+md5\char`\"{}}\hypertarget{apps_8c_a8b0c9ebd30781fa360a42665a30f4912}{}\label{apps_8c_a8b0c9ebd30781fa360a42665a30f4912}
+\index{apps.\+c@{apps.\+c}!Max\+Retry\+Count@{Max\+Retry\+Count}}
+\index{Max\+Retry\+Count@{Max\+Retry\+Count}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Max\+Retry\+Count}{MaxRetryCount}}]{\setlength{\rightskip}{0pt plus 5cm}\#define Max\+Retry\+Count~10}\hypertarget{apps_8c_a8b8cc9e4f25f95da6d83a2dd26cde0e8}{}\label{apps_8c_a8b8cc9e4f25f95da6d83a2dd26cde0e8}
+
+
+\subsection{Typedef Documentation}
+\index{apps.\+c@{apps.\+c}!App\+Stop\+Handler\+\_\+t@{App\+Stop\+Handler\+\_\+t}}
+\index{App\+Stop\+Handler\+\_\+t@{App\+Stop\+Handler\+\_\+t}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{App\+Stop\+Handler\+\_\+t}{AppStopHandler_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef {\bf void}($\ast$ App\+Stop\+Handler\+\_\+t) (struct App\+Container $\ast$app\+Container\+Ptr)}\hypertarget{apps_8c_af0ebf52286e44ef2ae18f2fa4f151e7b}{}\label{apps_8c_af0ebf52286e44ef2ae18f2fa4f151e7b}
+Prototype for app stopped handler. 
+
+\subsection{Function Documentation}
+\index{apps.\+c@{apps.\+c}!app\+Ctrl\+\_\+\+Get\+Ref@{app\+Ctrl\+\_\+\+Get\+Ref}}
+\index{app\+Ctrl\+\_\+\+Get\+Ref@{app\+Ctrl\+\_\+\+Get\+Ref}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{app\+Ctrl\+\_\+\+Get\+Ref(const char $\ast$app\+Name)}{appCtrl_GetRef(const char *appName)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void}$\ast$ app\+Ctrl\+\_\+\+Get\+Ref (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_afdce3eea2d425a1f8ff2ebac5c46215c}{}\label{apps_8c_afdce3eea2d425a1f8ff2ebac5c46215c}
+Gets a reference to an application. Has the side-\/effect of creating the app\textquotesingle{}s runtime container if it hasn\textquotesingle{}t already been created.
+
+\begin{DoxyReturn}{Returns}
+Reference to the named app. N\+U\+LL on error.
+\end{DoxyReturn}
+\begin{DoxyWarning}{Warning}
+No more than one app can hold a reference at any given time.
+\end{DoxyWarning}
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000010}{Todo}]Remove side-\/effect of creating an app container. App container creation shouldn\textquotesingle{}t be tied to this. The container isn\textquotesingle{}t needed until the app starts, so it could be done then instead. \end{DoxyRefDesc}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name} & Name of the app to get the ref for. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!app\+Ctrl\+\_\+\+Release\+Ref@{app\+Ctrl\+\_\+\+Release\+Ref}}
+\index{app\+Ctrl\+\_\+\+Release\+Ref@{app\+Ctrl\+\_\+\+Release\+Ref}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{app\+Ctrl\+\_\+\+Release\+Ref(le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref)}{appCtrl_ReleaseRef(le_appCtrl_AppRef_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} app\+Ctrl\+\_\+\+Release\+Ref (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_afc9868e31ee76f5456ec6792118343b5}{}\label{apps_8c_afc9868e31ee76f5456ec6792118343b5}
+Release the reference to an application. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Ref to the app. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!app\+Ctrl\+\_\+\+Set\+Run@{app\+Ctrl\+\_\+\+Set\+Run}}
+\index{app\+Ctrl\+\_\+\+Set\+Run@{app\+Ctrl\+\_\+\+Set\+Run}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{app\+Ctrl\+\_\+\+Set\+Run(le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref, const char $\ast$proc\+Name, bool run)}{appCtrl_SetRun(le_appCtrl_AppRef_t appRef, const char *procName, bool run)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} app\+Ctrl\+\_\+\+Set\+Run (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{proc\+Name, }
+\item[{bool}]{run}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a1e44fb5dfc1f4c86e071a94e16abd2d9}{}\label{apps_8c_a1e44fb5dfc1f4c86e071a94e16abd2d9}
+Sets the run flag for a process in an application.
+
+If there is an error this function will kill the calling client. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Ref to the app. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name} & Process name to set the run flag for. \\
+\hline
+\mbox{\tt in}  & {\em run} & Flag to run the process or not. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!app\+Ctrl\+\_\+\+Start@{app\+Ctrl\+\_\+\+Start}}
+\index{app\+Ctrl\+\_\+\+Start@{app\+Ctrl\+\_\+\+Start}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{app\+Ctrl\+\_\+\+Start(const char $\ast$app\+Name)}{appCtrl_Start(const char *appName)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} app\+Ctrl\+\_\+\+Start (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a0dffbfc794578a16f9c13525c7490299}{}\label{apps_8c_a0dffbfc794578a16f9c13525c7490299}
+Starts an app. This function is called by the event loop when a separate process requests to start an app.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the app is successfully started. L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE if the app is already running. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the app is not installed. L\+E\+\_\+\+F\+A\+U\+LT if there was an error and the app could not be launched. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name} & Name of the application to start. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!app\+Ctrl\+\_\+\+Stop@{app\+Ctrl\+\_\+\+Stop}}
+\index{app\+Ctrl\+\_\+\+Stop@{app\+Ctrl\+\_\+\+Stop}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{app\+Ctrl\+\_\+\+Stop(le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, const char $\ast$app\+Name, App\+Stop\+Handler\+\_\+t stop\+Handler)}{appCtrl_Stop(le_appCtrl_ServerCmdRef_t cmdRef, const char *appName, AppStopHandler_t stopHandler)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} app\+Ctrl\+\_\+\+Stop (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref, }
+\item[{const char $\ast$}]{app\+Name, }
+\item[{{\bf App\+Stop\+Handler\+\_\+t}}]{stop\+Handler}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_ac3ec26f286bd25a5d629112e5a6d4bb6}{}\label{apps_8c_ac3ec26f286bd25a5d629112e5a6d4bb6}
+Stops an app. This function is called by the event loop when a separate process requests to stop an app.
+
+\begin{DoxyNote}{Note}
+If this function returns L\+E\+\_\+\+OK that does not mean the app has necessarily stopped yet because stopping apps is asynchronous. When the app actually stops the stop\+Handler will be called.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the app could not be found. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cmd\+Ref} & Command reference that must be passed to this command\textquotesingle{}s response function. \\
+\hline
+\mbox{\tt in}  & {\em app\+Name} & Name of the application to stop. \\
+\hline
+\mbox{\tt in}  & {\em stop\+Handler} & Handler to use to report when the app has stopped. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!apps\+\_\+\+Auto\+Start@{apps\+\_\+\+Auto\+Start}}
+\index{apps\+\_\+\+Auto\+Start@{apps\+\_\+\+Auto\+Start}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{apps\+\_\+\+Auto\+Start(void)}{apps_AutoStart(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} apps\+\_\+\+Auto\+Start (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a8f5e18e16a47bc87ce22e7712194bda3}{}\label{apps_8c_a8f5e18e16a47bc87ce22e7712194bda3}
+Start all applications marked as \textquotesingle{}auto\textquotesingle{} start. \index{apps.\+c@{apps.\+c}!apps\+\_\+\+Init@{apps\+\_\+\+Init}}
+\index{apps\+\_\+\+Init@{apps\+\_\+\+Init}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{apps\+\_\+\+Init(void)}{apps_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} apps\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a39787421de89d447b206d162fe06f3d2}{}\label{apps_8c_a39787421de89d447b206d162fe06f3d2}
+Initialize the applications system. \index{apps.\+c@{apps.\+c}!apps\+\_\+\+Set\+Shutdown\+Handler@{apps\+\_\+\+Set\+Shutdown\+Handler}}
+\index{apps\+\_\+\+Set\+Shutdown\+Handler@{apps\+\_\+\+Set\+Shutdown\+Handler}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{apps\+\_\+\+Set\+Shutdown\+Handler(apps\+\_\+\+Shutdown\+Handler\+\_\+t shutdown\+Handler)}{apps_SetShutdownHandler(apps_ShutdownHandler_t shutdownHandler)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} apps\+\_\+\+Set\+Shutdown\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf apps\+\_\+\+Shutdown\+Handler\+\_\+t}}]{shutdown\+Handler}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_ae2c09a0d43d462f68f610c0d91bea017}{}\label{apps_8c_ae2c09a0d43d462f68f610c0d91bea017}
+Sets the shutdown handler to be called when all the applications have shutdown. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em shutdown\+Handler} & Shut down handler. Can be N\+U\+LL. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!apps\+\_\+\+Shutdown@{apps\+\_\+\+Shutdown}}
+\index{apps\+\_\+\+Shutdown@{apps\+\_\+\+Shutdown}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{apps\+\_\+\+Shutdown(void)}{apps_Shutdown(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} apps\+\_\+\+Shutdown (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_ace2593c8a92bd8fd9ced79ddedf41fd1}{}\label{apps_8c_ace2593c8a92bd8fd9ced79ddedf41fd1}
+Initiates the shut down of all the applications. The shut down sequence happens asynchronously. A shut down handler should be set using \hyperlink{apps_8c_ae2c09a0d43d462f68f610c0d91bea017}{apps\+\_\+\+Set\+Shutdown\+Handler()} to be notified when all applications actually shut down. \index{apps.\+c@{apps.\+c}!apps\+\_\+\+Sig\+Child\+Handler@{apps\+\_\+\+Sig\+Child\+Handler}}
+\index{apps\+\_\+\+Sig\+Child\+Handler@{apps\+\_\+\+Sig\+Child\+Handler}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{apps\+\_\+\+Sig\+Child\+Handler(pid\+\_\+t pid)}{apps_SigChildHandler(pid_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} apps\+\_\+\+Sig\+Child\+Handler (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_ae4914ff9f165ca01792d664e49fd968b}{}\label{apps_8c_ae4914ff9f165ca01792d664e49fd968b}
+The S\+I\+G\+C\+H\+LD handler for the applications. This should be called from the Supervisor\textquotesingle{}s S\+I\+G\+C\+H\+I\+LD handler.
+
+\begin{DoxyNote}{Note}
+This function will reap the child if the child is a configured application process, otherwise the child will be reaped by the Supervisor\textquotesingle{}s S\+I\+G\+C\+H\+I\+LD handler.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the signal was handled without incident. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the pid is not a configured application process. The child will not be reaped. L\+E\+\_\+\+F\+A\+U\+LT if the signal indicates a failure of one of the applications which requires a system restart. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pid} & Pid of the process that produced the S\+I\+G\+C\+H\+LD. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!apps\+\_\+\+Verify\+App\+Writeable\+Device\+Files@{apps\+\_\+\+Verify\+App\+Writeable\+Device\+Files}}
+\index{apps\+\_\+\+Verify\+App\+Writeable\+Device\+Files@{apps\+\_\+\+Verify\+App\+Writeable\+Device\+Files}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{apps\+\_\+\+Verify\+App\+Writeable\+Device\+Files(void)}{apps_VerifyAppWriteableDeviceFiles(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} apps\+\_\+\+Verify\+App\+Writeable\+Device\+Files (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_ae68561e7f3df428f176523fe2bb93473}{}\label{apps_8c_ae68561e7f3df428f176523fe2bb93473}
+Verify that all devices in our sandboxed applications match with the device outside the sandbox. Remove devices and allow supervisor to recreate them. \index{apps.\+c@{apps.\+c}!App\+Stop\+Handler@{App\+Stop\+Handler}}
+\index{App\+Stop\+Handler@{App\+Stop\+Handler}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{App\+Stop\+Handler(int fd, short events)}{AppStopHandler(int fd, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} App\+Stop\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a354f54c5d1781dc826a947f23252b4d6}{}\label{apps_8c_a354f54c5d1781dc826a947f23252b4d6}
+Handler function called when the last process has exited a freezer cgroup. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & fd being monitored. \\
+\hline
+\mbox{\tt in}  & {\em events} & events that happened. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Create\+App@{Create\+App}}
+\index{Create\+App@{Create\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Create\+App(const char $\ast$app\+Name\+Ptr, App\+Container\+\_\+t $\ast$$\ast$container\+Ptr\+Ptr)}{CreateApp(const char *appNamePtr, AppContainer_t **containerPtrPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+App (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name\+Ptr, }
+\item[{{\bf App\+Container\+\_\+t} $\ast$$\ast$}]{container\+Ptr\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a3c4aafe4e481f1b3d4afd429d6c08721}{}\label{apps_8c_a3c4aafe4e481f1b3d4afd429d6c08721}
+Create the app container if necessary. This function searches for the app container in the active and inactive lists first, if it can\textquotesingle{}t find it then it creates the app container.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if successful.
+\item L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the app is not installed (no container created).
+\item L\+E\+\_\+\+F\+A\+U\+LT if there was some other error (check logs). 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name\+Ptr} & Name of the application to launch. \\
+\hline
+\mbox{\tt out}  & {\em container\+Ptr\+Ptr} & Ptr to the app container, or N\+U\+LL if not created. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Create\+App\+Stop\+Sv\+Socket@{Create\+App\+Stop\+Sv\+Socket}}
+\index{Create\+App\+Stop\+Sv\+Socket@{Create\+App\+Stop\+Sv\+Socket}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Create\+App\+Stop\+Sv\+Socket(void)}{CreateAppStopSvSocket(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Create\+App\+Stop\+Sv\+Socket (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a117e27c1a598b1fee900d1e5006d249a}{}\label{apps_8c_a117e27c1a598b1fee900d1e5006d249a}
+Create the App\+Stop Server socket. \index{apps.\+c@{apps.\+c}!Deactivate\+App\+Container@{Deactivate\+App\+Container}}
+\index{Deactivate\+App\+Container@{Deactivate\+App\+Container}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Deactivate\+App\+Container(\+App\+Container\+\_\+t $\ast$app\+Container\+Ptr)}{DeactivateAppContainer(AppContainer_t *appContainerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Deactivate\+App\+Container (
+\begin{DoxyParamCaption}
+\item[{{\bf App\+Container\+\_\+t} $\ast$}]{app\+Container\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a04e4ec1142f3e12fbbbc24987a7a51b9}{}\label{apps_8c_a04e4ec1142f3e12fbbbc24987a7a51b9}
+Puts the app into the inactive list. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Container\+Ptr} & App to deactivate. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Delete\+App@{Delete\+App}}
+\index{Delete\+App@{Delete\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+App(\+App\+Container\+\_\+t $\ast$app\+Container\+Ptr)}{DeleteApp(AppContainer_t *appContainerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+App (
+\begin{DoxyParamCaption}
+\item[{{\bf App\+Container\+\_\+t} $\ast$}]{app\+Container\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_afaf5be7ed4c1f25236ca63cb52c39f44}{}\label{apps_8c_afaf5be7ed4c1f25236ca63cb52c39f44}
+Deletes application container and references to it. 
+\begin{DoxyParams}{Parameters}
+{\em app\+Container\+Ptr} & App container to be deleted. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Delete\+App\+Procs@{Delete\+App\+Procs}}
+\index{Delete\+App\+Procs@{Delete\+App\+Procs}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+App\+Procs(app\+\_\+\+Ref\+\_\+t app\+Ref, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t client\+Ref)}{DeleteAppProcs(app_Ref_t appRef, le_msg_SessionRef_t clientRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+App\+Procs (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{client\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a177de333d0b5241d41faf75fb094feef}{}\label{apps_8c_a177de333d0b5241d41faf75fb094feef}
+Deletes all application process containers for either an application or a client. 
+\begin{DoxyParams}{Parameters}
+{\em app\+Ref} & Apps to delete from. N\+U\+LL if not used. \\
+\hline
+{\em client\+Ref} & Client to delete from. N\+U\+LL if not used. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Delete\+Client\+App\+Procs@{Delete\+Client\+App\+Procs}}
+\index{Delete\+Client\+App\+Procs@{Delete\+Client\+App\+Procs}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Client\+App\+Procs(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, void $\ast$context\+Ptr)}{DeleteClientAppProcs(le_msg_SessionRef_t sessionRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+Client\+App\+Procs (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_aa1a82dfdd7d615ed92c1433e4cd08541}{}\label{apps_8c_aa1a82dfdd7d615ed92c1433e4cd08541}
+Deletes all application process containers for the client with the given session reference. 
+\begin{DoxyParams}{Parameters}
+{\em session\+Ref} & Session reference of the client. \\
+\hline
+{\em context\+Ptr} & Not used. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Deletes\+All\+Inactive\+App@{Deletes\+All\+Inactive\+App}}
+\index{Deletes\+All\+Inactive\+App@{Deletes\+All\+Inactive\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Deletes\+All\+Inactive\+App(void)}{DeletesAllInactiveApp(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Deletes\+All\+Inactive\+App (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_acedf0e27cf2c3ffb79cbcf829d3d8a74}{}\label{apps_8c_acedf0e27cf2c3ffb79cbcf829d3d8a74}
+Deletes all inactive app objects. \index{apps.\+c@{apps.\+c}!Deletes\+Inactive\+App@{Deletes\+Inactive\+App}}
+\index{Deletes\+Inactive\+App@{Deletes\+Inactive\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Deletes\+Inactive\+App(const char $\ast$app\+Name, void $\ast$context\+Ptr)}{DeletesInactiveApp(const char *appName, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Deletes\+Inactive\+App (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a7e8202840a50bac148a078c456dd5025}{}\label{apps_8c_a7e8202840a50bac148a078c456dd5025}
+Deletes an inactive app object. 
+\begin{DoxyParams}{Parameters}
+{\em app\+Name} & App being removed. \\
+\hline
+{\em context\+Ptr} & Context for this function. Not used. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Get\+Active\+App@{Get\+Active\+App}}
+\index{Get\+Active\+App@{Get\+Active\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Active\+App(const char $\ast$app\+Name\+Ptr)}{GetActiveApp(const char *appNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf App\+Container\+\_\+t}$\ast$ Get\+Active\+App (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a4cd43732bcb6769dfa33f842314bbac7}{}\label{apps_8c_a4cd43732bcb6769dfa33f842314bbac7}
+Gets an active app container by application name.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the app container if successful. N\+U\+LL if the app is not found. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name\+Ptr} & Name of the application to get. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Get\+Active\+App\+With\+Proc@{Get\+Active\+App\+With\+Proc}}
+\index{Get\+Active\+App\+With\+Proc@{Get\+Active\+App\+With\+Proc}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Active\+App\+With\+Proc(pid\+\_\+t pid)}{GetActiveAppWithProc(pid_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf App\+Container\+\_\+t}$\ast$ Get\+Active\+App\+With\+Proc (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a3c30c35d45fb41b063aa5db1d0c5cf8a}{}\label{apps_8c_a3c30c35d45fb41b063aa5db1d0c5cf8a}
+Gets a pointer to the active app container for the app that has a process with the given P\+ID.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the app container, if successful. N\+U\+LL if the P\+ID is not found. 
+\end{DoxyReturn}
+\index{apps.\+c@{apps.\+c}!Get\+Inactive\+App@{Get\+Inactive\+App}}
+\index{Get\+Inactive\+App@{Get\+Inactive\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Inactive\+App(const char $\ast$app\+Name\+Ptr)}{GetInactiveApp(const char *appNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf App\+Container\+\_\+t}$\ast$ Get\+Inactive\+App (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a0f682e7dc90fa73c678e92c2b3aba951}{}\label{apps_8c_a0f682e7dc90fa73c678e92c2b3aba951}
+Gets an inactive app container by application name.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the app container if successful. N\+U\+LL if the app is not found. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name\+Ptr} & Name of the application to get. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Handle\+App\+Fault@{Handle\+App\+Fault}}
+\index{Handle\+App\+Fault@{Handle\+App\+Fault}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Handle\+App\+Fault(\+App\+Container\+\_\+t $\ast$app\+Container\+Ptr, pid\+\_\+t proc\+Pid, int proc\+Exit\+Status)}{HandleAppFault(AppContainer_t *appContainerPtr, pid_t procPid, int procExitStatus)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Handle\+App\+Fault (
+\begin{DoxyParamCaption}
+\item[{{\bf App\+Container\+\_\+t} $\ast$}]{app\+Container\+Ptr, }
+\item[{pid\+\_\+t}]{proc\+Pid, }
+\item[{int}]{proc\+Exit\+Status}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a754593e71bb3279fc1d281a9078f2485}{}\label{apps_8c_a754593e71bb3279fc1d281a9078f2485}
+Handle application fault. Gets the application fault action for the process that terminated and handle the fault.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the fault was handled. L\+E\+\_\+\+F\+A\+U\+LT if the fault could not be handled. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Container\+Ptr} & Application container reference. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Pid} & Pid of the process that changed state. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Exit\+Status} & Return status of the process given by wait(). \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Is\+App\+Name\+Valid@{Is\+App\+Name\+Valid}}
+\index{Is\+App\+Name\+Valid@{Is\+App\+Name\+Valid}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Is\+App\+Name\+Valid(const char $\ast$app\+Name\+Ptr)}{IsAppNameValid(const char *appNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+App\+Name\+Valid (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a9c99d1e2d87831f30723926b16fd6d14}{}\label{apps_8c_a9c99d1e2d87831f30723926b16fd6d14}
+Checks app name. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name\+Ptr} & App name. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Is\+App\+Proc\+Already\+Referenced@{Is\+App\+Proc\+Already\+Referenced}}
+\index{Is\+App\+Proc\+Already\+Referenced@{Is\+App\+Proc\+Already\+Referenced}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Is\+App\+Proc\+Already\+Referenced(app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref)}{IsAppProcAlreadyReferenced(app_Proc_Ref_t appProcRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+App\+Proc\+Already\+Referenced (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a99499b49359047f50b60643094650a7d}{}\label{apps_8c_a99499b49359047f50b60643094650a7d}
+Checks whether an app\textquotesingle{}s process is reference by any clients. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & App process reference. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Is\+Proc\+Name\+Valid@{Is\+Proc\+Name\+Valid}}
+\index{Is\+Proc\+Name\+Valid@{Is\+Proc\+Name\+Valid}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Proc\+Name\+Valid(const char $\ast$proc\+Name\+Ptr)}{IsProcNameValid(const char *procNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Proc\+Name\+Valid (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{proc\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a6955d4c889cbf8871412b161eae228a8}{}\label{apps_8c_a6955d4c889cbf8871412b161eae228a8}
+Checks process name. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Name\+Ptr} & Process name. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Launch\+App@{Launch\+App}}
+\index{Launch\+App@{Launch\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Launch\+App(const char $\ast$app\+Name\+Ptr)}{LaunchApp(const char *appNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Launch\+App (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a93c8f16ade37ac3ab6b3ea1cef6b2a68}{}\label{apps_8c_a93c8f16ade37ac3ab6b3ea1cef6b2a68}
+Launch an app. Create the app container if necessary and start all the app\textquotesingle{}s processes.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successfully launched the app. L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE if the app is already running. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the app is not installed. L\+E\+\_\+\+F\+A\+U\+LT if the app could not be launched. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name\+Ptr} & Name of the application to launch. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Ctrl\+\_\+\+Add\+Trace\+Attach\+Handler@{le\+\_\+app\+Ctrl\+\_\+\+Add\+Trace\+Attach\+Handler}}
+\index{le\+\_\+app\+Ctrl\+\_\+\+Add\+Trace\+Attach\+Handler@{le\+\_\+app\+Ctrl\+\_\+\+Add\+Trace\+Attach\+Handler}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Ctrl\+\_\+\+Add\+Trace\+Attach\+Handler(le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref, le\+\_\+app\+Ctrl\+\_\+\+Trace\+Attach\+Handler\+Func\+\_\+t attach\+To\+Pid\+Ptr, void $\ast$context\+Ptr)}{le_appCtrl_AddTraceAttachHandler(le_appCtrl_AppRef_t appRef, le_appCtrl_TraceAttachHandlerFunc_t attachToPidPtr, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+app\+Ctrl\+\_\+\+Trace\+Attach\+Handler\+Ref\+\_\+t} le\+\_\+app\+Ctrl\+\_\+\+Add\+Trace\+Attach\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{{\bf le\+\_\+app\+Ctrl\+\_\+\+Trace\+Attach\+Handler\+Func\+\_\+t}}]{attach\+To\+Pid\+Ptr, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a61eef2118f65c5e1855c5b5b768a027a}{}\label{apps_8c_a61eef2118f65c5e1855c5b5b768a027a}
+Add handler function for E\+V\+E\+NT \textquotesingle{}le\+\_\+app\+Ctrl\+\_\+\+Trace\+Attach\textquotesingle{}
+
+Event that indicates the process that can be attached to in the application being traced. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Ref to the app. \\
+\hline
+\mbox{\tt in}  & {\em attach\+To\+Pid\+Ptr} & \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Ctrl\+\_\+\+Get\+Ref@{le\+\_\+app\+Ctrl\+\_\+\+Get\+Ref}}
+\index{le\+\_\+app\+Ctrl\+\_\+\+Get\+Ref@{le\+\_\+app\+Ctrl\+\_\+\+Get\+Ref}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Ctrl\+\_\+\+Get\+Ref(le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, const char $\ast$app\+Name)}{le_appCtrl_GetRef(le_appCtrl_ServerCmdRef_t cmdRef, const char *appName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Ctrl\+\_\+\+Get\+Ref (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref, }
+\item[{const char $\ast$}]{app\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a2811527163990063e5cc2b9f31105ca6}{}\label{apps_8c_a2811527163990063e5cc2b9f31105ca6}
+Gets a reference to an application.
+
+\begin{DoxyReturn}{Returns}
+Reference to the named app. N\+U\+LL if the app is not installed. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cmd\+Ref} & Command reference that must be passed to this command\textquotesingle{}s response function. \\
+\hline
+\mbox{\tt in}  & {\em app\+Name} & Name of the app to get the ref for. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Ctrl\+\_\+\+Import@{le\+\_\+app\+Ctrl\+\_\+\+Import}}
+\index{le\+\_\+app\+Ctrl\+\_\+\+Import@{le\+\_\+app\+Ctrl\+\_\+\+Import}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Ctrl\+\_\+\+Import(le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref, const char $\ast$path)}{le_appCtrl_Import(le_appCtrl_ServerCmdRef_t cmdRef, le_appCtrl_AppRef_t appRef, const char *path)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Ctrl\+\_\+\+Import (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref, }
+\item[{{\bf le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a2ce58932f8ae77626eca0d90f5be40db}{}\label{apps_8c_a2ce58932f8ae77626eca0d90f5be40db}
+Import a file into the app\textquotesingle{}s working directory.
+
+\begin{DoxyNote}{Note}
+The result code for this command should be sent back to the requesting process via le\+\_\+app\+Ctrl\+\_\+\+Import\+Respond(). The possible result codes are\+:
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successfully imported the file. L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE if the path conflicts with items already in the app\textquotesingle{}s working directory. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the path does not point to a valid file. L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER if the path is formatted incorrectly. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If the caller is passing an invalid reference to the application, it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cmd\+Ref} & Command reference that must be passed to this command\textquotesingle{}s response function. \\
+\hline
+\mbox{\tt in}  & {\em app\+Ref} & Ref to the app. \\
+\hline
+\mbox{\tt in}  & {\em path} & Absolute path to the file to import. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Ctrl\+\_\+\+Release\+Ref@{le\+\_\+app\+Ctrl\+\_\+\+Release\+Ref}}
+\index{le\+\_\+app\+Ctrl\+\_\+\+Release\+Ref@{le\+\_\+app\+Ctrl\+\_\+\+Release\+Ref}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Ctrl\+\_\+\+Release\+Ref(le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref)}{le_appCtrl_ReleaseRef(le_appCtrl_ServerCmdRef_t cmdRef, le_appCtrl_AppRef_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Ctrl\+\_\+\+Release\+Ref (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref, }
+\item[{{\bf le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a80619d009b90dc49c11cf557ceebf392}{}\label{apps_8c_a80619d009b90dc49c11cf557ceebf392}
+Release the reference to an application. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cmd\+Ref} & Command reference that must be passed to this command\textquotesingle{}s response function. \\
+\hline
+\mbox{\tt in}  & {\em app\+Ref} & Ref to the app. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Ctrl\+\_\+\+Remove\+Trace\+Attach\+Handler@{le\+\_\+app\+Ctrl\+\_\+\+Remove\+Trace\+Attach\+Handler}}
+\index{le\+\_\+app\+Ctrl\+\_\+\+Remove\+Trace\+Attach\+Handler@{le\+\_\+app\+Ctrl\+\_\+\+Remove\+Trace\+Attach\+Handler}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Ctrl\+\_\+\+Remove\+Trace\+Attach\+Handler(le\+\_\+app\+Ctrl\+\_\+\+Trace\+Attach\+Handler\+Ref\+\_\+t add\+Handler\+Ref)}{le_appCtrl_RemoveTraceAttachHandler(le_appCtrl_TraceAttachHandlerRef_t addHandlerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Ctrl\+\_\+\+Remove\+Trace\+Attach\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+app\+Ctrl\+\_\+\+Trace\+Attach\+Handler\+Ref\+\_\+t}}]{add\+Handler\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a97fc925b782c9fd213c741fece156b4d}{}\label{apps_8c_a97fc925b782c9fd213c741fece156b4d}
+Remove handler function for E\+V\+E\+NT \textquotesingle{}le\+\_\+app\+Ctrl\+\_\+\+Trace\+Attach\textquotesingle{} 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em add\+Handler\+Ref} & \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Ctrl\+\_\+\+Set\+Device\+Perm@{le\+\_\+app\+Ctrl\+\_\+\+Set\+Device\+Perm}}
+\index{le\+\_\+app\+Ctrl\+\_\+\+Set\+Device\+Perm@{le\+\_\+app\+Ctrl\+\_\+\+Set\+Device\+Perm}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Ctrl\+\_\+\+Set\+Device\+Perm(le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref, const char $\ast$path, const char $\ast$permissions)}{le_appCtrl_SetDevicePerm(le_appCtrl_ServerCmdRef_t cmdRef, le_appCtrl_AppRef_t appRef, const char *path, const char *permissions)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Ctrl\+\_\+\+Set\+Device\+Perm (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref, }
+\item[{{\bf le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{path, }
+\item[{const char $\ast$}]{permissions}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a296abb9f1261e860ffac8d2e1a3b9d58}{}\label{apps_8c_a296abb9f1261e860ffac8d2e1a3b9d58}
+Sets a device file\textquotesingle{}s permissions.
+
+\begin{DoxyNote}{Note}
+The result code for this command should be sent back to the requesting process via le\+\_\+app\+Ctrl\+\_\+\+Set\+Device\+Perm\+Respond(). The possible result codes are\+:
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successfully set the device\textquotesingle{}s permissions. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the path does not point to a valid device. L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER if the path is formatted incorrectly. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If the caller is passing an invalid reference to the application, it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cmd\+Ref} & Command reference that must be passed to this command\textquotesingle{}s response function. \\
+\hline
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the app. \\
+\hline
+\mbox{\tt in}  & {\em path} & Absolute path to the device. \\
+\hline
+\mbox{\tt in}  & {\em permissions} & Permission to apply to the device. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Ctrl\+\_\+\+Set\+Run@{le\+\_\+app\+Ctrl\+\_\+\+Set\+Run}}
+\index{le\+\_\+app\+Ctrl\+\_\+\+Set\+Run@{le\+\_\+app\+Ctrl\+\_\+\+Set\+Run}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Ctrl\+\_\+\+Set\+Run(le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref, const char $\ast$proc\+Name, bool run)}{le_appCtrl_SetRun(le_appCtrl_ServerCmdRef_t cmdRef, le_appCtrl_AppRef_t appRef, const char *procName, bool run)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Ctrl\+\_\+\+Set\+Run (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref, }
+\item[{{\bf le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{proc\+Name, }
+\item[{bool}]{run}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a2819bfcb98e75afefdb46023b3f98b4d}{}\label{apps_8c_a2819bfcb98e75afefdb46023b3f98b4d}
+Sets the run flag for a process in an application.
+
+If there is an error this function will kill the calling client. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cmd\+Ref} & Command reference that must be passed to this command\textquotesingle{}s response function. \\
+\hline
+\mbox{\tt in}  & {\em app\+Ref} & Ref to the app. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name} & Process name to set the run flag for. \\
+\hline
+\mbox{\tt in}  & {\em run} & Flag to run the process or not. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Ctrl\+\_\+\+Start@{le\+\_\+app\+Ctrl\+\_\+\+Start}}
+\index{le\+\_\+app\+Ctrl\+\_\+\+Start@{le\+\_\+app\+Ctrl\+\_\+\+Start}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Ctrl\+\_\+\+Start(le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, const char $\ast$app\+Name)}{le_appCtrl_Start(le_appCtrl_ServerCmdRef_t cmdRef, const char *appName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Ctrl\+\_\+\+Start (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref, }
+\item[{const char $\ast$}]{app\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_ac7d4e0cc089aff5962bf6dad4ef71503}{}\label{apps_8c_ac7d4e0cc089aff5962bf6dad4ef71503}
+Starts an app. This function is called by the event loop when a separate process requests to start an app.
+
+\begin{DoxyNote}{Note}
+The result code for this command should be sent back to the requesting process via le\+\_\+app\+Ctrl\+\_\+\+Start\+Respond(). The possible result codes are\+:
+\end{DoxyNote}
+L\+E\+\_\+\+OK if the app is successfully started. L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE if the app is already running. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the app is not installed. L\+E\+\_\+\+F\+A\+U\+LT if there was an error and the app could not be launched. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cmd\+Ref} & Command reference that must be passed to this command\textquotesingle{}s response function. \\
+\hline
+\mbox{\tt in}  & {\em app\+Name} & Name of the application to start. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Ctrl\+\_\+\+Stop@{le\+\_\+app\+Ctrl\+\_\+\+Stop}}
+\index{le\+\_\+app\+Ctrl\+\_\+\+Stop@{le\+\_\+app\+Ctrl\+\_\+\+Stop}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Ctrl\+\_\+\+Stop(le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, const char $\ast$app\+Name)}{le_appCtrl_Stop(le_appCtrl_ServerCmdRef_t cmdRef, const char *appName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Ctrl\+\_\+\+Stop (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref, }
+\item[{const char $\ast$}]{app\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_af544b1aaafc8ce1cbf751941604bcdba}{}\label{apps_8c_af544b1aaafc8ce1cbf751941604bcdba}
+Stops an app. This function is called by the event loop when a separate process requests to stop an app.
+
+\begin{DoxyNote}{Note}
+The result code for this command should be sent back to the requesting process via le\+\_\+app\+Ctrl\+\_\+\+Stop\+Respond(). The possible result codes are\+:
+\end{DoxyNote}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the app could not be found. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cmd\+Ref} & Command reference that must be passed to this command\textquotesingle{}s response function. \\
+\hline
+\mbox{\tt in}  & {\em app\+Name} & Name of the application to stop. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Ctrl\+\_\+\+Trace\+Unblock@{le\+\_\+app\+Ctrl\+\_\+\+Trace\+Unblock}}
+\index{le\+\_\+app\+Ctrl\+\_\+\+Trace\+Unblock@{le\+\_\+app\+Ctrl\+\_\+\+Trace\+Unblock}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Ctrl\+\_\+\+Trace\+Unblock(le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref, int32\+\_\+t pid)}{le_appCtrl_TraceUnblock(le_appCtrl_ServerCmdRef_t _cmdRef, le_appCtrl_AppRef_t appRef, int32_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Ctrl\+\_\+\+Trace\+Unblock (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{\+\_\+cmd\+Ref, }
+\item[{{\bf le\+\_\+app\+Ctrl\+\_\+\+App\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{int32\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_aa7fcc3e0e90afb3ca0e7ff82d8196a23}{}\label{apps_8c_aa7fcc3e0e90afb3ca0e7ff82d8196a23}
+Unblocks the traced process. This should normally be done once the tracer has successfully attached to the process.
+
+\begin{DoxyNote}{Note}
+If the caller is passing an invalid reference to the application, it is a fatal error, the function will not return. 
+\end{DoxyNote}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Info\+\_\+\+Get\+Hash@{le\+\_\+app\+Info\+\_\+\+Get\+Hash}}
+\index{le\+\_\+app\+Info\+\_\+\+Get\+Hash@{le\+\_\+app\+Info\+\_\+\+Get\+Hash}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Info\+\_\+\+Get\+Hash(const char $\ast$app\+Name, char $\ast$hash\+Str, size\+\_\+t hash\+Str\+Num\+Elements)}{le_appInfo_GetHash(const char *appName, char *hashStr, size_t hashStrNumElements)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+app\+Info\+\_\+\+Get\+Hash (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name, }
+\item[{char $\ast$}]{hash\+Str, }
+\item[{size\+\_\+t}]{hash\+Str\+Num\+Elements}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a4c905cdff5f1ef3c543db2a053d8b09a}{}\label{apps_8c_a4c905cdff5f1ef3c543db2a053d8b09a}
+Gets the application hash as a hexidecimal string. The application hash is a unique hash of the current version of the application.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the application has was successfully retrieved. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the application hash could not fit in the provided buffer. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the application is not installed. L\+E\+\_\+\+F\+A\+U\+LT if there was an error.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If the application name pointer is null or if its string is empty or of bad format it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name} & Application name. \\
+\hline
+\mbox{\tt out}  & {\em hash\+Str} & Hash string. \\
+\hline
+\mbox{\tt in}  & {\em hash\+Str\+Num\+Elements} & \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Info\+\_\+\+Get\+Name@{le\+\_\+app\+Info\+\_\+\+Get\+Name}}
+\index{le\+\_\+app\+Info\+\_\+\+Get\+Name@{le\+\_\+app\+Info\+\_\+\+Get\+Name}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Info\+\_\+\+Get\+Name(int32\+\_\+t pid, char $\ast$app\+Name, size\+\_\+t app\+Name\+Num\+Elements)}{le_appInfo_GetName(int32_t pid, char *appName, size_t appNameNumElements)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+app\+Info\+\_\+\+Get\+Name (
+\begin{DoxyParamCaption}
+\item[{int32\+\_\+t}]{pid, }
+\item[{char $\ast$}]{app\+Name, }
+\item[{size\+\_\+t}]{app\+Name\+Num\+Elements}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_ad403b48535ca090859b8096c9cc051cc}{}\label{apps_8c_ad403b48535ca090859b8096c9cc051cc}
+Gets the application name of the process with the specified P\+ID.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the application name was successfully found. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the application name could not fit in the provided buffer. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the process is not part of an application. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pid} & P\+ID of the process. \\
+\hline
+\mbox{\tt out}  & {\em app\+Name} & Application name \\
+\hline
+\mbox{\tt in}  & {\em app\+Name\+Num\+Elements} & \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Info\+\_\+\+Get\+Proc\+State@{le\+\_\+app\+Info\+\_\+\+Get\+Proc\+State}}
+\index{le\+\_\+app\+Info\+\_\+\+Get\+Proc\+State@{le\+\_\+app\+Info\+\_\+\+Get\+Proc\+State}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Info\+\_\+\+Get\+Proc\+State(const char $\ast$app\+Name, const char $\ast$proc\+Name)}{le_appInfo_GetProcState(const char *appName, const char *procName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+app\+Info\+\_\+\+Proc\+State\+\_\+t} le\+\_\+app\+Info\+\_\+\+Get\+Proc\+State (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name, }
+\item[{const char $\ast$}]{proc\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a6857ca395b0fad4dab33291737755643}{}\label{apps_8c_a6857ca395b0fad4dab33291737755643}
+Gets the state of the specified process in an application. This function only works for configured processes that the Supervisor starts directly.
+
+\begin{DoxyReturn}{Returns}
+The state of the specified process.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If the application or process names pointers are null or if their strings are empty or of bad format it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name} & Name of the application. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name} & Name of the process. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Info\+\_\+\+Get\+State@{le\+\_\+app\+Info\+\_\+\+Get\+State}}
+\index{le\+\_\+app\+Info\+\_\+\+Get\+State@{le\+\_\+app\+Info\+\_\+\+Get\+State}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Info\+\_\+\+Get\+State(const char $\ast$app\+Name)}{le_appInfo_GetState(const char *appName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+app\+Info\+\_\+\+State\+\_\+t} le\+\_\+app\+Info\+\_\+\+Get\+State (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a58c868b60a679fe7d63ab1e8286cfa94}{}\label{apps_8c_a58c868b60a679fe7d63ab1e8286cfa94}
+Gets the state of the specified application. The state of unknown applications is S\+T\+O\+P\+P\+ED.
+
+\begin{DoxyReturn}{Returns}
+The state of the specified application.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If the application name pointer is null or if its string is empty or of bad format it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name} & Name of the application. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Add\+Arg@{le\+\_\+app\+Proc\+\_\+\+Add\+Arg}}
+\index{le\+\_\+app\+Proc\+\_\+\+Add\+Arg@{le\+\_\+app\+Proc\+\_\+\+Add\+Arg}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Add\+Arg(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, const char $\ast$arg)}{le_appProc_AddArg(le_appProc_RefRef_t appProcRef, const char *arg)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Proc\+\_\+\+Add\+Arg (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref, }
+\item[{const char $\ast$}]{arg}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a7777f9d7b5e78fff1bf9259cfe33ce1e}{}\label{apps_8c_a7777f9d7b5e78fff1bf9259cfe33ce1e}
+Adds a command line argument to the application process.
+
+If the application process is a configured process adding any argument means no arguments from the configuration database will be used.
+
+Adding an empty argument validates the argument list but does not acutally add an argument. This is useful for overriding the configured arguments list with an empty argument list.
+
+If there is an error this function will kill the calling client. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\mbox{\tt in}  & {\em arg} & Argument to add. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Add\+Stop\+Handler@{le\+\_\+app\+Proc\+\_\+\+Add\+Stop\+Handler}}
+\index{le\+\_\+app\+Proc\+\_\+\+Add\+Stop\+Handler@{le\+\_\+app\+Proc\+\_\+\+Add\+Stop\+Handler}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Add\+Stop\+Handler(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, le\+\_\+app\+Proc\+\_\+\+Stop\+Handler\+Func\+\_\+t handler\+Ptr, void $\ast$context\+Ptr)}{le_appProc_AddStopHandler(le_appProc_RefRef_t appProcRef, le_appProc_StopHandlerFunc_t handlerPtr, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+app\+Proc\+\_\+\+Stop\+Handler\+Ref\+\_\+t le\+\_\+app\+Proc\+\_\+\+Add\+Stop\+Handler (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref, }
+\item[{le\+\_\+app\+Proc\+\_\+\+Stop\+Handler\+Func\+\_\+t}]{handler\+Ptr, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_ac1142e2fd9bc950d01682c3be6968acf}{}\label{apps_8c_ac1142e2fd9bc950d01682c3be6968acf}
+Add handler function for E\+V\+E\+NT \textquotesingle{}le\+\_\+app\+Proc\+\_\+\+Stop\textquotesingle{}
+
+Process stopped event. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\mbox{\tt in}  & {\em handler\+Ptr} & \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Clear\+Args@{le\+\_\+app\+Proc\+\_\+\+Clear\+Args}}
+\index{le\+\_\+app\+Proc\+\_\+\+Clear\+Args@{le\+\_\+app\+Proc\+\_\+\+Clear\+Args}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Clear\+Args(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref)}{le_appProc_ClearArgs(le_appProc_RefRef_t appProcRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Proc\+\_\+\+Clear\+Args (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_adcd9432aa4865015af3bdead6b97a5ab}{}\label{apps_8c_adcd9432aa4865015af3bdead6b97a5ab}
+Deletes and invalidates the cmd-\/line arguments to a process. This means the process will only use arguments from the config if available.
+
+\begin{DoxyNote}{Note}
+If the caller is passing an invalid reference to the application process, it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Clear\+Fault\+Action@{le\+\_\+app\+Proc\+\_\+\+Clear\+Fault\+Action}}
+\index{le\+\_\+app\+Proc\+\_\+\+Clear\+Fault\+Action@{le\+\_\+app\+Proc\+\_\+\+Clear\+Fault\+Action}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Clear\+Fault\+Action(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref)}{le_appProc_ClearFaultAction(le_appProc_RefRef_t appProcRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Proc\+\_\+\+Clear\+Fault\+Action (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_ab7a13e04ce14b0140a43d87e072d915c}{}\label{apps_8c_ab7a13e04ce14b0140a43d87e072d915c}
+Clears the application process\textquotesingle{}s fault action and use either the configured fault action or the default.
+
+\begin{DoxyNote}{Note}
+If the caller is passing an invalid reference to the application process, it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Clear\+Priority@{le\+\_\+app\+Proc\+\_\+\+Clear\+Priority}}
+\index{le\+\_\+app\+Proc\+\_\+\+Clear\+Priority@{le\+\_\+app\+Proc\+\_\+\+Clear\+Priority}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Clear\+Priority(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref)}{le_appProc_ClearPriority(le_appProc_RefRef_t appProcRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Proc\+\_\+\+Clear\+Priority (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a29b3b8529f3c4dc5580d8acd5d261957}{}\label{apps_8c_a29b3b8529f3c4dc5580d8acd5d261957}
+Clears the application process\textquotesingle{}s priority and use either the configured priority or the default.
+
+\begin{DoxyNote}{Note}
+If the caller is passing an invalid reference to the application process, it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Create@{le\+\_\+app\+Proc\+\_\+\+Create}}
+\index{le\+\_\+app\+Proc\+\_\+\+Create@{le\+\_\+app\+Proc\+\_\+\+Create}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Create(const char $\ast$app\+Name, const char $\ast$proc\+Name, const char $\ast$exec\+Path)}{le_appProc_Create(const char *appName, const char *procName, const char *execPath)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t le\+\_\+app\+Proc\+\_\+\+Create (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name, }
+\item[{const char $\ast$}]{proc\+Name, }
+\item[{const char $\ast$}]{exec\+Path}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_ad8ae70b0444be01b418e6859117491af}{}\label{apps_8c_ad8ae70b0444be01b418e6859117491af}
+Creates a process in an app. This function can be used to create and subsequently start a process in an application that the application normally would not start on its own. This function does not actually start the process, use Start() to start the process.
+
+If the specified process name matches a name in the app\textquotesingle{}s list of configured processes then runtime parameters such as environment variables, priority, etc. will be taken from the configuration database. Otherwise default parameters will be used.
+
+Parameters can be overridden by the other functions in this A\+PI such as Add\+Arg(), Set\+Priority(), etc.
+
+If the executable path is empty and the process name matches a configured process then the configured executable is used. Otherwise the specified executable path is used.
+
+Either the process name or the executable path may be empty but not both.
+
+It is an error to call this function on a configured process that is already running.
+
+\begin{DoxyReturn}{Returns}
+Reference to the application process object if successful. N\+U\+LL if there was an error.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If the application or process names pointers are null or if their strings are empty or of bad format it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name} & Name of the app. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name} & Name of the process. \\
+\hline
+\mbox{\tt in}  & {\em exec\+Path} & Path to the executable file. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Delete@{le\+\_\+app\+Proc\+\_\+\+Delete}}
+\index{le\+\_\+app\+Proc\+\_\+\+Delete@{le\+\_\+app\+Proc\+\_\+\+Delete}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Delete(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref)}{le_appProc_Delete(le_appProc_RefRef_t appProcRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Proc\+\_\+\+Delete (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_ae6390153cad9389427bf5968f573808e}{}\label{apps_8c_ae6390153cad9389427bf5968f573808e}
+Deletes the application process object.
+
+\begin{DoxyNote}{Note}
+If the caller is passing an invalid reference to the application process, it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Remove\+Stop\+Handler@{le\+\_\+app\+Proc\+\_\+\+Remove\+Stop\+Handler}}
+\index{le\+\_\+app\+Proc\+\_\+\+Remove\+Stop\+Handler@{le\+\_\+app\+Proc\+\_\+\+Remove\+Stop\+Handler}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Remove\+Stop\+Handler(le\+\_\+app\+Proc\+\_\+\+Stop\+Handler\+Ref\+\_\+t add\+Handler\+Ref)}{le_appProc_RemoveStopHandler(le_appProc_StopHandlerRef_t addHandlerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Proc\+\_\+\+Remove\+Stop\+Handler (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Stop\+Handler\+Ref\+\_\+t}]{add\+Handler\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_aec23ee557c01ac7ae7a7e99b236a43a2}{}\label{apps_8c_aec23ee557c01ac7ae7a7e99b236a43a2}
+Remove handler function for E\+V\+E\+NT \textquotesingle{}le\+\_\+app\+Proc\+\_\+\+Stop\textquotesingle{} 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em add\+Handler\+Ref} & \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Set\+Fault\+Action@{le\+\_\+app\+Proc\+\_\+\+Set\+Fault\+Action}}
+\index{le\+\_\+app\+Proc\+\_\+\+Set\+Fault\+Action@{le\+\_\+app\+Proc\+\_\+\+Set\+Fault\+Action}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Set\+Fault\+Action(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, le\+\_\+app\+Proc\+\_\+\+Fault\+Action\+\_\+t action)}{le_appProc_SetFaultAction(le_appProc_RefRef_t appProcRef, le_appProc_FaultAction_t action)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Proc\+\_\+\+Set\+Fault\+Action (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref, }
+\item[{le\+\_\+app\+Proc\+\_\+\+Fault\+Action\+\_\+t}]{action}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a0a1d0c99b9f0c086b33c0efd2da8aada}{}\label{apps_8c_a0a1d0c99b9f0c086b33c0efd2da8aada}
+Sets the application process\textquotesingle{}s fault action.
+
+\begin{DoxyNote}{Note}
+If the caller is passing an invalid reference to the application process, it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\mbox{\tt in}  & {\em action} & Fault action for the application process. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Set\+Priority@{le\+\_\+app\+Proc\+\_\+\+Set\+Priority}}
+\index{le\+\_\+app\+Proc\+\_\+\+Set\+Priority@{le\+\_\+app\+Proc\+\_\+\+Set\+Priority}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Set\+Priority(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, const char $\ast$priority)}{le_appProc_SetPriority(le_appProc_RefRef_t appProcRef, const char *priority)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Proc\+\_\+\+Set\+Priority (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref, }
+\item[{const char $\ast$}]{priority}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a67c2a246f592b928c3d10010ae712438}{}\label{apps_8c_a67c2a246f592b928c3d10010ae712438}
+Sets the application process\textquotesingle{}s priority.
+
+The priority string must be either \textquotesingle{}idle\textquotesingle{},\textquotesingle{}low\textquotesingle{}, \textquotesingle{}medium\textquotesingle{}, \textquotesingle{}high\textquotesingle{}, \textquotesingle{}rt1\textquotesingle{}, \textquotesingle{}rt2\textquotesingle{}...\textquotesingle{}rt32\textquotesingle{}.
+
+If there is an error this function will kill the calling client. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\mbox{\tt in}  & {\em priority} & Priority for the application process. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Err@{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Err}}
+\index{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Err@{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Err}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Err(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, int std\+Err\+Fd)}{le_appProc_SetStdErr(le_appProc_RefRef_t appProcRef, int stdErrFd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Err (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref, }
+\item[{int}]{std\+Err\+Fd}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a6a5df96a9f94f93cd2c63d99680d1221}{}\label{apps_8c_a6a5df96a9f94f93cd2c63d99680d1221}
+Sets the file descriptor that the application process\textquotesingle{}s standard err should be attached to.
+
+By default the standard err is directed to the logs.
+
+If there is an error this function will kill the calling process 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\mbox{\tt in}  & {\em std\+Err\+Fd} & File descriptor to use as the app proc\textquotesingle{}s standard error. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Set\+Std\+In@{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+In}}
+\index{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+In@{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+In}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+In(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, int std\+In\+Fd)}{le_appProc_SetStdIn(le_appProc_RefRef_t appProcRef, int stdInFd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Proc\+\_\+\+Set\+Std\+In (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref, }
+\item[{int}]{std\+In\+Fd}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a653dd6a5ccfe03148326ba0ddf97150b}{}\label{apps_8c_a653dd6a5ccfe03148326ba0ddf97150b}
+Sets the file descriptor that the application process\textquotesingle{}s standard in should be attached to.
+
+By default the standard in is directed to /dev/null.
+
+If there is an error this function will kill the calling process 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\mbox{\tt in}  & {\em std\+In\+Fd} & File descriptor to use as the app proc\textquotesingle{}s standard in. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Out@{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Out}}
+\index{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Out@{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Out}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Out(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref, int std\+Out\+Fd)}{le_appProc_SetStdOut(le_appProc_RefRef_t appProcRef, int stdOutFd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+app\+Proc\+\_\+\+Set\+Std\+Out (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref, }
+\item[{int}]{std\+Out\+Fd}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a4ebde1675892edb909462004d0152782}{}\label{apps_8c_a4ebde1675892edb909462004d0152782}
+Sets the file descriptor that the application process\textquotesingle{}s standard out should be attached to.
+
+By default the standard out is directed to the logs.
+
+If there is an error this function will kill the calling process 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\mbox{\tt in}  & {\em std\+Out\+Fd} & File descriptor to use as the app proc\textquotesingle{}s standard out. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+app\+Proc\+\_\+\+Start@{le\+\_\+app\+Proc\+\_\+\+Start}}
+\index{le\+\_\+app\+Proc\+\_\+\+Start@{le\+\_\+app\+Proc\+\_\+\+Start}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Proc\+\_\+\+Start(le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t app\+Proc\+Ref)}{le_appProc_Start(le_appProc_RefRef_t appProcRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+app\+Proc\+\_\+\+Start (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+app\+Proc\+\_\+\+Ref\+Ref\+\_\+t}]{app\+Proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a6203aae500afb330a0ad99f55592066b}{}\label{apps_8c_a6203aae500afb330a0ad99f55592066b}
+Starts the application process. If the application was not running this function will start it first.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If the caller is passing an invalid reference to the application process, it is a fatal error, the function will not return. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Application process to start. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!le\+\_\+sup\+\_\+ctrl\+\_\+\+Get\+App\+Ref@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Get\+App\+Ref}}
+\index{le\+\_\+sup\+\_\+ctrl\+\_\+\+Get\+App\+Ref@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Get\+App\+Ref}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sup\+\_\+ctrl\+\_\+\+Get\+App\+Ref(le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, const char $\ast$app\+Name)}{le_sup_ctrl_GetAppRef(le_sup_ctrl_ServerCmdRef_t _cmdRef, const char *appName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+sup\+\_\+ctrl\+\_\+\+Get\+App\+Ref (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{\+\_\+cmd\+Ref, }
+\item[{const char $\ast$}]{app\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a463bc01d21d8f48c34691e30b2467443}{}\label{apps_8c_a463bc01d21d8f48c34691e30b2467443}
+Gets a reference to an application.
+
+\begin{DoxyReturn}{Returns}
+Reference to the named app. N\+U\+LL if the app is not installed. 
+\end{DoxyReturn}
+\index{apps.\+c@{apps.\+c}!le\+\_\+sup\+\_\+ctrl\+\_\+\+Release\+App\+Ref@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Release\+App\+Ref}}
+\index{le\+\_\+sup\+\_\+ctrl\+\_\+\+Release\+App\+Ref@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Release\+App\+Ref}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sup\+\_\+ctrl\+\_\+\+Release\+App\+Ref(le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, le\+\_\+sup\+\_\+ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref)}{le_sup_ctrl_ReleaseAppRef(le_sup_ctrl_ServerCmdRef_t _cmdRef, le_sup_ctrl_AppRef_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+sup\+\_\+ctrl\+\_\+\+Release\+App\+Ref (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{\+\_\+cmd\+Ref, }
+\item[{le\+\_\+sup\+\_\+ctrl\+\_\+\+App\+Ref\+\_\+t}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_ab58b7c62f7a5886cf2dfb8b25e27717d}{}\label{apps_8c_ab58b7c62f7a5886cf2dfb8b25e27717d}
+Release the reference to an application. \index{apps.\+c@{apps.\+c}!le\+\_\+sup\+\_\+ctrl\+\_\+\+Set\+Run@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Set\+Run}}
+\index{le\+\_\+sup\+\_\+ctrl\+\_\+\+Set\+Run@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Set\+Run}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sup\+\_\+ctrl\+\_\+\+Set\+Run(le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, le\+\_\+sup\+\_\+ctrl\+\_\+\+App\+Ref\+\_\+t app\+Ref, const char $\ast$proc\+Name, bool run)}{le_sup_ctrl_SetRun(le_sup_ctrl_ServerCmdRef_t _cmdRef, le_sup_ctrl_AppRef_t appRef, const char *procName, bool run)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+sup\+\_\+ctrl\+\_\+\+Set\+Run (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{\+\_\+cmd\+Ref, }
+\item[{le\+\_\+sup\+\_\+ctrl\+\_\+\+App\+Ref\+\_\+t}]{app\+Ref, }
+\item[{const char $\ast$}]{proc\+Name, }
+\item[{bool}]{run}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a0b0d1735cca5eb8c3e2b12f24fd31cd0}{}\label{apps_8c_a0b0d1735cca5eb8c3e2b12f24fd31cd0}
+Sets the run flag for a process in an application.
+
+If there is an error this function will kill the calling client. \index{apps.\+c@{apps.\+c}!le\+\_\+sup\+\_\+ctrl\+\_\+\+Start\+App@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Start\+App}}
+\index{le\+\_\+sup\+\_\+ctrl\+\_\+\+Start\+App@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Start\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sup\+\_\+ctrl\+\_\+\+Start\+App(le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, const char $\ast$app\+Name)}{le_sup_ctrl_StartApp(le_sup_ctrl_ServerCmdRef_t _cmdRef, const char *appName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+sup\+\_\+ctrl\+\_\+\+Start\+App (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{\+\_\+cmd\+Ref, }
+\item[{const char $\ast$}]{app\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a9c06c4626b8786ed7668d19bebe75f6d}{}\label{apps_8c_a9c06c4626b8786ed7668d19bebe75f6d}
+Starts an app. This function is called by the event loop when a separate process requests to start an app.
+
+\begin{DoxyNote}{Note}
+The result code for this command should be sent back to the requesting process via le\+\_\+sup\+\_\+ctrl\+\_\+\+Start\+App\+Respond(). The possible result codes are\+:
+\end{DoxyNote}
+L\+E\+\_\+\+OK if the app is successfully started. L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE if the app is already running. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the app is not installed. L\+E\+\_\+\+F\+A\+U\+LT if there was an error and the app could not be launched. \index{apps.\+c@{apps.\+c}!le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+App@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+App}}
+\index{le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+App@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+App(le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref, const char $\ast$app\+Name)}{le_sup_ctrl_StopApp(le_sup_ctrl_ServerCmdRef_t _cmdRef, const char *appName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+App (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{\+\_\+cmd\+Ref, }
+\item[{const char $\ast$}]{app\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_af3c9c89cefa7977afaf3fbc284ab19d3}{}\label{apps_8c_af3c9c89cefa7977afaf3fbc284ab19d3}
+Stops an app. This function is called by the event loop when a separate process requests to stop an app.
+
+\begin{DoxyNote}{Note}
+The result code for this command should be sent back to the requesting process via le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+App\+Respond(). The possible result codes are\+:
+\end{DoxyNote}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the app could not be found. \index{apps.\+c@{apps.\+c}!Log\+Deprecated\+Msg@{Log\+Deprecated\+Msg}}
+\index{Log\+Deprecated\+Msg@{Log\+Deprecated\+Msg}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Log\+Deprecated\+Msg(void)}{LogDeprecatedMsg(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Log\+Deprecated\+Msg (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_ac374b112085cec3408b87522bc1ae87f}{}\label{apps_8c_ac374b112085cec3408b87522bc1ae87f}
+Logs a deprecated A\+PI message. \index{apps.\+c@{apps.\+c}!Mark\+App\+As\+Stopped@{Mark\+App\+As\+Stopped}}
+\index{Mark\+App\+As\+Stopped@{Mark\+App\+As\+Stopped}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Mark\+App\+As\+Stopped(void $\ast$param1\+Ptr, void $\ast$param2\+Ptr)}{MarkAppAsStopped(void *param1Ptr, void *param2Ptr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Mark\+App\+As\+Stopped (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{param1\+Ptr, }
+\item[{{\bf void} $\ast$}]{param2\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a7be336a4c79e4176991f39315d2fd103}{}\label{apps_8c_a7be336a4c79e4176991f39315d2fd103}
+Marking an app as \char`\"{}stopped\char`\"{}. Since the mechanisms to determine app stop (cgroup release\+\_\+agent) and proc stop (S\+I\+G\+C\+H\+I\+LD signals and the handlers) are decoupled, this function ensures that an app is marked as stopped only when all configured processes have been marked as stopped. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em param1\+Ptr} & param 1, app ref \\
+\hline
+\mbox{\tt in}  & {\em param2\+Ptr} & param 2, app container ref \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Proc\+Block\+Handler@{Proc\+Block\+Handler}}
+\index{Proc\+Block\+Handler@{Proc\+Block\+Handler}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Proc\+Block\+Handler(pid\+\_\+t pid, const char $\ast$proc\+Name\+Ptr, void $\ast$app\+Safe\+Ref)}{ProcBlockHandler(pid_t pid, const char *procNamePtr, void *appSafeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Proc\+Block\+Handler (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{pid, }
+\item[{const char $\ast$}]{proc\+Name\+Ptr, }
+\item[{{\bf void} $\ast$}]{app\+Safe\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_aac6758221e4f25939a2670166e09b0f0}{}\label{apps_8c_aac6758221e4f25939a2670166e09b0f0}
+Process block handler. Called when a process has blocked on startup. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pid} & P\+ID of the blocked process. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name\+Ptr} & Name of the blocked process. \\
+\hline
+\mbox{\tt in}  & {\em app\+Safe\+Ref} & Safe ref app pointer. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Release\+App\+Ref@{Release\+App\+Ref}}
+\index{Release\+App\+Ref@{Release\+App\+Ref}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Release\+App\+Ref(void $\ast$app\+Safe\+Ref, App\+Container\+\_\+t $\ast$app\+Container\+Ptr)}{ReleaseAppRef(void *appSafeRef, AppContainer_t *appContainerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Release\+App\+Ref (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{app\+Safe\+Ref, }
+\item[{{\bf App\+Container\+\_\+t} $\ast$}]{app\+Container\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_ab0c36a3853973cc6131d31f2cb4995c7}{}\label{apps_8c_ab0c36a3853973cc6131d31f2cb4995c7}
+Release an application reference. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Safe\+Ref} & Safe reference for the app. \\
+\hline
+\mbox{\tt in}  & {\em app\+Container\+Ptr} & App container the safe reference points to. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Release\+Client\+App\+Refs@{Release\+Client\+App\+Refs}}
+\index{Release\+Client\+App\+Refs@{Release\+Client\+App\+Refs}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Release\+Client\+App\+Refs(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, void $\ast$context\+Ptr)}{ReleaseClientAppRefs(le_msg_SessionRef_t sessionRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Release\+Client\+App\+Refs (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a5c971c020a0ceb8e8608d5783a8fc261}{}\label{apps_8c_a5c971c020a0ceb8e8608d5783a8fc261}
+Deletes all application process containers for either an application or a client. 
+\begin{DoxyParams}{Parameters}
+{\em session\+Ref} & Session reference of the client. \\
+\hline
+{\em context\+Ptr} & Not used. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Respond\+To\+Stop\+App\+Cmd@{Respond\+To\+Stop\+App\+Cmd}}
+\index{Respond\+To\+Stop\+App\+Cmd@{Respond\+To\+Stop\+App\+Cmd}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Respond\+To\+Stop\+App\+Cmd(\+App\+Container\+\_\+t $\ast$app\+Container\+Ptr)}{RespondToStopAppCmd(AppContainer_t *appContainerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Respond\+To\+Stop\+App\+Cmd (
+\begin{DoxyParamCaption}
+\item[{{\bf App\+Container\+\_\+t} $\ast$}]{app\+Container\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a666b85ee681640b2e6d74b53144be5ec}{}\label{apps_8c_a666b85ee681640b2e6d74b53144be5ec}
+Responds to the stop app command. Also deactivates the app container for the app that just stopped. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Container\+Ptr} & App that stopped. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Respond\+To\+Stop\+App\+Cmd\+Deprecated@{Respond\+To\+Stop\+App\+Cmd\+Deprecated}}
+\index{Respond\+To\+Stop\+App\+Cmd\+Deprecated@{Respond\+To\+Stop\+App\+Cmd\+Deprecated}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Respond\+To\+Stop\+App\+Cmd\+Deprecated(\+App\+Container\+\_\+t $\ast$app\+Container\+Ptr)}{RespondToStopAppCmdDeprecated(AppContainer_t *appContainerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Respond\+To\+Stop\+App\+Cmd\+Deprecated (
+\begin{DoxyParamCaption}
+\item[{{\bf App\+Container\+\_\+t} $\ast$}]{app\+Container\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_ae725574ce680e9da58338e87f61a3f11}{}\label{apps_8c_ae725574ce680e9da58338e87f61a3f11}
+Responds to the stop app command. Also deactivates the app container for the app that just stopped. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Container\+Ptr} & App that stopped. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Restart\+App@{Restart\+App}}
+\index{Restart\+App@{Restart\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Restart\+App(\+App\+Container\+\_\+t $\ast$app\+Container\+Ptr)}{RestartApp(AppContainer_t *appContainerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Restart\+App (
+\begin{DoxyParamCaption}
+\item[{{\bf App\+Container\+\_\+t} $\ast$}]{app\+Container\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_adeddaa36c00e0c1a6af522f17a0b2972}{}\label{apps_8c_adeddaa36c00e0c1a6af522f17a0b2972}
+Restarts an application. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Container\+Ptr} & App to restart. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Shutdown\+Next\+App@{Shutdown\+Next\+App}}
+\index{Shutdown\+Next\+App@{Shutdown\+Next\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Shutdown\+Next\+App(\+App\+Container\+\_\+t $\ast$app\+Container\+Ptr)}{ShutdownNextApp(AppContainer_t *appContainerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Shutdown\+Next\+App (
+\begin{DoxyParamCaption}
+\item[{{\bf App\+Container\+\_\+t} $\ast$}]{app\+Container\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a82d1ae80e1c74a7490ff3d98c3d50ef8}{}\label{apps_8c_a82d1ae80e1c74a7490ff3d98c3d50ef8}
+Shuts down the next running app.
+
+Deletes the current app container. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Container\+Ptr} & App that just stopped. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Start\+App@{Start\+App}}
+\index{Start\+App@{Start\+App}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Start\+App(\+App\+Container\+\_\+t $\ast$app\+Container\+Ptr)}{StartApp(AppContainer_t *appContainerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Start\+App (
+\begin{DoxyParamCaption}
+\item[{{\bf App\+Container\+\_\+t} $\ast$}]{app\+Container\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_ad3609987431ca480bf80f1320a5cab34}{}\label{apps_8c_ad3609987431ca480bf80f1320a5cab34}
+Starts an app.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Container\+Ptr} & App to start. \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Wait\+App\+Stop@{Wait\+App\+Stop}}
+\index{Wait\+App\+Stop@{Wait\+App\+Stop}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Wait\+App\+Stop(void $\ast$param1\+Ptr, void $\ast$param2\+Ptr)}{WaitAppStop(void *param1Ptr, void *param2Ptr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Wait\+App\+Stop (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{param1\+Ptr, }
+\item[{{\bf void} $\ast$}]{param2\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a20df48debcb50222f14d2a7fbf30203d}{}\label{apps_8c_a20df48debcb50222f14d2a7fbf30203d}
+Raise a timer to check if the App has stopped. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em param1\+Ptr} & param 1, app ref \\
+\hline
+\mbox{\tt in}  & {\em param2\+Ptr} & param 2, app container ref \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Wait\+App\+Stop\+Complete@{Wait\+App\+Stop\+Complete}}
+\index{Wait\+App\+Stop\+Complete@{Wait\+App\+Stop\+Complete}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Wait\+App\+Stop\+Complete(void $\ast$param\+Ptr)}{WaitAppStopComplete(void *paramPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} Wait\+App\+Stop\+Complete (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{param\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a3e6a8c1201d2417d28725501c67d16e2}{}\label{apps_8c_a3e6a8c1201d2417d28725501c67d16e2}
+Delete the check stop timer after the app has been stopped. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em param\+Ptr} & param, app container ref \\
+\hline
+\end{DoxyParams}
+\index{apps.\+c@{apps.\+c}!Wait\+App\+Stop\+Handler@{Wait\+App\+Stop\+Handler}}
+\index{Wait\+App\+Stop\+Handler@{Wait\+App\+Stop\+Handler}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Wait\+App\+Stop\+Handler(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{WaitAppStopHandler(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Wait\+App\+Stop\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a9d781dd54b987fc7f13cfb809f5e0fb3}{}\label{apps_8c_a9d781dd54b987fc7f13cfb809f5e0fb3}
+Handler function called when there are configured procs in the proc lists, but no actual running procs. \index{apps.\+c@{apps.\+c}!wdog\+\_\+\+Watchdog\+Timed\+Out@{wdog\+\_\+\+Watchdog\+Timed\+Out}}
+\index{wdog\+\_\+\+Watchdog\+Timed\+Out@{wdog\+\_\+\+Watchdog\+Timed\+Out}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{wdog\+\_\+\+Watchdog\+Timed\+Out(wdog\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, uint32\+\_\+t proc\+Id)}{wdog_WatchdogTimedOut(wdog_ServerCmdRef_t cmdRef, uint32_t procId)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} wdog\+\_\+\+Watchdog\+Timed\+Out (
+\begin{DoxyParamCaption}
+\item[{wdog\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref, }
+\item[{uint32\+\_\+t}]{proc\+Id}
+\end{DoxyParamCaption}
+)}\hypertarget{apps_8c_a096ab66a5a6b91dd895b73b135ca47e3}{}\label{apps_8c_a096ab66a5a6b91dd895b73b135ca47e3}
+A watchdog has timed out. This function determines the watchdog\+Action to take and applies it. The action to take is first delegated to the app (and proc layers) and actions not handled by or not appropriate for lower layers are handled here. $<$\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000011}{Todo}]Need to use a reboot A\+PI here that actually reboots the entire module rather than just the framework so that possibly connected peripherals get reset as well. So, for now we will just log an error message and restart the app. \end{DoxyRefDesc}
+
+
+\subsection{Variable Documentation}
+\index{apps.\+c@{apps.\+c}!Active\+Apps\+List@{Active\+Apps\+List}}
+\index{Active\+Apps\+List@{Active\+Apps\+List}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Active\+Apps\+List}{ActiveAppsList}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+dls\+\_\+\+List\+\_\+t} Active\+Apps\+List = {\bf L\+E\+\_\+\+D\+L\+S\+\_\+\+L\+I\+S\+T\+\_\+\+I\+N\+IT}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a3aa634a5e6b9849a1a4d04ead8078875}{}\label{apps_8c_a3aa634a5e6b9849a1a4d04ead8078875}
+List of all active app containers. \index{apps.\+c@{apps.\+c}!All\+Apps\+Shutdown\+Handler@{All\+Apps\+Shutdown\+Handler}}
+\index{All\+Apps\+Shutdown\+Handler@{All\+Apps\+Shutdown\+Handler}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{All\+Apps\+Shutdown\+Handler}{AllAppsShutdownHandler}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf apps\+\_\+\+Shutdown\+Handler\+\_\+t} All\+Apps\+Shutdown\+Handler = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a3a7ffbbe26d36454541c607bf188c936}{}\label{apps_8c_a3a7ffbbe26d36454541c607bf188c936}
+Handler to be called when all applications have shutdown. \index{apps.\+c@{apps.\+c}!App\+Attach\+Handler\+Map@{App\+Attach\+Handler\+Map}}
+\index{App\+Attach\+Handler\+Map@{App\+Attach\+Handler\+Map}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{App\+Attach\+Handler\+Map}{AppAttachHandlerMap}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} App\+Attach\+Handler\+Map\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_ab6af6977fdf03a97e4180b5952d9631e}{}\label{apps_8c_ab6af6977fdf03a97e4180b5952d9631e}
+Safe reference map for application attach handlers. \index{apps.\+c@{apps.\+c}!App\+Container\+Pool@{App\+Container\+Pool}}
+\index{App\+Container\+Pool@{App\+Container\+Pool}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{App\+Container\+Pool}{AppContainerPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} App\+Container\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_ab81ad3ac6fb7dfd6cb51baa0568f90f6}{}\label{apps_8c_ab81ad3ac6fb7dfd6cb51baa0568f90f6}
+Memory pool for app containers. \index{apps.\+c@{apps.\+c}!App\+Map@{App\+Map}}
+\index{App\+Map@{App\+Map}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{App\+Map}{AppMap}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} App\+Map\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_af2349ccfaab92764d8aa944c5bfd41d2}{}\label{apps_8c_af2349ccfaab92764d8aa944c5bfd41d2}
+Safe reference map of applications. \index{apps.\+c@{apps.\+c}!App\+Proc\+Container\+Pool@{App\+Proc\+Container\+Pool}}
+\index{App\+Proc\+Container\+Pool@{App\+Proc\+Container\+Pool}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{App\+Proc\+Container\+Pool}{AppProcContainerPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} App\+Proc\+Container\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a291276989ab8c21f1ad1f76f32241b7c}{}\label{apps_8c_a291276989ab8c21f1ad1f76f32241b7c}
+Memory pool for application process containers. \index{apps.\+c@{apps.\+c}!App\+Proc\+Map@{App\+Proc\+Map}}
+\index{App\+Proc\+Map@{App\+Proc\+Map}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{App\+Proc\+Map}{AppProcMap}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} App\+Proc\+Map\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a440191c05f79159fa1d05bd6638c5321}{}\label{apps_8c_a440191c05f79159fa1d05bd6638c5321}
+Safe reference map of application processes. \index{apps.\+c@{apps.\+c}!App\+Stop\+Sv\+Socket\+Fd@{App\+Stop\+Sv\+Socket\+Fd}}
+\index{App\+Stop\+Sv\+Socket\+Fd@{App\+Stop\+Sv\+Socket\+Fd}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{App\+Stop\+Sv\+Socket\+Fd}{AppStopSvSocketFd}}]{\setlength{\rightskip}{0pt plus 5cm}int App\+Stop\+Sv\+Socket\+Fd = -\/1\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_ad74e08a9de4329e5dc9e41a32c299aeb}{}\label{apps_8c_ad74e08a9de4329e5dc9e41a32c299aeb}
+The file descriptors of the App\+Stop Server and Client sockets. \index{apps.\+c@{apps.\+c}!App\+Stop\+Sv\+Socket\+Fd\+Mon\+Ref@{App\+Stop\+Sv\+Socket\+Fd\+Mon\+Ref}}
+\index{App\+Stop\+Sv\+Socket\+Fd\+Mon\+Ref@{App\+Stop\+Sv\+Socket\+Fd\+Mon\+Ref}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{App\+Stop\+Sv\+Socket\+Fd\+Mon\+Ref}{AppStopSvSocketFdMonRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} App\+Stop\+Sv\+Socket\+Fd\+Mon\+Ref = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a6045bc92dc4740a2711418fd67f13544}{}\label{apps_8c_a6045bc92dc4740a2711418fd67f13544}
+The fd monitor reference for the App\+Stop Server socket. \index{apps.\+c@{apps.\+c}!Inactive\+Apps\+List@{Inactive\+Apps\+List}}
+\index{Inactive\+Apps\+List@{Inactive\+Apps\+List}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Inactive\+Apps\+List}{InactiveAppsList}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+dls\+\_\+\+List\+\_\+t} Inactive\+Apps\+List = {\bf L\+E\+\_\+\+D\+L\+S\+\_\+\+L\+I\+S\+T\+\_\+\+I\+N\+IT}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_ad68957432f219828b6c83041d2e0df81}{}\label{apps_8c_ad68957432f219828b6c83041d2e0df81}
+List of all inactive app containers. \index{apps.\+c@{apps.\+c}!Wait\+App\+Stop\+Timeout@{Wait\+App\+Stop\+Timeout}}
+\index{Wait\+App\+Stop\+Timeout@{Wait\+App\+Stop\+Timeout}!apps.\+c@{apps.\+c}}
+\subsubsection[{\texorpdfstring{Wait\+App\+Stop\+Timeout}{WaitAppStopTimeout}}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf le\+\_\+clk\+\_\+\+Time\+\_\+t} Wait\+App\+Stop\+Timeout\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{apps_8c_a7a68198f1a735a2e9f751eda2fd3bdf4}{}\label{apps_8c_a7a68198f1a735a2e9f751eda2fd3bdf4}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    .sec = 0,
+    .usec = 100*1000
+\}
+\end{DoxyCode}
+Timeout value for waiting processes to exit for an app. 

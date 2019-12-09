@@ -1,0 +1,1110 @@
+\hypertarget{update_daemon_8c}{}\section{framework/daemons/linux/update\+Daemon/update\+Daemon.c File Reference}
+\label{update_daemon_8c}\index{framework/daemons/linux/update\+Daemon/update\+Daemon.\+c@{framework/daemons/linux/update\+Daemon/update\+Daemon.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}interfaces.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}user.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}pipeline.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}update\+Unpack.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}inst\+Stat.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}app.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}system.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sys\+Status.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sys\+Paths.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sup\+Ctrl.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}update\+Ctrl.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}installer.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}properties.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}fs\+Sys.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}ima.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file.\+h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_client_progress_handler__t}{Client\+Progress\+Handler\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{update_daemon_8c_a3ddb0fef811bda6f92ac076b02acfea1}{P\+R\+O\+B\+A\+T\+I\+O\+N\+\_\+\+P\+E\+R\+I\+OD}~(30 $\ast$ 60 $\ast$ 1000)
+\item 
+\#define \hyperlink{update_daemon_8c_ad45ce1b90dc6a8836f7bf381c380b95e}{M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}~\hyperlink{limit_8h_a6edbf14b38ca141c9e2a6edef24e44bf}{L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+R\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \{ \hyperlink{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4daaade5e53e88cf231292cd1142cce2afe}{S\+T\+A\+T\+E\+\_\+\+I\+D\+LE}, 
+\hyperlink{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4da7514d81145a1ffcf0a895a400e655585}{S\+T\+A\+T\+E\+\_\+\+U\+N\+P\+A\+C\+K\+I\+NG}, 
+\hyperlink{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4dac0f18a763f91d4a3e43c153a125f5ec1}{S\+T\+A\+T\+E\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+C\+H\+E\+C\+K\+I\+NG}, 
+\hyperlink{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4da7d58af2948bc1526109821b1b4fa75f9}{S\+T\+A\+T\+E\+\_\+\+A\+P\+P\+L\+Y\+I\+NG}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a10615db71fa6108e89800ca40cc7c73e}{Start\+Probation} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_aaaa0ea1beec4d844a1af5247bb1e99bf}{update\+Daemon\+\_\+\+Mark\+Good} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a4d73fca4446249b1de29bd6ade3f2b60}{Handle\+Probation\+Expiry} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer)
+\item 
+static bool \hyperlink{update_daemon_8c_a209e1e20ce704de4b28d4cc7272e85f1}{Is\+Valid\+File\+Desc} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static int \hyperlink{update_daemon_8c_ad22e8e2806faf44fdbd4409b66e2f9f8}{Security\+Unpack} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$param)
+\item 
+static bool \hyperlink{update_daemon_8c_a7501da27837a6d6e9e2e6a194bb86d32}{File\+Exists} (const char $\ast$file\+Path)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a07b311f10d06d7423b5d55426a81fde8}{Call\+Status\+Handlers} (\hyperlink{le__update__interface_8h_ae9758536ebaf1842cdaaddd6cf95a672}{le\+\_\+update\+\_\+\+State\+\_\+t} api\+State, unsigned int percent\+Done)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a5be363e86f5cc5e959acac9802c4a582}{Update\+Failed} (\hyperlink{le__update__interface_8h_a24bac90fc939c561c64d13608cc78a20}{le\+\_\+update\+\_\+\+Error\+Code\+\_\+t} err\+Code)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_acd445689161fe9d7fd5bae5ae63554e1}{Report\+Update\+Done} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{update_daemon_8c_ae0f891c5dd78594a12973322d48e9945}{Install\+System\+Apps} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{update_daemon_8c_a016eeacbdb94546818d7b477535ba2a4}{Setup\+System\+Apps\+Writable} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{update_daemon_8c_aa604911931b460c43f2795590d4dc920}{Verify\+App\+Unpack\+Dir} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{update_daemon_8c_a1bc6c75f2ad5d333355f93b871511fbf}{Verify\+Unpacked\+System} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a3b35dcefb87059588e43100c2a08afbd}{Apply\+System\+Update} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_adb6d758142f889764fb61bca72e3c053}{Apply\+App\+Update} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_ad5e13145e3efbd174e45c3f88a8ed536}{Apply\+App\+Remove} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_ae7326dda672f3d73f18bc93820eef9c4}{Apply\+Update} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$unused)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_ac44bfe36cdc5c8da29456b8cefb774e6}{Unpack\+Done} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a515f1f30a653d699ee40da76cf23df64}{Handle\+Update\+Progress} (\hyperlink{update_unpack_8h_a40469bc8f509ecaf999c52181e6b4bbc}{update\+Unpack\+\_\+\+Progress\+Code\+\_\+t} progress\+Code, unsigned int percent\+Done)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a36eed88d409dbc7aba230cb03b3f9bd1}{End\+Update} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a34cdb7230815295d1c55fcacd0b8c316}{Update\+Service\+Closed} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a02f348360211f77ef709b2f0427af38b}{Sig\+Child\+Handler} (int sig\+Num)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a090244beffbdeee9562b3e4970d60ae2}{Delete\+File} (const char $\ast$file\+Path)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a63a926a5a0670b16ced723586dbeeadb}{Import\+File} (\hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} i, const char $\ast$file\+Path, const char $\ast$node\+Path)
+\item 
+static bool \hyperlink{update_daemon_8c_a68664377a52b908683ac865a310538c9}{Is\+Cfg\+Tree} (const char $\ast$tree\+Name)
+\item 
+static bool \hyperlink{update_daemon_8c_a4cfa65d4b6fc47a0fea4f2ddd78e00d7}{Is\+System\+Cfg\+Tree} (const char $\ast$tree\+Name)
+\item 
+static bool \hyperlink{update_daemon_8c_aeddc128259f55d4c9f787d91f5ed698d}{Is\+Dir\+Entry\+App\+Cfg\+Tree} (struct dirent $\ast$dp)
+\item 
+static bool \hyperlink{update_daemon_8c_ae04e4c0c13529b530d5e88ea3fc673da}{Is\+This\+Apps\+Cfg\+Tree} (const char $\ast$tree\+Name, const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name})
+\item 
+static int \hyperlink{update_daemon_8c_ad7596457c7b4d938d820614fa39c7bc3}{Get\+Num\+App\+Cfg\+Tree} (D\+IR $\ast$dir\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_aa472de10a7aa772dc9b6fef28a4b1bf1}{Get\+App\+Cfg\+Tree\+List} (D\+IR $\ast$dir\+Ptr, int num\+App\+Cfg\+Tree, char($\ast$cfg\+Tree\+List)\mbox{[}\hyperlink{update_daemon_8c_ad45ce1b90dc6a8836f7bf381c380b95e}{M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}\mbox{]})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_aedd39dfe66661c02c3493c4d2df62a20}{Remove\+From\+List\+Tree\+In\+Cfg\+Node} (\hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} cfg\+Iter, size\+\_\+t num\+App\+Cfg\+Tree, char($\ast$obsolete\+Tree\+List)\mbox{[}\hyperlink{update_daemon_8c_ad45ce1b90dc6a8836f7bf381c380b95e}{M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}\mbox{]})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_ab22141fd005ea4ec050b2851a9b46cce}{Remove\+From\+List\+Tree\+In\+App\+A\+CL} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, size\+\_\+t num\+App\+Cfg\+Tree, char($\ast$obsolete\+Tree\+List)\mbox{[}\hyperlink{update_daemon_8c_ad45ce1b90dc6a8836f7bf381c380b95e}{M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}\mbox{]})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a3cdb68c43e33ddb79c263169801e12c0}{Cleanup\+App\+Config\+Trees} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_adbddd29e3c8ed5688cd0129e9cf57c40}{Finish\+System\+Update} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static bool \hyperlink{update_daemon_8c_a283da9bfc768c5aba8c9a71389d68365}{Should\+Keep\+User\+Or\+Group} (const char $\ast$file\+Line)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_ac172f3d0619efb32e186f782761811bf}{Copy\+Existing\+User\+Or\+Group\+Lines} (F\+I\+LE $\ast$output\+File, const char $\ast$input\+File\+Path)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a1781c16581ef45979c8b717be2118acc}{Update\+Users\+And\+Groups} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_a8a4d38e7e2e465ecc1a5586475970f89}{Pipeline\+Done} (\hyperlink{pipeline_8h_adfb885380a9b0f550fafe4de0a2d2564}{pipeline\+\_\+\+Ref\+\_\+t} pipeline, int status)
+\item 
+static bool \hyperlink{update_daemon_8c_aeaf42b223be3176ce146c257168098be}{Is\+Session\+Valid} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__update__interface_8h_a20a94b986a9ba0e6772b146f98b95f92}{le\+\_\+update\+\_\+\+Progress\+Handler\+Ref\+\_\+t} \hyperlink{update_daemon_8c_a67236a5fb1ef3cc24d54ca7d60b7e69f}{le\+\_\+update\+\_\+\+Add\+Progress\+Handler} (\hyperlink{le__update__interface_8h_ae56667313f5ee9ee20c6ebc273aca3bb}{le\+\_\+update\+\_\+\+Progress\+Handler\+Func\+\_\+t} func, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_ae2d40ca3fd9c048546e5e7eb923ae449}{le\+\_\+update\+\_\+\+Remove\+Progress\+Handler} (\hyperlink{le__update__interface_8h_a20a94b986a9ba0e6772b146f98b95f92}{le\+\_\+update\+\_\+\+Progress\+Handler\+Ref\+\_\+t} handler\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{update_daemon_8c_aa71a2ea4d5cf4926b195a5826aee1711}{le\+\_\+update\+\_\+\+Start} (int client\+Fd)
+\item 
+\hyperlink{le__update__interface_8h_a24bac90fc939c561c64d13608cc78a20}{le\+\_\+update\+\_\+\+Error\+Code\+\_\+t} \hyperlink{update_daemon_8c_ab29edc63b713c6a7b1d652ec0512c46e}{le\+\_\+update\+\_\+\+Get\+Error\+Code} ()
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{update_daemon_8c_aff38d9bd101b7b09ea5d6ad69cd085e0}{le\+\_\+update\+\_\+\+Install} ()
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{update_daemon_8c_ada3064eb99fa8776a7ddbcedf7fa3c91}{le\+\_\+update\+\_\+\+End} ()
+\item 
+int32\+\_\+t \hyperlink{update_daemon_8c_a7ae02132ca690606a1d556aff5f3a4c4}{le\+\_\+update\+\_\+\+Get\+Current\+Sys\+Index} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{update_daemon_8c_a397981b56b2dd6855ca3375ae9c61ac2}{le\+\_\+update\+\_\+\+Get\+System\+Hash} (int32\+\_\+t system\+Index, char $\ast$hash\+Str, size\+\_\+t hash\+Str\+Size)
+\item 
+int32\+\_\+t \hyperlink{update_daemon_8c_a82196efdc87d57f62d40a195cbafd2eb}{le\+\_\+update\+\_\+\+Get\+Previous\+System\+Index} (int32\+\_\+t system\+Index)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{update_daemon_8c_aae3aab605c3a96ccc2944ad67d82d517}{le\+\_\+app\+Remove\+\_\+\+Remove} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name})
+\item 
+static size\+\_\+t \hyperlink{update_daemon_8c_a76d2a2b262ac6d18389cb91c900f7490}{Get\+Probation\+Period} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{update_daemon_8c_afa9069e7bbdeed2332b5cbffbb472691}{le\+\_\+sig\+\_\+\+Block} (S\+I\+G\+P\+I\+PE)
+\item 
+\hyperlink{update_daemon_8c_a3e9284a065fbe4f65aad310617e311a4}{user\+\_\+\+Init} ()
+\item 
+\hyperlink{update_daemon_8c_a55d2ded7e1ecdc130b9bcbc452a34f67}{le\+\_\+event\+\_\+\+Add\+Handler} (\char`\"{}Installer\char`\"{}, Install\+Event\+Id, \hyperlink{update_daemon_8c_ae7326dda672f3d73f18bc93820eef9c4}{Apply\+Update})
+\item 
+\hyperlink{update_daemon_8c_a2eb645189be654e43dfeb29c95143ed8}{le\+\_\+sig\+\_\+\+Set\+Event\+Handler} (S\+I\+G\+C\+H\+LD, \hyperlink{sbtrace_8c_a02f348360211f77ef709b2f0427af38b}{Sig\+Child\+Handler})
+\item 
+\hyperlink{update_daemon_8c_ac9249ea73392d7d9ffe947ef6829b551}{le\+\_\+timer\+\_\+\+Set\+Handler} (\hyperlink{update_daemon_8c_a098b398395a3b07bf85b424c81cadd4b}{Probation\+Timer}, \hyperlink{update_daemon_8c_a4d73fca4446249b1de29bd6ade3f2b60}{Handle\+Probation\+Expiry})
+\item 
+\hyperlink{update_daemon_8c_a743b239db31c0fac7cd824a1102c3710}{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval} (\hyperlink{update_daemon_8c_a098b398395a3b07bf85b424c81cadd4b}{Probation\+Timer}, \hyperlink{update_daemon_8c_a76d2a2b262ac6d18389cb91c900f7490}{Get\+Probation\+Period}())
+\item 
+\hyperlink{update_daemon_8c_a19688e27608620184afc803d0b7f1ced}{le\+\_\+timer\+\_\+\+Set\+Wakeup} (\hyperlink{update_daemon_8c_a098b398395a3b07bf85b424c81cadd4b}{Probation\+Timer}, false)
+\item 
+\hyperlink{update_daemon_8c_aa5c063c7e6dcd964c817f5fe9b1d72fc}{umask} (0)
+\item 
+\hyperlink{update_daemon_8c_aa5dd351260ac9fdd56edfcf42219da73}{if} (!\hyperlink{update_daemon_8c_a49d717b2b7c81add99c4efab74b94a24}{Is\+Read\+Only})
+\item 
+\hyperlink{update_daemon_8c_ab9626242af3bf70ec52eaa2c86720b26}{if} (\hyperlink{sys_status_8h_a0529c9aefccbe735d1b6f3e246eedbb6}{sys\+Status\+\_\+\+Status}()==\hyperlink{sys_status_8h_ae25825ce432b365f8a57356b813abf6bac60e69a45b3c8996154495e412a58007}{S\+Y\+S\+\_\+\+G\+O\+OD})
+\item 
+\hyperlink{update_daemon_8c_abac4c37d9572f74795111a0dbd36bd4f}{inst\+Stat\+\_\+\+Init} ()
+\item 
+\hyperlink{update_daemon_8c_a64505a7a2c8b629d7bc7675e98f97caa}{update\+Ctrl\+\_\+\+Initialize} ()
+\item 
+\hyperlink{update_daemon_8c_a3bdf3fd9c2053680c84be72940d25a8e}{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler} (le\+\_\+update\+\_\+\+Get\+Service\+Ref(), \hyperlink{update_daemon_8c_a34cdb7230815295d1c55fcacd0b8c316}{Update\+Service\+Closed}, N\+U\+LL)
+\item 
+\hyperlink{update_daemon_8c_a4bd1f0df024da0cb002930fa9363c47e}{while} ((\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}==N\+U\+LL)\&\&(\hyperlink{supervisor_8c_a0a4ccfdbe1cf7b37afc60d34e748b066}{errno}==E\+I\+N\+TR))
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static enum  \{ ... \}  \hyperlink{update_daemon_8c_abc90a4c424d12dbd79b3cff0e060cde2}{State} = \hyperlink{update_unpack_8c_aba01db17f4a2bfbc3db60dc172972a25aaade5e53e88cf231292cd1142cce2afe}{S\+T\+A\+T\+E\+\_\+\+I\+D\+LE}
+\item 
+\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} \hyperlink{update_daemon_8c_a098b398395a3b07bf85b424c81cadd4b}{Probation\+Timer} = \hyperlink{timer_8c_aee41169a210378b369f440cf99146522}{le\+\_\+timer\+\_\+\+Create}(\char`\"{}Probation\char`\"{})
+\item 
+static \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{update_daemon_8c_ada568d0f0071010665e1cfee910101f7}{Ipc\+Session} = N\+U\+LL
+\item 
+\hyperlink{pipeline_8h_adfb885380a9b0f550fafe4de0a2d2564}{pipeline\+\_\+\+Ref\+\_\+t} \hyperlink{update_daemon_8c_a62dade98bb16b47db32a0b5994c3da58}{Security\+Unpack\+Pipeline} = N\+U\+LL
+\item 
+static size\+\_\+t \hyperlink{update_daemon_8c_a7ff54e32471cdcb7321bfff653ff0b50}{Next\+Client\+Progress\+Handler\+Ref} = random()
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{update_daemon_8c_ae3c745f4b8d8125918c769c8a5b0f5ad}{Client\+Progress\+Handler\+Pool}
+\item 
+static \hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} \hyperlink{update_daemon_8c_a9a65410b58c652fb7067855e71fbc50b}{Client\+Progress\+Handler\+List} = \hyperlink{le__doubly_linked_list_8h_a68f28b61cdfd004591f24730b4d5a740}{L\+E\+\_\+\+D\+L\+S\+\_\+\+L\+I\+S\+T\+\_\+\+I\+N\+IT}
+\item 
+static \hyperlink{le__event_loop_8h_ae6e351b38bc95954f159d16d19d2d55c}{le\+\_\+event\+\_\+\+Id\+\_\+t} \hyperlink{update_daemon_8c_a7fa6a757edc45070dc88af0c58cab05d}{Install\+Event\+Id} = \hyperlink{event_loop_8c_a41a96eb3affb07184b519164cf54e213}{le\+\_\+event\+\_\+\+Create\+Id}(\char`\"{}Install\+Event\char`\"{}, 0)
+\item 
+static \hyperlink{le__update__interface_8h_a24bac90fc939c561c64d13608cc78a20}{le\+\_\+update\+\_\+\+Error\+Code\+\_\+t} \hyperlink{update_daemon_8c_a0913372cceeed6bf8d8cbbb812686d7f}{Error\+Code} = \hyperlink{le__update__interface_8h_a24bac90fc939c561c64d13608cc78a20a5473b80d9e60fc1a8fd5f78a47b1c69e}{L\+E\+\_\+\+U\+P\+D\+A\+T\+E\+\_\+\+E\+R\+R\+\_\+\+N\+O\+NE}
+\item 
+bool \hyperlink{update_daemon_8c_a89f191ee44d2f7c3aeab77fcb0ed348b}{Install\+Ready} = false
+\item 
+static bool \hyperlink{update_daemon_8c_a49d717b2b7c81add99c4efab74b94a24}{Is\+Read\+Only} = false
+\item 
+\hyperlink{update_daemon_8c_a0392d452f926ce36c4852de26b5eca12}{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}
+\item 
+\hyperlink{update_daemon_8c_a0544c3fe466e421738dae463968b70ba}{else}
+\item 
+F\+I\+LE $\ast$ \hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}
+\item 
+\hyperlink{update_daemon_8c_a721c6ff80a6d3e4ad4ffa52a04c60085}{do}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The Update Daemon is one of the \char`\"{}framework daemon\char`\"{} processes that is started by the Supervisor outside of other apps. It is a core part of the Legato app framework responsible for software update.
+
+The Update Daemon has a single-\/threaded, event-\/driven internal design. It is broken into the following parts\+:
+
+
+\begin{DoxyItemize}
+\item \hyperlink{update_daemon_8c}{update\+Daemon.\+c} -\/ C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT and all A\+PI implementations.
+\item \hyperlink{update_unpack_8c}{update\+Unpack.\+c} -\/ unpacks incoming update pack files and drives execution of the update.
+\item update\+Exec.\+c -\/ implements execution of the updates.
+\end{DoxyItemize}
+
+\begin{DoxyNote}{Note}
+The Update Daemon only supports a single update task at a time. Requests to start updates will be rejected while an update is already in progress.
+\end{DoxyNote}
+At start up, the Update Daemon checks for new configuration settings that need to be imported due to an unfinished system update. It does this by looking for the files \char`\"{}users.\+cfg\char`\"{} and \char`\"{}apps.\+cfg\char`\"{} in the directory in which configuration trees are stored. If these files exist they are imported into the system tree and deleted.
+
+If the current system is not \char`\"{}good\char`\"{}, then a probation timer is started. When that timer expires, the current system is marked \char`\"{}good\char`\"{}. The le\+\_\+update\+Ctrl A\+PI can be used to control this from outside.
+
+While the system is in its probation period, update requests are rejected, and probation period controls (marking \char`\"{}bad\char`\"{} or \char`\"{}good\char`\"{}, and deferring the end of probation) are accepted.
+
+If the current system is \char`\"{}good\char`\"{}, then update requests are honoured and fault reports are ignored.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}}
+\index{M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}{MAX_CFGTREE_NAME_BYTES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES~{\bf L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+R\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}}\hypertarget{update_daemon_8c_ad45ce1b90dc6a8836f7bf381c380b95e}{}\label{update_daemon_8c_ad45ce1b90dc6a8836f7bf381c380b95e}
+Maximum length of app config tree name. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!P\+R\+O\+B\+A\+T\+I\+O\+N\+\_\+\+P\+E\+R\+I\+OD@{P\+R\+O\+B\+A\+T\+I\+O\+N\+\_\+\+P\+E\+R\+I\+OD}}
+\index{P\+R\+O\+B\+A\+T\+I\+O\+N\+\_\+\+P\+E\+R\+I\+OD@{P\+R\+O\+B\+A\+T\+I\+O\+N\+\_\+\+P\+E\+R\+I\+OD}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{P\+R\+O\+B\+A\+T\+I\+O\+N\+\_\+\+P\+E\+R\+I\+OD}{PROBATION_PERIOD}}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\+R\+O\+B\+A\+T\+I\+O\+N\+\_\+\+P\+E\+R\+I\+OD~(30 $\ast$ 60 $\ast$ 1000)}\hypertarget{update_daemon_8c_a3ddb0fef811bda6f92ac076b02acfea1}{}\label{update_daemon_8c_a3ddb0fef811bda6f92ac076b02acfea1}
+
+
+\subsection{Enumeration Type Documentation}
+\subsubsection[{\texorpdfstring{anonymous enum}{anonymous enum}}]{\setlength{\rightskip}{0pt plus 5cm}anonymous enum}\hypertarget{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4d}{}\label{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4d}
+State of the Update Daemon state machine. \begin{DoxyVerb}           +---------------------------------------+
+           |                                       |
+           |                                       V
+\end{DoxyVerb}
+ I\+D\+LE -\/---$>$ U\+N\+P\+A\+C\+K\+I\+NG -\/---$>$ S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+C\+H\+E\+C\+K\+I\+NG -\/---$>$ A\+P\+P\+L\+Y\+I\+NG $^\wedge$ $\vert$ $\vert$ $\vert$ $\vert$ $\vert$ $\vert$ $\vert$ +-\/-\/-\/-\/-\/-\/-\/-\/-\/---+ $\vert$ $\vert$ $\vert$ $\vert$ $\vert$ +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+ $\vert$ $\vert$ $\vert$ +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+
+
+Transition from U\+N\+P\+A\+C\+K\+I\+NG to A\+P\+P\+L\+Y\+I\+NG happens when security-\/unpack finishes before the unpacking finishes. This is common when update packs are unsigned (when security-\/unpack is not really doing anything). \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{S\+T\+A\+T\+E\+\_\+\+I\+D\+LE@{S\+T\+A\+T\+E\+\_\+\+I\+D\+LE}!update\+Daemon.\+c@{update\+Daemon.\+c}}\index{update\+Daemon.\+c@{update\+Daemon.\+c}!S\+T\+A\+T\+E\+\_\+\+I\+D\+LE@{S\+T\+A\+T\+E\+\_\+\+I\+D\+LE}}\item[{\em 
+S\+T\+A\+T\+E\+\_\+\+I\+D\+LE\hypertarget{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4daaade5e53e88cf231292cd1142cce2afe}{}\label{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4daaade5e53e88cf231292cd1142cce2afe}
+}]No update is happening. Check probation timer to see if in probation. \index{S\+T\+A\+T\+E\+\_\+\+U\+N\+P\+A\+C\+K\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+U\+N\+P\+A\+C\+K\+I\+NG}!update\+Daemon.\+c@{update\+Daemon.\+c}}\index{update\+Daemon.\+c@{update\+Daemon.\+c}!S\+T\+A\+T\+E\+\_\+\+U\+N\+P\+A\+C\+K\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+U\+N\+P\+A\+C\+K\+I\+NG}}\item[{\em 
+S\+T\+A\+T\+E\+\_\+\+U\+N\+P\+A\+C\+K\+I\+NG\hypertarget{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4da7514d81145a1ffcf0a895a400e655585}{}\label{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4da7514d81145a1ffcf0a895a400e655585}
+}]A system update is being unpacked. \index{S\+T\+A\+T\+E\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+C\+H\+E\+C\+K\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+C\+H\+E\+C\+K\+I\+NG}!update\+Daemon.\+c@{update\+Daemon.\+c}}\index{update\+Daemon.\+c@{update\+Daemon.\+c}!S\+T\+A\+T\+E\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+C\+H\+E\+C\+K\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+C\+H\+E\+C\+K\+I\+NG}}\item[{\em 
+S\+T\+A\+T\+E\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+C\+H\+E\+C\+K\+I\+NG\hypertarget{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4dac0f18a763f91d4a3e43c153a125f5ec1}{}\label{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4dac0f18a763f91d4a3e43c153a125f5ec1}
+}]A unpack finished, but security-\/unpack not finished yet. \index{S\+T\+A\+T\+E\+\_\+\+A\+P\+P\+L\+Y\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+A\+P\+P\+L\+Y\+I\+NG}!update\+Daemon.\+c@{update\+Daemon.\+c}}\index{update\+Daemon.\+c@{update\+Daemon.\+c}!S\+T\+A\+T\+E\+\_\+\+A\+P\+P\+L\+Y\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+A\+P\+P\+L\+Y\+I\+NG}}\item[{\em 
+S\+T\+A\+T\+E\+\_\+\+A\+P\+P\+L\+Y\+I\+NG\hypertarget{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4da7d58af2948bc1526109821b1b4fa75f9}{}\label{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4da7d58af2948bc1526109821b1b4fa75f9}
+}]A system update is being applied. \end{description}
+\end{Desc}
+
+
+\subsection{Function Documentation}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Apply\+App\+Remove@{Apply\+App\+Remove}}
+\index{Apply\+App\+Remove@{Apply\+App\+Remove}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Apply\+App\+Remove(void)}{ApplyAppRemove(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Apply\+App\+Remove (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_ad5e13145e3efbd174e45c3f88a8ed536}{}\label{update_daemon_8c_ad5e13145e3efbd174e45c3f88a8ed536}
+Do an application remove. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Apply\+App\+Update@{Apply\+App\+Update}}
+\index{Apply\+App\+Update@{Apply\+App\+Update}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Apply\+App\+Update(void)}{ApplyAppUpdate(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Apply\+App\+Update (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_adb6d758142f889764fb61bca72e3c053}{}\label{update_daemon_8c_adb6d758142f889764fb61bca72e3c053}
+Apply an application update. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Apply\+System\+Update@{Apply\+System\+Update}}
+\index{Apply\+System\+Update@{Apply\+System\+Update}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Apply\+System\+Update(void)}{ApplySystemUpdate(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Apply\+System\+Update (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a3b35dcefb87059588e43100c2a08afbd}{}\label{update_daemon_8c_a3b35dcefb87059588e43100c2a08afbd}
+Apply a system update. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Apply\+Update@{Apply\+Update}}
+\index{Apply\+Update@{Apply\+Update}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Apply\+Update(void $\ast$unused)}{ApplyUpdate(void *unused)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Apply\+Update (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{unused}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_ae7326dda672f3d73f18bc93820eef9c4}{}\label{update_daemon_8c_ae7326dda672f3d73f18bc93820eef9c4}
+Apply an unpacked update that has passed security check. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Call\+Status\+Handlers@{Call\+Status\+Handlers}}
+\index{Call\+Status\+Handlers@{Call\+Status\+Handlers}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Call\+Status\+Handlers(le\+\_\+update\+\_\+\+State\+\_\+t api\+State, unsigned int percent\+Done)}{CallStatusHandlers(le_update_State_t apiState, unsigned int percentDone)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Call\+Status\+Handlers (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+update\+\_\+\+State\+\_\+t}}]{api\+State, }
+\item[{unsigned int}]{percent\+Done}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a07b311f10d06d7423b5d55426a81fde8}{}\label{update_daemon_8c_a07b311f10d06d7423b5d55426a81fde8}
+Call all the registered status handler functions for the I\+PC client whose update is currently in progress. 
+\begin{DoxyParams}{Parameters}
+{\em percent\+Done} & The percentage this state is complete. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Cleanup\+App\+Config\+Trees@{Cleanup\+App\+Config\+Trees}}
+\index{Cleanup\+App\+Config\+Trees@{Cleanup\+App\+Config\+Trees}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Cleanup\+App\+Config\+Trees(void)}{CleanupAppConfigTrees(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Cleanup\+App\+Config\+Trees (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a3cdb68c43e33ddb79c263169801e12c0}{}\label{update_daemon_8c_a3cdb68c43e33ddb79c263169801e12c0}
+This function traverses the system config tree, find required tree and remove unnecessary trees. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Copy\+Existing\+User\+Or\+Group\+Lines@{Copy\+Existing\+User\+Or\+Group\+Lines}}
+\index{Copy\+Existing\+User\+Or\+Group\+Lines@{Copy\+Existing\+User\+Or\+Group\+Lines}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Copy\+Existing\+User\+Or\+Group\+Lines(\+F\+I\+L\+E $\ast$output\+File, const char $\ast$input\+File\+Path)}{CopyExistingUserOrGroupLines(FILE *outputFile, const char *inputFilePath)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Copy\+Existing\+User\+Or\+Group\+Lines (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{output\+File, }
+\item[{const char $\ast$}]{input\+File\+Path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_ac172f3d0619efb32e186f782761811bf}{}\label{update_daemon_8c_ac172f3d0619efb32e186f782761811bf}
+Copy lines from an existing passwd or group file that are either non-\/app users or groups or that correspond to apps that exist in the current system. 
+\begin{DoxyParams}{Parameters}
+{\em output\+File} & File to copy lines into. \\
+\hline
+{\em input\+File\+Path} & File system path of file to copy lines from. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Delete\+File@{Delete\+File}}
+\index{Delete\+File@{Delete\+File}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+File(const char $\ast$file\+Path)}{DeleteFile(const char *filePath)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+File (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{file\+Path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a090244beffbdeee9562b3e4970d60ae2}{}\label{update_daemon_8c_a090244beffbdeee9562b3e4970d60ae2}
+Deletes a file at a given path. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!End\+Update@{End\+Update}}
+\index{End\+Update@{End\+Update}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{End\+Update(void)}{EndUpdate(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} End\+Update (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a36eed88d409dbc7aba230cb03b3f9bd1}{}\label{update_daemon_8c_a36eed88d409dbc7aba230cb03b3f9bd1}
+Terminates the current update. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!File\+Exists@{File\+Exists}}
+\index{File\+Exists@{File\+Exists}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{File\+Exists(const char $\ast$file\+Path)}{FileExists(const char *filePath)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool File\+Exists (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{file\+Path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a7501da27837a6d6e9e2e6a194bb86d32}{}\label{update_daemon_8c_a7501da27837a6d6e9e2e6a194bb86d32}
+Checks whether or not a file exists at a given file system path.
+
+\begin{DoxyReturn}{Returns}
+true if the file exists and is a normal file. false otherwise. 
+\end{DoxyReturn}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Finish\+System\+Update@{Finish\+System\+Update}}
+\index{Finish\+System\+Update@{Finish\+System\+Update}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Finish\+System\+Update(void)}{FinishSystemUpdate(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Finish\+System\+Update (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_adbddd29e3c8ed5688cd0129e9cf57c40}{}\label{update_daemon_8c_adbddd29e3c8ed5688cd0129e9cf57c40}
+Before we advertise our services, we check to see if we need to import new system configuration settings. This happens when we start after a system update has just been applied. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Get\+App\+Cfg\+Tree\+List@{Get\+App\+Cfg\+Tree\+List}}
+\index{Get\+App\+Cfg\+Tree\+List@{Get\+App\+Cfg\+Tree\+List}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Get\+App\+Cfg\+Tree\+List(\+D\+I\+R $\ast$dir\+Ptr, int num\+App\+Cfg\+Tree, char($\ast$cfg\+Tree\+List)[M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES])}{GetAppCfgTreeList(DIR *dirPtr, int numAppCfgTree, char(*cfgTreeList)[MAX_CFGTREE_NAME_BYTES])}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Get\+App\+Cfg\+Tree\+List (
+\begin{DoxyParamCaption}
+\item[{D\+IR $\ast$}]{dir\+Ptr, }
+\item[{int}]{num\+App\+Cfg\+Tree, }
+\item[{char($\ast$)}]{cfg\+Tree\+List\mbox{[}\+M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+E\+S\mbox{]}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_aa472de10a7aa772dc9b6fef28a4b1bf1}{}\label{update_daemon_8c_aa472de10a7aa772dc9b6fef28a4b1bf1}
+Function to get list of app config trees. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em dir\+Ptr} & Directory containing config trees. \\
+\hline
+\mbox{\tt in}  & {\em num\+App\+Cfg\+Tree} & Number of app config tree in directory. \\
+\hline
+\mbox{\tt out}  & {\em cfg\+Tree\+List} & Array containing list of config trees in specified config directory. Caller function is responsible to allocate it properly. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Get\+Num\+App\+Cfg\+Tree@{Get\+Num\+App\+Cfg\+Tree}}
+\index{Get\+Num\+App\+Cfg\+Tree@{Get\+Num\+App\+Cfg\+Tree}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Num\+App\+Cfg\+Tree(\+D\+I\+R $\ast$dir\+Ptr)}{GetNumAppCfgTree(DIR *dirPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Get\+Num\+App\+Cfg\+Tree (
+\begin{DoxyParamCaption}
+\item[{D\+IR $\ast$}]{dir\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_ad7596457c7b4d938d820614fa39c7bc3}{}\label{update_daemon_8c_ad7596457c7b4d938d820614fa39c7bc3}
+Function to get number of app config trees.
+
+returns
+\begin{DoxyItemize}
+\item Number of app config trees in config directory. 
+\end{DoxyItemize}
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em dir\+Ptr} & Directory containing config trees. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Get\+Probation\+Period@{Get\+Probation\+Period}}
+\index{Get\+Probation\+Period@{Get\+Probation\+Period}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Probation\+Period(void)}{GetProbationPeriod(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Get\+Probation\+Period (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a76d2a2b262ac6d18389cb91c900f7490}{}\label{update_daemon_8c_a76d2a2b262ac6d18389cb91c900f7490}
+Get the probation timer period.
+
+\begin{DoxyReturn}{Returns}
+The timer period, in milliseconds. 
+\end{DoxyReturn}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Handle\+Probation\+Expiry@{Handle\+Probation\+Expiry}}
+\index{Handle\+Probation\+Expiry@{Handle\+Probation\+Expiry}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Handle\+Probation\+Expiry(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer)}{HandleProbationExpiry(le_timer_Ref_t timer)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Handle\+Probation\+Expiry (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a4d73fca4446249b1de29bd6ade3f2b60}{}\label{update_daemon_8c_a4d73fca4446249b1de29bd6ade3f2b60}
+Timer expiry function for the probation timer. If this goes off, it means the system passed probation and it\textquotesingle{}s time to mark it \char`\"{}good\char`\"{}. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Handle\+Update\+Progress@{Handle\+Update\+Progress}}
+\index{Handle\+Update\+Progress@{Handle\+Update\+Progress}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Handle\+Update\+Progress(update\+Unpack\+\_\+\+Progress\+Code\+\_\+t progress\+Code, unsigned int percent\+Done)}{HandleUpdateProgress(updateUnpack_ProgressCode_t progressCode, unsigned int percentDone)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Handle\+Update\+Progress (
+\begin{DoxyParamCaption}
+\item[{{\bf update\+Unpack\+\_\+\+Progress\+Code\+\_\+t}}]{progress\+Code, }
+\item[{unsigned int}]{percent\+Done}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a515f1f30a653d699ee40da76cf23df64}{}\label{update_daemon_8c_a515f1f30a653d699ee40da76cf23df64}
+Callback from the update unpacker to report progress on the update. 
+\begin{DoxyParams}{Parameters}
+{\em progress\+Code} & The update state. \\
+\hline
+{\em percent\+Done} & The percentage this state is complete. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!if@{if}}
+\index{if@{if}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{if("!Is\+Read\+Only)}{if(!IsReadOnly)}}]{\setlength{\rightskip}{0pt plus 5cm}if (
+\begin{DoxyParamCaption}
+\item[{!}]{Is\+Read\+Only}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_aa5dd351260ac9fdd56edfcf42219da73}{}\label{update_daemon_8c_aa5dd351260ac9fdd56edfcf42219da73}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!if@{if}}
+\index{if@{if}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{if(sys\+Status\+\_\+\+Status()==\+S\+Y\+S\+\_\+\+G\+O\+O\+D)}{if(sysStatus_Status()==SYS_GOOD)}}]{\setlength{\rightskip}{0pt plus 5cm}if (
+\begin{DoxyParamCaption}
+\item[{{\bf sys\+Status\+\_\+\+Status}()}]{ = {\ttfamily =~{\bf S\+Y\+S\+\_\+\+G\+O\+OD}}}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_ab9626242af3bf70ec52eaa2c86720b26}{}\label{update_daemon_8c_ab9626242af3bf70ec52eaa2c86720b26}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Import\+File@{Import\+File}}
+\index{Import\+File@{Import\+File}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Import\+File(le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t i, const char $\ast$file\+Path, const char $\ast$node\+Path)}{ImportFile(le_cfg_IteratorRef_t i, const char *filePath, const char *nodePath)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Import\+File (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t}}]{i, }
+\item[{const char $\ast$}]{file\+Path, }
+\item[{const char $\ast$}]{node\+Path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a63a926a5a0670b16ced723586dbeeadb}{}\label{update_daemon_8c_a63a926a5a0670b16ced723586dbeeadb}
+Imports configuration settings from a given file into a given node in the tree. 
+\begin{DoxyParams}{Parameters}
+{\em i} & Write transaction iterator. \\
+\hline
+{\em file\+Path} & File system path of file to import from. \\
+\hline
+{\em node\+Path} & Path of node in tree, relative to current position of iterator. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Install\+System\+Apps@{Install\+System\+Apps}}
+\index{Install\+System\+Apps@{Install\+System\+Apps}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Install\+System\+Apps(void)}{InstallSystemApps(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Install\+System\+Apps (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_ae0f891c5dd78594a12973322d48e9945}{}\label{update_daemon_8c_ae0f891c5dd78594a12973322d48e9945}
+Install system applications from unpack directory.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if successful
+\item L\+E\+\_\+\+F\+A\+U\+LT if failed 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!inst\+Stat\+\_\+\+Init@{inst\+Stat\+\_\+\+Init}}
+\index{inst\+Stat\+\_\+\+Init@{inst\+Stat\+\_\+\+Init}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{inst\+Stat\+\_\+\+Init()}{instStat_Init()}}]{\setlength{\rightskip}{0pt plus 5cm}inst\+Stat\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_abac4c37d9572f74795111a0dbd36bd4f}{}\label{update_daemon_8c_abac4c37d9572f74795111a0dbd36bd4f}
+Initialize the inst\+Stat subsystem so that it is ready to report install and uninstall activity. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Is\+Cfg\+Tree@{Is\+Cfg\+Tree}}
+\index{Is\+Cfg\+Tree@{Is\+Cfg\+Tree}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Cfg\+Tree(const char $\ast$tree\+Name)}{IsCfgTree(const char *treeName)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Cfg\+Tree (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{tree\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a68664377a52b908683ac865a310538c9}{}\label{update_daemon_8c_a68664377a52b908683ac865a310538c9}
+Checks if given name is a valid config tree.
+
+returns
+\begin{DoxyItemize}
+\item true if it is a valid config tree.
+\item false otherwise. 
+\end{DoxyItemize}
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Name} & Config tree name. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Is\+Dir\+Entry\+App\+Cfg\+Tree@{Is\+Dir\+Entry\+App\+Cfg\+Tree}}
+\index{Is\+Dir\+Entry\+App\+Cfg\+Tree@{Is\+Dir\+Entry\+App\+Cfg\+Tree}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Dir\+Entry\+App\+Cfg\+Tree(struct dirent $\ast$dp)}{IsDirEntryAppCfgTree(struct dirent *dp)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Dir\+Entry\+App\+Cfg\+Tree (
+\begin{DoxyParamCaption}
+\item[{struct dirent $\ast$}]{dp}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_aeddc128259f55d4c9f787d91f5ed698d}{}\label{update_daemon_8c_aeddc128259f55d4c9f787d91f5ed698d}
+Checks if given directory entry is an app config tree.
+
+returns
+\begin{DoxyItemize}
+\item true if it is a valid app config tree.
+\item false otherwise. 
+\end{DoxyItemize}
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em dp} & Directory entry in config dir. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Is\+Session\+Valid@{Is\+Session\+Valid}}
+\index{Is\+Session\+Valid@{Is\+Session\+Valid}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Session\+Valid(void)}{IsSessionValid(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Session\+Valid (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_aeaf42b223be3176ce146c257168098be}{}\label{update_daemon_8c_aeaf42b223be3176ce146c257168098be}
+Checks that the current I\+PC session is the one that started the current update. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Is\+System\+Cfg\+Tree@{Is\+System\+Cfg\+Tree}}
+\index{Is\+System\+Cfg\+Tree@{Is\+System\+Cfg\+Tree}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Is\+System\+Cfg\+Tree(const char $\ast$tree\+Name)}{IsSystemCfgTree(const char *treeName)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+System\+Cfg\+Tree (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{tree\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a4cfa65d4b6fc47a0fea4f2ddd78e00d7}{}\label{update_daemon_8c_a4cfa65d4b6fc47a0fea4f2ddd78e00d7}
+Checks if given name is a valid system config tree.
+
+returns
+\begin{DoxyItemize}
+\item true if it is a valid system config tree.
+\item false otherwise. 
+\end{DoxyItemize}
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Name} & Config tree name. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Is\+This\+Apps\+Cfg\+Tree@{Is\+This\+Apps\+Cfg\+Tree}}
+\index{Is\+This\+Apps\+Cfg\+Tree@{Is\+This\+Apps\+Cfg\+Tree}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Is\+This\+Apps\+Cfg\+Tree(const char $\ast$tree\+Name, const char $\ast$app\+Name)}{IsThisAppsCfgTree(const char *treeName, const char *appName)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+This\+Apps\+Cfg\+Tree (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{tree\+Name, }
+\item[{const char $\ast$}]{app\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_ae04e4c0c13529b530d5e88ea3fc673da}{}\label{update_daemon_8c_ae04e4c0c13529b530d5e88ea3fc673da}
+Checks if given config tree belongs to given app.
+
+returns
+\begin{DoxyItemize}
+\item true if belongs to the given app.
+\item false otherwise. 
+\end{DoxyItemize}
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Name} & Config tree name to check. \\
+\hline
+\mbox{\tt in}  & {\em app\+Name} & App name \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Is\+Valid\+File\+Desc@{Is\+Valid\+File\+Desc}}
+\index{Is\+Valid\+File\+Desc@{Is\+Valid\+File\+Desc}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Valid\+File\+Desc(int fd)}{IsValidFileDesc(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Valid\+File\+Desc (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a209e1e20ce704de4b28d4cc7272e85f1}{}\label{update_daemon_8c_a209e1e20ce704de4b28d4cc7272e85f1}
+Validate the supplied file descriptor.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item true\+: Supplied file descriptor is valid.
+\item false\+: Supplied file descriptor is invalid.. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor to be validated. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+app\+Remove\+\_\+\+Remove@{le\+\_\+app\+Remove\+\_\+\+Remove}}
+\index{le\+\_\+app\+Remove\+\_\+\+Remove@{le\+\_\+app\+Remove\+\_\+\+Remove}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Remove\+\_\+\+Remove(const char $\ast$app\+Name)}{le_appRemove_Remove(const char *appName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+app\+Remove\+\_\+\+Remove (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_aae3aab605c3a96ccc2944ad67d82d517}{}\label{update_daemon_8c_aae3aab605c3a96ccc2944ad67d82d517}
+Removes a given app from the target device.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if successful
+\item L\+E\+\_\+\+B\+U\+SY if system busy.
+\item L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if given app is not installed.
+\item L\+E\+\_\+\+F\+A\+U\+LT for any other failure. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+event\+\_\+\+Add\+Handler@{le\+\_\+event\+\_\+\+Add\+Handler}}
+\index{le\+\_\+event\+\_\+\+Add\+Handler@{le\+\_\+event\+\_\+\+Add\+Handler}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+event\+\_\+\+Add\+Handler(""Installer"", Install\+Event\+Id, Apply\+Update)}{le_event_AddHandler("Installer", InstallEventId, ApplyUpdate)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+event\+\_\+\+Add\+Handler (
+\begin{DoxyParamCaption}
+\item[{\char`\"{}Installer\char`\"{}}]{, }
+\item[{{\bf Install\+Event\+Id}}]{, }
+\item[{{\bf Apply\+Update}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a55d2ded7e1ecdc130b9bcbc452a34f67}{}\label{update_daemon_8c_a55d2ded7e1ecdc130b9bcbc452a34f67}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler@{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler}}
+\index{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler@{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler(le\+\_\+update\+\_\+\+Get\+Service\+Ref(), Update\+Service\+Closed, N\+U\+L\+L)}{le_msg_AddServiceCloseHandler(le_update_GetServiceRef(), UpdateServiceClosed, NULL)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+update\+\_\+\+Get\+Service\+Ref()}]{, }
+\item[{{\bf Update\+Service\+Closed}}]{, }
+\item[{N\+U\+LL}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a3bdf3fd9c2053680c84be72940d25a8e}{}\label{update_daemon_8c_a3bdf3fd9c2053680c84be72940d25a8e}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+sig\+\_\+\+Block@{le\+\_\+sig\+\_\+\+Block}}
+\index{le\+\_\+sig\+\_\+\+Block@{le\+\_\+sig\+\_\+\+Block}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sig\+\_\+\+Block(\+S\+I\+G\+P\+I\+P\+E)}{le_sig_Block(SIGPIPE)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+sig\+\_\+\+Block (
+\begin{DoxyParamCaption}
+\item[{S\+I\+G\+P\+I\+PE}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_afa9069e7bbdeed2332b5cbffbb472691}{}\label{update_daemon_8c_afa9069e7bbdeed2332b5cbffbb472691}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+sig\+\_\+\+Set\+Event\+Handler@{le\+\_\+sig\+\_\+\+Set\+Event\+Handler}}
+\index{le\+\_\+sig\+\_\+\+Set\+Event\+Handler@{le\+\_\+sig\+\_\+\+Set\+Event\+Handler}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sig\+\_\+\+Set\+Event\+Handler(\+S\+I\+G\+C\+H\+L\+D, Sig\+Child\+Handler)}{le_sig_SetEventHandler(SIGCHLD, SigChildHandler)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+sig\+\_\+\+Set\+Event\+Handler (
+\begin{DoxyParamCaption}
+\item[{S\+I\+G\+C\+H\+LD}]{, }
+\item[{{\bf Sig\+Child\+Handler}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a2eb645189be654e43dfeb29c95143ed8}{}\label{update_daemon_8c_a2eb645189be654e43dfeb29c95143ed8}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+timer\+\_\+\+Set\+Handler@{le\+\_\+timer\+\_\+\+Set\+Handler}}
+\index{le\+\_\+timer\+\_\+\+Set\+Handler@{le\+\_\+timer\+\_\+\+Set\+Handler}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Handler(\+Probation\+Timer, Handle\+Probation\+Expiry)}{le_timer_SetHandler(ProbationTimer, HandleProbationExpiry)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+timer\+\_\+\+Set\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf Probation\+Timer}}]{, }
+\item[{{\bf Handle\+Probation\+Expiry}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_ac9249ea73392d7d9ffe947ef6829b551}{}\label{update_daemon_8c_ac9249ea73392d7d9ffe947ef6829b551}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+timer\+\_\+\+Set\+Ms\+Interval@{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval}}
+\index{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval@{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval(\+Probation\+Timer, Get\+Probation\+Period())}{le_timer_SetMsInterval(ProbationTimer, GetProbationPeriod())}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+timer\+\_\+\+Set\+Ms\+Interval (
+\begin{DoxyParamCaption}
+\item[{{\bf Probation\+Timer}}]{, }
+\item[{{\bf Get\+Probation\+Period}()}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a743b239db31c0fac7cd824a1102c3710}{}\label{update_daemon_8c_a743b239db31c0fac7cd824a1102c3710}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+timer\+\_\+\+Set\+Wakeup@{le\+\_\+timer\+\_\+\+Set\+Wakeup}}
+\index{le\+\_\+timer\+\_\+\+Set\+Wakeup@{le\+\_\+timer\+\_\+\+Set\+Wakeup}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Wakeup(\+Probation\+Timer, false)}{le_timer_SetWakeup(ProbationTimer, false)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+timer\+\_\+\+Set\+Wakeup (
+\begin{DoxyParamCaption}
+\item[{{\bf Probation\+Timer}}]{, }
+\item[{false}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a19688e27608620184afc803d0b7f1ced}{}\label{update_daemon_8c_a19688e27608620184afc803d0b7f1ced}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+update\+\_\+\+Add\+Progress\+Handler@{le\+\_\+update\+\_\+\+Add\+Progress\+Handler}}
+\index{le\+\_\+update\+\_\+\+Add\+Progress\+Handler@{le\+\_\+update\+\_\+\+Add\+Progress\+Handler}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+update\+\_\+\+Add\+Progress\+Handler(le\+\_\+update\+\_\+\+Progress\+Handler\+Func\+\_\+t func, void $\ast$context\+Ptr)}{le_update_AddProgressHandler(le_update_ProgressHandlerFunc_t func, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+update\+\_\+\+Progress\+Handler\+Ref\+\_\+t} le\+\_\+update\+\_\+\+Add\+Progress\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+update\+\_\+\+Progress\+Handler\+Func\+\_\+t}}]{func, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a67236a5fb1ef3cc24d54ca7d60b7e69f}{}\label{update_daemon_8c_a67236a5fb1ef3cc24d54ca7d60b7e69f}
+Add handler function for E\+V\+E\+NT \textquotesingle{}le\+\_\+update\+\_\+\+Progress\textquotesingle{}
+
+This event is used for showing status of ongoing update process. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em func} & Pointer to client callback function. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Context pointer. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+update\+\_\+\+End@{le\+\_\+update\+\_\+\+End}}
+\index{le\+\_\+update\+\_\+\+End@{le\+\_\+update\+\_\+\+End}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+update\+\_\+\+End()}{le_update_End()}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+update\+\_\+\+End (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_ada3064eb99fa8776a7ddbcedf7fa3c91}{}\label{update_daemon_8c_ada3064eb99fa8776a7ddbcedf7fa3c91}
+Ends an update session. If the update is not finished yet, cancels it.
+
+\begin{DoxyNote}{Note}
+The update session reference becomes invalid after this. 
+\end{DoxyNote}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+update\+\_\+\+Get\+Current\+Sys\+Index@{le\+\_\+update\+\_\+\+Get\+Current\+Sys\+Index}}
+\index{le\+\_\+update\+\_\+\+Get\+Current\+Sys\+Index@{le\+\_\+update\+\_\+\+Get\+Current\+Sys\+Index}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+update\+\_\+\+Get\+Current\+Sys\+Index(void)}{le_update_GetCurrentSysIndex(void)}}]{\setlength{\rightskip}{0pt plus 5cm}int32\+\_\+t le\+\_\+update\+\_\+\+Get\+Current\+Sys\+Index (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a7ae02132ca690606a1d556aff5f3a4c4}{}\label{update_daemon_8c_a7ae02132ca690606a1d556aff5f3a4c4}
+Get the index of the currently running system.
+
+\begin{DoxyReturn}{Returns}
+The index of the running system. 
+\end{DoxyReturn}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+update\+\_\+\+Get\+Error\+Code@{le\+\_\+update\+\_\+\+Get\+Error\+Code}}
+\index{le\+\_\+update\+\_\+\+Get\+Error\+Code@{le\+\_\+update\+\_\+\+Get\+Error\+Code}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+update\+\_\+\+Get\+Error\+Code()}{le_update_GetErrorCode()}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+update\+\_\+\+Error\+Code\+\_\+t} le\+\_\+update\+\_\+\+Get\+Error\+Code (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_ab29edc63b713c6a7b1d652ec0512c46e}{}\label{update_daemon_8c_ab29edc63b713c6a7b1d652ec0512c46e}
+Function to get error code when update fails.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item Error code of encountered error.
+\item E\+R\+R\+\_\+\+N\+O\+NE if update is in any other state. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+update\+\_\+\+Get\+Previous\+System\+Index@{le\+\_\+update\+\_\+\+Get\+Previous\+System\+Index}}
+\index{le\+\_\+update\+\_\+\+Get\+Previous\+System\+Index@{le\+\_\+update\+\_\+\+Get\+Previous\+System\+Index}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+update\+\_\+\+Get\+Previous\+System\+Index(int32\+\_\+t system\+Index)}{le_update_GetPreviousSystemIndex(int32_t systemIndex)}}]{\setlength{\rightskip}{0pt plus 5cm}int32\+\_\+t le\+\_\+update\+\_\+\+Get\+Previous\+System\+Index (
+\begin{DoxyParamCaption}
+\item[{int32\+\_\+t}]{system\+Index}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a82196efdc87d57f62d40a195cbafd2eb}{}\label{update_daemon_8c_a82196efdc87d57f62d40a195cbafd2eb}
+Get the index for the previous system in the chain, using the current system as a starting point.
+
+\begin{DoxyReturn}{Returns}
+The index to the system that\textquotesingle{}s previous to the given system. -\/1 is returned if the previous system was not found. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em system\+Index} & Get the system that\textquotesingle{}s earlier to this system. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+update\+\_\+\+Get\+System\+Hash@{le\+\_\+update\+\_\+\+Get\+System\+Hash}}
+\index{le\+\_\+update\+\_\+\+Get\+System\+Hash@{le\+\_\+update\+\_\+\+Get\+System\+Hash}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+update\+\_\+\+Get\+System\+Hash(int32\+\_\+t system\+Index, char $\ast$hash\+Str, size\+\_\+t hash\+Str\+Size)}{le_update_GetSystemHash(int32_t systemIndex, char *hashStr, size_t hashStrSize)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+update\+\_\+\+Get\+System\+Hash (
+\begin{DoxyParamCaption}
+\item[{int32\+\_\+t}]{system\+Index, }
+\item[{char $\ast$}]{hash\+Str, }
+\item[{size\+\_\+t}]{hash\+Str\+Size}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a397981b56b2dd6855ca3375ae9c61ac2}{}\label{update_daemon_8c_a397981b56b2dd6855ca3375ae9c61ac2}
+Read the hash ID from a given system.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if no problems are encountered.
+\item L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the given index does not correspond to an available system.
+\item L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the supplied buffer is too small.
+\item L\+E\+\_\+\+F\+O\+R\+M\+A\+T\+\_\+\+E\+R\+R\+OR if there are problems reading the hash from the system. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em system\+Index} & The system to read the hash for. \\
+\hline
+\mbox{\tt out}  & {\em hash\+Str} & Buffer to hold the system hash string. \\
+\hline
+\mbox{\tt in}  & {\em hash\+Str\+Size} & Size of the hash\+Str buffer. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+update\+\_\+\+Install@{le\+\_\+update\+\_\+\+Install}}
+\index{le\+\_\+update\+\_\+\+Install@{le\+\_\+update\+\_\+\+Install}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+update\+\_\+\+Install()}{le_update_Install()}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+update\+\_\+\+Install (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_aff38d9bd101b7b09ea5d6ad69cd085e0}{}\label{update_daemon_8c_aff38d9bd101b7b09ea5d6ad69cd085e0}
+Install the update
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if installation started.
+\item L\+E\+\_\+\+B\+U\+SY if package download is not finished yet.
+\item L\+E\+\_\+\+F\+A\+U\+LT if there is an error. Check logs 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+update\+\_\+\+Remove\+Progress\+Handler@{le\+\_\+update\+\_\+\+Remove\+Progress\+Handler}}
+\index{le\+\_\+update\+\_\+\+Remove\+Progress\+Handler@{le\+\_\+update\+\_\+\+Remove\+Progress\+Handler}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+update\+\_\+\+Remove\+Progress\+Handler(le\+\_\+update\+\_\+\+Progress\+Handler\+Ref\+\_\+t handler\+Ref)}{le_update_RemoveProgressHandler(le_update_ProgressHandlerRef_t handlerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+update\+\_\+\+Remove\+Progress\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+update\+\_\+\+Progress\+Handler\+Ref\+\_\+t}}]{handler\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_ae2d40ca3fd9c048546e5e7eb923ae449}{}\label{update_daemon_8c_ae2d40ca3fd9c048546e5e7eb923ae449}
+Remove handler function for E\+V\+E\+NT \textquotesingle{}le\+\_\+update\+\_\+\+Progress\textquotesingle{} 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em handler\+Ref} & Reference to client callback function. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!le\+\_\+update\+\_\+\+Start@{le\+\_\+update\+\_\+\+Start}}
+\index{le\+\_\+update\+\_\+\+Start@{le\+\_\+update\+\_\+\+Start}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+update\+\_\+\+Start(int client\+Fd)}{le_update_Start(int clientFd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+update\+\_\+\+Start (
+\begin{DoxyParamCaption}
+\item[{int}]{client\+Fd}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_aa71a2ea4d5cf4926b195a5826aee1711}{}\label{update_daemon_8c_aa71a2ea4d5cf4926b195a5826aee1711}
+Starts an update.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if accepted.
+\item L\+E\+\_\+\+B\+U\+SY if another update is in progress.
+\item L\+E\+\_\+\+U\+N\+S\+U\+P\+P\+O\+R\+T\+ED if Legato system is R/O.
+\item L\+E\+\_\+\+U\+N\+A\+V\+A\+I\+L\+A\+B\+LE if updates are deferred. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em client\+Fd} & Open file descriptor from which the update can be read. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Pipeline\+Done@{Pipeline\+Done}}
+\index{Pipeline\+Done@{Pipeline\+Done}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Pipeline\+Done(pipeline\+\_\+\+Ref\+\_\+t pipeline, int status)}{PipelineDone(pipeline_Ref_t pipeline, int status)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Pipeline\+Done (
+\begin{DoxyParamCaption}
+\item[{{\bf pipeline\+\_\+\+Ref\+\_\+t}}]{pipeline, }
+\item[{int}]{status}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a8a4d38e7e2e465ecc1a5586475970f89}{}\label{update_daemon_8c_a8a4d38e7e2e465ecc1a5586475970f89}
+Pipeline completion function for the security-\/unpack.
+
+\begin{DoxyNote}{Note}
+This will usually be called A\+F\+T\+ER the update\+Unpack operation reports completion, even if the update\+Unpack operation was interrupted by the security-\/unpack program exiting. 
+\end{DoxyNote}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Remove\+From\+List\+Tree\+In\+App\+A\+CL@{Remove\+From\+List\+Tree\+In\+App\+A\+CL}}
+\index{Remove\+From\+List\+Tree\+In\+App\+A\+CL@{Remove\+From\+List\+Tree\+In\+App\+A\+CL}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Remove\+From\+List\+Tree\+In\+App\+A\+C\+L(const char $\ast$app\+Name, size\+\_\+t num\+App\+Cfg\+Tree, char($\ast$obsolete\+Tree\+List)[M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES])}{RemoveFromListTreeInAppACL(const char *appName, size_t numAppCfgTree, char(*obsoleteTreeList)[MAX_CFGTREE_NAME_BYTES])}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Remove\+From\+List\+Tree\+In\+App\+A\+CL (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name, }
+\item[{size\+\_\+t}]{num\+App\+Cfg\+Tree, }
+\item[{char($\ast$)}]{obsolete\+Tree\+List\mbox{[}\+M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+E\+S\mbox{]}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_ab22141fd005ea4ec050b2851a9b46cce}{}\label{update_daemon_8c_ab22141fd005ea4ec050b2851a9b46cce}
+Remove trees that are in App Access list from obsolete tree list. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name} & App name. \\
+\hline
+\mbox{\tt in}  & {\em num\+App\+Cfg\+Tree} & No. of config tree in current config directory. \\
+\hline
+\mbox{\tt in}  & {\em obsolete\+Tree\+List} & Array containing list of config trees in current config directory. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Remove\+From\+List\+Tree\+In\+Cfg\+Node@{Remove\+From\+List\+Tree\+In\+Cfg\+Node}}
+\index{Remove\+From\+List\+Tree\+In\+Cfg\+Node@{Remove\+From\+List\+Tree\+In\+Cfg\+Node}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Remove\+From\+List\+Tree\+In\+Cfg\+Node(le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t cfg\+Iter, size\+\_\+t num\+App\+Cfg\+Tree, char($\ast$obsolete\+Tree\+List)[M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES])}{RemoveFromListTreeInCfgNode(le_cfg_IteratorRef_t cfgIter, size_t numAppCfgTree, char(*obsoleteTreeList)[MAX_CFGTREE_NAME_BYTES])}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Remove\+From\+List\+Tree\+In\+Cfg\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t}}]{cfg\+Iter, }
+\item[{size\+\_\+t}]{num\+App\+Cfg\+Tree, }
+\item[{char($\ast$)}]{obsolete\+Tree\+List\mbox{[}\+M\+A\+X\+\_\+\+C\+F\+G\+T\+R\+E\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+E\+S\mbox{]}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_aedd39dfe66661c02c3493c4d2df62a20}{}\label{update_daemon_8c_aedd39dfe66661c02c3493c4d2df62a20}
+Remove the tree pointed by config tree node from obsolete tree list.. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cfg\+Iter} & Node containing config tree name \\
+\hline
+\mbox{\tt in}  & {\em num\+App\+Cfg\+Tree} & No. of config tree in current config directory. \\
+\hline
+\mbox{\tt in}  & {\em obsolete\+Tree\+List} & Array containing list of config trees in current config directory. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Report\+Update\+Done@{Report\+Update\+Done}}
+\index{Report\+Update\+Done@{Report\+Update\+Done}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Report\+Update\+Done(void)}{ReportUpdateDone(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Report\+Update\+Done (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_acd445689161fe9d7fd5bae5ae63554e1}{}\label{update_daemon_8c_acd445689161fe9d7fd5bae5ae63554e1}
+Report to the client that update is done. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Security\+Unpack@{Security\+Unpack}}
+\index{Security\+Unpack@{Security\+Unpack}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Security\+Unpack(void $\ast$param)}{SecurityUnpack(void *param)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Security\+Unpack (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{param}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_ad22e8e2806faf44fdbd4409b66e2f9f8}{}\label{update_daemon_8c_ad22e8e2806faf44fdbd4409b66e2f9f8}
+Function that runs in the security-\/unpack child process inside the pipeline. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Setup\+System\+Apps\+Writable@{Setup\+System\+Apps\+Writable}}
+\index{Setup\+System\+Apps\+Writable@{Setup\+System\+Apps\+Writable}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Setup\+System\+Apps\+Writable(void)}{SetupSystemAppsWritable(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Setup\+System\+Apps\+Writable (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a016eeacbdb94546818d7b477535ba2a4}{}\label{update_daemon_8c_a016eeacbdb94546818d7b477535ba2a4}
+Setup writable files for all system applications.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if successful
+\item L\+E\+\_\+\+F\+A\+U\+LT if failed 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Should\+Keep\+User\+Or\+Group@{Should\+Keep\+User\+Or\+Group}}
+\index{Should\+Keep\+User\+Or\+Group@{Should\+Keep\+User\+Or\+Group}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Should\+Keep\+User\+Or\+Group(const char $\ast$file\+Line)}{ShouldKeepUserOrGroup(const char *fileLine)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Should\+Keep\+User\+Or\+Group (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{file\+Line}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a283da9bfc768c5aba8c9a71389d68365}{}\label{update_daemon_8c_a283da9bfc768c5aba8c9a71389d68365}
+Determines whether or not a given line from the /etc/passwd file or /etc/group file should be kept. If the user or group name at the beginning of the line does not being with \char`\"{}app\char`\"{}, then it should be kept. Also, we want to keep app users and groups for apps that are installed in the current (running) system. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Sig\+Child\+Handler@{Sig\+Child\+Handler}}
+\index{Sig\+Child\+Handler@{Sig\+Child\+Handler}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Sig\+Child\+Handler(int sig\+Num)}{SigChildHandler(int sigNum)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sig\+Child\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{sig\+Num}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a02f348360211f77ef709b2f0427af38b}{}\label{update_daemon_8c_a02f348360211f77ef709b2f0427af38b}
+The signal event handler function for S\+I\+G\+C\+H\+LD, called via the Legato event loop. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Start\+Probation@{Start\+Probation}}
+\index{Start\+Probation@{Start\+Probation}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Start\+Probation(void)}{StartProbation(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Start\+Probation (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a10615db71fa6108e89800ca40cc7c73e}{}\label{update_daemon_8c_a10615db71fa6108e89800ca40cc7c73e}
+Enter probation mode and kick off the probation timer. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!umask@{umask}}
+\index{umask@{umask}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{umask(0)}{umask(0)}}]{\setlength{\rightskip}{0pt plus 5cm}umask (
+\begin{DoxyParamCaption}
+\item[{0}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_aa5c063c7e6dcd964c817f5fe9b1d72fc}{}\label{update_daemon_8c_aa5c063c7e6dcd964c817f5fe9b1d72fc}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Unpack\+Done@{Unpack\+Done}}
+\index{Unpack\+Done@{Unpack\+Done}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Unpack\+Done(void)}{UnpackDone(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Unpack\+Done (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_ac44bfe36cdc5c8da29456b8cefb774e6}{}\label{update_daemon_8c_ac44bfe36cdc5c8da29456b8cefb774e6}
+Called when an unpack finishes successfully. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!update\+Ctrl\+\_\+\+Initialize@{update\+Ctrl\+\_\+\+Initialize}}
+\index{update\+Ctrl\+\_\+\+Initialize@{update\+Ctrl\+\_\+\+Initialize}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{update\+Ctrl\+\_\+\+Initialize()}{updateCtrl_Initialize()}}]{\setlength{\rightskip}{0pt plus 5cm}update\+Ctrl\+\_\+\+Initialize (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a64505a7a2c8b629d7bc7675e98f97caa}{}\label{update_daemon_8c_a64505a7a2c8b629d7bc7675e98f97caa}
+Initialize the mem pool so we can allocate our counter objects and set up the hash we will store them in. This will be done in a lazy way. We will only do the work of initializing if someone actually want to use this. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!update\+Daemon\+\_\+\+Mark\+Good@{update\+Daemon\+\_\+\+Mark\+Good}}
+\index{update\+Daemon\+\_\+\+Mark\+Good@{update\+Daemon\+\_\+\+Mark\+Good}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{update\+Daemon\+\_\+\+Mark\+Good(void)}{updateDaemon_MarkGood(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} update\+Daemon\+\_\+\+Mark\+Good (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_aaaa0ea1beec4d844a1af5247bb1e99bf}{}\label{update_daemon_8c_aaaa0ea1beec4d844a1af5247bb1e99bf}
+Set the update state to idle, mark the system good and clean up old system files. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Update\+Failed@{Update\+Failed}}
+\index{Update\+Failed@{Update\+Failed}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Update\+Failed(le\+\_\+update\+\_\+\+Error\+Code\+\_\+t err\+Code)}{UpdateFailed(le_update_ErrorCode_t errCode)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Update\+Failed (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+update\+\_\+\+Error\+Code\+\_\+t}}]{err\+Code}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a5be363e86f5cc5e959acac9802c4a582}{}\label{update_daemon_8c_a5be363e86f5cc5e959acac9802c4a582}
+If the update failed, go back to I\+D\+LE and report the failure to the client. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Update\+Service\+Closed@{Update\+Service\+Closed}}
+\index{Update\+Service\+Closed@{Update\+Service\+Closed}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Update\+Service\+Closed(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, void $\ast$context\+Ptr)}{UpdateServiceClosed(le_msg_SessionRef_t sessionRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Update\+Service\+Closed (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a34cdb7230815295d1c55fcacd0b8c316}{}\label{update_daemon_8c_a34cdb7230815295d1c55fcacd0b8c316}
+Handle a client session closing on the le\+\_\+update service interface. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Client session reference. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Client context pointer. \\
+\hline
+\end{DoxyParams}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Update\+Users\+And\+Groups@{Update\+Users\+And\+Groups}}
+\index{Update\+Users\+And\+Groups@{Update\+Users\+And\+Groups}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Update\+Users\+And\+Groups(void)}{UpdateUsersAndGroups(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Update\+Users\+And\+Groups (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a1781c16581ef45979c8b717be2118acc}{}\label{update_daemon_8c_a1781c16581ef45979c8b717be2118acc}
+Make sure the users and groups are set up correctly for the apps we have installed in the current system. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!user\+\_\+\+Init@{user\+\_\+\+Init}}
+\index{user\+\_\+\+Init@{user\+\_\+\+Init}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Init()}{user_Init()}}]{\setlength{\rightskip}{0pt plus 5cm}user\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a3e9284a065fbe4f65aad310617e311a4}{}\label{update_daemon_8c_a3e9284a065fbe4f65aad310617e311a4}
+Initialize the user system. This should be called before any other function in this A\+PI. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Verify\+App\+Unpack\+Dir@{Verify\+App\+Unpack\+Dir}}
+\index{Verify\+App\+Unpack\+Dir@{Verify\+App\+Unpack\+Dir}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Verify\+App\+Unpack\+Dir(void)}{VerifyAppUnpackDir(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} Verify\+App\+Unpack\+Dir (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_aa604911931b460c43f2795590d4dc920}{}\label{update_daemon_8c_aa604911931b460c43f2795590d4dc920}
+Recursively traverse the directory and verify each file I\+MA signature against the public certificate.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK on success
+\item L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if no app unpack directory exists
+\item L\+E\+\_\+\+F\+A\+U\+LT otherwise 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Verify\+Unpacked\+System@{Verify\+Unpacked\+System}}
+\index{Verify\+Unpacked\+System@{Verify\+Unpacked\+System}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Verify\+Unpacked\+System(void)}{VerifyUnpackedSystem(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} Verify\+Unpacked\+System (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a1bc6c75f2ad5d333355f93b871511fbf}{}\label{update_daemon_8c_a1bc6c75f2ad5d333355f93b871511fbf}
+Recursively traverse the directory and verify each file I\+MA signature against the public certificate.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK on success
+\item L\+E\+\_\+\+F\+A\+U\+LT otherwise 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!while@{while}}
+\index{while@{while}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{while((file\+Ptr==\+N\+U\+L\+L)\&\&(errno==\+E\+I\+N\+T\+R))}{while((filePtr==NULL)&&(errno==EINTR))}}]{\setlength{\rightskip}{0pt plus 5cm}while (
+\begin{DoxyParamCaption}
+\item[{({\bf file\+Ptr}==N\+U\+LL)\&\&({\bf errno}==E\+I\+N\+TR)}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{update_daemon_8c_a4bd1f0df024da0cb002930fa9363c47e}{}\label{update_daemon_8c_a4bd1f0df024da0cb002930fa9363c47e}
+
+
+\subsection{Variable Documentation}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Client\+Progress\+Handler\+List@{Client\+Progress\+Handler\+List}}
+\index{Client\+Progress\+Handler\+List@{Client\+Progress\+Handler\+List}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Progress\+Handler\+List}{ClientProgressHandlerList}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+dls\+\_\+\+List\+\_\+t} Client\+Progress\+Handler\+List = {\bf L\+E\+\_\+\+D\+L\+S\+\_\+\+L\+I\+S\+T\+\_\+\+I\+N\+IT}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a9a65410b58c652fb7067855e71fbc50b}{}\label{update_daemon_8c_a9a65410b58c652fb7067855e71fbc50b}
+List of client progress handlers. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Client\+Progress\+Handler\+Pool@{Client\+Progress\+Handler\+Pool}}
+\index{Client\+Progress\+Handler\+Pool@{Client\+Progress\+Handler\+Pool}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Progress\+Handler\+Pool}{ClientProgressHandlerPool}}]{\setlength{\rightskip}{0pt plus 5cm}Client\+Progress\+Handler\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_ae3c745f4b8d8125918c769c8a5b0f5ad}{}\label{update_daemon_8c_ae3c745f4b8d8125918c769c8a5b0f5ad}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+= \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\_mem\_CreatePool}(\textcolor{stringliteral}{"ProgressHandler"},
+                                                  \textcolor{keyword}{sizeof}(\hyperlink{struct_client_progress_handler__t}{ClientProgressHandler\_t}))
+\end{DoxyCode}
+Pool from which client progress handler objects are allocated. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}}
+\index{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}{COMPONENT_INIT}}]{\setlength{\rightskip}{0pt plus 5cm}C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}\hypertarget{update_daemon_8c_a0392d452f926ce36c4852de26b5eca12}{}\label{update_daemon_8c_a0392d452f926ce36c4852de26b5eca12}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+    
+    \hyperlink{update_daemon_8c_afa9069e7bbdeed2332b5cbffbb472691}{le\_sig\_Block}(SIGCHLD)
+\end{DoxyCode}
+The main function for the update daemon. Listens for commands from process/components and apply update accordingly. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!do@{do}}
+\index{do@{do}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{do}{do}}]{\setlength{\rightskip}{0pt plus 5cm}do}\hypertarget{update_daemon_8c_a721c6ff80a6d3e4ad4ffa52a04c60085}{}\label{update_daemon_8c_a721c6ff80a6d3e4ad4ffa52a04c60085}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+        \hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{filePtr} = freopen(\textcolor{stringliteral}{"/dev/null"}, \textcolor{stringliteral}{"r"}, stdin)
+\end{DoxyCode}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!else@{else}}
+\index{else@{else}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{else}{else}}]{\setlength{\rightskip}{0pt plus 5cm}else}\hypertarget{update_daemon_8c_a0544c3fe466e421738dae463968b70ba}{}\label{update_daemon_8c_a0544c3fe466e421738dae463968b70ba}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+        
+        \textcolor{keywordflow}{if} ((0 == access(\textcolor{stringliteral}{"/etc/passwd"}, W\_OK)) && (0 == access(\textcolor{stringliteral}{"/etc/group"}, W\_OK)))
+        \{
+            \hyperlink{update_daemon_8c_a1781c16581ef45979c8b717be2118acc}{UpdateUsersAndGroups}();
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{supervisor_8c_ad2c77028b3adbf2aed592699085afca5}{LE\_CRIT}(\textcolor{stringliteral}{"/etc/passwd and /etc/group are read-only. Sandboxes are not supported"});
+        \}
+
+        \hyperlink{update_daemon_8c_abc90a4c424d12dbd79b3cff0e060cde2}{State} = \hyperlink{update_daemon_8c_a16af7b253440dadd46a80a4b9fddba4daaade5e53e88cf231292cd1142cce2afe}{STATE\_IDLE}
+\end{DoxyCode}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Error\+Code@{Error\+Code}}
+\index{Error\+Code@{Error\+Code}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Error\+Code}{ErrorCode}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+update\+\_\+\+Error\+Code\+\_\+t} Error\+Code = {\bf L\+E\+\_\+\+U\+P\+D\+A\+T\+E\+\_\+\+E\+R\+R\+\_\+\+N\+O\+NE}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a0913372cceeed6bf8d8cbbb812686d7f}{}\label{update_daemon_8c_a0913372cceeed6bf8d8cbbb812686d7f}
+Error code. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!file\+Ptr@{file\+Ptr}}
+\index{file\+Ptr@{file\+Ptr}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{file\+Ptr}{filePtr}}]{\setlength{\rightskip}{0pt plus 5cm}F\+I\+LE$\ast$ file\+Ptr}\hypertarget{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{}\label{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}
+\index{update\+Daemon.\+c@{update\+Daemon.\+c}!Install\+Event\+Id@{Install\+Event\+Id}}
+\index{Install\+Event\+Id@{Install\+Event\+Id}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Install\+Event\+Id}{InstallEventId}}]{\setlength{\rightskip}{0pt plus 5cm}Install\+Event\+Id = {\bf le\+\_\+event\+\_\+\+Create\+Id}(\char`\"{}Install\+Event\char`\"{}, 0)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a7fa6a757edc45070dc88af0c58cab05d}{}\label{update_daemon_8c_a7fa6a757edc45070dc88af0c58cab05d}
+Event ID for triggering installation. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Install\+Ready@{Install\+Ready}}
+\index{Install\+Ready@{Install\+Ready}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Install\+Ready}{InstallReady}}]{\setlength{\rightskip}{0pt plus 5cm}bool Install\+Ready = false}\hypertarget{update_daemon_8c_a89f191ee44d2f7c3aeab77fcb0ed348b}{}\label{update_daemon_8c_a89f191ee44d2f7c3aeab77fcb0ed348b}
+Flag to store when update\+Daemon is ready to install new app/system. Only set to true when update\+Daemon send notification to client that download is successful. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Ipc\+Session@{Ipc\+Session}}
+\index{Ipc\+Session@{Ipc\+Session}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Ipc\+Session}{IpcSession}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} Ipc\+Session = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_ada568d0f0071010665e1cfee910101f7}{}\label{update_daemon_8c_ada568d0f0071010665e1cfee910101f7}
+The I\+PC Session Reference for the I\+PC session that started the current update. N\+U\+LL if no update in progress. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Is\+Read\+Only@{Is\+Read\+Only}}
+\index{Is\+Read\+Only@{Is\+Read\+Only}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Read\+Only}{IsReadOnly}}]{\setlength{\rightskip}{0pt plus 5cm}Is\+Read\+Only = false\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a49d717b2b7c81add99c4efab74b94a24}{}\label{update_daemon_8c_a49d717b2b7c81add99c4efab74b94a24}
+Legato R/O tree \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Next\+Client\+Progress\+Handler\+Ref@{Next\+Client\+Progress\+Handler\+Ref}}
+\index{Next\+Client\+Progress\+Handler\+Ref@{Next\+Client\+Progress\+Handler\+Ref}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Next\+Client\+Progress\+Handler\+Ref}{NextClientProgressHandlerRef}}]{\setlength{\rightskip}{0pt plus 5cm}Next\+Client\+Progress\+Handler\+Ref = random()\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_a7ff54e32471cdcb7321bfff653ff0b50}{}\label{update_daemon_8c_a7ff54e32471cdcb7321bfff653ff0b50}
+Counter used to create progress handler references. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Probation\+Timer@{Probation\+Timer}}
+\index{Probation\+Timer@{Probation\+Timer}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Probation\+Timer}{ProbationTimer}}]{\setlength{\rightskip}{0pt plus 5cm}Probation\+Timer = {\bf le\+\_\+timer\+\_\+\+Create}(\char`\"{}Probation\char`\"{})}\hypertarget{update_daemon_8c_a098b398395a3b07bf85b424c81cadd4b}{}\label{update_daemon_8c_a098b398395a3b07bf85b424c81cadd4b}
+Timer for the probation period. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!Security\+Unpack\+Pipeline@{Security\+Unpack\+Pipeline}}
+\index{Security\+Unpack\+Pipeline@{Security\+Unpack\+Pipeline}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Security\+Unpack\+Pipeline}{SecurityUnpackPipeline}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf pipeline\+\_\+\+Ref\+\_\+t} Security\+Unpack\+Pipeline = N\+U\+LL}\hypertarget{update_daemon_8c_a62dade98bb16b47db32a0b5994c3da58}{}\label{update_daemon_8c_a62dade98bb16b47db32a0b5994c3da58}
+Reference to the security-\/unpack process pipeline, or N\+U\+LL if the pipeline doesn\textquotesingle{}t exist. \index{update\+Daemon.\+c@{update\+Daemon.\+c}!State@{State}}
+\index{State@{State}!update\+Daemon.\+c@{update\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{State}{State}}]{\setlength{\rightskip}{0pt plus 5cm}enum \{ ... \} 
+ State\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{update_daemon_8c_abc90a4c424d12dbd79b3cff0e060cde2}{}\label{update_daemon_8c_abc90a4c424d12dbd79b3cff0e060cde2}
+State of the Update Daemon state machine. \begin{DoxyVerb}           +---------------------------------------+
+           |                                       |
+           |                                       V
+\end{DoxyVerb}
+ I\+D\+LE -\/---$>$ U\+N\+P\+A\+C\+K\+I\+NG -\/---$>$ S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+C\+H\+E\+C\+K\+I\+NG -\/---$>$ A\+P\+P\+L\+Y\+I\+NG $^\wedge$ $\vert$ $\vert$ $\vert$ $\vert$ $\vert$ $\vert$ $\vert$ +-\/-\/-\/-\/-\/-\/-\/-\/-\/---+ $\vert$ $\vert$ $\vert$ $\vert$ $\vert$ +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+ $\vert$ $\vert$ $\vert$ +-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/---+
+
+Transition from U\+N\+P\+A\+C\+K\+I\+NG to A\+P\+P\+L\+Y\+I\+NG happens when security-\/unpack finishes before the unpacking finishes. This is common when update packs are unsigned (when security-\/unpack is not really doing anything). 

@@ -1,0 +1,545 @@
+\hypertarget{log_8c}{}\section{framework/liblegato/linux/log.c File Reference}
+\label{log_8c}\index{framework/liblegato/linux/log.\+c@{framework/liblegato/linux/log.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}log.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}log\+Daemon/log\+Daemon.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}messaging\+Session.\+h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t}
+\item 
+struct \hyperlink{struct_keyword_obj__t}{Keyword\+Obj\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{log_8c_a17e333794ae761cd55ec6fd6fc0f1bac}{M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE}~256
+\item 
+\#define \hyperlink{log_8c_aab862cd605a431cd3df3b19da3258a7d}{L\+O\+G\+\_\+\+E\+M\+E\+R\+G\+\_\+\+S\+TR}~\char`\"{}$\ast$E\+MR$\ast$\char`\"{}
+\item 
+\#define \hyperlink{log_8c_af77c4301d0e592be6343109d3ab0fe14}{L\+O\+G\+\_\+\+C\+R\+I\+T\+\_\+\+S\+TR}~\char`\"{}$\ast$C\+RT$\ast$\char`\"{}
+\item 
+\#define \hyperlink{log_8c_ad4cb5b1bcd594fc1545b9555b7f940c2}{L\+O\+G\+\_\+\+E\+R\+R\+O\+R\+\_\+\+S\+TR}~\char`\"{}=E\+RR=\char`\"{}
+\item 
+\#define \hyperlink{log_8c_a8784f651220cf95a6f1db7acbb8a34d9}{L\+O\+G\+\_\+\+W\+A\+R\+N\+\_\+\+S\+TR}~\char`\"{}-\/W\+RN-\/\char`\"{}
+\item 
+\#define \hyperlink{log_8c_a8acfafe033bb83deea97f0ce81508f5b}{L\+O\+G\+\_\+\+I\+N\+F\+O\+\_\+\+S\+TR}~\char`\"{} I\+N\+FO\char`\"{}
+\item 
+\#define \hyperlink{log_8c_a290c4350c9069bc58fd6496bc915e708}{L\+O\+G\+\_\+\+D\+E\+B\+U\+G\+\_\+\+S\+TR}~\char`\"{} D\+B\+UG\char`\"{}
+\item 
+\#define \hyperlink{log_8c_a5f6aa8edcd99914757600b5d3b259bb7}{T\+R\+A\+CE}(...)~\hyperlink{le__log_8h_a331fb6c78ccddeafc455ad9c64e42008}{L\+E\+\_\+\+T\+R\+A\+CE}(\hyperlink{timer_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref}, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+)
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_a63692d3983734584a66f2ca4db563ad6}{Lock} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_abba239500052c40aac456def0f18e855}{Unlock} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{struct_keyword_obj__t}{Keyword\+Obj\+\_\+t} $\ast$ \hyperlink{log_8c_a1dc9ddb7b7fa735107de2121a75712de}{Create\+Keyword} (\hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$log\+Session\+Ptr, const char $\ast$keyword)
+\item 
+static \hyperlink{struct_keyword_obj__t}{Keyword\+Obj\+\_\+t} $\ast$ \hyperlink{log_8c_a5a719fd711a8aa0c972f1e35293dfa79}{Get\+Keyword\+Obj} (const char $\ast$keyword\+Ptr, \hyperlink{structle__sls___list__t}{le\+\_\+sls\+\_\+\+List\+\_\+t} $\ast$keyword\+List)
+\item 
+static \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$ \hyperlink{log_8c_af6747cbbe04bf4673c1fb82277ad6f55}{Get\+Session} (const char $\ast$component\+Name\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_abbee6656983b767c6814da0854ef6efa}{Enable\+Trace} (const char $\ast$component\+Name\+Ptr, const char $\ast$keyword\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_a2a22e2ccd928408b3b91b14ece0375c1}{Disable\+Trace} (const char $\ast$component\+Name\+Ptr, const char $\ast$keyword\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_adff9942b1825af7e346dd356e7e0eb4a}{Set\+Log\+Level\+Filter} (const char $\ast$component\+Name\+Ptr, int level\+Filter)
+\item 
+static \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$ \hyperlink{log_8c_a960bfe2c189520b6ad8e00d93690bb72}{Create\+Session} (const char $\ast$component\+Name\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_a42317263ee55174ef4612870d99bf71f}{Read\+Level\+From\+Env} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_acbf0438e97691625bfe9ad207eb33ab2}{Read\+Trace\+Keywords\+From\+Env} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static bool \hyperlink{log_8c_af75cc6965d784f146a3e0b0f3f3b941e}{Parse\+Cmd\+Packet} (const char $\ast$cmd\+Packet\+Ptr, char $\ast$cmd\+Ptr, char $\ast$component\+Name\+Ptr, const char $\ast$$\ast$cmd\+Data\+Ptr\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_a7bd49b0ab1b4dca90db9e5f6e4a79bcd}{Process\+Log\+Cmd} (\hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_a4de41d4be8cc187d2ba549d9b9b45287}{Register\+With\+Log\+Control\+Daemon} (\hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$log\+Session\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_a205a0a93bd202923978f0738e1aaeac8}{log\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_a91f69de1c84b361bbdfe0d8ac5039fea}{log\+\_\+\+Re\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_ac933de0abfd72e6455c7bc1346041f36}{log\+\_\+\+Connect\+To\+Control\+Daemon} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__log_8h_ae74f60cb8aba8cc6344a906a4db623f9}{le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_8c_a87eadac770827a5143143ce2c3fff5cd}{log\+\_\+\+Reg\+Component} (const char $\ast$component\+Name\+Ptr, \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$$\ast$level\+Filter\+Ptr\+Ptr)
+\item 
+\hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} \hyperlink{log_8c_a86ff9857ae1bfd526e709ec3e75e8715}{log\+\_\+\+Str\+To\+Severity\+Level} (const char $\ast$level\+Str)
+\item 
+const char $\ast$ \hyperlink{log_8c_a5fbd7fa6820a90e95c1f6255b8d8d297}{log\+\_\+\+Severity\+Level\+To\+Str} (\hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} level)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_a48b3c3843b175c7ad79cb5d98577d1af}{\+\_\+le\+\_\+log\+\_\+\+Send} (const \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} level, const \hyperlink{le__log_8h_a055e29785e8d1c5bf1b3a230df8d65b7}{le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} trace\+Ref, \hyperlink{le__log_8h_ae74f60cb8aba8cc6344a906a4db623f9}{le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t} log\+Session, const char $\ast$filename\+Ptr, const char $\ast$function\+Name\+Ptr, const unsigned int line\+Number, const char $\ast$format\+Ptr,...)
+\item 
+const char $\ast$ \hyperlink{log_8c_a9402d78fa0ea7040ec3574b227b639ca}{\+\_\+le\+\_\+log\+\_\+\+Get\+Result\+Code\+String} (\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} result\+Code)
+\begin{DoxyCompactList}\small\item\em Function that does the real work of translating result codes. See \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{L\+E\+\_\+\+R\+E\+S\+U\+L\+T\+\_\+\+T\+XT}. \end{DoxyCompactList}\item 
+\hyperlink{le__log_8h_a055e29785e8d1c5bf1b3a230df8d65b7}{le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} \hyperlink{log_8c_a065a43be9ccf08123170a3a444723b03}{\+\_\+le\+\_\+log\+\_\+\+Get\+Trace\+Ref} (const \hyperlink{le__log_8h_ae74f60cb8aba8cc6344a906a4db623f9}{le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t} log\+Session, const char $\ast$keyword\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_a064085569e4924b99d967cc6ecabe8de}{\+\_\+le\+\_\+log\+\_\+\+Set\+Filter\+Level} (\hyperlink{le__log_8h_ae74f60cb8aba8cc6344a906a4db623f9}{le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t} log\+Session, \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} level)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_a16a71374f066353dae8218cf65d4bfc1}{\+\_\+le\+\_\+\+Log\+Data} (const uint8\+\_\+t $\ast$data\+Ptr, int data\+Length, const char $\ast$filename\+Ptr, const char $\ast$function\+Name\+Ptr, const unsigned int line\+Number)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_aaaa2b1f3d1d8197ac528e3b3cd75a624}{log\+\_\+\+Test\+Framework\+Msgs} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8c_afce531c9bd8e7b3c772c15a7063145aa}{log\+\_\+\+Log\+Generic\+Msg} (\hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} level, const char $\ast$proc\+Name\+Ptr, pid\+\_\+t pid, const char $\ast$msg\+Ptr)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const char $\ast$ \hyperlink{log_8c_ab262d3dab71191e5121ba48ff58caef4}{Severity\+Str} \mbox{[}$\,$\mbox{]}
+\item 
+static \hyperlink{structle__sls___list__t}{le\+\_\+sls\+\_\+\+List\+\_\+t} \hyperlink{log_8c_a87d84e4a0cbcd997665fb2f59d14b23f}{Session\+List} = \hyperlink{le__singly_linked_list_8h_a2e1013c24e2c826dbba37a761c5d9f44}{L\+E\+\_\+\+S\+L\+S\+\_\+\+L\+I\+S\+T\+\_\+\+I\+N\+IT}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{log_8c_adfbf6d7596e8e68244659e1cd0c8258e}{Session\+Mem\+Pool}
+\item 
+static \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} \hyperlink{log_8c_a1104eb44c99ebcccd64f78093377b5bc}{Default\+Log\+Session}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{log_8c_aae3901c3707892012808ddd81c60ea03}{Keyword\+Mem\+Pool}
+\item 
+static \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_8c_a34ffe8eef8610023318f0c2a358e07b1}{Ipc\+Session\+Ref}
+\item 
+static \hyperlink{le__log_8h_a055e29785e8d1c5bf1b3a230df8d65b7}{le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} \hyperlink{log_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref}
+\item 
+static pthread\+\_\+mutex\+\_\+t \hyperlink{log_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{Mutex} = P\+T\+H\+R\+E\+A\+D\+\_\+\+R\+E\+C\+U\+R\+S\+I\+V\+E\+\_\+\+M\+U\+T\+E\+X\+\_\+\+I\+N\+I\+T\+I\+A\+L\+I\+Z\+E\+R\+\_\+\+NP
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This module handles the building of the log messages and sending the messages to the log file. Configuration of log messages is also handled by this module. Writing traces to the log and enabling traces by keyword is also handled here.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{log.\+c@{log.\+c}!L\+O\+G\+\_\+\+C\+R\+I\+T\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+C\+R\+I\+T\+\_\+\+S\+TR}}
+\index{L\+O\+G\+\_\+\+C\+R\+I\+T\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+C\+R\+I\+T\+\_\+\+S\+TR}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{L\+O\+G\+\_\+\+C\+R\+I\+T\+\_\+\+S\+TR}{LOG_CRIT_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+G\+\_\+\+C\+R\+I\+T\+\_\+\+S\+TR~\char`\"{}$\ast$C\+RT$\ast$\char`\"{}}\hypertarget{log_8c_af77c4301d0e592be6343109d3ab0fe14}{}\label{log_8c_af77c4301d0e592be6343109d3ab0fe14}
+\index{log.\+c@{log.\+c}!L\+O\+G\+\_\+\+D\+E\+B\+U\+G\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+D\+E\+B\+U\+G\+\_\+\+S\+TR}}
+\index{L\+O\+G\+\_\+\+D\+E\+B\+U\+G\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+D\+E\+B\+U\+G\+\_\+\+S\+TR}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{L\+O\+G\+\_\+\+D\+E\+B\+U\+G\+\_\+\+S\+TR}{LOG_DEBUG_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+G\+\_\+\+D\+E\+B\+U\+G\+\_\+\+S\+TR~\char`\"{} D\+B\+UG\char`\"{}}\hypertarget{log_8c_a290c4350c9069bc58fd6496bc915e708}{}\label{log_8c_a290c4350c9069bc58fd6496bc915e708}
+\index{log.\+c@{log.\+c}!L\+O\+G\+\_\+\+E\+M\+E\+R\+G\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+E\+M\+E\+R\+G\+\_\+\+S\+TR}}
+\index{L\+O\+G\+\_\+\+E\+M\+E\+R\+G\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+E\+M\+E\+R\+G\+\_\+\+S\+TR}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{L\+O\+G\+\_\+\+E\+M\+E\+R\+G\+\_\+\+S\+TR}{LOG_EMERG_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+G\+\_\+\+E\+M\+E\+R\+G\+\_\+\+S\+TR~\char`\"{}$\ast$E\+MR$\ast$\char`\"{}}\hypertarget{log_8c_aab862cd605a431cd3df3b19da3258a7d}{}\label{log_8c_aab862cd605a431cd3df3b19da3258a7d}
+Log severity strings. \index{log.\+c@{log.\+c}!L\+O\+G\+\_\+\+E\+R\+R\+O\+R\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+E\+R\+R\+O\+R\+\_\+\+S\+TR}}
+\index{L\+O\+G\+\_\+\+E\+R\+R\+O\+R\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+E\+R\+R\+O\+R\+\_\+\+S\+TR}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{L\+O\+G\+\_\+\+E\+R\+R\+O\+R\+\_\+\+S\+TR}{LOG_ERROR_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+G\+\_\+\+E\+R\+R\+O\+R\+\_\+\+S\+TR~\char`\"{}=E\+RR=\char`\"{}}\hypertarget{log_8c_ad4cb5b1bcd594fc1545b9555b7f940c2}{}\label{log_8c_ad4cb5b1bcd594fc1545b9555b7f940c2}
+\index{log.\+c@{log.\+c}!L\+O\+G\+\_\+\+I\+N\+F\+O\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+I\+N\+F\+O\+\_\+\+S\+TR}}
+\index{L\+O\+G\+\_\+\+I\+N\+F\+O\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+I\+N\+F\+O\+\_\+\+S\+TR}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{L\+O\+G\+\_\+\+I\+N\+F\+O\+\_\+\+S\+TR}{LOG_INFO_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+G\+\_\+\+I\+N\+F\+O\+\_\+\+S\+TR~\char`\"{} I\+N\+FO\char`\"{}}\hypertarget{log_8c_a8acfafe033bb83deea97f0ce81508f5b}{}\label{log_8c_a8acfafe033bb83deea97f0ce81508f5b}
+\index{log.\+c@{log.\+c}!L\+O\+G\+\_\+\+W\+A\+R\+N\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+W\+A\+R\+N\+\_\+\+S\+TR}}
+\index{L\+O\+G\+\_\+\+W\+A\+R\+N\+\_\+\+S\+TR@{L\+O\+G\+\_\+\+W\+A\+R\+N\+\_\+\+S\+TR}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{L\+O\+G\+\_\+\+W\+A\+R\+N\+\_\+\+S\+TR}{LOG_WARN_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+G\+\_\+\+W\+A\+R\+N\+\_\+\+S\+TR~\char`\"{}-\/W\+RN-\/\char`\"{}}\hypertarget{log_8c_a8784f651220cf95a6f1db7acbb8a34d9}{}\label{log_8c_a8784f651220cf95a6f1db7acbb8a34d9}
+\index{log.\+c@{log.\+c}!M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE@{M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE}}
+\index{M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE@{M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE}{MAX_MSG_SIZE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE~256}\hypertarget{log_8c_a17e333794ae761cd55ec6fd6fc0f1bac}{}\label{log_8c_a17e333794ae761cd55ec6fd6fc0f1bac}
+Maximum length of log messages. \index{log.\+c@{log.\+c}!T\+R\+A\+CE@{T\+R\+A\+CE}}
+\index{T\+R\+A\+CE@{T\+R\+A\+CE}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{T\+R\+A\+CE}{TRACE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define T\+R\+A\+CE(
+\begin{DoxyParamCaption}
+\item[{}]{...}
+\end{DoxyParamCaption}
+)~{\bf L\+E\+\_\+\+T\+R\+A\+CE}({\bf Trace\+Ref}, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+)}\hypertarget{log_8c_a5f6aa8edcd99914757600b5d3b259bb7}{}\label{log_8c_a5f6aa8edcd99914757600b5d3b259bb7}
+Macro used to generate trace output in this module. Takes the same parameters as \hyperlink{le__log_8h_a2a91ea8857cf190fde71d85ba930a498}{L\+E\+\_\+\+D\+E\+B\+U\+G()} et. al. 
+
+\subsection{Function Documentation}
+\index{log.\+c@{log.\+c}!\+\_\+le\+\_\+log\+\_\+\+Get\+Result\+Code\+String@{\+\_\+le\+\_\+log\+\_\+\+Get\+Result\+Code\+String}}
+\index{\+\_\+le\+\_\+log\+\_\+\+Get\+Result\+Code\+String@{\+\_\+le\+\_\+log\+\_\+\+Get\+Result\+Code\+String}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{\+\_\+le\+\_\+log\+\_\+\+Get\+Result\+Code\+String(le\+\_\+result\+\_\+t result\+Code)}{_le_log_GetResultCodeString(le_result_t resultCode)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ \+\_\+le\+\_\+log\+\_\+\+Get\+Result\+Code\+String (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+result\+\_\+t}}]{result\+Code}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_a9402d78fa0ea7040ec3574b227b639ca}{}\label{log_8c_a9402d78fa0ea7040ec3574b227b639ca}
+
+
+Function that does the real work of translating result codes. See \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{L\+E\+\_\+\+R\+E\+S\+U\+L\+T\+\_\+\+T\+XT}. 
+
+Get a null-\/terminated, printable string representing an le\+\_\+result\+\_\+t value.
+
+For example, \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{L\+E\+\_\+\+R\+E\+S\+U\+L\+T\+\_\+\+T\+X\+T(\+L\+E\+\_\+\+N\+O\+T\+\_\+\+P\+E\+R\+M\+I\+T\+T\+E\+D)} would return a pointer to a string containing \char`\"{}\+L\+E\+\_\+\+N\+O\+T\+\_\+\+P\+E\+R\+M\+I\+T\+T\+E\+D\char`\"{}.
+
+\char`\"{}(unknown)\char`\"{} will be returned if the value given is out of range.
+
+\begin{DoxyReturn}{Returns}
+A pointer to a string constant. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em result\+Code} & The result code value to be translated. \\
+\hline
+\end{DoxyParams}
+\index{log.\+c@{log.\+c}!\+\_\+le\+\_\+log\+\_\+\+Get\+Trace\+Ref@{\+\_\+le\+\_\+log\+\_\+\+Get\+Trace\+Ref}}
+\index{\+\_\+le\+\_\+log\+\_\+\+Get\+Trace\+Ref@{\+\_\+le\+\_\+log\+\_\+\+Get\+Trace\+Ref}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{\+\_\+le\+\_\+log\+\_\+\+Get\+Trace\+Ref(const le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t log\+Session, const char $\ast$keyword\+Ptr)}{_le_log_GetTraceRef(const le_log_SessionRef_t logSession, const char *keywordPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} \+\_\+le\+\_\+log\+\_\+\+Get\+Trace\+Ref (
+\begin{DoxyParamCaption}
+\item[{const {\bf le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t}}]{log\+Session, }
+\item[{const char $\ast$}]{keyword\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_a065a43be9ccf08123170a3a444723b03}{}\label{log_8c_a065a43be9ccf08123170a3a444723b03}
+Gets a reference to a trace keyword\textquotesingle{}s settings.
+
+\begin{DoxyReturn}{Returns}
+The trace reference. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em log\+Session} & The log session. \\
+\hline
+\mbox{\tt in}  & {\em keyword\+Ptr} & Pointer to the keyword string. \\
+\hline
+\end{DoxyParams}
+\index{log.\+c@{log.\+c}!\+\_\+le\+\_\+log\+\_\+\+Send@{\+\_\+le\+\_\+log\+\_\+\+Send}}
+\index{\+\_\+le\+\_\+log\+\_\+\+Send@{\+\_\+le\+\_\+log\+\_\+\+Send}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{\+\_\+le\+\_\+log\+\_\+\+Send(const le\+\_\+log\+\_\+\+Level\+\_\+t level, const le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t trace\+Ref, le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t log\+Session, const char $\ast$filename\+Ptr, const char $\ast$function\+Name\+Ptr, const unsigned int line\+Number, const char $\ast$format\+Ptr,...)}{_le_log_Send(const le_log_Level_t level, const le_log_TraceRef_t traceRef, le_log_SessionRef_t logSession, const char *filenamePtr, const char *functionNamePtr, const unsigned int lineNumber, const char *formatPtr,...)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} \+\_\+le\+\_\+log\+\_\+\+Send (
+\begin{DoxyParamCaption}
+\item[{const {\bf le\+\_\+log\+\_\+\+Level\+\_\+t}}]{level, }
+\item[{const {\bf le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t}}]{trace\+Ref, }
+\item[{{\bf le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t}}]{log\+Session, }
+\item[{const char $\ast$}]{filename\+Ptr, }
+\item[{const char $\ast$}]{function\+Name\+Ptr, }
+\item[{const unsigned int}]{line\+Number, }
+\item[{const char $\ast$}]{format\+Ptr, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_a48b3c3843b175c7ad79cb5d98577d1af}{}\label{log_8c_a48b3c3843b175c7ad79cb5d98577d1af}
+Converts the legato log levels to the syslog priority levels.
+
+\begin{DoxyReturn}{Returns}
+Syslog priority level. Builds the log message and sends it to the logging system. 
+\end{DoxyReturn}
+\index{log.\+c@{log.\+c}!\+\_\+le\+\_\+log\+\_\+\+Set\+Filter\+Level@{\+\_\+le\+\_\+log\+\_\+\+Set\+Filter\+Level}}
+\index{\+\_\+le\+\_\+log\+\_\+\+Set\+Filter\+Level@{\+\_\+le\+\_\+log\+\_\+\+Set\+Filter\+Level}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{\+\_\+le\+\_\+log\+\_\+\+Set\+Filter\+Level(le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t log\+Session, le\+\_\+log\+\_\+\+Level\+\_\+t level)}{_le_log_SetFilterLevel(le_log_SessionRef_t logSession, le_log_Level_t level)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} \+\_\+le\+\_\+log\+\_\+\+Set\+Filter\+Level (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t}}]{log\+Session, }
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t}}]{level}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_a064085569e4924b99d967cc6ecabe8de}{}\label{log_8c_a064085569e4924b99d967cc6ecabe8de}
+Sets the log filter level for a given log session in the calling process.
+
+\begin{DoxyNote}{Note}
+This does not affect other processes and does not update the Log Control Daemon. 
+\end{DoxyNote}
+\index{log.\+c@{log.\+c}!\+\_\+le\+\_\+\+Log\+Data@{\+\_\+le\+\_\+\+Log\+Data}}
+\index{\+\_\+le\+\_\+\+Log\+Data@{\+\_\+le\+\_\+\+Log\+Data}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{\+\_\+le\+\_\+\+Log\+Data(const uint8\+\_\+t $\ast$data\+Ptr, int data\+Length, const char $\ast$filename\+Ptr, const char $\ast$function\+Name\+Ptr, const unsigned int line\+Number)}{_le_LogData(const uint8_t *dataPtr, int dataLength, const char *filenamePtr, const char *functionNamePtr, const unsigned int lineNumber)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} \+\_\+le\+\_\+\+Log\+Data (
+\begin{DoxyParamCaption}
+\item[{const uint8\+\_\+t $\ast$}]{data\+Ptr, }
+\item[{int}]{data\+Length, }
+\item[{const char $\ast$}]{filename\+Ptr, }
+\item[{const char $\ast$}]{function\+Name\+Ptr, }
+\item[{const unsigned int}]{line\+Number}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_a16a71374f066353dae8218cf65d4bfc1}{}\label{log_8c_a16a71374f066353dae8218cf65d4bfc1}
+Log data block. Provides a hex dump for debug \index{log.\+c@{log.\+c}!Create\+Keyword@{Create\+Keyword}}
+\index{Create\+Keyword@{Create\+Keyword}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Keyword(\+Log\+Session\+\_\+t $\ast$log\+Session\+Ptr, const char $\ast$keyword)}{CreateKeyword(LogSession_t *logSessionPtr, const char *keyword)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Keyword\+Obj\+\_\+t}$\ast$ Create\+Keyword (
+\begin{DoxyParamCaption}
+\item[{{\bf Log\+Session\+\_\+t} $\ast$}]{log\+Session\+Ptr, }
+\item[{const char $\ast$}]{keyword}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_a1dc9ddb7b7fa735107de2121a75712de}{}\label{log_8c_a1dc9ddb7b7fa735107de2121a75712de}
+Creates a new Keyword Object for a given session.
+
+\begin{DoxyWarning}{Warning}
+Assumes that the mutex is locked.
+\end{DoxyWarning}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\index{log.\+c@{log.\+c}!Create\+Session@{Create\+Session}}
+\index{Create\+Session@{Create\+Session}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Session(const char $\ast$component\+Name\+Ptr)}{CreateSession(const char *componentNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Log\+Session\+\_\+t}$\ast$ Create\+Session (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{component\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_a960bfe2c189520b6ad8e00d93690bb72}{}\label{log_8c_a960bfe2c189520b6ad8e00d93690bb72}
+Create a log session.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the new log session object. 
+\end{DoxyReturn}
+\index{log.\+c@{log.\+c}!Disable\+Trace@{Disable\+Trace}}
+\index{Disable\+Trace@{Disable\+Trace}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Disable\+Trace(const char $\ast$component\+Name\+Ptr, const char $\ast$keyword\+Ptr)}{DisableTrace(const char *componentNamePtr, const char *keywordPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Disable\+Trace (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{component\+Name\+Ptr, }
+\item[{const char $\ast$}]{keyword\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_a2a22e2ccd928408b3b91b14ece0375c1}{}\label{log_8c_a2a22e2ccd928408b3b91b14ece0375c1}
+Disable a trace keyword. \index{log.\+c@{log.\+c}!Enable\+Trace@{Enable\+Trace}}
+\index{Enable\+Trace@{Enable\+Trace}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Enable\+Trace(const char $\ast$component\+Name\+Ptr, const char $\ast$keyword\+Ptr)}{EnableTrace(const char *componentNamePtr, const char *keywordPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Enable\+Trace (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{component\+Name\+Ptr, }
+\item[{const char $\ast$}]{keyword\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_abbee6656983b767c6814da0854ef6efa}{}\label{log_8c_abbee6656983b767c6814da0854ef6efa}
+Enable a trace keyword. \index{log.\+c@{log.\+c}!Get\+Keyword\+Obj@{Get\+Keyword\+Obj}}
+\index{Get\+Keyword\+Obj@{Get\+Keyword\+Obj}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Keyword\+Obj(const char $\ast$keyword\+Ptr, le\+\_\+sls\+\_\+\+List\+\_\+t $\ast$keyword\+List)}{GetKeywordObj(const char *keywordPtr, le_sls_List_t *keywordList)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Keyword\+Obj\+\_\+t}$\ast$ Get\+Keyword\+Obj (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{keyword\+Ptr, }
+\item[{{\bf le\+\_\+sls\+\_\+\+List\+\_\+t} $\ast$}]{keyword\+List}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_a5a719fd711a8aa0c972f1e35293dfa79}{}\label{log_8c_a5a719fd711a8aa0c972f1e35293dfa79}
+Get the keyword object by keyword.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Keyword Object or N\+U\+LL if not found.
+\end{DoxyReturn}
+\begin{DoxyWarning}{Warning}
+Assumes that mutex is already locked by the caller. 
+\end{DoxyWarning}
+\index{log.\+c@{log.\+c}!Get\+Session@{Get\+Session}}
+\index{Get\+Session@{Get\+Session}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Session(const char $\ast$component\+Name\+Ptr)}{GetSession(const char *componentNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Log\+Session\+\_\+t}$\ast$ Get\+Session (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{component\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_af6747cbbe04bf4673c1fb82277ad6f55}{}\label{log_8c_af6747cbbe04bf4673c1fb82277ad6f55}
+Get a session by component name.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Session object or N\+U\+LL if not found.
+\end{DoxyReturn}
+\begin{DoxyWarning}{Warning}
+Assumes that the mutex is held by the caller. 
+\end{DoxyWarning}
+\index{log.\+c@{log.\+c}!Lock@{Lock}}
+\index{Lock@{Lock}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Lock(void)}{Lock(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Lock (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}\hypertarget{log_8c_a63692d3983734584a66f2ca4db563ad6}{}\label{log_8c_a63692d3983734584a66f2ca4db563ad6}
+Lock the mutex. \index{log.\+c@{log.\+c}!log\+\_\+\+Connect\+To\+Control\+Daemon@{log\+\_\+\+Connect\+To\+Control\+Daemon}}
+\index{log\+\_\+\+Connect\+To\+Control\+Daemon@{log\+\_\+\+Connect\+To\+Control\+Daemon}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Connect\+To\+Control\+Daemon(void)}{log_ConnectToControlDaemon(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+\_\+\+Connect\+To\+Control\+Daemon (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_ac933de0abfd72e6455c7bc1346041f36}{}\label{log_8c_ac933de0abfd72e6455c7bc1346041f36}
+Connects to the Log Control Daemon. This must not be done until after the Messaging system is initialized, but should be done as soon as possible. Anything that gets logged before this is called may get logged with settings that don\textquotesingle{}t match what has been set using the log control tool. \index{log.\+c@{log.\+c}!log\+\_\+\+Init@{log\+\_\+\+Init}}
+\index{log\+\_\+\+Init@{log\+\_\+\+Init}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Init(void)}{log_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_a205a0a93bd202923978f0738e1aaeac8}{}\label{log_8c_a205a0a93bd202923978f0738e1aaeac8}
+Initialize the logging system. \begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000043}{Todo}]Make this configurable. \end{DoxyRefDesc}
+
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000044}{Todo}]Make this configurable. \end{DoxyRefDesc}
+\index{log.\+c@{log.\+c}!log\+\_\+\+Log\+Generic\+Msg@{log\+\_\+\+Log\+Generic\+Msg}}
+\index{log\+\_\+\+Log\+Generic\+Msg@{log\+\_\+\+Log\+Generic\+Msg}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Log\+Generic\+Msg(le\+\_\+log\+\_\+\+Level\+\_\+t level, const char $\ast$proc\+Name\+Ptr, pid\+\_\+t pid, const char $\ast$msg\+Ptr)}{log_LogGenericMsg(le_log_Level_t level, const char *procNamePtr, pid_t pid, const char *msgPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+\_\+\+Log\+Generic\+Msg (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t}}]{level, }
+\item[{const char $\ast$}]{proc\+Name\+Ptr, }
+\item[{pid\+\_\+t}]{pid, }
+\item[{const char $\ast$}]{msg\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_afce531c9bd8e7b3c772c15a7063145aa}{}\label{log_8c_afce531c9bd8e7b3c772c15a7063145aa}
+Logs a generic message with the given information. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em level} & Severity level. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name\+Ptr} & Process name. \\
+\hline
+\mbox{\tt in}  & {\em pid} & P\+ID of the process. \\
+\hline
+\mbox{\tt in}  & {\em msg\+Ptr} & Message. \\
+\hline
+\end{DoxyParams}
+\index{log.\+c@{log.\+c}!log\+\_\+\+Reg\+Component@{log\+\_\+\+Reg\+Component}}
+\index{log\+\_\+\+Reg\+Component@{log\+\_\+\+Reg\+Component}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Reg\+Component(const char $\ast$component\+Name\+Ptr, le\+\_\+log\+\_\+\+Level\+\_\+t $\ast$$\ast$level\+Filter\+Ptr\+Ptr)}{log_RegComponent(const char *componentNamePtr, le_log_Level_t **levelFilterPtrPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t} log\+\_\+\+Reg\+Component (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{component\+Name\+Ptr, }
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$$\ast$}]{level\+Filter\+Ptr\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_a87eadac770827a5143143ce2c3fff5cd}{}\label{log_8c_a87eadac770827a5143143ce2c3fff5cd}
+Registers a named component with the logging system.
+
+\begin{DoxyReturn}{Returns}
+A log session reference. This reference must be kept by the component and accessible through a local macro with the name L\+E\+\_\+\+L\+O\+G\+\_\+\+S\+E\+S\+S\+I\+ON. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em component\+Name\+Ptr} & A pointer to the component\textquotesingle{}s name. \\
+\hline
+\mbox{\tt out}  & {\em level\+Filter\+Ptr\+Ptr} & Set to point to the component\textquotesingle{}s level filter. \\
+\hline
+\end{DoxyParams}
+\index{log.\+c@{log.\+c}!log\+\_\+\+Re\+Init@{log\+\_\+\+Re\+Init}}
+\index{log\+\_\+\+Re\+Init@{log\+\_\+\+Re\+Init}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Re\+Init(void)}{log_ReInit(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+\_\+\+Re\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_a91f69de1c84b361bbdfe0d8ac5039fea}{}\label{log_8c_a91f69de1c84b361bbdfe0d8ac5039fea}
+Re-\/\+Initialize the logging system. \index{log.\+c@{log.\+c}!log\+\_\+\+Severity\+Level\+To\+Str@{log\+\_\+\+Severity\+Level\+To\+Str}}
+\index{log\+\_\+\+Severity\+Level\+To\+Str@{log\+\_\+\+Severity\+Level\+To\+Str}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Severity\+Level\+To\+Str(le\+\_\+log\+\_\+\+Level\+\_\+t level)}{log_SeverityLevelToStr(le_log_Level_t level)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ log\+\_\+\+Severity\+Level\+To\+Str (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t}}]{level}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_a5fbd7fa6820a90e95c1f6255b8d8d297}{}\label{log_8c_a5fbd7fa6820a90e95c1f6255b8d8d297}
+Translates a severity level value to a severity level string.
+
+\begin{DoxyReturn}{Returns}
+Pointer to a string constant containing the severity level string. N\+U\+LL if the value is out of range. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em level} & Severity level. \\
+\hline
+\end{DoxyParams}
+\index{log.\+c@{log.\+c}!log\+\_\+\+Str\+To\+Severity\+Level@{log\+\_\+\+Str\+To\+Severity\+Level}}
+\index{log\+\_\+\+Str\+To\+Severity\+Level@{log\+\_\+\+Str\+To\+Severity\+Level}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Str\+To\+Severity\+Level(const char $\ast$level\+Str)}{log_StrToSeverityLevel(const char *levelStr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+log\+\_\+\+Level\+\_\+t} log\+\_\+\+Str\+To\+Severity\+Level (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{level\+Str}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_a86ff9857ae1bfd526e709ec3e75e8715}{}\label{log_8c_a86ff9857ae1bfd526e709ec3e75e8715}
+Translates a severity level string to the severity level value. These strings are received from the log control tool and are different from the strings that are used in the actual log messages.
+
+\begin{DoxyReturn}{Returns}
+The severity level if successful. -\/1 if the string is an invalid log level. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em level\+Str} & The severity level string. \\
+\hline
+\end{DoxyParams}
+\index{log.\+c@{log.\+c}!log\+\_\+\+Test\+Framework\+Msgs@{log\+\_\+\+Test\+Framework\+Msgs}}
+\index{log\+\_\+\+Test\+Framework\+Msgs@{log\+\_\+\+Test\+Framework\+Msgs}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Test\+Framework\+Msgs(void)}{log_TestFrameworkMsgs(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+\_\+\+Test\+Framework\+Msgs (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8c_aaaa2b1f3d1d8197ac528e3b3cd75a624}{}\label{log_8c_aaaa2b1f3d1d8197ac528e3b3cd75a624}
+Log messages from the framework. Used for testing only. \index{log.\+c@{log.\+c}!Parse\+Cmd\+Packet@{Parse\+Cmd\+Packet}}
+\index{Parse\+Cmd\+Packet@{Parse\+Cmd\+Packet}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Parse\+Cmd\+Packet(const char $\ast$cmd\+Packet\+Ptr, char $\ast$cmd\+Ptr, char $\ast$component\+Name\+Ptr, const char $\ast$$\ast$cmd\+Data\+Ptr\+Ptr)}{ParseCmdPacket(const char *cmdPacketPtr, char *cmdPtr, char *componentNamePtr, const char **cmdDataPtrPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Parse\+Cmd\+Packet (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{cmd\+Packet\+Ptr, }
+\item[{char $\ast$}]{cmd\+Ptr, }
+\item[{char $\ast$}]{component\+Name\+Ptr, }
+\item[{const char $\ast$$\ast$}]{cmd\+Data\+Ptr\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_af75cc6965d784f146a3e0b0f3f3b941e}{}\label{log_8c_af75cc6965d784f146a3e0b0f3f3b941e}
+Parses a command packet, received from the Log Control Daemon, to get the component name, command code and the command data. The buffer size for the component\+Name must be L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES.
+
+\begin{DoxyReturn}{Returns}
+true if success. false if the packet was not formated correctly. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cmd\+Packet\+Ptr} & The command packet. \\
+\hline
+\mbox{\tt out}  & {\em cmd\+Ptr} & Ptr to where the command code should be copied. Can be N\+U\+LL if not needed. \\
+\hline
+\mbox{\tt out}  & {\em component\+Name\+Ptr} & Pointer buffer to copy the component name into. Can be N\+U\+LL if not needed. \\
+\hline
+\mbox{\tt out}  & {\em cmd\+Data\+Ptr\+Ptr} & Set to point to the optional Command\+Data part at the end. Can be N\+U\+LL if not needed. \\
+\hline
+\end{DoxyParams}
+\index{log.\+c@{log.\+c}!Process\+Log\+Cmd@{Process\+Log\+Cmd}}
+\index{Process\+Log\+Cmd@{Process\+Log\+Cmd}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Log\+Cmd(le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref, void $\ast$context\+Ptr)}{ProcessLogCmd(le_msg_MessageRef_t msgRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Process\+Log\+Cmd (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_a7bd49b0ab1b4dca90db9e5f6e4a79bcd}{}\label{log_8c_a7bd49b0ab1b4dca90db9e5f6e4a79bcd}
+Processes a remote logging command. This function should be called by the event loop when there is a received log command. \index{log.\+c@{log.\+c}!Read\+Level\+From\+Env@{Read\+Level\+From\+Env}}
+\index{Read\+Level\+From\+Env@{Read\+Level\+From\+Env}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Read\+Level\+From\+Env(void)}{ReadLevelFromEnv(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Read\+Level\+From\+Env (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_a42317263ee55174ef4612870d99bf71f}{}\label{log_8c_a42317263ee55174ef4612870d99bf71f}
+Loads the default log filter level from the environment, if present. \index{log.\+c@{log.\+c}!Read\+Trace\+Keywords\+From\+Env@{Read\+Trace\+Keywords\+From\+Env}}
+\index{Read\+Trace\+Keywords\+From\+Env@{Read\+Trace\+Keywords\+From\+Env}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Read\+Trace\+Keywords\+From\+Env(void)}{ReadTraceKeywordsFromEnv(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Read\+Trace\+Keywords\+From\+Env (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_acbf0438e97691625bfe9ad207eb33ab2}{}\label{log_8c_acbf0438e97691625bfe9ad207eb33ab2}
+Loads the default list of enabled trace keywords from the environment, if present. \index{log.\+c@{log.\+c}!Register\+With\+Log\+Control\+Daemon@{Register\+With\+Log\+Control\+Daemon}}
+\index{Register\+With\+Log\+Control\+Daemon@{Register\+With\+Log\+Control\+Daemon}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Register\+With\+Log\+Control\+Daemon(\+Log\+Session\+\_\+t $\ast$log\+Session\+Ptr)}{RegisterWithLogControlDaemon(LogSession_t *logSessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Register\+With\+Log\+Control\+Daemon (
+\begin{DoxyParamCaption}
+\item[{{\bf Log\+Session\+\_\+t} $\ast$}]{log\+Session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_a4de41d4be8cc187d2ba549d9b9b45287}{}\label{log_8c_a4de41d4be8cc187d2ba549d9b9b45287}
+Registers a local log session with the Log Control Daemon. \index{log.\+c@{log.\+c}!Set\+Log\+Level\+Filter@{Set\+Log\+Level\+Filter}}
+\index{Set\+Log\+Level\+Filter@{Set\+Log\+Level\+Filter}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Log\+Level\+Filter(const char $\ast$component\+Name\+Ptr, int level\+Filter)}{SetLogLevelFilter(const char *componentNamePtr, int levelFilter)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Log\+Level\+Filter (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{component\+Name\+Ptr, }
+\item[{int}]{level\+Filter}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_adff9942b1825af7e346dd356e7e0eb4a}{}\label{log_8c_adff9942b1825af7e346dd356e7e0eb4a}
+Set the log level filter for a specific component. \index{log.\+c@{log.\+c}!Unlock@{Unlock}}
+\index{Unlock@{Unlock}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Unlock(void)}{Unlock(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Unlock (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}\hypertarget{log_8c_abba239500052c40aac456def0f18e855}{}\label{log_8c_abba239500052c40aac456def0f18e855}
+Unlock the mutex. 
+
+\subsection{Variable Documentation}
+\index{log.\+c@{log.\+c}!Default\+Log\+Session@{Default\+Log\+Session}}
+\index{Default\+Log\+Session@{Default\+Log\+Session}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Default\+Log\+Session}{DefaultLogSession}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Log\+Session\+\_\+t} Default\+Log\+Session\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_a1104eb44c99ebcccd64f78093377b5bc}{}\label{log_8c_a1104eb44c99ebcccd64f78093377b5bc}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=    \{
+                                            .componentNamePtr=\textcolor{stringliteral}{"<invalid>"},
+                                            .level=\hyperlink{log_8h_ae6fb4d01996f76196c9e4b32b097d09d}{LOG\_DEFAULT\_LOG\_FILTER},
+                                            .keywordList=\hyperlink{le__singly_linked_list_8h_a2e1013c24e2c826dbba37a761c5d9f44}{LE\_SLS\_LIST\_INIT},
+                                            .link=\hyperlink{le__singly_linked_list_8h_aa8375976bebc74107b4d026dfcf3e94a}{LE\_SLS\_LINK\_INIT}
+                                        \}
+\end{DoxyCode}
+Default log session to be used when logging from code that is extremely early in the start-\/up sequence or that didn\textquotesingle{}t execute the proper component start-\/up sequence. \index{log.\+c@{log.\+c}!Ipc\+Session\+Ref@{Ipc\+Session\+Ref}}
+\index{Ipc\+Session\+Ref@{Ipc\+Session\+Ref}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Ipc\+Session\+Ref}{IpcSessionRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} Ipc\+Session\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_a34ffe8eef8610023318f0c2a358e07b1}{}\label{log_8c_a34ffe8eef8610023318f0c2a358e07b1}
+c\+\_\+messaging Session Reference used to communicate with the Log Control Daemon. N\+U\+LL if the Log Control Daemon is not available. \index{log.\+c@{log.\+c}!Keyword\+Mem\+Pool@{Keyword\+Mem\+Pool}}
+\index{Keyword\+Mem\+Pool@{Keyword\+Mem\+Pool}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Keyword\+Mem\+Pool}{KeywordMemPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Keyword\+Mem\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_aae3901c3707892012808ddd81c60ea03}{}\label{log_8c_aae3901c3707892012808ddd81c60ea03}
+A memory pool where we get the memory for the keyword objects. \index{log.\+c@{log.\+c}!Mutex@{Mutex}}
+\index{Mutex@{Mutex}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Mutex}{Mutex}}]{\setlength{\rightskip}{0pt plus 5cm}pthread\+\_\+mutex\+\_\+t Mutex = P\+T\+H\+R\+E\+A\+D\+\_\+\+R\+E\+C\+U\+R\+S\+I\+V\+E\+\_\+\+M\+U\+T\+E\+X\+\_\+\+I\+N\+I\+T\+I\+A\+L\+I\+Z\+E\+R\+\_\+\+NP\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{}\label{log_8c_abc03085ccf7c38e092cdf06bf6b98ea6}
+P\+O\+S\+IX threads \char`\"{}\+Fast\char`\"{} mutex used to protect structures in this module from multi-\/threaded race conditions. \index{log.\+c@{log.\+c}!Session\+List@{Session\+List}}
+\index{Session\+List@{Session\+List}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Session\+List}{SessionList}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+sls\+\_\+\+List\+\_\+t} Session\+List = {\bf L\+E\+\_\+\+S\+L\+S\+\_\+\+L\+I\+S\+T\+\_\+\+I\+N\+IT}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_a87d84e4a0cbcd997665fb2f59d14b23f}{}\label{log_8c_a87d84e4a0cbcd997665fb2f59d14b23f}
+A list of log sessions, one for each component. \index{log.\+c@{log.\+c}!Session\+Mem\+Pool@{Session\+Mem\+Pool}}
+\index{Session\+Mem\+Pool@{Session\+Mem\+Pool}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Session\+Mem\+Pool}{SessionMemPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Session\+Mem\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_adfbf6d7596e8e68244659e1cd0c8258e}{}\label{log_8c_adfbf6d7596e8e68244659e1cd0c8258e}
+A memory pool for the log sessions. \index{log.\+c@{log.\+c}!Severity\+Str@{Severity\+Str}}
+\index{Severity\+Str@{Severity\+Str}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Severity\+Str}{SeverityStr}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ Severity\+Str\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_ab262d3dab71191e5121ba48ff58caef4}{}\label{log_8c_ab262d3dab71191e5121ba48ff58caef4}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+= \{
+        \hyperlink{log_8c_a290c4350c9069bc58fd6496bc915e708}{LOG\_DEBUG\_STR},
+        \hyperlink{log_8c_a8acfafe033bb83deea97f0ce81508f5b}{LOG\_INFO\_STR},
+        \hyperlink{log_8c_a8784f651220cf95a6f1db7acbb8a34d9}{LOG\_WARN\_STR},
+        \hyperlink{log_8c_ad4cb5b1bcd594fc1545b9555b7f940c2}{LOG\_ERROR\_STR},
+        \hyperlink{log_8c_af77c4301d0e592be6343109d3ab0fe14}{LOG\_CRIT\_STR},
+        \hyperlink{log_8c_aab862cd605a431cd3df3b19da3258a7d}{LOG\_EMERG\_STR}
+    \}
+\end{DoxyCode}
+Strings for the severity levels in the same order as the level constants L\+E\+\_\+\+L\+O\+G\+\_\+\+D\+E\+B\+UG, L\+E\+\_\+\+L\+O\+G\+\_\+\+I\+N\+FO, etc. appear in the enumeration \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} in \hyperlink{le__log_8h}{le\+\_\+log.\+h} . \index{log.\+c@{log.\+c}!Trace\+Ref@{Trace\+Ref}}
+\index{Trace\+Ref@{Trace\+Ref}!log.\+c@{log.\+c}}
+\subsubsection[{\texorpdfstring{Trace\+Ref}{TraceRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} Trace\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_8c_a84d541f37420ace8bdf697deca689deb}{}\label{log_8c_a84d541f37420ace8bdf697deca689deb}
+Trace reference used for controlling tracing in this module. 

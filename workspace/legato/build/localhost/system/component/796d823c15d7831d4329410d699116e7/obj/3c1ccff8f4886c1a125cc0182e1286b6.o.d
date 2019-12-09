@@ -1,0 +1,37 @@
+/home/shrunoti/Downloads/workspace/legato/build/localhost/system/component/796d823c15d7831d4329410d699116e7/obj/3c1ccff8f4886c1a125cc0182e1286b6.o: \
+ /home/shrunoti/Downloads/workspace/legato/components/modemServices/platformAdaptor/default/le_pa_remotesim_default/pa_rsim_default.c \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/legato.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_build_config.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_basics.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_doublyLinkedList.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_singlyLinkedList.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_utf8.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_log.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_mem.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_mutex.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_clock.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_semaphore.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_safeRef.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_thread.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_eventLoop.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_fdMonitor.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_hashmap.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_signals.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_args.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_timer.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_messaging.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_test.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_pack.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_path.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_pathIter.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_hex.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_dir.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_fileLock.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_json.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_tty.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_atomFile.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_crc.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_fs.h \
+ /home/shrunoti/Downloads/workspace/legato/framework/include/le_rand.h \
+ /home/shrunoti/Downloads/workspace/legato/components/modemServices/platformAdaptor/default/le_pa_remotesim_default/../../inc/pa_rsim.h \
+ /home/shrunoti/Downloads/workspace/legato/build/localhost/system/component/796d823c15d7831d4329410d699116e7/src/interfaces.h

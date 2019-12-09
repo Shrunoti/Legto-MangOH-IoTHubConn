@@ -1,0 +1,263 @@
+
+\begin{DoxyCodeInclude}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * This module implements the Data Connection Service tests:}
+\textcolor{comment}{ * - Define the technologies to use for the default data connection}
+\textcolor{comment}{ * - Check if the technologies are correctly added to the list of technologies to use}
+\textcolor{comment}{ * - Start the default data connection}
+\textcolor{comment}{ * - Check with connection status notifications if the data connection is established}
+\textcolor{comment}{ * - Close the default data connection}
+\textcolor{comment}{ *}
+\textcolor{comment}{ * Copyright (C) Sierra Wireless Inc.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+
+\textcolor{comment}{/* Legato Framework */}
+\textcolor{preprocessor}{#include "\hyperlink{legato_8h}{legato.h}"}
+
+\textcolor{comment}{/* data Connection Services (Client) */}
+\textcolor{preprocessor}{#include "\hyperlink{le__data__interface_8h}{le\_data\_interface.h}"}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * The technology string max length}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{preprocessor}{#define TECH\_MAX\_LEN        16}
+\textcolor{preprocessor}{#define TECH\_MAX\_BYTES      (TECH\_MAX\_LEN+1)}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  The Data Connection reference}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \hyperlink{le__data__interface_8h_abe5cdfb887a7fe14e991d0a685f9cf2b}{le\_data\_RequestObjRef\_t} RequestRef = NULL;
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  List of technologies to use}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \hyperlink{le__data__interface_8h_a245d12b4d3367d81c0fc8b76fa60674a}{le\_data\_Technology\_t} TechList[\hyperlink{le__data__interface_8h_a245d12b4d3367d81c0fc8b76fa60674aa5143acc7e16842ac4cf33afa34b50c0b}{LE\_DATA\_MAX}] = \{\};
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  List of technology strings}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{char} techDico[\hyperlink{le__data__interface_8h_a245d12b4d3367d81c0fc8b76fa60674aa5143acc7e16842ac4cf33afa34b50c0b}{LE\_DATA\_MAX}][TECH\_MAX\_LEN] = \{
+    \textcolor{stringliteral}{"wifi"},
+    \textcolor{stringliteral}{"cellular"}
+\};
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  This function will set the technologies to use}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} SetTechnologies
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordtype}{int} techCounter = 0;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Setting the technologies to use for the data connection."});
+
+    \textcolor{comment}{// Add 'Wifi' as the first technology to use}
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} wifiResult = \hyperlink{le__data__interface_8h_aeb5f71861d30b8442b2c11ca34bc73c4}{le\_data\_SetTechnologyRank}(1, 
+      \hyperlink{le__data__interface_8h_a245d12b4d3367d81c0fc8b76fa60674aadad1d51bb56b95e60bdae2656be89904}{LE\_DATA\_WIFI});
+    \textcolor{keywordflow}{if} (LE\_OK == wifiResult)
+    \{
+        TechList[techCounter++] = \hyperlink{le__data__interface_8h_a245d12b4d3367d81c0fc8b76fa60674aadad1d51bb56b95e60bdae2656be89904}{LE\_DATA\_WIFI};
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5377262702e8434207b03533259e0c5f}{LE\_UNSUPPORTED} == wifiResult)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wifi not available on this platform."});
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Error %d when adding wifi to the list of technologies to use."}, wifiResult);
+        exit(EXIT\_FAILURE);
+    \}
+
+    \textcolor{comment}{// Add 'Cellular' as the second technology to use}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__data__interface_8h_aeb5f71861d30b8442b2c11ca34bc73c4}{le\_data\_SetTechnologyRank}(2, 
+      \hyperlink{le__data__interface_8h_a245d12b4d3367d81c0fc8b76fa60674aaaa3c712c673bf5a353beba020c415a5f}{LE\_DATA\_CELLULAR}));
+    TechList[techCounter++] = \hyperlink{le__data__interface_8h_a245d12b4d3367d81c0fc8b76fa60674aaaa3c712c673bf5a353beba020c415a5f}{LE\_DATA\_CELLULAR};
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  This function will get the technologies to use}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} CheckTechnologies
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordtype}{int} techCounter = 0;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Checking the technologies to use for the data connection."});
+
+    \textcolor{comment}{// Get first technology to use}
+    \hyperlink{le__data__interface_8h_a245d12b4d3367d81c0fc8b76fa60674a}{le\_data\_Technology\_t} technology = 
+      \hyperlink{le__data__interface_8h_affc9e22694ddee1141983129f6e29837}{le\_data\_GetFirstUsedTechnology}();
+
+    \textcolor{keywordflow}{if} (technology != TechList[techCounter])
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Unexpected first technology %d, should be %d."}, technology, TechList[techCounter]
+      );
+        exit(EXIT\_FAILURE);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        techCounter++;
+    \}
+
+    \textcolor{comment}{// Get next technologies to use}
+    \textcolor{keywordflow}{while} (\hyperlink{le__data__interface_8h_a245d12b4d3367d81c0fc8b76fa60674aa5143acc7e16842ac4cf33afa34b50c0b}{LE\_DATA\_MAX} != (technology = \hyperlink{le__data__interface_8h_af262685afd895d084e9ee485de514264}{le\_data\_GetNextUsedTechnology}
+      ()))
+    \{
+        \textcolor{keywordflow}{if} (technology != TechList[techCounter])
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Unexpected technology %d, should be %d."}, technology, TechList[techCounter]);
+            exit(EXIT\_FAILURE);
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            techCounter++;
+        \}
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  This function will request the data connection}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectData
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordflow}{if} (RequestRef)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"A data connection request already exist."});
+        exit(EXIT\_FAILURE);
+    \}
+
+    RequestRef = \hyperlink{le__data__interface_8h_afb9db0acdd98620cb0cd303bee8a817c}{le\_data\_Request}();
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Requesting the data connection: %p."}, RequestRef);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  The opposite of ConnectData, this function will tear down the data connection.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} DisconnectData
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordflow}{if} (!RequestRef)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Not existing data connection reference."});
+        exit(EXIT\_FAILURE);
+    \}
+
+    \textcolor{comment}{// Release the connection}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Releasing the data connection."});
+    \hyperlink{le__data__interface_8h_a1dc7cd8faed6b1ee02ea947cf02b8ee7}{le\_data\_Release}(RequestRef);
+
+    \textcolor{comment}{// Reset connection reference}
+    RequestRef = NULL;
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  This function will get the date and time from a time server}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} GetDateTime
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    uint16\_t year, month, day, hour, minute, second, millisecond;
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__data__interface_8h_a02a43ab1a3b9aef7e170214ffeb48907}{le\_data\_GetDate}(&year, &month, &day));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__data__interface_8h_afdd17e6659e60b1510fe54c23a022960}{le\_data\_GetTime}(&hour, &minute, &second, &millisecond));
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Time retrieved from server: %04d-%02d-%02d %02d:%02d:%02d:%03d"},
+            year, month, day, hour, minute, second, millisecond);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  Event callback for data connection state changes.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} DcsStateHandler
+(
+    \textcolor{keyword}{const} \textcolor{keywordtype}{char}* intfName,
+    \textcolor{keywordtype}{bool} isConnected,
+    \textcolor{keywordtype}{void}* contextPtr
+)
+\{
+    \textcolor{keywordflow}{if} (isConnected)
+    \{
+        \textcolor{comment}{// Get the technology used for the data connection}
+        \hyperlink{le__data__interface_8h_a245d12b4d3367d81c0fc8b76fa60674a}{le\_data\_Technology\_t} usedTech = 
+      \hyperlink{le__data__interface_8h_a76b66fd017a52db01fcc46a5fcd2f54b}{le\_data\_GetTechnology}();
+        \textcolor{keywordflow}{if} (\hyperlink{le__data__interface_8h_a245d12b4d3367d81c0fc8b76fa60674aa5143acc7e16842ac4cf33afa34b50c0b}{LE\_DATA\_MAX} == usedTech)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Unknown technology used for the data connection of '%s'!"}, intfName);
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"'%s' connected using the technology '%s'!"}, intfName, techDico[usedTech]);
+        \}
+
+        GetDateTime();
+
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wait for 5 seconds before releasing the data connection."});
+        sleep(5);
+        DisconnectData();
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Verify that the data connection is released by checking DCS events."});
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"'%s' disconnected!"}, intfName);
+        exit(EXIT\_SUCCESS);
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  Test main function.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\hyperlink{le__event_loop_8h_abdb9187a56836a93d19cc793cbd4b7ec}{COMPONENT\_INIT}
+\{
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Running data connection service test"});
+
+    \textcolor{comment}{// Register handler for data connection state change}
+    \hyperlink{le__data__interface_8h_aebd3fc58774ed3f5a11f70d2317837dd}{le\_data\_AddConnectionStateHandler}(DcsStateHandler, NULL);
+
+    \textcolor{comment}{// Set technologies to use}
+    SetTechnologies();
+
+    \textcolor{comment}{// Check if the technologies list was correctly updated}
+    CheckTechnologies();
+
+    \textcolor{comment}{// Start the default data connection}
+    ConnectData();
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Verify that the Data connection is established by checking DCS events."});
+\}
+
+\end{DoxyCodeInclude}
+ 

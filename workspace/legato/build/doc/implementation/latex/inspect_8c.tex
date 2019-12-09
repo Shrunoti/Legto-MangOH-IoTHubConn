@@ -1,0 +1,2105 @@
+\hypertarget{inspect_8c}{}\section{framework/tools/target/linux/inspect/inspect.c File Reference}
+\label{inspect_8c}\index{framework/tools/target/linux/inspect/inspect.\+c@{framework/tools/target/linux/inspect/inspect.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}mem.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}thread.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hashmap.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}messaging\+Interface.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}messaging\+Protocol.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}messaging\+Session.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}addr.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}timer.\+h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_remote_list_access__t}{Remote\+List\+Access\+\_\+t}
+\item 
+struct \hyperlink{struct_remote_hashmap_access__t}{Remote\+Hashmap\+Access\+\_\+t}
+\item 
+struct \hyperlink{struct_mem_pool_iter__t}{Mem\+Pool\+Iter\+\_\+t}
+\item 
+struct \hyperlink{struct_thread_obj_iter__t}{Thread\+Obj\+Iter\+\_\+t}
+\item 
+struct \hyperlink{struct_timer_iter__t}{Timer\+Iter\+\_\+t}
+\item 
+struct \hyperlink{struct_mutex_iter__t}{Mutex\+Iter\+\_\+t}
+\item 
+struct \hyperlink{struct_semaphore_iter__t}{Semaphore\+Iter\+\_\+t}
+\item 
+struct \hyperlink{struct_thread_member_obj_iter__t}{Thread\+Member\+Obj\+Iter\+\_\+t}
+\item 
+struct \hyperlink{struct_service_obj_iter__t}{Service\+Obj\+Iter\+\_\+t}
+\item 
+struct \hyperlink{struct_client_obj_iter__t}{Client\+Obj\+Iter\+\_\+t}
+\item 
+struct \hyperlink{struct_session_obj_iter__t}{Session\+Obj\+Iter\+\_\+t}
+\item 
+struct \hyperlink{struct_interface_obj_iter__t}{Interface\+Obj\+Iter\+\_\+t}
+\item 
+struct \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t}
+\item 
+struct \hyperlink{struct_defn_str_mapping__t}{Defn\+Str\+Mapping\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{inspect_8c_ac1044915eb305f07e6825a5ba500c06d}{E\+S\+C\+A\+P\+E\+\_\+\+C\+H\+AR}~27
+\item 
+\#define \hyperlink{inspect_8c_a9859cca7856311819ca3d2b4a85ef216}{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+R\+E\+S\+H\+\_\+\+I\+N\+T\+E\+R\+V\+AL}~3
+\item 
+\#define \hyperlink{inspect_8c_af2126f2e32b98f667bbaa13cef032686}{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+T\+R\+Y\+\_\+\+I\+N\+T\+E\+R\+V\+AL}~500000
+\item 
+\#define \hyperlink{inspect_8c_a3b2316794233b1337cafa86a8e739168}{I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+RR}(format\+String, ...)
+\item 
+\#define \hyperlink{inspect_8c_a4834562728b934eabdb9b813f3a2c1b3}{I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+R\+R\+\_\+\+IF}(condition,  format\+String, ...)~\hyperlink{wifi_web_ap_8c_a2bf420bda7cb80e4552dcff350cddbef}{if} (condition) \{ \hyperlink{xattr_8c_a3b2316794233b1337cafa86a8e739168}{I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+RR}(format\+String, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+); \}
+\item 
+\#define \hyperlink{inspect_8c_affb53c74cc70df97dab53e7783a28963}{R\+E\+M\+O\+T\+E\+\_\+\+R\+E\+A\+D\+\_\+\+E\+RR}(x)~\char`\"{}Error reading \char`\"{} \#x \char`\"{} in the remote process.\char`\"{}
+\item 
+\#define \hyperlink{inspect_8c_acd67c671c77bf4f491671e2ba82cad62}{Table\+Line\+Bytes}~(\hyperlink{inspect_8c_a9a24ee68c293d28476f928bf2fddf25e}{Table\+Line\+Len} + 1)
+\item 
+\#define \hyperlink{inspect_8c_a3d2312915868da6f3b3c28ac0616f73c}{col\+Bytes}~table\mbox{[}i\mbox{]}.col\+Width + 1
+\item 
+\#define \hyperlink{inspect_8c_a612bea60c96df4791063adb9790c3b2f}{inspect\+Type\+String\+Size}~40
+\item 
+\#define \hyperlink{inspect_8c_a8b5173357adb02a86c027316e0acdfa0}{M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS}~400
+\item 
+\#define \hyperlink{inspect_8c_a8b5173357adb02a86c027316e0acdfa0}{M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS}~400
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct Mem\+Pool\+Iter $\ast$ \hyperlink{inspect_8c_adfb31499ab617ef3d066416b907b9f15}{Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t}
+\item 
+typedef struct Thread\+Obj\+Iter $\ast$ \hyperlink{inspect_8c_ab52de93d706e8faffb10c68168a515a4}{Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t}
+\item 
+typedef struct Timer\+Iter $\ast$ \hyperlink{inspect_8c_af0c9b7368918bd1f7552cbb5bea35818}{Timer\+Iter\+\_\+\+Ref\+\_\+t}
+\item 
+typedef struct Mutex\+Iter $\ast$ \hyperlink{inspect_8c_a1d89ddbc93e51e490d5a08c994812e5d}{Mutex\+Iter\+\_\+\+Ref\+\_\+t}
+\item 
+typedef struct Semaphore\+Iter $\ast$ \hyperlink{inspect_8c_a2eb5b302836315c4fff331c800342b4c}{Semaphore\+Iter\+\_\+\+Ref\+\_\+t}
+\item 
+typedef struct Thread\+Member\+Obj\+Iter $\ast$ \hyperlink{inspect_8c_a2c660a861ac0e66f500b75109a5cc6ff}{Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t}
+\item 
+typedef struct Service\+Obj\+Iter $\ast$ \hyperlink{inspect_8c_a5711d81a28f352d64639d5775f4d3c5c}{Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t}
+\item 
+typedef struct Client\+Obj\+Iter $\ast$ \hyperlink{inspect_8c_a792ac9f447615d76b565934c97268a94}{Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t}
+\item 
+typedef struct Session\+Obj\+Iter $\ast$ \hyperlink{inspect_8c_a3c494718ee74a7788c631e12f86ebfd8}{Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t}
+\item 
+typedef struct Interface\+Obj\+Iter $\ast$ \hyperlink{inspect_8c_acd320d3cb2f726be4a6e779e9a1e31f3}{Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{Insp\+Type\+\_\+t} \{ \\*
+\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa4e1c2e4f87464110624dafba9e788184}{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+E\+M\+\_\+\+P\+O\+OL}, 
+\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fad3c7ae76197548bdeeef4b6efae116a2}{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+H\+R\+E\+A\+D\+\_\+\+O\+BJ}, 
+\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa83c31f9bc449b53817d0845b0eb469e3}{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+I\+M\+ER}, 
+\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa9475ea4ca5ddd5b6c4195c6f6215f7b9}{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+U\+T\+EX}, 
+\\*
+\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa72a9c94c007b24910df901eaf6d3801b}{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+E\+M\+A\+P\+H\+O\+RE}, 
+\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa98dbc4782eaa649a5c8504969fa5267f}{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+RS}, 
+\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa8977cc04337eca129dfd4ef9fd74183c}{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+TS}, 
+\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa5da0748d5ec0704a47fb5de362a2849a}{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+R\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS}, 
+\\*
+\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa497ecb5e800e34af6d86e5e923ce2186}{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+T\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS}
+ \}
+\item 
+enum \hyperlink{inspect_8c_a5513a456b3709bfe1ef92a1a56db4be4}{Inspect\+End\+Status\+\_\+t} \{ \hyperlink{inspect_8c_a5513a456b3709bfe1ef92a1a56db4be4abe429179acdde37de14e5a5e3718a3de}{I\+N\+S\+P\+E\+C\+T\+\_\+\+S\+U\+C\+C\+E\+SS}, 
+\hyperlink{inspect_8c_a5513a456b3709bfe1ef92a1a56db4be4ada2b8b4427e9467f72f3154f4cb0b4b9}{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+T\+E\+R\+R\+U\+P\+T\+ED}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static off\+\_\+t \hyperlink{inspect_8c_a0a38685cefe1c153879282b8930f0ded}{Get\+Remote\+Address} (pid\+\_\+t pid, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$local\+Addr\+Ptr)
+\item 
+static int \hyperlink{inspect_8c_a92ff02d06b5b53e94c7d8036ca43f17d}{Open\+Proc\+Mem\+File} (pid\+\_\+t pid)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_ab70cc75e1f385fe0ef7c0f72f94e90e0}{Init\+Remote\+List\+Access\+Obj} (\hyperlink{struct_remote_list_access__t}{Remote\+List\+Access\+\_\+t} $\ast$remote\+List)
+\item 
+static \hyperlink{inspect_8c_adfb31499ab617ef3d066416b907b9f15}{Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t} \hyperlink{inspect_8c_a78d16c064fae7ff6a78ee3adf8872f15}{Create\+Mem\+Pool\+Iter} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{inspect_8c_ab52de93d706e8faffb10c68168a515a4}{Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t} \hyperlink{inspect_8c_a7d0e8da0dd8d1db27538cb85713461d6}{Create\+Thread\+Obj\+Iter} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$ \hyperlink{inspect_8c_af93735d12d664632fac0b8404e5f5ae0}{Create\+Thread\+Member\+Obj\+Iter} (\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{Insp\+Type\+\_\+t} member\+Obj\+Type)
+\item 
+static \hyperlink{inspect_8c_af0c9b7368918bd1f7552cbb5bea35818}{Timer\+Iter\+\_\+\+Ref\+\_\+t} \hyperlink{inspect_8c_a87e9b38453b24667206ad83f5a1968d8}{Create\+Timer\+Iter} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{inspect_8c_a1d89ddbc93e51e490d5a08c994812e5d}{Mutex\+Iter\+\_\+\+Ref\+\_\+t} \hyperlink{inspect_8c_ab6e9310b87e5e1ed45ab7e16b282c86e}{Create\+Mutex\+Iter} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{inspect_8c_a2eb5b302836315c4fff331c800342b4c}{Semaphore\+Iter\+\_\+\+Ref\+\_\+t} \hyperlink{inspect_8c_ae45090268adeac6b951262a477cf164c}{Create\+Semaphore\+Iter} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{inspect_8c_acd320d3cb2f726be4a6e779e9a1e31f3}{Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t} \hyperlink{inspect_8c_aac5aec39cee280eda0f92ff4eda8541e}{Create\+Interface\+Obj\+Iter} (\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{Insp\+Type\+\_\+t} interface\+Type)
+\item 
+static \hyperlink{inspect_8c_a5711d81a28f352d64639d5775f4d3c5c}{Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t} \hyperlink{inspect_8c_a43ffe65bfb800956f81a1a88a7ddda7b}{Create\+Service\+Obj\+Iter} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{inspect_8c_a792ac9f447615d76b565934c97268a94}{Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t} \hyperlink{inspect_8c_a7030d94045b2cb7e6eb915a3ab62a3c1}{Create\+Client\+Obj\+Iter} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{inspect_8c_a3c494718ee74a7788c631e12f86ebfd8}{Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t} \hyperlink{inspect_8c_a924143273802c795ef8db769546f1668}{Create\+Session\+Obj\+Iter} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a5ce6675414a96ec37b10e54083117179}{Get\+Mem\+Pool\+List\+Chg\+Cnt} (\hyperlink{inspect_8c_adfb31499ab617ef3d066416b907b9f15}{Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t} iterator)
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a39cb0efafd0483c0ac35e86e050c6c52}{Get\+Thread\+Obj\+List\+Chg\+Cnt} (\hyperlink{inspect_8c_ab52de93d706e8faffb10c68168a515a4}{Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t} iterator)
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a8f825169778d8dda9121364b2870fabb}{Get\+Thread\+Member\+Obj\+List\+Chg\+Cnt} (\hyperlink{inspect_8c_a2c660a861ac0e66f500b75109a5cc6ff}{Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t} iterator)
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_aa878a3a3aa05e16cc7d7b927d27c023a}{Get\+Interface\+Obj\+Map\+Chg\+Cnt} (\hyperlink{inspect_8c_acd320d3cb2f726be4a6e779e9a1e31f3}{Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t} iterator)
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a940c3620f5d020cd20fd0e4deb50b385}{Get\+Session\+List\+Chg\+Cnt} (\hyperlink{inspect_8c_a3c494718ee74a7788c631e12f86ebfd8}{Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t} iterator)
+\item 
+static \hyperlink{structle__dls___link__t}{le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$ \hyperlink{inspect_8c_a16816bfd1f39c0b44d6fa8400aa2fe8e}{Get\+Next\+Link} (\hyperlink{struct_remote_list_access__t}{Remote\+List\+Access\+\_\+t} $\ast$list\+Info\+Ref, \hyperlink{structle__dls___link__t}{le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$link\+Ref)
+\item 
+static \hyperlink{struct_mem_pool__t}{Mem\+Pool\+\_\+t} $\ast$ \hyperlink{inspect_8c_a34ba73a533210cdba6de6ebb3bed7265}{Get\+Next\+Mem\+Pool} (\hyperlink{inspect_8c_adfb31499ab617ef3d066416b907b9f15}{Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t} mem\+Pool\+Iter\+Ref)
+\item 
+static \hyperlink{structthread___obj__t}{thread\+\_\+\+Obj\+\_\+t} $\ast$ \hyperlink{inspect_8c_abbf1ec3a24785f72cb3a83c84c699483}{Get\+Next\+Thread\+Obj} (\hyperlink{inspect_8c_ab52de93d706e8faffb10c68168a515a4}{Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t} thread\+Obj\+Iter\+Ref)
+\item 
+static \hyperlink{structle__dls___link__t}{le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$ \hyperlink{inspect_8c_a4b98eb5512629564b2c8330f2cd49560}{Get\+Thread\+Member\+Obj\+List} (\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{Insp\+Type\+\_\+t} member\+Obj\+Type, \hyperlink{structthread___obj__t}{thread\+\_\+\+Obj\+\_\+t} $\ast$thread\+Obj\+Ref)
+\item 
+static \hyperlink{structle__dls___link__t}{le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$ \hyperlink{inspect_8c_a3c6afdafc1198920fb8d491662dd0d88}{Get\+Next\+Thread\+Member\+Obj\+Link\+Ptr} (\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{Insp\+Type\+\_\+t} member\+Obj\+Type, \hyperlink{inspect_8c_a2c660a861ac0e66f500b75109a5cc6ff}{Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t} thread\+Member\+Obj\+Itr\+Ref)
+\item 
+static \hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$ \hyperlink{inspect_8c_a1db909d359037e75bdd08f8da94fb26c}{Get\+Next\+Timer} (\hyperlink{inspect_8c_af0c9b7368918bd1f7552cbb5bea35818}{Timer\+Iter\+\_\+\+Ref\+\_\+t} timer\+Iter\+Ref)
+\item 
+static \hyperlink{struct_mutex__t}{Mutex\+\_\+t} $\ast$ \hyperlink{inspect_8c_a536c160ca5e5a362f88a16373b33a69f}{Get\+Next\+Mutex} (\hyperlink{inspect_8c_a1d89ddbc93e51e490d5a08c994812e5d}{Mutex\+Iter\+\_\+\+Ref\+\_\+t} mutex\+Iter\+Ref)
+\item 
+static \hyperlink{struct_semaphore__t}{Semaphore\+\_\+t} $\ast$ \hyperlink{inspect_8c_a67dfde28e9e21954413eeb116685500e}{Get\+Next\+Semaphore} (\hyperlink{inspect_8c_a2eb5b302836315c4fff331c800342b4c}{Semaphore\+Iter\+\_\+\+Ref\+\_\+t} sema\+Iter\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$ \hyperlink{inspect_8c_a33f3214d922431f476929804442e064a}{Get\+Next\+Interface\+Obj\+Ptr} (\hyperlink{inspect_8c_acd320d3cb2f726be4a6e779e9a1e31f3}{Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t} iterator)
+\item 
+static \hyperlink{structmsg_interface___service__t}{msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$ \hyperlink{inspect_8c_ab34066cc17285f84c70d19e792b0b925}{Get\+Next\+Service\+Obj} (\hyperlink{inspect_8c_a5711d81a28f352d64639d5775f4d3c5c}{Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t} service\+Obj\+Iter\+Ref)
+\item 
+static \hyperlink{structmsg_interface___client_interface__t}{msg\+Interface\+\_\+\+Client\+Interface\+\_\+t} $\ast$ \hyperlink{inspect_8c_acb2e2bdf21b6fba7f5a1a332ac16cd23}{Get\+Next\+Client\+Obj} (\hyperlink{inspect_8c_a792ac9f447615d76b565934c97268a94}{Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t} client\+Obj\+Iter\+Ref)
+\item 
+static \hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$ \hyperlink{inspect_8c_a7a40c6a37598ea594b1b322c34ae5cd3}{Get\+Next\+Session\+Obj} (\hyperlink{inspect_8c_a3c494718ee74a7788c631e12f86ebfd8}{Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t} session\+Obj\+Iter\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a4636a28aa35491d27d7c67d3495be126}{Print\+Help} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static char $\ast$ \hyperlink{inspect_8c_a47d3259b96e9f71c0543f1b775d02757}{Defn\+To\+Str} (int defn, \hyperlink{struct_defn_str_mapping__t}{Defn\+Str\+Mapping\+\_\+t} $\ast$table, int table\+Size)
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_ac37accf6bf479ffdd52638634984d98f}{Find\+Max\+Str\+Size\+From\+Table} (\hyperlink{struct_defn_str_mapping__t}{Defn\+Str\+Mapping\+\_\+t} $\ast$table, size\+\_\+t table\+Size)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a24608d1637f2d783b7cc39c0585c9cc9}{Init\+Display\+Table\+Max\+Data\+Size} (char $\ast$col\+Title, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, size\+\_\+t max\+Data\+Size)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_aaa07620e8f6f1ec6a52b84ab4676671a}{Init\+Display\+Table} (\hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_aba5422516afcb6e4d894de9a4fe905a6}{Init\+Display} (\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{Insp\+Type\+\_\+t} inspect\+Type)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a57a59ee6fb208ae9c5a70c7ded340a49}{Print\+Header} (\hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_adb47af74dbf948ddc8b9628560085f80}{Print\+Info} (\hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a72c8609ad6c98829b08006fc23af9e57}{Print\+Under\+Column} (char $\ast$col\+Title, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, char $\ast$str)
+\item 
+static \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$ \hyperlink{inspect_8c_a3a9f425f5ef916c079119b0894ace017}{Get\+Next\+Column} (\hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)
+\item 
+static int \hyperlink{inspect_8c_a7221f4b81e314a8a66f03255c8071d3b}{Print\+Inspect\+Header} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a2339b8f7555697e67aa3a690d91da545}{Export\+Array\+To\+Json} (char $\ast$array, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a21b5df39def9722a30a8af97ab8a6d33}{Export\+Str\+To\+Json} (char $\ast$field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_aa58d3dbba481317b021b35a1b39d3c92}{Export\+Size\+T\+To\+Json} (size\+\_\+t field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_ae6a9100fedadae9aea133c5b7fee5da7}{Export\+Int\+To\+Json} (int field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a8080b03e9c307290844467f4268a4aad}{Export\+Double\+To\+Json} (double field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a731e817b02c01d634891b43cfce33cb4}{Export\+Uint32\+To\+Json} (uint32\+\_\+t field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a320bdaadb1189eb9e0d7289fe03a31db}{Export\+Uint64\+To\+Json} (uint64\+\_\+t field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a4a8588bd19dd94f4b5dbb6511203c3e6}{Export\+Bool\+To\+Json} (bool field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a4932b3b4fbbd9cd70ffd97a7435ddad0}{Fill\+Str\+Col\+Field} (char $\ast$field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a01b745a1d8eec99c65b1a419fb74b0ec}{Fill\+Size\+T\+Col\+Field} (size\+\_\+t field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a4ab2025c4b0c8ea5256e5039cc35ea4a}{Fill\+Int\+Col\+Field} (int field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_acb6e37ea6f4f761fecb0ab9da2c2feac}{Fill\+Double\+Col\+Field} (double field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_ab0d0c9e6dc65a39ce475196b0d9baa5c}{Fill\+Uint32\+Col\+Field} (uint32\+\_\+t field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_ae69dc65799b57d93e011a634316cbd97}{Fill\+Uint64\+Col\+Field} (uint64\+\_\+t field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a14ac1c220dd777fbfbd0432460be6de5}{Fill\+Bool\+Col\+Field} (bool field, \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)
+\item 
+static int \hyperlink{inspect_8c_a3dc07414b2807e10dafe40e252c72ed2}{Print\+Mem\+Pool\+Info} (\hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} mem\+Pool)
+\item 
+static int \hyperlink{inspect_8c_ae6344fa4294cdbc71b0b01851fdd9717}{Print\+Thread\+Obj\+Info} (\hyperlink{structthread___obj__t}{thread\+\_\+\+Obj\+\_\+t} $\ast$thread\+Obj\+Ref)
+\item 
+static int \hyperlink{inspect_8c_a5440bdad576fe29c9c17e52dbf57c48a}{Print\+Timer\+Info} (\hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$timer\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$ \hyperlink{inspect_8c_a8b005b34da38640f15cbd5233ec00076}{Get\+Mutex\+Thread\+Rec\+Ptr} (\hyperlink{structle__dls___link__t}{le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$curr\+Node\+Link\+Ptr)
+\item 
+static \hyperlink{structthread___obj__t}{thread\+\_\+\+Obj\+\_\+t} $\ast$ \hyperlink{inspect_8c_aaf5e8aaaf28261da411b5c81e672f7c0}{Get\+Thread\+Ptr\+From\+Mutex\+Link} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$curr\+Node\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$ \hyperlink{inspect_8c_ad91c07bf1b9c8270cb762535fdde37be}{Get\+Sem\+Thread\+Rec\+Ptr} (\hyperlink{structle__dls___link__t}{le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$curr\+Node\+Link\+Ptr)
+\item 
+static \hyperlink{structthread___obj__t}{thread\+\_\+\+Obj\+\_\+t} $\ast$ \hyperlink{inspect_8c_a7667416b15afc84264a58b555829965c}{Get\+Thread\+Ptr\+From\+Sem\+Link} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$curr\+Node\+Ptr)
+\item 
+static \hyperlink{structle__dls___link__t}{le\+\_\+dls\+\_\+\+Link\+\_\+t} \hyperlink{inspect_8c_a3dee2612c8882980f14c2def88b7d1b6}{Get\+Waiting\+List\+Link} (\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{Insp\+Type\+\_\+t} inspect\+Type, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$thread\+Rec\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a536f128b24d3b88a435377d4a0b98f4f}{Get\+Waiting\+List\+Thread\+Names} (\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{Insp\+Type\+\_\+t} inspect\+Type, \hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} remote\+Waiting\+List, char $\ast$$\ast$waiting\+Thread\+Names, size\+\_\+t waiting\+Thread\+Names\+Num, int $\ast$thread\+Name\+Num\+Ptr)
+\item 
+static int \hyperlink{inspect_8c_a2d815889d8f7c8341445f9c6a61a289b}{Estimate\+Json\+Array\+Size\+From\+Strings} (char $\ast$$\ast$string\+Array, int string\+Num)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a59c610a318e30bb472887be306ce600a}{Construct\+Json\+Array\+From\+Strings} (char $\ast$$\ast$string\+Array, int string\+Num, char $\ast$waiting\+Thread\+Json\+Array, int waiting\+Thread\+Json\+Array\+Size)
+\item 
+static int \hyperlink{inspect_8c_aebdaf06a0f38f9d3ec9444bfa49d4a70}{Print\+Mutex\+Info} (\hyperlink{struct_mutex__t}{Mutex\+\_\+t} $\ast$mutex\+Ref)
+\item 
+static int \hyperlink{inspect_8c_a77eba72ab04775dbaeb779229f4eee9e}{Print\+Semaphore\+Info} (\hyperlink{struct_semaphore__t}{Semaphore\+\_\+t} $\ast$semaphore\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_acb861e4692a8be7ea3ce5ed2d2159cba}{Lookup\+Thread\+Name} (size\+\_\+t thread\+Obj\+Safe\+Ref\+Addr, char $\ast$thread\+Obj\+Name\+Buffer, size\+\_\+t thread\+Obj\+Name\+Buffer\+Size)
+\item 
+static int \hyperlink{inspect_8c_a5af1fb37946eadc194bdc839f195aac1}{Print\+Service\+Obj\+Info} (\hyperlink{structmsg_interface___service__t}{msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$service\+Obj\+Ref)
+\item 
+static int \hyperlink{inspect_8c_add555c34d73a5bc0bbe19c2f62548247}{Print\+Client\+Obj\+Info} (\hyperlink{structmsg_interface___client_interface__t}{msg\+Interface\+\_\+\+Client\+Interface\+\_\+t} $\ast$client\+Obj\+Ref)
+\item 
+static int \hyperlink{inspect_8c_a7d1b60d772abadc91e0393dbfd3f6bad}{Print\+Session\+Obj\+Info} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Obj\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_ad0c76025505bfd3197205aedc3d8f6ef}{Refresh\+Timer\+Handler} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+static int \hyperlink{inspect_8c_a04b723a0a05615975a82d842c923c581}{Inspect\+End\+Handling} (\hyperlink{inspect_8c_a5513a456b3709bfe1ef92a1a56db4be4}{Inspect\+End\+Status\+\_\+t} end\+Status)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_ac9bde6e0203100aae7eaba935480a799}{Inspect\+Func} (\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{Insp\+Type\+\_\+t} inspect\+Type)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_ae6466e74677319c064e7babeffc8b8f0}{Pid\+Arg\+Handler} (const char $\ast$pid\+Str)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_aa50723e1ff7029a8775cb044929b1ba4}{Ipc\+Session\+Arg\+Handler} (const char $\ast$sessions\+Arg)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a983b1cc4594de6f11277ab857135d114}{Ipc\+Interface\+Type\+Handler} (const char $\ast$interface\+Type)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_ac6aa192ae9052b032bb8c36b19d35361}{Command\+Arg\+Handler} (const char $\ast$command)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_ab26348058efe62f29ea3d5e148e8b98e}{Follow\+Option\+Callback} (int value)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_ae33b54c6307a7e2fd406a94127cd29a8}{Format\+Option\+Callback} (const char $\ast$format)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{inspect_8c_a236a8e4d08ef82b4bb3bc75a83d5afbd}{Init\+Iterator\+Pool} (\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{Insp\+Type\+\_\+t} inspect\+Type)
+\item 
+\hyperlink{inspect_8c_a436590eed10831baf046b23d8442753c}{le\+\_\+arg\+\_\+\+Set\+Flag\+Callback} (\hyperlink{wifi_8c_a4636a28aa35491d27d7c67d3495be126}{Print\+Help}, N\+U\+LL,\char`\"{}help\char`\"{})
+\item 
+\hyperlink{inspect_8c_ad26e43b067cac83f86cd1d062b55e24b}{le\+\_\+arg\+\_\+\+Set\+Int\+Callback} (\hyperlink{inspect_8c_ab26348058efe62f29ea3d5e148e8b98e}{Follow\+Option\+Callback}, N\+U\+LL,\char`\"{}interval\char`\"{})
+\item 
+\hyperlink{inspect_8c_ae2546fab020db8d1db5848937c39fd64}{le\+\_\+arg\+\_\+\+Set\+String\+Callback} (\hyperlink{inspect_8c_ae33b54c6307a7e2fd406a94127cd29a8}{Format\+Option\+Callback}, N\+U\+LL,\char`\"{}format\char`\"{})
+\item 
+\hyperlink{inspect_8c_a90d7318a26a47ff744c89bedb6b02907}{le\+\_\+arg\+\_\+\+Scan} ()
+\item 
+\hyperlink{inspect_8c_a47cb76fe1e20c92cf081326677e9be42}{Init\+Iterator\+Pool} (\hyperlink{inspect_8c_a4c0f5d132843db10c76c9bfb65673aa8}{Inspect\+Type})
+\item 
+\hyperlink{inspect_8c_a735feb7a754ffba77fa222db6b620ed6}{Init\+Display} (\hyperlink{inspect_8c_a4c0f5d132843db10c76c9bfb65673aa8}{Inspect\+Type})
+\item 
+\hyperlink{inspect_8c_a2ee8d0737dc4c127d2e4dd1fdf21033f}{Inspect\+Func} (\hyperlink{inspect_8c_a4c0f5d132843db10c76c9bfb65673aa8}{Inspect\+Type})
+\item 
+\hyperlink{inspect_8c_adb9cf5f84b8d3d1ee54a403566b28610}{if} (!\hyperlink{inspect_8c_a02e464811efe7d11ba85d80c56e4d02a}{Is\+Following})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{inspect_8c_a94568218819e56d5349c0e49f324f2f7}{Iterator\+Pool}
+\item 
+static time\+\_\+t \hyperlink{inspect_8c_a31dd80cbde26a091edf40615f3027825}{Refresh\+Interval} = \hyperlink{inspect_8c_a9859cca7856311819ca3d2b4a85ef216}{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+R\+E\+S\+H\+\_\+\+I\+N\+T\+E\+R\+V\+AL}
+\item 
+static \hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} \hyperlink{inspect_8c_a52ee8f00f1d77a7a3f69a01515cd6c04}{refresh\+Timer} = N\+U\+LL
+\item 
+static pid\+\_\+t \hyperlink{inspect_8c_a492420a95432e8059cb190a7a48fa425}{Pid\+To\+Inspect} = -\/1
+\item 
+static int \hyperlink{inspect_8c_adbfc8d9822e9fe50a63bbd873d9c8d2a}{Fd\+Proc\+Mem} = -\/1
+\item 
+static bool \hyperlink{inspect_8c_a4d2b8df1fbb6e3e61e1cd6b55ac05431}{Is\+Output\+Json} = false
+\item 
+\hyperlink{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{Insp\+Type\+\_\+t} \hyperlink{inspect_8c_a4c0f5d132843db10c76c9bfb65673aa8}{Inspect\+Type}
+\item 
+static bool \hyperlink{inspect_8c_a02e464811efe7d11ba85d80c56e4d02a}{Is\+Following} = false
+\item 
+static bool \hyperlink{inspect_8c_ac0a159d61186ad28a25e11ded270bb70}{Is\+Verbose} = false
+\item 
+static char \hyperlink{inspect_8c_aaef04d1e9473e626ae721ca573db2aba}{Column\+Spacers} \mbox{[}$\,$\mbox{]} = \char`\"{} $\vert$ \char`\"{}
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a9a24ee68c293d28476f928bf2fddf25e}{Table\+Line\+Len} = 0
+\item 
+static char $\ast$ \hyperlink{inspect_8c_a2d449cd45c1da3737e93b22b36044858}{Table\+Line\+Buffer}
+\item 
+static char \hyperlink{inspect_8c_aa51cb71ec28208ef9be51c42a8f59e7c}{Sub\+Pool\+Str} \mbox{[}$\,$\mbox{]} = \char`\"{}(Sub-\/pool)\char`\"{}
+\item 
+static char \hyperlink{inspect_8c_a578335550702a2b93402f7b5453d53fb}{Super\+Pool\+Str} \mbox{[}$\,$\mbox{]} = \char`\"{}\char`\"{}
+\item 
+static \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} \hyperlink{inspect_8c_a1b7461370de84c072259574af899ce2e}{Mem\+Pool\+Table\+Info} \mbox{[}$\,$\mbox{]}
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a9c6d1b1150c94754ded1831ef8112ac0}{Mem\+Pool\+Table\+Info\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_a1b7461370de84c072259574af899ce2e}{Mem\+Pool\+Table\+Info})
+\item 
+static \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} \hyperlink{inspect_8c_a07f1b66457647fb32c749459cf983cb6}{Thread\+Obj\+Table\+Info} \mbox{[}$\,$\mbox{]}
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a2908e763d3012e330b724f2884e5577d}{Thread\+Obj\+Table\+Info\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_a07f1b66457647fb32c749459cf983cb6}{Thread\+Obj\+Table\+Info})
+\item 
+static \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} \hyperlink{inspect_8c_acc1103036ca848766d846ef0b02f5abd}{Timer\+Table\+Info} \mbox{[}$\,$\mbox{]}
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_aa9b75aea7ce662ab6a55071a98e0f7d4}{Timer\+Table\+Info\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_acc1103036ca848766d846ef0b02f5abd}{Timer\+Table\+Info})
+\item 
+static \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} \hyperlink{inspect_8c_adee83b80b028d232a967e67d8576b654}{Mutex\+Table\+Info} \mbox{[}$\,$\mbox{]}
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a8e0e83eb05cc4eceeb2f42b920acf067}{Mutex\+Table\+Info\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_adee83b80b028d232a967e67d8576b654}{Mutex\+Table\+Info})
+\item 
+static \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} \hyperlink{inspect_8c_a41aaed0d4487f033f79528165b907296}{Semaphore\+Table\+Info} \mbox{[}$\,$\mbox{]}
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a9b14087bb8ff1dd08866e062017d4920}{Semaphore\+Table\+Info\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_a41aaed0d4487f033f79528165b907296}{Semaphore\+Table\+Info})
+\item 
+static \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} \hyperlink{inspect_8c_a5b27b20c677f83b927a1557f338d8ef0}{Service\+Obj\+Table\+Info} \mbox{[}$\,$\mbox{]}
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a5df35a7a81a85241ed6c8e3894221416}{Service\+Obj\+Table\+Info\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_a5b27b20c677f83b927a1557f338d8ef0}{Service\+Obj\+Table\+Info})
+\item 
+static \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} \hyperlink{inspect_8c_a040a482f92e75e82b25c65399f78ae6d}{Client\+Obj\+Table\+Info} \mbox{[}$\,$\mbox{]}
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a5dcad1f2be17a2f922bd7815b2d6907b}{Client\+Obj\+Table\+Info\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_a040a482f92e75e82b25c65399f78ae6d}{Client\+Obj\+Table\+Info})
+\item 
+static \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} \hyperlink{inspect_8c_a5d348cc4bf0c2e64bac5d44776d29b2c}{Session\+Obj\+Table\+Info} \mbox{[}$\,$\mbox{]}
+\item 
+static size\+\_\+t \hyperlink{inspect_8c_a412d6f8dc6cf988ebc67f650a51b7ffd}{Session\+Obj\+Table\+Info\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_a5d348cc4bf0c2e64bac5d44776d29b2c}{Session\+Obj\+Table\+Info})
+\item 
+static \hyperlink{struct_defn_str_mapping__t}{Defn\+Str\+Mapping\+\_\+t} \hyperlink{inspect_8c_aa5d9d5040ce19b4aeb5299646d4f6389}{Thread\+Obj\+Detach\+State\+Tbl} \mbox{[}$\,$\mbox{]}
+\item 
+static int \hyperlink{inspect_8c_ac1319ad23606a52cb2dacac3f7eebbfc}{Thread\+Obj\+Detach\+State\+Tbl\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_aa5d9d5040ce19b4aeb5299646d4f6389}{Thread\+Obj\+Detach\+State\+Tbl})
+\item 
+static \hyperlink{struct_defn_str_mapping__t}{Defn\+Str\+Mapping\+\_\+t} \hyperlink{inspect_8c_ae6f4ce2e512de41852d94ea7ffbf2714}{Thread\+Obj\+Sched\+Pol\+Tbl} \mbox{[}$\,$\mbox{]}
+\item 
+static int \hyperlink{inspect_8c_a2157efb36265bbbb434aacae2a364eb7}{Thread\+Obj\+Sched\+Pol\+Tbl\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_ae6f4ce2e512de41852d94ea7ffbf2714}{Thread\+Obj\+Sched\+Pol\+Tbl})
+\item 
+static \hyperlink{struct_defn_str_mapping__t}{Defn\+Str\+Mapping\+\_\+t} \hyperlink{inspect_8c_a61bf6a1222971f123bdc274435344f57}{Thread\+Obj\+Inherit\+Sched\+Tbl} \mbox{[}$\,$\mbox{]}
+\item 
+static int \hyperlink{inspect_8c_a87743988b831ee99a46f99e2b62f4654}{Thread\+Obj\+Inherit\+Sched\+Tbl\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_a61bf6a1222971f123bdc274435344f57}{Thread\+Obj\+Inherit\+Sched\+Tbl})
+\item 
+static \hyperlink{struct_defn_str_mapping__t}{Defn\+Str\+Mapping\+\_\+t} \hyperlink{inspect_8c_a8dc38722b0b59c82feb6b29fe3e87026}{Thread\+Obj\+Contention\+Scope\+Tbl} \mbox{[}$\,$\mbox{]}
+\item 
+static int \hyperlink{inspect_8c_aed41dd8d659b304ded92702cf0b2c5fa}{Thread\+Obj\+Contention\+Scope\+Tbl\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_a8dc38722b0b59c82feb6b29fe3e87026}{Thread\+Obj\+Contention\+Scope\+Tbl})
+\item 
+static \hyperlink{struct_defn_str_mapping__t}{Defn\+Str\+Mapping\+\_\+t} \hyperlink{inspect_8c_a8f2b2be2cde0110164b2cf06ba46c8d1}{Service\+State\+Tbl} \mbox{[}$\,$\mbox{]}
+\item 
+static int \hyperlink{inspect_8c_a5a0bd87d454d7a6ace45ce7ac4088f3d}{Service\+State\+Tbl\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_a8f2b2be2cde0110164b2cf06ba46c8d1}{Service\+State\+Tbl})
+\item 
+static \hyperlink{struct_defn_str_mapping__t}{Defn\+Str\+Mapping\+\_\+t} \hyperlink{inspect_8c_a28e6cb2d8cb667bf7739b639dca9ad0a}{Session\+State\+Tbl} \mbox{[}$\,$\mbox{]}
+\item 
+static int \hyperlink{inspect_8c_a8132d7ca57fa798e820cfe1c5ce41258}{Session\+State\+Tbl\+Size} = \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}(\hyperlink{inspect_8c_a28e6cb2d8cb667bf7739b639dca9ad0a}{Session\+State\+Tbl})
+\item 
+static bool \hyperlink{inspect_8c_ac7e2d00e2cc7939ba9267f65a5493f30}{Is\+Printed\+Node\+First} = true
+\item 
+\hyperlink{inspect_8c_a0392d452f926ce36c4852de26b5eca12}{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Legato inspection tool used to inspect Legato structures such as memory pools, timers, threads, mutexes, etc. in running processes.
+
+Must be run as root.
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000058}{Todo}]Add inspect by process name.\end{DoxyRefDesc}
+
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{inspect.\+c@{inspect.\+c}!col\+Bytes@{col\+Bytes}}
+\index{col\+Bytes@{col\+Bytes}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{col\+Bytes}{colBytes}}]{\setlength{\rightskip}{0pt plus 5cm}\#define col\+Bytes~table\mbox{[}i\mbox{]}.col\+Width + 1}\hypertarget{inspect_8c_a3d2312915868da6f3b3c28ac0616f73c}{}\label{inspect_8c_a3d2312915868da6f3b3c28ac0616f73c}
+\index{inspect.\+c@{inspect.\+c}!D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+R\+E\+S\+H\+\_\+\+I\+N\+T\+E\+R\+V\+AL@{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+R\+E\+S\+H\+\_\+\+I\+N\+T\+E\+R\+V\+AL}}
+\index{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+R\+E\+S\+H\+\_\+\+I\+N\+T\+E\+R\+V\+AL@{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+R\+E\+S\+H\+\_\+\+I\+N\+T\+E\+R\+V\+AL}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+R\+E\+S\+H\+\_\+\+I\+N\+T\+E\+R\+V\+AL}{DEFAULT_REFRESH_INTERVAL}}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+R\+E\+S\+H\+\_\+\+I\+N\+T\+E\+R\+V\+AL~3}\hypertarget{inspect_8c_a9859cca7856311819ca3d2b4a85ef216}{}\label{inspect_8c_a9859cca7856311819ca3d2b4a85ef216}
+Default refresh interval in seconds. \index{inspect.\+c@{inspect.\+c}!D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+T\+R\+Y\+\_\+\+I\+N\+T\+E\+R\+V\+AL@{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+T\+R\+Y\+\_\+\+I\+N\+T\+E\+R\+V\+AL}}
+\index{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+T\+R\+Y\+\_\+\+I\+N\+T\+E\+R\+V\+AL@{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+T\+R\+Y\+\_\+\+I\+N\+T\+E\+R\+V\+AL}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+T\+R\+Y\+\_\+\+I\+N\+T\+E\+R\+V\+AL}{DEFAULT_RETRY_INTERVAL}}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+T\+R\+Y\+\_\+\+I\+N\+T\+E\+R\+V\+AL~500000}\hypertarget{inspect_8c_af2126f2e32b98f667bbaa13cef032686}{}\label{inspect_8c_af2126f2e32b98f667bbaa13cef032686}
+Default retry interval in microseconds. \index{inspect.\+c@{inspect.\+c}!E\+S\+C\+A\+P\+E\+\_\+\+C\+H\+AR@{E\+S\+C\+A\+P\+E\+\_\+\+C\+H\+AR}}
+\index{E\+S\+C\+A\+P\+E\+\_\+\+C\+H\+AR@{E\+S\+C\+A\+P\+E\+\_\+\+C\+H\+AR}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{E\+S\+C\+A\+P\+E\+\_\+\+C\+H\+AR}{ESCAPE_CHAR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define E\+S\+C\+A\+P\+E\+\_\+\+C\+H\+AR~27}\hypertarget{inspect_8c_ac1044915eb305f07e6825a5ba500c06d}{}\label{inspect_8c_ac1044915eb305f07e6825a5ba500c06d}
+A\+S\+C\+II code for the escape character. \index{inspect.\+c@{inspect.\+c}!inspect\+Type\+String\+Size@{inspect\+Type\+String\+Size}}
+\index{inspect\+Type\+String\+Size@{inspect\+Type\+String\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{inspect\+Type\+String\+Size}{inspectTypeStringSize}}]{\setlength{\rightskip}{0pt plus 5cm}\#define inspect\+Type\+String\+Size~40}\hypertarget{inspect_8c_a612bea60c96df4791063adb9790c3b2f}{}\label{inspect_8c_a612bea60c96df4791063adb9790c3b2f}
+\index{inspect.\+c@{inspect.\+c}!I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+RR@{I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+RR}}
+\index{I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+RR@{I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+RR}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+RR}{INTERNAL_ERR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+RR(
+\begin{DoxyParamCaption}
+\item[{}]{format\+String, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}\hypertarget{inspect_8c_a3b2316794233b1337cafa86a8e739168}{}\label{inspect_8c_a3b2316794233b1337cafa86a8e739168}
+{\bfseries Value\+:}
+\begin{DoxyCode}
+\{ fprintf(stderr, \textcolor{stringliteral}{"Internal error check logs for details.\(\backslash\)n"});              \hyperlink{le__log_8h_a54b4b07f5396e19a8d9fca74238f4795}{\(\backslash\)}
+\hyperlink{le__log_8h_a54b4b07f5396e19a8d9fca74238f4795}{              LE\_FATAL}(formatString, ##\_\_VA\_ARGS\_\_); \}
+\end{DoxyCode}
+Prints a generic message on stderr so that the user is aware there is a problem, logs the internal error message and exit. \index{inspect.\+c@{inspect.\+c}!I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+R\+R\+\_\+\+IF@{I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+R\+R\+\_\+\+IF}}
+\index{I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+R\+R\+\_\+\+IF@{I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+R\+R\+\_\+\+IF}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+R\+R\+\_\+\+IF}{INTERNAL_ERR_IF}}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+R\+R\+\_\+\+IF(
+\begin{DoxyParamCaption}
+\item[{}]{condition, }
+\item[{}]{format\+String, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)~{\bf if} (condition) \{ {\bf I\+N\+T\+E\+R\+N\+A\+L\+\_\+\+E\+RR}(format\+String, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+); \}}\hypertarget{inspect_8c_a4834562728b934eabdb9b813f3a2c1b3}{}\label{inspect_8c_a4834562728b934eabdb9b813f3a2c1b3}
+If the condition is true, print a generic message on stderr so that the user is aware there is a problem, log the internal error message and exit. \index{inspect.\+c@{inspect.\+c}!M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS@{M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS}}
+\index{M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS@{M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS}{MAX_THREADS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS~400}\hypertarget{inspect_8c_a8b5173357adb02a86c027316e0acdfa0}{}\label{inspect_8c_a8b5173357adb02a86c027316e0acdfa0}
+\index{inspect.\+c@{inspect.\+c}!M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS@{M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS}}
+\index{M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS@{M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS}{MAX_THREADS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+T\+H\+R\+E\+A\+DS~400}\hypertarget{inspect_8c_a8b5173357adb02a86c027316e0acdfa0}{}\label{inspect_8c_a8b5173357adb02a86c027316e0acdfa0}
+\index{inspect.\+c@{inspect.\+c}!R\+E\+M\+O\+T\+E\+\_\+\+R\+E\+A\+D\+\_\+\+E\+RR@{R\+E\+M\+O\+T\+E\+\_\+\+R\+E\+A\+D\+\_\+\+E\+RR}}
+\index{R\+E\+M\+O\+T\+E\+\_\+\+R\+E\+A\+D\+\_\+\+E\+RR@{R\+E\+M\+O\+T\+E\+\_\+\+R\+E\+A\+D\+\_\+\+E\+RR}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{R\+E\+M\+O\+T\+E\+\_\+\+R\+E\+A\+D\+\_\+\+E\+RR}{REMOTE_READ_ERR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\+E\+M\+O\+T\+E\+\_\+\+R\+E\+A\+D\+\_\+\+E\+RR(
+\begin{DoxyParamCaption}
+\item[{}]{x}
+\end{DoxyParamCaption}
+)~\char`\"{}Error reading \char`\"{} \#x \char`\"{} in the remote process.\char`\"{}}\hypertarget{inspect_8c_affb53c74cc70df97dab53e7783a28963}{}\label{inspect_8c_affb53c74cc70df97dab53e7783a28963}
+Error message for reading something in the remote process. \index{inspect.\+c@{inspect.\+c}!Table\+Line\+Bytes@{Table\+Line\+Bytes}}
+\index{Table\+Line\+Bytes@{Table\+Line\+Bytes}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Table\+Line\+Bytes}{TableLineBytes}}]{\setlength{\rightskip}{0pt plus 5cm}\#define Table\+Line\+Bytes~({\bf Table\+Line\+Len} + 1)}\hypertarget{inspect_8c_acd67c671c77bf4f491671e2ba82cad62}{}\label{inspect_8c_acd67c671c77bf4f491671e2ba82cad62}
+
+
+\subsection{Typedef Documentation}
+\index{inspect.\+c@{inspect.\+c}!Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}
+\index{Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t}{ClientObjIter_Ref_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct Client\+Obj\+Iter$\ast$ {\bf Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}\hypertarget{inspect_8c_a792ac9f447615d76b565934c97268a94}{}\label{inspect_8c_a792ac9f447615d76b565934c97268a94}
+\index{inspect.\+c@{inspect.\+c}!Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}
+\index{Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t}{InterfaceObjIter_Ref_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct Interface\+Obj\+Iter$\ast$ {\bf Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}\hypertarget{inspect_8c_acd320d3cb2f726be4a6e779e9a1e31f3}{}\label{inspect_8c_acd320d3cb2f726be4a6e779e9a1e31f3}
+\index{inspect.\+c@{inspect.\+c}!Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t@{Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t}}
+\index{Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t@{Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t}{MemPoolIter_Ref_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct Mem\+Pool\+Iter$\ast$ {\bf Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t}}\hypertarget{inspect_8c_adfb31499ab617ef3d066416b907b9f15}{}\label{inspect_8c_adfb31499ab617ef3d066416b907b9f15}
+Objects of these types are used to refer to lists of memory pools, thread objects, timers, mutexes, semaphores, and service objects. They can be used to iterate over those lists in a remote process. \index{inspect.\+c@{inspect.\+c}!Mutex\+Iter\+\_\+\+Ref\+\_\+t@{Mutex\+Iter\+\_\+\+Ref\+\_\+t}}
+\index{Mutex\+Iter\+\_\+\+Ref\+\_\+t@{Mutex\+Iter\+\_\+\+Ref\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Mutex\+Iter\+\_\+\+Ref\+\_\+t}{MutexIter_Ref_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct Mutex\+Iter$\ast$ {\bf Mutex\+Iter\+\_\+\+Ref\+\_\+t}}\hypertarget{inspect_8c_a1d89ddbc93e51e490d5a08c994812e5d}{}\label{inspect_8c_a1d89ddbc93e51e490d5a08c994812e5d}
+\index{inspect.\+c@{inspect.\+c}!Semaphore\+Iter\+\_\+\+Ref\+\_\+t@{Semaphore\+Iter\+\_\+\+Ref\+\_\+t}}
+\index{Semaphore\+Iter\+\_\+\+Ref\+\_\+t@{Semaphore\+Iter\+\_\+\+Ref\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Semaphore\+Iter\+\_\+\+Ref\+\_\+t}{SemaphoreIter_Ref_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct Semaphore\+Iter$\ast$ {\bf Semaphore\+Iter\+\_\+\+Ref\+\_\+t}}\hypertarget{inspect_8c_a2eb5b302836315c4fff331c800342b4c}{}\label{inspect_8c_a2eb5b302836315c4fff331c800342b4c}
+\index{inspect.\+c@{inspect.\+c}!Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}
+\index{Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t}{ServiceObjIter_Ref_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct Service\+Obj\+Iter$\ast$ {\bf Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}\hypertarget{inspect_8c_a5711d81a28f352d64639d5775f4d3c5c}{}\label{inspect_8c_a5711d81a28f352d64639d5775f4d3c5c}
+\index{inspect.\+c@{inspect.\+c}!Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}
+\index{Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t}{SessionObjIter_Ref_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct Session\+Obj\+Iter$\ast$ {\bf Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}\hypertarget{inspect_8c_a3c494718ee74a7788c631e12f86ebfd8}{}\label{inspect_8c_a3c494718ee74a7788c631e12f86ebfd8}
+\index{inspect.\+c@{inspect.\+c}!Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}
+\index{Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t}{ThreadMemberObjIter_Ref_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct Thread\+Member\+Obj\+Iter$\ast$ {\bf Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}\hypertarget{inspect_8c_a2c660a861ac0e66f500b75109a5cc6ff}{}\label{inspect_8c_a2c660a861ac0e66f500b75109a5cc6ff}
+\index{inspect.\+c@{inspect.\+c}!Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}
+\index{Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t@{Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t}{ThreadObjIter_Ref_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct Thread\+Obj\+Iter$\ast$ {\bf Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}\hypertarget{inspect_8c_ab52de93d706e8faffb10c68168a515a4}{}\label{inspect_8c_ab52de93d706e8faffb10c68168a515a4}
+\index{inspect.\+c@{inspect.\+c}!Timer\+Iter\+\_\+\+Ref\+\_\+t@{Timer\+Iter\+\_\+\+Ref\+\_\+t}}
+\index{Timer\+Iter\+\_\+\+Ref\+\_\+t@{Timer\+Iter\+\_\+\+Ref\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Timer\+Iter\+\_\+\+Ref\+\_\+t}{TimerIter_Ref_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef struct Timer\+Iter$\ast$ {\bf Timer\+Iter\+\_\+\+Ref\+\_\+t}}\hypertarget{inspect_8c_af0c9b7368918bd1f7552cbb5bea35818}{}\label{inspect_8c_af0c9b7368918bd1f7552cbb5bea35818}
+
+
+\subsection{Enumeration Type Documentation}
+\index{inspect.\+c@{inspect.\+c}!Inspect\+End\+Status\+\_\+t@{Inspect\+End\+Status\+\_\+t}}
+\index{Inspect\+End\+Status\+\_\+t@{Inspect\+End\+Status\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Inspect\+End\+Status\+\_\+t}{InspectEndStatus_t}}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf Inspect\+End\+Status\+\_\+t}}\hypertarget{inspect_8c_a5513a456b3709bfe1ef92a1a56db4be4}{}\label{inspect_8c_a5513a456b3709bfe1ef92a1a56db4be4}
+Flags indicating how an inspection ended. \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{I\+N\+S\+P\+E\+C\+T\+\_\+\+S\+U\+C\+C\+E\+SS@{I\+N\+S\+P\+E\+C\+T\+\_\+\+S\+U\+C\+C\+E\+SS}!inspect.\+c@{inspect.\+c}}\index{inspect.\+c@{inspect.\+c}!I\+N\+S\+P\+E\+C\+T\+\_\+\+S\+U\+C\+C\+E\+SS@{I\+N\+S\+P\+E\+C\+T\+\_\+\+S\+U\+C\+C\+E\+SS}}\item[{\em 
+I\+N\+S\+P\+E\+C\+T\+\_\+\+S\+U\+C\+C\+E\+SS\hypertarget{inspect_8c_a5513a456b3709bfe1ef92a1a56db4be4abe429179acdde37de14e5a5e3718a3de}{}\label{inspect_8c_a5513a456b3709bfe1ef92a1a56db4be4abe429179acdde37de14e5a5e3718a3de}
+}]inspection completed without interruption or error. \index{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+T\+E\+R\+R\+U\+P\+T\+ED@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+T\+E\+R\+R\+U\+P\+T\+ED}!inspect.\+c@{inspect.\+c}}\index{inspect.\+c@{inspect.\+c}!I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+T\+E\+R\+R\+U\+P\+T\+ED@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+T\+E\+R\+R\+U\+P\+T\+ED}}\item[{\em 
+I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+T\+E\+R\+R\+U\+P\+T\+ED\hypertarget{inspect_8c_a5513a456b3709bfe1ef92a1a56db4be4ada2b8b4427e9467f72f3154f4cb0b4b9}{}\label{inspect_8c_a5513a456b3709bfe1ef92a1a56db4be4ada2b8b4427e9467f72f3154f4cb0b4b9}
+}]inspection was interrupted due to list changes. \end{description}
+\end{Desc}
+\index{inspect.\+c@{inspect.\+c}!Insp\+Type\+\_\+t@{Insp\+Type\+\_\+t}}
+\index{Insp\+Type\+\_\+t@{Insp\+Type\+\_\+t}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Insp\+Type\+\_\+t}{InspType_t}}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf Insp\+Type\+\_\+t}}\hypertarget{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}{}\label{inspect_8c_a9fb27db535de1d1e9899f2c031c9243f}
+Inspection types -\/ what\textquotesingle{}s being inspected for the remote process. \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+E\+M\+\_\+\+P\+O\+OL@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+E\+M\+\_\+\+P\+O\+OL}!inspect.\+c@{inspect.\+c}}\index{inspect.\+c@{inspect.\+c}!I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+E\+M\+\_\+\+P\+O\+OL@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+E\+M\+\_\+\+P\+O\+OL}}\item[{\em 
+I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+E\+M\+\_\+\+P\+O\+OL\hypertarget{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa4e1c2e4f87464110624dafba9e788184}{}\label{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa4e1c2e4f87464110624dafba9e788184}
+}]\index{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+H\+R\+E\+A\+D\+\_\+\+O\+BJ@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+H\+R\+E\+A\+D\+\_\+\+O\+BJ}!inspect.\+c@{inspect.\+c}}\index{inspect.\+c@{inspect.\+c}!I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+H\+R\+E\+A\+D\+\_\+\+O\+BJ@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+H\+R\+E\+A\+D\+\_\+\+O\+BJ}}\item[{\em 
+I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+H\+R\+E\+A\+D\+\_\+\+O\+BJ\hypertarget{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fad3c7ae76197548bdeeef4b6efae116a2}{}\label{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fad3c7ae76197548bdeeef4b6efae116a2}
+}]\index{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+I\+M\+ER@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+I\+M\+ER}!inspect.\+c@{inspect.\+c}}\index{inspect.\+c@{inspect.\+c}!I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+I\+M\+ER@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+I\+M\+ER}}\item[{\em 
+I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+I\+M\+ER\hypertarget{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa83c31f9bc449b53817d0845b0eb469e3}{}\label{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa83c31f9bc449b53817d0845b0eb469e3}
+}]\index{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+U\+T\+EX@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+U\+T\+EX}!inspect.\+c@{inspect.\+c}}\index{inspect.\+c@{inspect.\+c}!I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+U\+T\+EX@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+U\+T\+EX}}\item[{\em 
+I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+U\+T\+EX\hypertarget{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa9475ea4ca5ddd5b6c4195c6f6215f7b9}{}\label{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa9475ea4ca5ddd5b6c4195c6f6215f7b9}
+}]\index{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+E\+M\+A\+P\+H\+O\+RE@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+E\+M\+A\+P\+H\+O\+RE}!inspect.\+c@{inspect.\+c}}\index{inspect.\+c@{inspect.\+c}!I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+E\+M\+A\+P\+H\+O\+RE@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+E\+M\+A\+P\+H\+O\+RE}}\item[{\em 
+I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+E\+M\+A\+P\+H\+O\+RE\hypertarget{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa72a9c94c007b24910df901eaf6d3801b}{}\label{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa72a9c94c007b24910df901eaf6d3801b}
+}]\index{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+RS@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+RS}!inspect.\+c@{inspect.\+c}}\index{inspect.\+c@{inspect.\+c}!I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+RS@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+RS}}\item[{\em 
+I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+RS\hypertarget{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa98dbc4782eaa649a5c8504969fa5267f}{}\label{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa98dbc4782eaa649a5c8504969fa5267f}
+}]\index{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+TS@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+TS}!inspect.\+c@{inspect.\+c}}\index{inspect.\+c@{inspect.\+c}!I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+TS@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+TS}}\item[{\em 
+I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+TS\hypertarget{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa8977cc04337eca129dfd4ef9fd74183c}{}\label{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa8977cc04337eca129dfd4ef9fd74183c}
+}]\index{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+R\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+R\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS}!inspect.\+c@{inspect.\+c}}\index{inspect.\+c@{inspect.\+c}!I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+R\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+R\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS}}\item[{\em 
+I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+S\+E\+R\+V\+E\+R\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS\hypertarget{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa5da0748d5ec0704a47fb5de362a2849a}{}\label{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa5da0748d5ec0704a47fb5de362a2849a}
+}]\index{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+T\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+T\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS}!inspect.\+c@{inspect.\+c}}\index{inspect.\+c@{inspect.\+c}!I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+T\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS@{I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+T\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS}}\item[{\em 
+I\+N\+S\+P\+E\+C\+T\+\_\+\+I\+N\+S\+P\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+P\+C\+\_\+\+C\+L\+I\+E\+N\+T\+S\+\_\+\+S\+E\+S\+S\+I\+O\+NS\hypertarget{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa497ecb5e800e34af6d86e5e923ce2186}{}\label{inspect_8c_a9fb27db535de1d1e9899f2c031c9243fa497ecb5e800e34af6d86e5e923ce2186}
+}]\end{description}
+\end{Desc}
+
+
+\subsection{Function Documentation}
+\index{inspect.\+c@{inspect.\+c}!Command\+Arg\+Handler@{Command\+Arg\+Handler}}
+\index{Command\+Arg\+Handler@{Command\+Arg\+Handler}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Command\+Arg\+Handler(const char $\ast$command)}{CommandArgHandler(const char *command)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Command\+Arg\+Handler (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{command}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ac6aa192ae9052b032bb8c36b19d35361}{}\label{inspect_8c_ac6aa192ae9052b032bb8c36b19d35361}
+Function called by command line argument scanner when the command argument is found. \index{inspect.\+c@{inspect.\+c}!Construct\+Json\+Array\+From\+Strings@{Construct\+Json\+Array\+From\+Strings}}
+\index{Construct\+Json\+Array\+From\+Strings@{Construct\+Json\+Array\+From\+Strings}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Construct\+Json\+Array\+From\+Strings(char $\ast$$\ast$string\+Array, int string\+Num, char $\ast$waiting\+Thread\+Json\+Array, int waiting\+Thread\+Json\+Array\+Size)}{ConstructJsonArrayFromStrings(char **stringArray, int stringNum, char *waitingThreadJsonArray, int waitingThreadJsonArraySize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Construct\+Json\+Array\+From\+Strings (
+\begin{DoxyParamCaption}
+\item[{char $\ast$$\ast$}]{string\+Array, }
+\item[{int}]{string\+Num, }
+\item[{char $\ast$}]{waiting\+Thread\+Json\+Array, }
+\item[{int}]{waiting\+Thread\+Json\+Array\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a59c610a318e30bb472887be306ce600a}{}\label{inspect_8c_a59c610a318e30bb472887be306ce600a}
+Given an array of strings, construct a string which is a J\+S\+ON array consisting of all strings in the input array. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em string\+Array} & Array of strings to construct the json array with. \\
+\hline
+\mbox{\tt in}  & {\em string\+Num} & Number of strings in the above array. \\
+\hline
+\mbox{\tt out}  & {\em waiting\+Thread\+Json\+Array} & The resulting string which is a J\+S\+ON array. \\
+\hline
+\mbox{\tt in}  & {\em waiting\+Thread\+Json\+Array\+Size} & Size of the resulting string. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Create\+Client\+Obj\+Iter@{Create\+Client\+Obj\+Iter}}
+\index{Create\+Client\+Obj\+Iter@{Create\+Client\+Obj\+Iter}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Client\+Obj\+Iter(void)}{CreateClientObjIter(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t} Create\+Client\+Obj\+Iter (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a7030d94045b2cb7e6eb915a3ab62a3c1}{}\label{inspect_8c_a7030d94045b2cb7e6eb915a3ab62a3c1}
+\index{inspect.\+c@{inspect.\+c}!Create\+Interface\+Obj\+Iter@{Create\+Interface\+Obj\+Iter}}
+\index{Create\+Interface\+Obj\+Iter@{Create\+Interface\+Obj\+Iter}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Interface\+Obj\+Iter(\+Insp\+Type\+\_\+t interface\+Type)}{CreateInterfaceObjIter(InspType_t interfaceType)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t} Create\+Interface\+Obj\+Iter (
+\begin{DoxyParamCaption}
+\item[{{\bf Insp\+Type\+\_\+t}}]{interface\+Type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aac5aec39cee280eda0f92ff4eda8541e}{}\label{inspect_8c_aac5aec39cee280eda0f92ff4eda8541e}
+Creates an iterator that can be used to iterate over the map of interface objects. See the comment block for Create\+Mem\+Pool\+Iter for additional detail.
+
+\begin{DoxyReturn}{Returns}
+An iterator to the map of interface objects. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em interface\+Type} & The type of iterator to create. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Create\+Mem\+Pool\+Iter@{Create\+Mem\+Pool\+Iter}}
+\index{Create\+Mem\+Pool\+Iter@{Create\+Mem\+Pool\+Iter}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Mem\+Pool\+Iter(void)}{CreateMemPoolIter(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t} Create\+Mem\+Pool\+Iter (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a78d16c064fae7ff6a78ee3adf8872f15}{}\label{inspect_8c_a78d16c064fae7ff6a78ee3adf8872f15}
+Creates an iterator that can be used to iterate over the list of available memory pools for a specific process.
+
+\begin{DoxyNote}{Note}
+The calling process must be root or have appropriate capabilities for this function and all subsequent operations on the iterator to succeed.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+An iterator to the list of memory pools for the specified process. 
+\end{DoxyReturn}
+\index{inspect.\+c@{inspect.\+c}!Create\+Mutex\+Iter@{Create\+Mutex\+Iter}}
+\index{Create\+Mutex\+Iter@{Create\+Mutex\+Iter}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Mutex\+Iter(void)}{CreateMutexIter(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Mutex\+Iter\+\_\+\+Ref\+\_\+t} Create\+Mutex\+Iter (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ab6e9310b87e5e1ed45ab7e16b282c86e}{}\label{inspect_8c_ab6e9310b87e5e1ed45ab7e16b282c86e}
+\index{inspect.\+c@{inspect.\+c}!Create\+Semaphore\+Iter@{Create\+Semaphore\+Iter}}
+\index{Create\+Semaphore\+Iter@{Create\+Semaphore\+Iter}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Semaphore\+Iter(void)}{CreateSemaphoreIter(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Semaphore\+Iter\+\_\+\+Ref\+\_\+t} Create\+Semaphore\+Iter (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ae45090268adeac6b951262a477cf164c}{}\label{inspect_8c_ae45090268adeac6b951262a477cf164c}
+\index{inspect.\+c@{inspect.\+c}!Create\+Service\+Obj\+Iter@{Create\+Service\+Obj\+Iter}}
+\index{Create\+Service\+Obj\+Iter@{Create\+Service\+Obj\+Iter}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Service\+Obj\+Iter(void)}{CreateServiceObjIter(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t} Create\+Service\+Obj\+Iter (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a43ffe65bfb800956f81a1a88a7ddda7b}{}\label{inspect_8c_a43ffe65bfb800956f81a1a88a7ddda7b}
+Creates an iterator that can be used to iterate over the map of service objects for a specific process. See the comment block for Create\+Mem\+Pool\+Iter for additional detail.
+
+\begin{DoxyReturn}{Returns}
+An iterator to the map of service objects. 
+\end{DoxyReturn}
+\index{inspect.\+c@{inspect.\+c}!Create\+Session\+Obj\+Iter@{Create\+Session\+Obj\+Iter}}
+\index{Create\+Session\+Obj\+Iter@{Create\+Session\+Obj\+Iter}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Session\+Obj\+Iter(void)}{CreateSessionObjIter(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t} Create\+Session\+Obj\+Iter (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a924143273802c795ef8db769546f1668}{}\label{inspect_8c_a924143273802c795ef8db769546f1668}
+Creates an iterator that can be used to iterate over the list of session objects for a specific process. See the comment block for Create\+Mem\+Pool\+Iter for additional detail.
+
+\begin{DoxyReturn}{Returns}
+An iterator to the list of session objects. 
+\end{DoxyReturn}
+\index{inspect.\+c@{inspect.\+c}!Create\+Thread\+Member\+Obj\+Iter@{Create\+Thread\+Member\+Obj\+Iter}}
+\index{Create\+Thread\+Member\+Obj\+Iter@{Create\+Thread\+Member\+Obj\+Iter}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Thread\+Member\+Obj\+Iter(\+Insp\+Type\+\_\+t member\+Obj\+Type)}{CreateThreadMemberObjIter(InspType_t memberObjType)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void}$\ast$ Create\+Thread\+Member\+Obj\+Iter (
+\begin{DoxyParamCaption}
+\item[{{\bf Insp\+Type\+\_\+t}}]{member\+Obj\+Type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_af93735d12d664632fac0b8404e5f5ae0}{}\label{inspect_8c_af93735d12d664632fac0b8404e5f5ae0}
+Creates an iterator that can be used to iterate over the list of thread member objects for a specific process. See the comment block for Create\+Mem\+Pool\+Iter for additional detail.
+
+\begin{DoxyReturn}{Returns}
+An iterator to the list of thread member objects for the specified process. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em member\+Obj\+Type} & The type of iterator to create. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Create\+Thread\+Obj\+Iter@{Create\+Thread\+Obj\+Iter}}
+\index{Create\+Thread\+Obj\+Iter@{Create\+Thread\+Obj\+Iter}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Thread\+Obj\+Iter(void)}{CreateThreadObjIter(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t} Create\+Thread\+Obj\+Iter (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a7d0e8da0dd8d1db27538cb85713461d6}{}\label{inspect_8c_a7d0e8da0dd8d1db27538cb85713461d6}
+Creates an iterator that can be used to iterate over the list of thread objects for a specific process. See the comment block for Create\+Mem\+Pool\+Iter for additional detail.
+
+\begin{DoxyReturn}{Returns}
+An iterator to the list of thread objects for the specified process. 
+\end{DoxyReturn}
+\index{inspect.\+c@{inspect.\+c}!Create\+Timer\+Iter@{Create\+Timer\+Iter}}
+\index{Create\+Timer\+Iter@{Create\+Timer\+Iter}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Timer\+Iter(void)}{CreateTimerIter(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Timer\+Iter\+\_\+\+Ref\+\_\+t} Create\+Timer\+Iter (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a87e9b38453b24667206ad83f5a1968d8}{}\label{inspect_8c_a87e9b38453b24667206ad83f5a1968d8}
+Creates an iterator that can be used to iterate over the list of timers, mutexes, or semaphores for a specific process. These are wrappers for Create\+Thread\+Member\+Obj\+Iter. See the comment block for Create\+Mem\+Pool\+Iter for additional detail.
+
+\begin{DoxyReturn}{Returns}
+An iterator to the list of timers/mutexes/semaphores for the specified process. 
+\end{DoxyReturn}
+\index{inspect.\+c@{inspect.\+c}!Defn\+To\+Str@{Defn\+To\+Str}}
+\index{Defn\+To\+Str@{Defn\+To\+Str}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Defn\+To\+Str(int defn, Defn\+Str\+Mapping\+\_\+t $\ast$table, int table\+Size)}{DefnToStr(int defn, DefnStrMapping_t *table, int tableSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static char$\ast$ Defn\+To\+Str (
+\begin{DoxyParamCaption}
+\item[{int}]{defn, }
+\item[{{\bf Defn\+Str\+Mapping\+\_\+t} $\ast$}]{table, }
+\item[{int}]{table\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a47d3259b96e9f71c0543f1b775d02757}{}\label{inspect_8c_a47d3259b96e9f71c0543f1b775d02757}
+Looks up the mapping between an enum or define and its textual description.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the textual description in the table. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em defn} & The enum/define that we want to look up the description for. \\
+\hline
+\mbox{\tt in}  & {\em table} & Pointer to the table to look up the textual description. \\
+\hline
+\mbox{\tt in}  & {\em table\+Size} & Table size. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Estimate\+Json\+Array\+Size\+From\+Strings@{Estimate\+Json\+Array\+Size\+From\+Strings}}
+\index{Estimate\+Json\+Array\+Size\+From\+Strings@{Estimate\+Json\+Array\+Size\+From\+Strings}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Estimate\+Json\+Array\+Size\+From\+Strings(char $\ast$$\ast$string\+Array, int string\+Num)}{EstimateJsonArraySizeFromStrings(char **stringArray, int stringNum)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Estimate\+Json\+Array\+Size\+From\+Strings (
+\begin{DoxyParamCaption}
+\item[{char $\ast$$\ast$}]{string\+Array, }
+\item[{int}]{string\+Num}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a2d815889d8f7c8341445f9c6a61a289b}{}\label{inspect_8c_a2d815889d8f7c8341445f9c6a61a289b}
+Given an array of strings, estimate the size needed for a string which is a J\+S\+ON array consisting of all strings in the input array.
+
+\begin{DoxyReturn}{Returns}
+Estimated size of the J\+S\+ON array. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em string\+Array} & Array of strings to construct the json array with. \\
+\hline
+\mbox{\tt in}  & {\em string\+Num} & Number of strings in the above array. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Export\+Array\+To\+Json@{Export\+Array\+To\+Json}}
+\index{Export\+Array\+To\+Json@{Export\+Array\+To\+Json}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Export\+Array\+To\+Json(char $\ast$array, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)}{ExportArrayToJson(char *array, ColumnInfo_t *table, size_t tableSize, int *indexRef, bool *printed)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Export\+Array\+To\+Json (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{array, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref, }
+\item[{bool $\ast$}]{printed}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a2339b8f7555697e67aa3a690d91da545}{}\label{inspect_8c_a2339b8f7555697e67aa3a690d91da545}
+The Export\+X\+X\+X\+To\+Json and Fill\+X\+X\+X\+Col\+Field families of functions are used by the Print\+X\+X\+X\+Info functions to output data in json format, or to print the \char`\"{}col\+Field\char`\"{} string in the X\+X\+X\+Table\+Info tables (which are to be later printed to the terminal), respectively.
+
+These functions provide type checking for the data to be printed, and properly format the data according to the formatting rules defined by the X\+X\+X\+Table\+Info tables. They also determine of the data should be output or not based on the \char`\"{}verbose mode\char`\"{} setting.
+
+For each data type used by the X\+X\+X\+Table\+Info tables, there should be a corresponding pairs of Export\+X\+X\+X\+To\+Json and Fill\+X\+X\+X\+Col\+Field functions. The Export\+X\+X\+X\+To\+Json family of functions. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em array} & json array. \\
+\hline
+\mbox{\tt in}  & {\em table} & X\+X\+X\+Table\+Info ref. \\
+\hline
+\mbox{\tt in}  & {\em table\+Size} & X\+X\+X\+Table\+Info size. \\
+\hline
+\mbox{\tt in,out}  & {\em index\+Ref} & iterator to parse the table. \\
+\hline
+\mbox{\tt in,out}  & {\em printed} & if the first entry is printed. if so, print a leading comma for the current entry. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Export\+Bool\+To\+Json@{Export\+Bool\+To\+Json}}
+\index{Export\+Bool\+To\+Json@{Export\+Bool\+To\+Json}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Export\+Bool\+To\+Json(bool field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)}{ExportBoolToJson(bool field, ColumnInfo_t *table, size_t tableSize, int *indexRef, bool *printed)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Export\+Bool\+To\+Json (
+\begin{DoxyParamCaption}
+\item[{bool}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref, }
+\item[{bool $\ast$}]{printed}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a4a8588bd19dd94f4b5dbb6511203c3e6}{}\label{inspect_8c_a4a8588bd19dd94f4b5dbb6511203c3e6}
+\index{inspect.\+c@{inspect.\+c}!Export\+Double\+To\+Json@{Export\+Double\+To\+Json}}
+\index{Export\+Double\+To\+Json@{Export\+Double\+To\+Json}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Export\+Double\+To\+Json(double field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)}{ExportDoubleToJson(double field, ColumnInfo_t *table, size_t tableSize, int *indexRef, bool *printed)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Export\+Double\+To\+Json (
+\begin{DoxyParamCaption}
+\item[{double}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref, }
+\item[{bool $\ast$}]{printed}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a8080b03e9c307290844467f4268a4aad}{}\label{inspect_8c_a8080b03e9c307290844467f4268a4aad}
+\index{inspect.\+c@{inspect.\+c}!Export\+Int\+To\+Json@{Export\+Int\+To\+Json}}
+\index{Export\+Int\+To\+Json@{Export\+Int\+To\+Json}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Export\+Int\+To\+Json(int field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)}{ExportIntToJson(int field, ColumnInfo_t *table, size_t tableSize, int *indexRef, bool *printed)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Export\+Int\+To\+Json (
+\begin{DoxyParamCaption}
+\item[{int}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref, }
+\item[{bool $\ast$}]{printed}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ae6a9100fedadae9aea133c5b7fee5da7}{}\label{inspect_8c_ae6a9100fedadae9aea133c5b7fee5da7}
+\index{inspect.\+c@{inspect.\+c}!Export\+Size\+T\+To\+Json@{Export\+Size\+T\+To\+Json}}
+\index{Export\+Size\+T\+To\+Json@{Export\+Size\+T\+To\+Json}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Export\+Size\+T\+To\+Json(size\+\_\+t field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)}{ExportSizeTToJson(size_t field, ColumnInfo_t *table, size_t tableSize, int *indexRef, bool *printed)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Export\+Size\+T\+To\+Json (
+\begin{DoxyParamCaption}
+\item[{size\+\_\+t}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref, }
+\item[{bool $\ast$}]{printed}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aa58d3dbba481317b021b35a1b39d3c92}{}\label{inspect_8c_aa58d3dbba481317b021b35a1b39d3c92}
+\index{inspect.\+c@{inspect.\+c}!Export\+Str\+To\+Json@{Export\+Str\+To\+Json}}
+\index{Export\+Str\+To\+Json@{Export\+Str\+To\+Json}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Export\+Str\+To\+Json(char $\ast$field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)}{ExportStrToJson(char *field, ColumnInfo_t *table, size_t tableSize, int *indexRef, bool *printed)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Export\+Str\+To\+Json (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref, }
+\item[{bool $\ast$}]{printed}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a21b5df39def9722a30a8af97ab8a6d33}{}\label{inspect_8c_a21b5df39def9722a30a8af97ab8a6d33}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em field} & the data to be exported to json. \\
+\hline
+\mbox{\tt in}  & {\em table} & X\+X\+X\+Table\+Info ref. \\
+\hline
+\mbox{\tt in}  & {\em table\+Size} & X\+X\+X\+Table\+Info size. \\
+\hline
+\mbox{\tt in,out}  & {\em index\+Ref} & iterator to parse the table. \\
+\hline
+\mbox{\tt in,out}  & {\em printed} & if the first entry is printed. if so, print a leading comma for the current entry. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Export\+Uint32\+To\+Json@{Export\+Uint32\+To\+Json}}
+\index{Export\+Uint32\+To\+Json@{Export\+Uint32\+To\+Json}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Export\+Uint32\+To\+Json(uint32\+\_\+t field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)}{ExportUint32ToJson(uint32_t field, ColumnInfo_t *table, size_t tableSize, int *indexRef, bool *printed)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Export\+Uint32\+To\+Json (
+\begin{DoxyParamCaption}
+\item[{uint32\+\_\+t}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref, }
+\item[{bool $\ast$}]{printed}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a731e817b02c01d634891b43cfce33cb4}{}\label{inspect_8c_a731e817b02c01d634891b43cfce33cb4}
+\index{inspect.\+c@{inspect.\+c}!Export\+Uint64\+To\+Json@{Export\+Uint64\+To\+Json}}
+\index{Export\+Uint64\+To\+Json@{Export\+Uint64\+To\+Json}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Export\+Uint64\+To\+Json(uint64\+\_\+t field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref, bool $\ast$printed)}{ExportUint64ToJson(uint64_t field, ColumnInfo_t *table, size_t tableSize, int *indexRef, bool *printed)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Export\+Uint64\+To\+Json (
+\begin{DoxyParamCaption}
+\item[{uint64\+\_\+t}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref, }
+\item[{bool $\ast$}]{printed}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a320bdaadb1189eb9e0d7289fe03a31db}{}\label{inspect_8c_a320bdaadb1189eb9e0d7289fe03a31db}
+\index{inspect.\+c@{inspect.\+c}!Fill\+Bool\+Col\+Field@{Fill\+Bool\+Col\+Field}}
+\index{Fill\+Bool\+Col\+Field@{Fill\+Bool\+Col\+Field}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Fill\+Bool\+Col\+Field(bool field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)}{FillBoolColField(bool field, ColumnInfo_t *table, size_t tableSize, int *indexRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Fill\+Bool\+Col\+Field (
+\begin{DoxyParamCaption}
+\item[{bool}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a14ac1c220dd777fbfbd0432460be6de5}{}\label{inspect_8c_a14ac1c220dd777fbfbd0432460be6de5}
+\index{inspect.\+c@{inspect.\+c}!Fill\+Double\+Col\+Field@{Fill\+Double\+Col\+Field}}
+\index{Fill\+Double\+Col\+Field@{Fill\+Double\+Col\+Field}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Fill\+Double\+Col\+Field(double field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)}{FillDoubleColField(double field, ColumnInfo_t *table, size_t tableSize, int *indexRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Fill\+Double\+Col\+Field (
+\begin{DoxyParamCaption}
+\item[{double}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_acb6e37ea6f4f761fecb0ab9da2c2feac}{}\label{inspect_8c_acb6e37ea6f4f761fecb0ab9da2c2feac}
+\index{inspect.\+c@{inspect.\+c}!Fill\+Int\+Col\+Field@{Fill\+Int\+Col\+Field}}
+\index{Fill\+Int\+Col\+Field@{Fill\+Int\+Col\+Field}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Fill\+Int\+Col\+Field(int field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)}{FillIntColField(int field, ColumnInfo_t *table, size_t tableSize, int *indexRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Fill\+Int\+Col\+Field (
+\begin{DoxyParamCaption}
+\item[{int}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a4ab2025c4b0c8ea5256e5039cc35ea4a}{}\label{inspect_8c_a4ab2025c4b0c8ea5256e5039cc35ea4a}
+\index{inspect.\+c@{inspect.\+c}!Fill\+Size\+T\+Col\+Field@{Fill\+Size\+T\+Col\+Field}}
+\index{Fill\+Size\+T\+Col\+Field@{Fill\+Size\+T\+Col\+Field}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Fill\+Size\+T\+Col\+Field(size\+\_\+t field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)}{FillSizeTColField(size_t field, ColumnInfo_t *table, size_t tableSize, int *indexRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Fill\+Size\+T\+Col\+Field (
+\begin{DoxyParamCaption}
+\item[{size\+\_\+t}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a01b745a1d8eec99c65b1a419fb74b0ec}{}\label{inspect_8c_a01b745a1d8eec99c65b1a419fb74b0ec}
+\index{inspect.\+c@{inspect.\+c}!Fill\+Str\+Col\+Field@{Fill\+Str\+Col\+Field}}
+\index{Fill\+Str\+Col\+Field@{Fill\+Str\+Col\+Field}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Fill\+Str\+Col\+Field(char $\ast$field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)}{FillStrColField(char *field, ColumnInfo_t *table, size_t tableSize, int *indexRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Fill\+Str\+Col\+Field (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a4932b3b4fbbd9cd70ffd97a7435ddad0}{}\label{inspect_8c_a4932b3b4fbbd9cd70ffd97a7435ddad0}
+The Fill\+X\+X\+X\+Col\+Field family of functions. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em field} & the data to be printed to the Col\+Field of the table. \\
+\hline
+\mbox{\tt in}  & {\em table} & X\+X\+X\+Table\+Info ref. \\
+\hline
+\mbox{\tt in}  & {\em table\+Size} & X\+X\+X\+Table\+Info size. \\
+\hline
+\mbox{\tt in,out}  & {\em index\+Ref} & iterator to parse the table. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Fill\+Uint32\+Col\+Field@{Fill\+Uint32\+Col\+Field}}
+\index{Fill\+Uint32\+Col\+Field@{Fill\+Uint32\+Col\+Field}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Fill\+Uint32\+Col\+Field(uint32\+\_\+t field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)}{FillUint32ColField(uint32_t field, ColumnInfo_t *table, size_t tableSize, int *indexRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Fill\+Uint32\+Col\+Field (
+\begin{DoxyParamCaption}
+\item[{uint32\+\_\+t}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ab0d0c9e6dc65a39ce475196b0d9baa5c}{}\label{inspect_8c_ab0d0c9e6dc65a39ce475196b0d9baa5c}
+\index{inspect.\+c@{inspect.\+c}!Fill\+Uint64\+Col\+Field@{Fill\+Uint64\+Col\+Field}}
+\index{Fill\+Uint64\+Col\+Field@{Fill\+Uint64\+Col\+Field}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Fill\+Uint64\+Col\+Field(uint64\+\_\+t field, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)}{FillUint64ColField(uint64_t field, ColumnInfo_t *table, size_t tableSize, int *indexRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Fill\+Uint64\+Col\+Field (
+\begin{DoxyParamCaption}
+\item[{uint64\+\_\+t}]{field, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ae69dc65799b57d93e011a634316cbd97}{}\label{inspect_8c_ae69dc65799b57d93e011a634316cbd97}
+\index{inspect.\+c@{inspect.\+c}!Find\+Max\+Str\+Size\+From\+Table@{Find\+Max\+Str\+Size\+From\+Table}}
+\index{Find\+Max\+Str\+Size\+From\+Table@{Find\+Max\+Str\+Size\+From\+Table}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Max\+Str\+Size\+From\+Table(\+Defn\+Str\+Mapping\+\_\+t $\ast$table, size\+\_\+t table\+Size)}{FindMaxStrSizeFromTable(DefnStrMapping_t *table, size_t tableSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Find\+Max\+Str\+Size\+From\+Table (
+\begin{DoxyParamCaption}
+\item[{{\bf Defn\+Str\+Mapping\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ac37accf6bf479ffdd52638634984d98f}{}\label{inspect_8c_ac37accf6bf479ffdd52638634984d98f}
+For a given table of number and text, find out the max number of characters out of all text. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em table} & Table ref. \\
+\hline
+\mbox{\tt in}  & {\em table\+Size} & Table size. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Follow\+Option\+Callback@{Follow\+Option\+Callback}}
+\index{Follow\+Option\+Callback@{Follow\+Option\+Callback}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Follow\+Option\+Callback(int value)}{FollowOptionCallback(int value)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Follow\+Option\+Callback (
+\begin{DoxyParamCaption}
+\item[{int}]{value}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ab26348058efe62f29ea3d5e148e8b98e}{}\label{inspect_8c_ab26348058efe62f29ea3d5e148e8b98e}
+Function called by command line argument scanner when the -\/f or --interval= option is given. \index{inspect.\+c@{inspect.\+c}!Format\+Option\+Callback@{Format\+Option\+Callback}}
+\index{Format\+Option\+Callback@{Format\+Option\+Callback}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Format\+Option\+Callback(const char $\ast$format)}{FormatOptionCallback(const char *format)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Format\+Option\+Callback (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{format}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ae33b54c6307a7e2fd406a94127cd29a8}{}\label{inspect_8c_ae33b54c6307a7e2fd406a94127cd29a8}
+Function called by command line argument scanner when the --format= option is given. \index{inspect.\+c@{inspect.\+c}!Get\+Interface\+Obj\+Map\+Chg\+Cnt@{Get\+Interface\+Obj\+Map\+Chg\+Cnt}}
+\index{Get\+Interface\+Obj\+Map\+Chg\+Cnt@{Get\+Interface\+Obj\+Map\+Chg\+Cnt}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Interface\+Obj\+Map\+Chg\+Cnt(\+Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t iterator)}{GetInterfaceObjMapChgCnt(InterfaceObjIter_Ref_t iterator)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Get\+Interface\+Obj\+Map\+Chg\+Cnt (
+\begin{DoxyParamCaption}
+\item[{{\bf Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}]{iterator}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aa878a3a3aa05e16cc7d7b927d27c023a}{}\label{inspect_8c_aa878a3a3aa05e16cc7d7b927d27c023a}
+Gets the interface object map change counter from the specified iterator.
+
+\begin{DoxyReturn}{Returns}
+Map change counter. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em iterator} & The iterator to get the map change counter from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Mem\+Pool\+List\+Chg\+Cnt@{Get\+Mem\+Pool\+List\+Chg\+Cnt}}
+\index{Get\+Mem\+Pool\+List\+Chg\+Cnt@{Get\+Mem\+Pool\+List\+Chg\+Cnt}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Mem\+Pool\+List\+Chg\+Cnt(\+Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t iterator)}{GetMemPoolListChgCnt(MemPoolIter_Ref_t iterator)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Get\+Mem\+Pool\+List\+Chg\+Cnt (
+\begin{DoxyParamCaption}
+\item[{{\bf Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t}}]{iterator}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a5ce6675414a96ec37b10e54083117179}{}\label{inspect_8c_a5ce6675414a96ec37b10e54083117179}
+Gets the memory pool list change counter from the specified iterator.
+
+\begin{DoxyReturn}{Returns}
+List change counter. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em iterator} & The iterator to get the list change counter from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Mutex\+Thread\+Rec\+Ptr@{Get\+Mutex\+Thread\+Rec\+Ptr}}
+\index{Get\+Mutex\+Thread\+Rec\+Ptr@{Get\+Mutex\+Thread\+Rec\+Ptr}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Mutex\+Thread\+Rec\+Ptr(le\+\_\+dls\+\_\+\+Link\+\_\+t $\ast$curr\+Node\+Link\+Ptr)}{GetMutexThreadRecPtr(le_dls_Link_t *currNodeLinkPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void}$\ast$ Get\+Mutex\+Thread\+Rec\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$}]{curr\+Node\+Link\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a8b005b34da38640f15cbd5233ec00076}{}\label{inspect_8c_a8b005b34da38640f15cbd5233ec00076}
+Helper functions for Get\+Waiting\+List\+Thread\+Names 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em curr\+Node\+Link\+Ptr} & waiting list link ptr. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Client\+Obj@{Get\+Next\+Client\+Obj}}
+\index{Get\+Next\+Client\+Obj@{Get\+Next\+Client\+Obj}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Client\+Obj(\+Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t client\+Obj\+Iter\+Ref)}{GetNextClientObj(ClientObjIter_Ref_t clientObjIterRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf msg\+Interface\+\_\+\+Client\+Interface\+\_\+t}$\ast$ Get\+Next\+Client\+Obj (
+\begin{DoxyParamCaption}
+\item[{{\bf Client\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}]{client\+Obj\+Iter\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_acb2e2bdf21b6fba7f5a1a332ac16cd23}{}\label{inspect_8c_acb2e2bdf21b6fba7f5a1a332ac16cd23}
+Gets the next client interface object from the specified iterator. For other detail see Get\+Next\+Mem\+Pool.
+
+\begin{DoxyReturn}{Returns}
+A client interface object from the iterator\textquotesingle{}s list of client interface objects. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em client\+Obj\+Iter\+Ref} & The iterator to get the next client interface obj from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Column@{Get\+Next\+Column}}
+\index{Get\+Next\+Column@{Get\+Next\+Column}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Column(\+Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, int $\ast$index\+Ref)}{GetNextColumn(ColumnInfo_t *table, size_t tableSize, int *indexRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Column\+Info\+\_\+t}$\ast$ Get\+Next\+Column (
+\begin{DoxyParamCaption}
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{int $\ast$}]{index\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a3a9f425f5ef916c079119b0894ace017}{}\label{inspect_8c_a3a9f425f5ef916c079119b0894ace017}
+For the given table, return the next column. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em table} & Table ref. \\
+\hline
+\mbox{\tt in}  & {\em table\+Size} & Table size. \\
+\hline
+\mbox{\tt in,out}  & {\em index\+Ref} & Iterator to parse the table. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Interface\+Obj\+Ptr@{Get\+Next\+Interface\+Obj\+Ptr}}
+\index{Get\+Next\+Interface\+Obj\+Ptr@{Get\+Next\+Interface\+Obj\+Ptr}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Interface\+Obj\+Ptr(\+Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t iterator)}{GetNextInterfaceObjPtr(InterfaceObjIter_Ref_t iterator)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void}$\ast$ Get\+Next\+Interface\+Obj\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf Interface\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}]{iterator}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a33f3214d922431f476929804442e064a}{}\label{inspect_8c_a33f3214d922431f476929804442e064a}
+Gets the pointer to the next interface instance object. For other detail see Get\+Next\+Mem\+Pool.
+
+\begin{DoxyReturn}{Returns}
+A pointer to an interface instace object. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em iterator} & The iterator to get the next interface obj from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Link@{Get\+Next\+Link}}
+\index{Get\+Next\+Link@{Get\+Next\+Link}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Link(\+Remote\+List\+Access\+\_\+t $\ast$list\+Info\+Ref, le\+\_\+dls\+\_\+\+Link\+\_\+t $\ast$link\+Ref)}{GetNextLink(RemoteListAccess_t *listInfoRef, le_dls_Link_t *linkRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+dls\+\_\+\+Link\+\_\+t}$\ast$ Get\+Next\+Link (
+\begin{DoxyParamCaption}
+\item[{{\bf Remote\+List\+Access\+\_\+t} $\ast$}]{list\+Info\+Ref, }
+\item[{{\bf le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$}]{link\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a16816bfd1f39c0b44d6fa8400aa2fe8e}{}\label{inspect_8c_a16816bfd1f39c0b44d6fa8400aa2fe8e}
+Gets the next link of the provided link. This is for accessing a list in a remote process, otherwise the doubly linked list A\+PI can simply be used. Note that \char`\"{}link\+Ref\char`\"{} is a ref to a locally existing link obj, which is a link for a remote node. Therefore Get\+Next\+Link cannot be called back-\/to-\/back.
+
+Also, if Get\+Next\+Link is called the first time for a given list\+Info\+Ref, link\+Ref is not used.
+
+After calling Get\+Next\+Link, the returned link ptr must be used to read the associated remote node into the local memory space. One would then retrieve the link object from the node, and then Get\+Next\+Link can be called on the ref of that link object.
+
+\begin{DoxyReturn}{Returns}
+Pointer to a link of a node in the remote process 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em list\+Info\+Ref} & Object for accessing a list in the remote process. \\
+\hline
+\mbox{\tt in}  & {\em link\+Ref} & Link of a node in the remote process. This is a ref to a locally existing link obj. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Mem\+Pool@{Get\+Next\+Mem\+Pool}}
+\index{Get\+Next\+Mem\+Pool@{Get\+Next\+Mem\+Pool}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Mem\+Pool(\+Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t mem\+Pool\+Iter\+Ref)}{GetNextMemPool(MemPoolIter_Ref_t memPoolIterRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Mem\+Pool\+\_\+t}$\ast$ Get\+Next\+Mem\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Mem\+Pool\+Iter\+\_\+\+Ref\+\_\+t}}]{mem\+Pool\+Iter\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a34ba73a533210cdba6de6ebb3bed7265}{}\label{inspect_8c_a34ba73a533210cdba6de6ebb3bed7265}
+Gets the next memory pool from the specified iterator. The first time this function is called after \hyperlink{inspect_8c_a78d16c064fae7ff6a78ee3adf8872f15}{Create\+Mem\+Pool\+Iter()} is called, the first memory pool in the list is returned. The second time this function is called the second memory pool is returned and so on.
+
+\begin{DoxyWarning}{Warning}
+The memory pool returned by this function belongs to the remote process. Do not attempt to expand the pool or allocate objects from the pool, doing so will lead to memory leaks in the calling process.
+\end{DoxyWarning}
+\begin{DoxyReturn}{Returns}
+A memory pool from the iterator\textquotesingle{}s list of memory pools. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em mem\+Pool\+Iter\+Ref} & The iterator to get the next mem pool from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Mutex@{Get\+Next\+Mutex}}
+\index{Get\+Next\+Mutex@{Get\+Next\+Mutex}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Mutex(\+Mutex\+Iter\+\_\+\+Ref\+\_\+t mutex\+Iter\+Ref)}{GetNextMutex(MutexIter_Ref_t mutexIterRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Mutex\+\_\+t}$\ast$ Get\+Next\+Mutex (
+\begin{DoxyParamCaption}
+\item[{{\bf Mutex\+Iter\+\_\+\+Ref\+\_\+t}}]{mutex\+Iter\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a536c160ca5e5a362f88a16373b33a69f}{}\label{inspect_8c_a536c160ca5e5a362f88a16373b33a69f}
+See Get\+Next\+Timer.
+
+\begin{DoxyReturn}{Returns}
+A mutex from the iterator\textquotesingle{}s list of mutexes. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em mutex\+Iter\+Ref} & The iterator to get the next mutex from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Semaphore@{Get\+Next\+Semaphore}}
+\index{Get\+Next\+Semaphore@{Get\+Next\+Semaphore}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Semaphore(\+Semaphore\+Iter\+\_\+\+Ref\+\_\+t sema\+Iter\+Ref)}{GetNextSemaphore(SemaphoreIter_Ref_t semaIterRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Semaphore\+\_\+t}$\ast$ Get\+Next\+Semaphore (
+\begin{DoxyParamCaption}
+\item[{{\bf Semaphore\+Iter\+\_\+\+Ref\+\_\+t}}]{sema\+Iter\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a67dfde28e9e21954413eeb116685500e}{}\label{inspect_8c_a67dfde28e9e21954413eeb116685500e}
+Get the next semaphore. Since there\textquotesingle{}s no \char`\"{}semaphore list\char`\"{} and therefore each thread object owns one semaphore object directly (ie. not on a list), this is handled a little differently from other Get\+Next\+X\+XX fcns. This takes advantage of the existing Get\+Next\+Thread\+Obj, updates the \char`\"{}current thread obj\char`\"{} in the iterator, and access the semaphore object directly. Note that this fcn could\textquotesingle{}ve been done the same way as Get\+Next\+Mutex and Timer since semaphore is also a \char`\"{}thread
+member obj\char`\"{}, but I\textquotesingle{}ve decided to do it this way instead of creating dummies and jumping through hoops to satisfy the abstraction.
+
+\begin{DoxyReturn}{Returns}
+A semaphore from the iterator\textquotesingle{}s list of thread obj. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em sema\+Iter\+Ref} & The iterator to get the next sempaphore from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Service\+Obj@{Get\+Next\+Service\+Obj}}
+\index{Get\+Next\+Service\+Obj@{Get\+Next\+Service\+Obj}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Service\+Obj(\+Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t service\+Obj\+Iter\+Ref)}{GetNextServiceObj(ServiceObjIter_Ref_t serviceObjIterRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf msg\+Interface\+\_\+\+Service\+\_\+t}$\ast$ Get\+Next\+Service\+Obj (
+\begin{DoxyParamCaption}
+\item[{{\bf Service\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}]{service\+Obj\+Iter\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ab34066cc17285f84c70d19e792b0b925}{}\label{inspect_8c_ab34066cc17285f84c70d19e792b0b925}
+Gets the next service object from the specified iterator. For other detail see Get\+Next\+Mem\+Pool.
+
+\begin{DoxyReturn}{Returns}
+A service object from the iterator\textquotesingle{}s list of service objects. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em service\+Obj\+Iter\+Ref} & The iterator to get the next service obj from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Session\+Obj@{Get\+Next\+Session\+Obj}}
+\index{Get\+Next\+Session\+Obj@{Get\+Next\+Session\+Obj}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Session\+Obj(\+Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t session\+Obj\+Iter\+Ref)}{GetNextSessionObj(SessionObjIter_Ref_t sessionObjIterRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf msg\+Session\+\_\+\+Session\+\_\+t}$\ast$ Get\+Next\+Session\+Obj (
+\begin{DoxyParamCaption}
+\item[{{\bf Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}]{session\+Obj\+Iter\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a7a40c6a37598ea594b1b322c34ae5cd3}{}\label{inspect_8c_a7a40c6a37598ea594b1b322c34ae5cd3}
+Gets the next session object from the specified iterator. For other detail see Get\+Next\+Mem\+Pool.
+
+\begin{DoxyReturn}{Returns}
+A session object from the iterator\textquotesingle{}s list of session objects. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Obj\+Iter\+Ref} & The iterator to get the next session obj from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Thread\+Member\+Obj\+Link\+Ptr@{Get\+Next\+Thread\+Member\+Obj\+Link\+Ptr}}
+\index{Get\+Next\+Thread\+Member\+Obj\+Link\+Ptr@{Get\+Next\+Thread\+Member\+Obj\+Link\+Ptr}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Thread\+Member\+Obj\+Link\+Ptr(\+Insp\+Type\+\_\+t member\+Obj\+Type, Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t thread\+Member\+Obj\+Itr\+Ref)}{GetNextThreadMemberObjLinkPtr(InspType_t memberObjType, ThreadMemberObjIter_Ref_t threadMemberObjItrRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+dls\+\_\+\+Link\+\_\+t}$\ast$ Get\+Next\+Thread\+Member\+Obj\+Link\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf Insp\+Type\+\_\+t}}]{member\+Obj\+Type, }
+\item[{{\bf Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}]{thread\+Member\+Obj\+Itr\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a3c6afdafc1198920fb8d491662dd0d88}{}\label{inspect_8c_a3c6afdafc1198920fb8d491662dd0d88}
+Gets the next thread member object link ptr from the specified iterator. For other detail see Get\+Next\+Mem\+Pool. This is a helper function for Get\+Next\+Timer and Get\+Next\+Mutex.
+
+\begin{DoxyReturn}{Returns}
+A thread member obj link ptr. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em member\+Obj\+Type} & The type of thread member object. \\
+\hline
+\mbox{\tt in}  & {\em thread\+Member\+Obj\+Itr\+Ref} & The iterator to get the next thread member obj from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Thread\+Obj@{Get\+Next\+Thread\+Obj}}
+\index{Get\+Next\+Thread\+Obj@{Get\+Next\+Thread\+Obj}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Thread\+Obj(\+Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t thread\+Obj\+Iter\+Ref)}{GetNextThreadObj(ThreadObjIter_Ref_t threadObjIterRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf thread\+\_\+\+Obj\+\_\+t}$\ast$ Get\+Next\+Thread\+Obj (
+\begin{DoxyParamCaption}
+\item[{{\bf Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}]{thread\+Obj\+Iter\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_abbf1ec3a24785f72cb3a83c84c699483}{}\label{inspect_8c_abbf1ec3a24785f72cb3a83c84c699483}
+Gets the next thread object from the specified iterator. For other detail see Get\+Next\+Mem\+Pool.
+
+\begin{DoxyReturn}{Returns}
+A thread object from the iterator\textquotesingle{}s list of thread objects. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em thread\+Obj\+Iter\+Ref} & The iterator to get the next thread obj from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Next\+Timer@{Get\+Next\+Timer}}
+\index{Get\+Next\+Timer@{Get\+Next\+Timer}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Next\+Timer(\+Timer\+Iter\+\_\+\+Ref\+\_\+t timer\+Iter\+Ref)}{GetNextTimer(TimerIter_Ref_t timerIterRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Timer\+\_\+t}$\ast$ Get\+Next\+Timer (
+\begin{DoxyParamCaption}
+\item[{{\bf Timer\+Iter\+\_\+\+Ref\+\_\+t}}]{timer\+Iter\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a1db909d359037e75bdd08f8da94fb26c}{}\label{inspect_8c_a1db909d359037e75bdd08f8da94fb26c}
+Gets the next timer from the specified iterator. All timers from all thread objects are considered to be on a single timer list. Therefore the out param would be N\+U\+LL only when all timer lists from all thread objects have been iterated.
+
+\begin{DoxyReturn}{Returns}
+A timer from the iterator\textquotesingle{}s list of timers. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Iter\+Ref} & The iterator to get the next timer from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Remote\+Address@{Get\+Remote\+Address}}
+\index{Get\+Remote\+Address@{Get\+Remote\+Address}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Remote\+Address(pid\+\_\+t pid, void $\ast$local\+Addr\+Ptr)}{GetRemoteAddress(pid_t pid, void *localAddrPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static off\+\_\+t Get\+Remote\+Address (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{pid, }
+\item[{{\bf void} $\ast$}]{local\+Addr\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a0a38685cefe1c153879282b8930f0ded}{}\label{inspect_8c_a0a38685cefe1c153879282b8930f0ded}
+Gets the counterpart address of the specified local reference in the address space of the specified process.
+
+\begin{DoxyReturn}{Returns}
+Remote address that is the counterpart of the local address. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pid} & Remote process to to get the address for. \\
+\hline
+\mbox{\tt in}  & {\em local\+Addr\+Ptr} & Local address to get the offset with. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Sem\+Thread\+Rec\+Ptr@{Get\+Sem\+Thread\+Rec\+Ptr}}
+\index{Get\+Sem\+Thread\+Rec\+Ptr@{Get\+Sem\+Thread\+Rec\+Ptr}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Sem\+Thread\+Rec\+Ptr(le\+\_\+dls\+\_\+\+Link\+\_\+t $\ast$curr\+Node\+Link\+Ptr)}{GetSemThreadRecPtr(le_dls_Link_t *currNodeLinkPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void}$\ast$ Get\+Sem\+Thread\+Rec\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$}]{curr\+Node\+Link\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ad91c07bf1b9c8270cb762535fdde37be}{}\label{inspect_8c_ad91c07bf1b9c8270cb762535fdde37be}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em curr\+Node\+Link\+Ptr} & waiting list link ptr. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Session\+List\+Chg\+Cnt@{Get\+Session\+List\+Chg\+Cnt}}
+\index{Get\+Session\+List\+Chg\+Cnt@{Get\+Session\+List\+Chg\+Cnt}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Session\+List\+Chg\+Cnt(\+Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t iterator)}{GetSessionListChgCnt(SessionObjIter_Ref_t iterator)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Get\+Session\+List\+Chg\+Cnt (
+\begin{DoxyParamCaption}
+\item[{{\bf Session\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}]{iterator}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a940c3620f5d020cd20fd0e4deb50b385}{}\label{inspect_8c_a940c3620f5d020cd20fd0e4deb50b385}
+Gets the session list change counter from the specified iterator. The session list is also considered \char`\"{}changed\char`\"{} if the interface object has changed.
+
+\begin{DoxyReturn}{Returns}
+Map change counter. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em iterator} & The iterator to get the list change counter from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Thread\+Member\+Obj\+List@{Get\+Thread\+Member\+Obj\+List}}
+\index{Get\+Thread\+Member\+Obj\+List@{Get\+Thread\+Member\+Obj\+List}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Thread\+Member\+Obj\+List(\+Insp\+Type\+\_\+t member\+Obj\+Type, thread\+\_\+\+Obj\+\_\+t $\ast$thread\+Obj\+Ref)}{GetThreadMemberObjList(InspType_t memberObjType, thread_Obj_t *threadObjRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+dls\+\_\+\+Link\+\_\+t}$\ast$ Get\+Thread\+Member\+Obj\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf Insp\+Type\+\_\+t}}]{member\+Obj\+Type, }
+\item[{{\bf thread\+\_\+\+Obj\+\_\+t} $\ast$}]{thread\+Obj\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a4b98eb5512629564b2c8330f2cd49560}{}\label{inspect_8c_a4b98eb5512629564b2c8330f2cd49560}
+Given a thread object, retrieve the thread member object list based on the member type specified.
+
+\begin{DoxyReturn}{Returns}
+The thread member object list under inspection. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em member\+Obj\+Type} & The type of the thread member object. \\
+\hline
+\mbox{\tt in}  & {\em thread\+Obj\+Ref} & Thread object ref. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Thread\+Member\+Obj\+List\+Chg\+Cnt@{Get\+Thread\+Member\+Obj\+List\+Chg\+Cnt}}
+\index{Get\+Thread\+Member\+Obj\+List\+Chg\+Cnt@{Get\+Thread\+Member\+Obj\+List\+Chg\+Cnt}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Thread\+Member\+Obj\+List\+Chg\+Cnt(\+Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t iterator)}{GetThreadMemberObjListChgCnt(ThreadMemberObjIter_Ref_t iterator)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Get\+Thread\+Member\+Obj\+List\+Chg\+Cnt (
+\begin{DoxyParamCaption}
+\item[{{\bf Thread\+Member\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}]{iterator}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a8f825169778d8dda9121364b2870fabb}{}\label{inspect_8c_a8f825169778d8dda9121364b2870fabb}
+Gets the timer list change counter from the specified iterator. Note while there\textquotesingle{}s one timer list for a thread, the timer list change counter is for all timer lists. Also the timer list is considered \char`\"{}changed\char`\"{} if the thread object list has changed (hence the addition of the timer and thread object list change counters). The same applies to the mutex and semaphore list change counter.
+
+\begin{DoxyReturn}{Returns}
+List change counter. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em iterator} & The iterator to get the list change counter from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Thread\+Obj\+List\+Chg\+Cnt@{Get\+Thread\+Obj\+List\+Chg\+Cnt}}
+\index{Get\+Thread\+Obj\+List\+Chg\+Cnt@{Get\+Thread\+Obj\+List\+Chg\+Cnt}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Thread\+Obj\+List\+Chg\+Cnt(\+Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t iterator)}{GetThreadObjListChgCnt(ThreadObjIter_Ref_t iterator)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Get\+Thread\+Obj\+List\+Chg\+Cnt (
+\begin{DoxyParamCaption}
+\item[{{\bf Thread\+Obj\+Iter\+\_\+\+Ref\+\_\+t}}]{iterator}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a39cb0efafd0483c0ac35e86e050c6c52}{}\label{inspect_8c_a39cb0efafd0483c0ac35e86e050c6c52}
+Gets the thread object list change counter from the specified iterator.
+
+\begin{DoxyReturn}{Returns}
+List change counter. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em iterator} & The iterator to get the list change counter from. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Thread\+Ptr\+From\+Mutex\+Link@{Get\+Thread\+Ptr\+From\+Mutex\+Link}}
+\index{Get\+Thread\+Ptr\+From\+Mutex\+Link@{Get\+Thread\+Ptr\+From\+Mutex\+Link}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Thread\+Ptr\+From\+Mutex\+Link(void $\ast$curr\+Node\+Ptr)}{GetThreadPtrFromMutexLink(void *currNodePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf thread\+\_\+\+Obj\+\_\+t}$\ast$ Get\+Thread\+Ptr\+From\+Mutex\+Link (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{curr\+Node\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aaf5e8aaaf28261da411b5c81e672f7c0}{}\label{inspect_8c_aaf5e8aaaf28261da411b5c81e672f7c0}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em curr\+Node\+Ptr} & thread record ptr. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Thread\+Ptr\+From\+Sem\+Link@{Get\+Thread\+Ptr\+From\+Sem\+Link}}
+\index{Get\+Thread\+Ptr\+From\+Sem\+Link@{Get\+Thread\+Ptr\+From\+Sem\+Link}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Thread\+Ptr\+From\+Sem\+Link(void $\ast$curr\+Node\+Ptr)}{GetThreadPtrFromSemLink(void *currNodePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf thread\+\_\+\+Obj\+\_\+t}$\ast$ Get\+Thread\+Ptr\+From\+Sem\+Link (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{curr\+Node\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a7667416b15afc84264a58b555829965c}{}\label{inspect_8c_a7667416b15afc84264a58b555829965c}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em curr\+Node\+Ptr} & thread record ptr. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Waiting\+List\+Link@{Get\+Waiting\+List\+Link}}
+\index{Get\+Waiting\+List\+Link@{Get\+Waiting\+List\+Link}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Waiting\+List\+Link(\+Insp\+Type\+\_\+t inspect\+Type, void $\ast$thread\+Rec\+Ptr)}{GetWaitingListLink(InspType_t inspectType, void *threadRecPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+dls\+\_\+\+Link\+\_\+t} Get\+Waiting\+List\+Link (
+\begin{DoxyParamCaption}
+\item[{{\bf Insp\+Type\+\_\+t}}]{inspect\+Type, }
+\item[{{\bf void} $\ast$}]{thread\+Rec\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a3dee2612c8882980f14c2def88b7d1b6}{}\label{inspect_8c_a3dee2612c8882980f14c2def88b7d1b6}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em inspect\+Type} & What to inspect. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Get\+Waiting\+List\+Thread\+Names@{Get\+Waiting\+List\+Thread\+Names}}
+\index{Get\+Waiting\+List\+Thread\+Names@{Get\+Waiting\+List\+Thread\+Names}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Waiting\+List\+Thread\+Names(\+Insp\+Type\+\_\+t inspect\+Type, le\+\_\+dls\+\_\+\+List\+\_\+t remote\+Waiting\+List, char $\ast$$\ast$waiting\+Thread\+Names, size\+\_\+t waiting\+Thread\+Names\+Num, int $\ast$thread\+Name\+Num\+Ptr)}{GetWaitingListThreadNames(InspType_t inspectType, le_dls_List_t remoteWaitingList, char **waitingThreadNames, size_t waitingThreadNamesNum, int *threadNameNumPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Get\+Waiting\+List\+Thread\+Names (
+\begin{DoxyParamCaption}
+\item[{{\bf Insp\+Type\+\_\+t}}]{inspect\+Type, }
+\item[{{\bf le\+\_\+dls\+\_\+\+List\+\_\+t}}]{remote\+Waiting\+List, }
+\item[{char $\ast$$\ast$}]{waiting\+Thread\+Names, }
+\item[{size\+\_\+t}]{waiting\+Thread\+Names\+Num, }
+\item[{int $\ast$}]{thread\+Name\+Num\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a536f128b24d3b88a435377d4a0b98f4f}{}\label{inspect_8c_a536f128b24d3b88a435377d4a0b98f4f}
+Given a remote \char`\"{}waiting list\char`\"{} with thread records as members, constrcut an array of thread names that are on the \char`\"{}waiting list\char`\"{}. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em inspect\+Type} & What to inspect. \\
+\hline
+\mbox{\tt in}  & {\em remote\+Waiting\+List} & Waiting list in the remote process. \\
+\hline
+\mbox{\tt out}  & {\em waiting\+Thread\+Names} & Array of thread names on the waiting list. \\
+\hline
+\mbox{\tt in}  & {\em waiting\+Thread\+Names\+Num} & Max number of thread names the array can contain. \\
+\hline
+\mbox{\tt out}  & {\em thread\+Name\+Num\+Ptr} & Number of thread names written to the array. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!if@{if}}
+\index{if@{if}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{if("!Is\+Following)}{if(!IsFollowing)}}]{\setlength{\rightskip}{0pt plus 5cm}if (
+\begin{DoxyParamCaption}
+\item[{!}]{Is\+Following}
+\end{DoxyParamCaption}
+)}\hypertarget{inspect_8c_adb9cf5f84b8d3d1ee54a403566b28610}{}\label{inspect_8c_adb9cf5f84b8d3d1ee54a403566b28610}
+\index{inspect.\+c@{inspect.\+c}!Init\+Display@{Init\+Display}}
+\index{Init\+Display@{Init\+Display}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Display(\+Insp\+Type\+\_\+t inspect\+Type)}{InitDisplay(InspType_t inspectType)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Init\+Display (
+\begin{DoxyParamCaption}
+\item[{{\bf Insp\+Type\+\_\+t}}]{inspect\+Type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aba5422516afcb6e4d894de9a4fe905a6}{}\label{inspect_8c_aba5422516afcb6e4d894de9a4fe905a6}
+Initialize all display tables, and other misc. display related chores. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em inspect\+Type} & What to inspect. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Init\+Display@{Init\+Display}}
+\index{Init\+Display@{Init\+Display}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Display(\+Inspect\+Type)}{InitDisplay(InspectType)}}]{\setlength{\rightskip}{0pt plus 5cm}Init\+Display (
+\begin{DoxyParamCaption}
+\item[{{\bf Inspect\+Type}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{inspect_8c_a735feb7a754ffba77fa222db6b620ed6}{}\label{inspect_8c_a735feb7a754ffba77fa222db6b620ed6}
+\index{inspect.\+c@{inspect.\+c}!Init\+Display\+Table@{Init\+Display\+Table}}
+\index{Init\+Display\+Table@{Init\+Display\+Table}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Display\+Table(\+Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size)}{InitDisplayTable(ColumnInfo_t *table, size_t tableSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Init\+Display\+Table (
+\begin{DoxyParamCaption}
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aaa07620e8f6f1ec6a52b84ab4676671a}{}\label{inspect_8c_aaa07620e8f6f1ec6a52b84ab4676671a}
+Initialize a display table. This function calculates the appropriate column widths that will accomodate all possible data for each column. With column widths calculated, column and line buffers are also properly initialized. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em table} & Table ref. \\
+\hline
+\mbox{\tt in}  & {\em table\+Size} & Table size. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Init\+Display\+Table\+Max\+Data\+Size@{Init\+Display\+Table\+Max\+Data\+Size}}
+\index{Init\+Display\+Table\+Max\+Data\+Size@{Init\+Display\+Table\+Max\+Data\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Display\+Table\+Max\+Data\+Size(char $\ast$col\+Title, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, size\+\_\+t max\+Data\+Size)}{InitDisplayTableMaxDataSize(char *colTitle, ColumnInfo_t *table, size_t tableSize, size_t maxDataSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Init\+Display\+Table\+Max\+Data\+Size (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{col\+Title, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{size\+\_\+t}]{max\+Data\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a24608d1637f2d783b7cc39c0585c9cc9}{}\label{inspect_8c_a24608d1637f2d783b7cc39c0585c9cc9}
+Initialize the max data size of the specified column in the specified table. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em col\+Title} & As a key for lookup, title of column to print the string under. \\
+\hline
+\mbox{\tt in}  & {\em table} & Table ref. \\
+\hline
+\mbox{\tt in}  & {\em table\+Size} & Table size. \\
+\hline
+\mbox{\tt in}  & {\em max\+Data\+Size} & Max data size to init the column with. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Init\+Iterator\+Pool@{Init\+Iterator\+Pool}}
+\index{Init\+Iterator\+Pool@{Init\+Iterator\+Pool}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Iterator\+Pool(\+Insp\+Type\+\_\+t inspect\+Type)}{InitIteratorPool(InspType_t inspectType)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Init\+Iterator\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Insp\+Type\+\_\+t}}]{inspect\+Type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a236a8e4d08ef82b4bb3bc75a83d5afbd}{}\label{inspect_8c_a236a8e4d08ef82b4bb3bc75a83d5afbd}
+Create a memory pool for the iterators depending on the inspect type. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em inspect\+Type} & What to inspect. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Init\+Iterator\+Pool@{Init\+Iterator\+Pool}}
+\index{Init\+Iterator\+Pool@{Init\+Iterator\+Pool}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Iterator\+Pool(\+Inspect\+Type)}{InitIteratorPool(InspectType)}}]{\setlength{\rightskip}{0pt plus 5cm}Init\+Iterator\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Inspect\+Type}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{inspect_8c_a47cb76fe1e20c92cf081326677e9be42}{}\label{inspect_8c_a47cb76fe1e20c92cf081326677e9be42}
+\index{inspect.\+c@{inspect.\+c}!Init\+Remote\+List\+Access\+Obj@{Init\+Remote\+List\+Access\+Obj}}
+\index{Init\+Remote\+List\+Access\+Obj@{Init\+Remote\+List\+Access\+Obj}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Remote\+List\+Access\+Obj(\+Remote\+List\+Access\+\_\+t $\ast$remote\+List)}{InitRemoteListAccessObj(RemoteListAccess_t *remoteList)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Init\+Remote\+List\+Access\+Obj (
+\begin{DoxyParamCaption}
+\item[{{\bf Remote\+List\+Access\+\_\+t} $\ast$}]{remote\+List}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ab70cc75e1f385fe0ef7c0f72f94e90e0}{}\label{inspect_8c_ab70cc75e1f385fe0ef7c0f72f94e90e0}
+Initialize a \hyperlink{struct_remote_list_access__t}{Remote\+List\+Access\+\_\+t} data struct. \index{inspect.\+c@{inspect.\+c}!Inspect\+End\+Handling@{Inspect\+End\+Handling}}
+\index{Inspect\+End\+Handling@{Inspect\+End\+Handling}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Inspect\+End\+Handling(\+Inspect\+End\+Status\+\_\+t end\+Status)}{InspectEndHandling(InspectEndStatus_t endStatus)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Inspect\+End\+Handling (
+\begin{DoxyParamCaption}
+\item[{{\bf Inspect\+End\+Status\+\_\+t}}]{end\+Status}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a04b723a0a05615975a82d842c923c581}{}\label{inspect_8c_a04b723a0a05615975a82d842c923c581}
+Performs actions when an inspection ends depending on how it ends. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em end\+Status} & How an inspection ended. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Inspect\+Func@{Inspect\+Func}}
+\index{Inspect\+Func@{Inspect\+Func}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Inspect\+Func(\+Insp\+Type\+\_\+t inspect\+Type)}{InspectFunc(InspType_t inspectType)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Inspect\+Func (
+\begin{DoxyParamCaption}
+\item[{{\bf Insp\+Type\+\_\+t}}]{inspect\+Type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ac9bde6e0203100aae7eaba935480a799}{}\label{inspect_8c_ac9bde6e0203100aae7eaba935480a799}
+Performs the specified inspection for the specified process. Prints the results to stdout. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em inspect\+Type} & What to inspect. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Inspect\+Func@{Inspect\+Func}}
+\index{Inspect\+Func@{Inspect\+Func}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Inspect\+Func(\+Inspect\+Type)}{InspectFunc(InspectType)}}]{\setlength{\rightskip}{0pt plus 5cm}Inspect\+Func (
+\begin{DoxyParamCaption}
+\item[{{\bf Inspect\+Type}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{inspect_8c_a2ee8d0737dc4c127d2e4dd1fdf21033f}{}\label{inspect_8c_a2ee8d0737dc4c127d2e4dd1fdf21033f}
+\index{inspect.\+c@{inspect.\+c}!Ipc\+Interface\+Type\+Handler@{Ipc\+Interface\+Type\+Handler}}
+\index{Ipc\+Interface\+Type\+Handler@{Ipc\+Interface\+Type\+Handler}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Ipc\+Interface\+Type\+Handler(const char $\ast$interface\+Type)}{IpcInterfaceTypeHandler(const char *interfaceType)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Ipc\+Interface\+Type\+Handler (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{interface\+Type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a983b1cc4594de6f11277ab857135d114}{}\label{inspect_8c_a983b1cc4594de6f11277ab857135d114}
+I\+PC interface type handler. \index{inspect.\+c@{inspect.\+c}!Ipc\+Session\+Arg\+Handler@{Ipc\+Session\+Arg\+Handler}}
+\index{Ipc\+Session\+Arg\+Handler@{Ipc\+Session\+Arg\+Handler}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Ipc\+Session\+Arg\+Handler(const char $\ast$sessions\+Arg)}{IpcSessionArgHandler(const char *sessionsArg)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Ipc\+Session\+Arg\+Handler (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{sessions\+Arg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aa50723e1ff7029a8775cb044929b1ba4}{}\label{inspect_8c_aa50723e1ff7029a8775cb044929b1ba4}
+I\+PC sessions argument handler. \index{inspect.\+c@{inspect.\+c}!le\+\_\+arg\+\_\+\+Scan@{le\+\_\+arg\+\_\+\+Scan}}
+\index{le\+\_\+arg\+\_\+\+Scan@{le\+\_\+arg\+\_\+\+Scan}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+arg\+\_\+\+Scan()}{le_arg_Scan()}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+arg\+\_\+\+Scan (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{inspect_8c_a90d7318a26a47ff744c89bedb6b02907}{}\label{inspect_8c_a90d7318a26a47ff744c89bedb6b02907}
+Scans the argument list, setting variables and calling callbacks registered using the le\+\_\+arg\+\_\+\+Set\+Xxx\+Var(), le\+\_\+arg\+\_\+\+Set\+Xxx\+Callback(), and le\+\_\+arg\+\_\+\+Add\+Positional\+Parameters() functions. \index{inspect.\+c@{inspect.\+c}!le\+\_\+arg\+\_\+\+Set\+Flag\+Callback@{le\+\_\+arg\+\_\+\+Set\+Flag\+Callback}}
+\index{le\+\_\+arg\+\_\+\+Set\+Flag\+Callback@{le\+\_\+arg\+\_\+\+Set\+Flag\+Callback}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+arg\+\_\+\+Set\+Flag\+Callback(\+Print\+Help, N\+U\+L\+L,""help"")}{le_arg_SetFlagCallback(PrintHelp, NULL,"help")}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+arg\+\_\+\+Set\+Flag\+Callback (
+\begin{DoxyParamCaption}
+\item[{{\bf Print\+Help}}]{, }
+\item[{N\+U\+LL}]{, }
+\item[{\char`\"{}help\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{inspect_8c_a436590eed10831baf046b23d8442753c}{}\label{inspect_8c_a436590eed10831baf046b23d8442753c}
+\index{inspect.\+c@{inspect.\+c}!le\+\_\+arg\+\_\+\+Set\+Int\+Callback@{le\+\_\+arg\+\_\+\+Set\+Int\+Callback}}
+\index{le\+\_\+arg\+\_\+\+Set\+Int\+Callback@{le\+\_\+arg\+\_\+\+Set\+Int\+Callback}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+arg\+\_\+\+Set\+Int\+Callback(\+Follow\+Option\+Callback, N\+U\+L\+L,""interval"")}{le_arg_SetIntCallback(FollowOptionCallback, NULL,"interval")}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+arg\+\_\+\+Set\+Int\+Callback (
+\begin{DoxyParamCaption}
+\item[{{\bf Follow\+Option\+Callback}}]{, }
+\item[{N\+U\+LL}]{, }
+\item[{\char`\"{}interval\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{inspect_8c_ad26e43b067cac83f86cd1d062b55e24b}{}\label{inspect_8c_ad26e43b067cac83f86cd1d062b55e24b}
+\index{inspect.\+c@{inspect.\+c}!le\+\_\+arg\+\_\+\+Set\+String\+Callback@{le\+\_\+arg\+\_\+\+Set\+String\+Callback}}
+\index{le\+\_\+arg\+\_\+\+Set\+String\+Callback@{le\+\_\+arg\+\_\+\+Set\+String\+Callback}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+arg\+\_\+\+Set\+String\+Callback(\+Format\+Option\+Callback, N\+U\+L\+L,""format"")}{le_arg_SetStringCallback(FormatOptionCallback, NULL,"format")}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+arg\+\_\+\+Set\+String\+Callback (
+\begin{DoxyParamCaption}
+\item[{{\bf Format\+Option\+Callback}}]{, }
+\item[{N\+U\+LL}]{, }
+\item[{\char`\"{}format\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{inspect_8c_ae2546fab020db8d1db5848937c39fd64}{}\label{inspect_8c_ae2546fab020db8d1db5848937c39fd64}
+\index{inspect.\+c@{inspect.\+c}!Lookup\+Thread\+Name@{Lookup\+Thread\+Name}}
+\index{Lookup\+Thread\+Name@{Lookup\+Thread\+Name}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Lookup\+Thread\+Name(size\+\_\+t thread\+Obj\+Safe\+Ref\+Addr, char $\ast$thread\+Obj\+Name\+Buffer, size\+\_\+t thread\+Obj\+Name\+Buffer\+Size)}{LookupThreadName(size_t threadObjSafeRefAddr, char *threadObjNameBuffer, size_t threadObjNameBufferSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Lookup\+Thread\+Name (
+\begin{DoxyParamCaption}
+\item[{size\+\_\+t}]{thread\+Obj\+Safe\+Ref\+Addr, }
+\item[{char $\ast$}]{thread\+Obj\+Name\+Buffer, }
+\item[{size\+\_\+t}]{thread\+Obj\+Name\+Buffer\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_acb861e4692a8be7ea3ce5ed2d2159cba}{}\label{inspect_8c_acb861e4692a8be7ea3ce5ed2d2159cba}
+Look up the thread name associated with the thread object safe ref being passed in. If there\textquotesingle{}s no match, the out buffer is emptied. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em thread\+Obj\+Safe\+Ref\+Addr} & thread obj safe ref used to look up thread name. \\
+\hline
+\mbox{\tt out}  & {\em thread\+Obj\+Name\+Buffer} & out buffer to stored the thread name. \\
+\hline
+\mbox{\tt in}  & {\em thread\+Obj\+Name\+Buffer\+Size} & size of the out buffer. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Open\+Proc\+Mem\+File@{Open\+Proc\+Mem\+File}}
+\index{Open\+Proc\+Mem\+File@{Open\+Proc\+Mem\+File}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Open\+Proc\+Mem\+File(pid\+\_\+t pid)}{OpenProcMemFile(pid_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Open\+Proc\+Mem\+File (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a92ff02d06b5b53e94c7d8036ca43f17d}{}\label{inspect_8c_a92ff02d06b5b53e94c7d8036ca43f17d}
+Opens the /proc/$<$\+P\+I\+D$>$/mem file for the specified pid and returns its fd.
+
+\begin{DoxyReturn}{Returns}
+The fd of the \char`\"{}mem\char`\"{} file opened. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pid} & The pid to open the \char`\"{}mem\char`\"{} file for. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Pid\+Arg\+Handler@{Pid\+Arg\+Handler}}
+\index{Pid\+Arg\+Handler@{Pid\+Arg\+Handler}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Pid\+Arg\+Handler(const char $\ast$pid\+Str)}{PidArgHandler(const char *pidStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Pid\+Arg\+Handler (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{pid\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ae6466e74677319c064e7babeffc8b8f0}{}\label{inspect_8c_ae6466e74677319c064e7babeffc8b8f0}
+Function called by command line argument scanner when the pid argument is found. \index{inspect.\+c@{inspect.\+c}!Print\+Client\+Obj\+Info@{Print\+Client\+Obj\+Info}}
+\index{Print\+Client\+Obj\+Info@{Print\+Client\+Obj\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Client\+Obj\+Info(msg\+Interface\+\_\+\+Client\+Interface\+\_\+t $\ast$client\+Obj\+Ref)}{PrintClientObjInfo(msgInterface_ClientInterface_t *clientObjRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Print\+Client\+Obj\+Info (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Interface\+\_\+\+Client\+Interface\+\_\+t} $\ast$}]{client\+Obj\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_add555c34d73a5bc0bbe19c2f62548247}{}\label{inspect_8c_add555c34d73a5bc0bbe19c2f62548247}
+Print client interface object information to stdout. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em client\+Obj\+Ref} & ref to client i/f obj to be printed. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Print\+Header@{Print\+Header}}
+\index{Print\+Header@{Print\+Header}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Header(\+Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size)}{PrintHeader(ColumnInfo_t *table, size_t tableSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Print\+Header (
+\begin{DoxyParamCaption}
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a57a59ee6fb208ae9c5a70c7ded340a49}{}\label{inspect_8c_a57a59ee6fb208ae9c5a70c7ded340a49}
+Prints the header row from the specified table. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em table} & Table ref. \\
+\hline
+\mbox{\tt in}  & {\em table\+Size} & Table size. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Print\+Help@{Print\+Help}}
+\index{Print\+Help@{Print\+Help}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Help(void)}{PrintHelp(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Print\+Help (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a4636a28aa35491d27d7c67d3495be126}{}\label{inspect_8c_a4636a28aa35491d27d7c67d3495be126}
+Prints help to stdout. \index{inspect.\+c@{inspect.\+c}!Print\+Info@{Print\+Info}}
+\index{Print\+Info@{Print\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Info(\+Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size)}{PrintInfo(ColumnInfo_t *table, size_t tableSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Print\+Info (
+\begin{DoxyParamCaption}
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_adb47af74dbf948ddc8b9628560085f80}{}\label{inspect_8c_adb47af74dbf948ddc8b9628560085f80}
+Prints a row for the currently inspected node from the specified table. The column buffers (col\+Field) need to be filled in prior to calling this function. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em table} & Table ref. \\
+\hline
+\mbox{\tt in}  & {\em table\+Size} & Table size. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Print\+Inspect\+Header@{Print\+Inspect\+Header}}
+\index{Print\+Inspect\+Header@{Print\+Inspect\+Header}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Inspect\+Header(void)}{PrintInspectHeader(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Print\+Inspect\+Header (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a7221f4b81e314a8a66f03255c8071d3b}{}\label{inspect_8c_a7221f4b81e314a8a66f03255c8071d3b}
+Print Inspect results header for human-\/readable format; and print global data for machine-\/ readable format.
+
+\begin{DoxyReturn}{Returns}
+The number of lines printed, if outputting human-\/readable format. 
+\end{DoxyReturn}
+\index{inspect.\+c@{inspect.\+c}!Print\+Mem\+Pool\+Info@{Print\+Mem\+Pool\+Info}}
+\index{Print\+Mem\+Pool\+Info@{Print\+Mem\+Pool\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Mem\+Pool\+Info(le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t mem\+Pool)}{PrintMemPoolInfo(le_mem_PoolRef_t memPool)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Print\+Mem\+Pool\+Info (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t}}]{mem\+Pool}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a3dc07414b2807e10dafe40e252c72ed2}{}\label{inspect_8c_a3dc07414b2807e10dafe40e252c72ed2}
+Print memory pool information to stdout. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em mem\+Pool} & ref to mem pool to be printed. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Print\+Mutex\+Info@{Print\+Mutex\+Info}}
+\index{Print\+Mutex\+Info@{Print\+Mutex\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Mutex\+Info(\+Mutex\+\_\+t $\ast$mutex\+Ref)}{PrintMutexInfo(Mutex_t *mutexRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Print\+Mutex\+Info (
+\begin{DoxyParamCaption}
+\item[{{\bf Mutex\+\_\+t} $\ast$}]{mutex\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aebdaf06a0f38f9d3ec9444bfa49d4a70}{}\label{inspect_8c_aebdaf06a0f38f9d3ec9444bfa49d4a70}
+Print mutex information to stdout. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em mutex\+Ref} & ref to mutex to be printed. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Print\+Semaphore\+Info@{Print\+Semaphore\+Info}}
+\index{Print\+Semaphore\+Info@{Print\+Semaphore\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Semaphore\+Info(\+Semaphore\+\_\+t $\ast$semaphore\+Ref)}{PrintSemaphoreInfo(Semaphore_t *semaphoreRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Print\+Semaphore\+Info (
+\begin{DoxyParamCaption}
+\item[{{\bf Semaphore\+\_\+t} $\ast$}]{semaphore\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a77eba72ab04775dbaeb779229f4eee9e}{}\label{inspect_8c_a77eba72ab04775dbaeb779229f4eee9e}
+Print semaphore information to stdout. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em semaphore\+Ref} & ref to semaphore to be printed. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Print\+Service\+Obj\+Info@{Print\+Service\+Obj\+Info}}
+\index{Print\+Service\+Obj\+Info@{Print\+Service\+Obj\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Service\+Obj\+Info(msg\+Interface\+\_\+\+Service\+\_\+t $\ast$service\+Obj\+Ref)}{PrintServiceObjInfo(msgInterface_Service_t *serviceObjRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Print\+Service\+Obj\+Info (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$}]{service\+Obj\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a5af1fb37946eadc194bdc839f195aac1}{}\label{inspect_8c_a5af1fb37946eadc194bdc839f195aac1}
+Print service object information to stdout. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em service\+Obj\+Ref} & ref to service obj to be printed. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Print\+Session\+Obj\+Info@{Print\+Session\+Obj\+Info}}
+\index{Print\+Session\+Obj\+Info@{Print\+Session\+Obj\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Session\+Obj\+Info(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Obj\+Ref)}{PrintSessionObjInfo(msgSession_Session_t *sessionObjRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Print\+Session\+Obj\+Info (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Obj\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a7d1b60d772abadc91e0393dbfd3f6bad}{}\label{inspect_8c_a7d1b60d772abadc91e0393dbfd3f6bad}
+Print session object information to stdout. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Obj\+Ref} & ref to session obj to be printed. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Print\+Thread\+Obj\+Info@{Print\+Thread\+Obj\+Info}}
+\index{Print\+Thread\+Obj\+Info@{Print\+Thread\+Obj\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Thread\+Obj\+Info(thread\+\_\+\+Obj\+\_\+t $\ast$thread\+Obj\+Ref)}{PrintThreadObjInfo(thread_Obj_t *threadObjRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Print\+Thread\+Obj\+Info (
+\begin{DoxyParamCaption}
+\item[{{\bf thread\+\_\+\+Obj\+\_\+t} $\ast$}]{thread\+Obj\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ae6344fa4294cdbc71b0b01851fdd9717}{}\label{inspect_8c_ae6344fa4294cdbc71b0b01851fdd9717}
+Print thread obj information to stdout. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em thread\+Obj\+Ref} & ref to thread obj to be printed. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Print\+Timer\+Info@{Print\+Timer\+Info}}
+\index{Print\+Timer\+Info@{Print\+Timer\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Timer\+Info(\+Timer\+\_\+t $\ast$timer\+Ref)}{PrintTimerInfo(Timer_t *timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Print\+Timer\+Info (
+\begin{DoxyParamCaption}
+\item[{{\bf Timer\+\_\+t} $\ast$}]{timer\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a5440bdad576fe29c9c17e52dbf57c48a}{}\label{inspect_8c_a5440bdad576fe29c9c17e52dbf57c48a}
+Print timer information to stdout. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & ref to timer to be printed. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Print\+Under\+Column@{Print\+Under\+Column}}
+\index{Print\+Under\+Column@{Print\+Under\+Column}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Under\+Column(char $\ast$col\+Title, Column\+Info\+\_\+t $\ast$table, size\+\_\+t table\+Size, char $\ast$str)}{PrintUnderColumn(char *colTitle, ColumnInfo_t *table, size_t tableSize, char *str)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Print\+Under\+Column (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{col\+Title, }
+\item[{{\bf Column\+Info\+\_\+t} $\ast$}]{table, }
+\item[{size\+\_\+t}]{table\+Size, }
+\item[{char $\ast$}]{str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a72c8609ad6c98829b08006fc23af9e57}{}\label{inspect_8c_a72c8609ad6c98829b08006fc23af9e57}
+If information spans across multiple lines, or if something needs to be printed under only a certain column, this function prints the specified string under the specified table and column. Nothing is printed for all other columns and no column spacers are printed. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em col\+Title} & As a key for lookup, title of column to print the string under. \\
+\hline
+\mbox{\tt in}  & {\em table} & Table ref. \\
+\hline
+\mbox{\tt in}  & {\em table\+Size} & Table size. \\
+\hline
+\mbox{\tt in}  & {\em str} & String to print under the specified column. \\
+\hline
+\end{DoxyParams}
+\index{inspect.\+c@{inspect.\+c}!Refresh\+Timer\+Handler@{Refresh\+Timer\+Handler}}
+\index{Refresh\+Timer\+Handler@{Refresh\+Timer\+Handler}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Refresh\+Timer\+Handler(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{RefreshTimerHandler(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Refresh\+Timer\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ad0c76025505bfd3197205aedc3d8f6ef}{}\label{inspect_8c_ad0c76025505bfd3197205aedc3d8f6ef}
+Function prototype needed by Inspect\+End\+Handling.
+
+Refresh timer handler. 
+
+\subsection{Variable Documentation}
+\index{inspect.\+c@{inspect.\+c}!Client\+Obj\+Table\+Info@{Client\+Obj\+Table\+Info}}
+\index{Client\+Obj\+Table\+Info@{Client\+Obj\+Table\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Obj\+Table\+Info}{ClientObjTableInfo}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Column\+Info\+\_\+t} Client\+Obj\+Table\+Info\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a040a482f92e75e82b25c65399f78ae6d}{}\label{inspect_8c_a040a482f92e75e82b25c65399f78ae6d}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{\textcolor{stringliteral}{"INTERFACE NAME"}, \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  \hyperlink{limit_8h_a06cfcaef1596f177e04ea0a131257c01}{LIMIT\_MAX\_IPC\_INTERFACE\_NAME\_BYTES}
+      , \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"PROTOCOL ID"},    \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  \hyperlink{limit_8h_ab51f3f9c6e3da08206cfd964b48d3e60}{LIMIT\_MAX\_PROTOCOL\_ID\_BYTES},        \textcolor{keyword}{
+      true},  0, \textcolor{keyword}{false}\},
+    \{\textcolor{stringliteral}{"MAX PAYLOAD"},    \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*zu"}, \textcolor{keyword}{sizeof}(size\_t),                     \textcolor{keyword}{false}, 0, \textcolor{keyword}{false}\},
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Client\+Obj\+Table\+Info\+Size@{Client\+Obj\+Table\+Info\+Size}}
+\index{Client\+Obj\+Table\+Info\+Size@{Client\+Obj\+Table\+Info\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Obj\+Table\+Info\+Size}{ClientObjTableInfoSize}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Client\+Obj\+Table\+Info\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Client\+Obj\+Table\+Info})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a5dcad1f2be17a2f922bd7815b2d6907b}{}\label{inspect_8c_a5dcad1f2be17a2f922bd7815b2d6907b}
+\index{inspect.\+c@{inspect.\+c}!Column\+Spacers@{Column\+Spacers}}
+\index{Column\+Spacers@{Column\+Spacers}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Column\+Spacers}{ColumnSpacers}}]{\setlength{\rightskip}{0pt plus 5cm}char Column\+Spacers\mbox{[}$\,$\mbox{]} = \char`\"{} $\vert$ \char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aaef04d1e9473e626ae721ca573db2aba}{}\label{inspect_8c_aaef04d1e9473e626ae721ca573db2aba}
+Characters representing dividers between columns. \index{inspect.\+c@{inspect.\+c}!C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}}
+\index{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}{COMPONENT_INIT}}]{\setlength{\rightskip}{0pt plus 5cm}C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}\hypertarget{inspect_8c_a0392d452f926ce36c4852de26b5eca12}{}\label{inspect_8c_a0392d452f926ce36c4852de26b5eca12}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+    
+    \hyperlink{le__args_8h_a525bef6095a4655e97008e27a4829d44}{le\_arg\_AddPositionalCallback}(\hyperlink{inspect_8c_ac6aa192ae9052b032bb8c36b19d35361}{CommandArgHandler})
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Fd\+Proc\+Mem@{Fd\+Proc\+Mem}}
+\index{Fd\+Proc\+Mem@{Fd\+Proc\+Mem}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Fd\+Proc\+Mem}{FdProcMem}}]{\setlength{\rightskip}{0pt plus 5cm}int Fd\+Proc\+Mem = -\/1\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_adbfc8d9822e9fe50a63bbd873d9c8d2a}{}\label{inspect_8c_adbfc8d9822e9fe50a63bbd873d9c8d2a}
+File descriptor of the /proc/$<$\+P\+I\+D$>$/mem file of the process under inspection. \index{inspect.\+c@{inspect.\+c}!Inspect\+Type@{Inspect\+Type}}
+\index{Inspect\+Type@{Inspect\+Type}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Inspect\+Type}{InspectType}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Insp\+Type\+\_\+t} Inspect\+Type}\hypertarget{inspect_8c_a4c0f5d132843db10c76c9bfb65673aa8}{}\label{inspect_8c_a4c0f5d132843db10c76c9bfb65673aa8}
+Inspection type. \index{inspect.\+c@{inspect.\+c}!Is\+Following@{Is\+Following}}
+\index{Is\+Following@{Is\+Following}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Following}{IsFollowing}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+arg\+\_\+\+Set\+Flag\+Var} \& Is\+Following = false\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a02e464811efe7d11ba85d80c56e4d02a}{}\label{inspect_8c_a02e464811efe7d11ba85d80c56e4d02a}
+true = follow (periodically update the output until the program is killed with S\+I\+G\+I\+NT or something). \index{inspect.\+c@{inspect.\+c}!Is\+Output\+Json@{Is\+Output\+Json}}
+\index{Is\+Output\+Json@{Is\+Output\+Json}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Output\+Json}{IsOutputJson}}]{\setlength{\rightskip}{0pt plus 5cm}bool Is\+Output\+Json = false\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a4d2b8df1fbb6e3e61e1cd6b55ac05431}{}\label{inspect_8c_a4d2b8df1fbb6e3e61e1cd6b55ac05431}
+Indicating if the Inspect results are output as the J\+S\+ON format or not. Currently false implies a human-\/readable format. \index{inspect.\+c@{inspect.\+c}!Is\+Printed\+Node\+First@{Is\+Printed\+Node\+First}}
+\index{Is\+Printed\+Node\+First@{Is\+Printed\+Node\+First}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Printed\+Node\+First}{IsPrintedNodeFirst}}]{\setlength{\rightskip}{0pt plus 5cm}bool Is\+Printed\+Node\+First = true\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ac7e2d00e2cc7939ba9267f65a5493f30}{}\label{inspect_8c_ac7e2d00e2cc7939ba9267f65a5493f30}
+For outputting J\+S\+ON format. If the node printed is not the first one, print a comma first to delimit from the last printed node. \index{inspect.\+c@{inspect.\+c}!Is\+Verbose@{Is\+Verbose}}
+\index{Is\+Verbose@{Is\+Verbose}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Verbose}{IsVerbose}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+arg\+\_\+\+Set\+Flag\+Var} \& Is\+Verbose = false\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ac0a159d61186ad28a25e11ded270bb70}{}\label{inspect_8c_ac0a159d61186ad28a25e11ded270bb70}
+true = verbose mode (everything is printed). \index{inspect.\+c@{inspect.\+c}!Iterator\+Pool@{Iterator\+Pool}}
+\index{Iterator\+Pool@{Iterator\+Pool}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Iterator\+Pool}{IteratorPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Iterator\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a94568218819e56d5349c0e49f324f2f7}{}\label{inspect_8c_a94568218819e56d5349c0e49f324f2f7}
+Local memory pool that is used for allocating an inspection object iterator. \index{inspect.\+c@{inspect.\+c}!Mem\+Pool\+Table\+Info@{Mem\+Pool\+Table\+Info}}
+\index{Mem\+Pool\+Table\+Info@{Mem\+Pool\+Table\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Mem\+Pool\+Table\+Info}{MemPoolTableInfo}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Column\+Info\+\_\+t} Mem\+Pool\+Table\+Info\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a1b7461370de84c072259574af899ce2e}{}\label{inspect_8c_a1b7461370de84c072259574af899ce2e}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{\textcolor{stringliteral}{"TOTAL BLKS"},  \textcolor{stringliteral}{"%*s"},  NULL, \textcolor{stringliteral}{"%*zu"},       \textcolor{keyword}{sizeof}(size\_t),              \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"USED BLKS"},   \textcolor{stringliteral}{"%*s"},  NULL, \textcolor{stringliteral}{"%*zu"},       \textcolor{keyword}{sizeof}(size\_t),              \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"MAX USED"},    \textcolor{stringliteral}{"%*s"},  NULL, \textcolor{stringliteral}{"%*zu"},       \textcolor{keyword}{sizeof}(size\_t),              \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"OVERFLOWS"},   \textcolor{stringliteral}{"%*s"},  NULL, \textcolor{stringliteral}{"%*zu"},       \textcolor{keyword}{sizeof}(size\_t),              \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"ALLOCS"},      \textcolor{stringliteral}{"%*s"},  NULL, \textcolor{stringliteral}{"%*"}PRIu64\textcolor{stringliteral}{""}, \textcolor{keyword}{sizeof}(uint64\_t),            \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"BLK BYTES"},   \textcolor{stringliteral}{"%*s"},  NULL, \textcolor{stringliteral}{"%*zu"},       \textcolor{keyword}{sizeof}(size\_t),              \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"USED BYTES"},  \textcolor{stringliteral}{"%*s"},  NULL, \textcolor{stringliteral}{"%*zu"},       \textcolor{keyword}{sizeof}(size\_t),              \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"MEMORY POOL"}, \textcolor{stringliteral}{"%-*s"}, NULL, \textcolor{stringliteral}{"%-*s"},       \hyperlink{limit_8h_afeb8f8cb014c41544a3b59f8d63e0645}{LIMIT\_MAX\_MEM\_POOL\_NAME\_LEN}, \textcolor{keyword}{
+      true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"SUB-POOL"},    \textcolor{stringliteral}{"%*s"},  NULL, \textcolor{stringliteral}{"%*s"},        0,                           \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\}
+\}
+\end{DoxyCode}
+These tables define the display tables of each inspection type. The column width is left at 0 here, but will be calculated in Init\+Display\+Table. The calculated column width is guaranteed to accomodate all possible data, so long as max\+Data\+Size and is\+String are correctly populated. The 0 max\+Data\+Size fields are populated in Init\+Display. A column title acts as an identifier so they need to be unique. The order of the \hyperlink{struct_column_info__t}{Column\+Info\+\_\+t} structs directly affect the order they are displayed at runtime (column with the smallest index is at the leftmost side). \index{inspect.\+c@{inspect.\+c}!Mem\+Pool\+Table\+Info\+Size@{Mem\+Pool\+Table\+Info\+Size}}
+\index{Mem\+Pool\+Table\+Info\+Size@{Mem\+Pool\+Table\+Info\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Mem\+Pool\+Table\+Info\+Size}{MemPoolTableInfoSize}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Mem\+Pool\+Table\+Info\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Mem\+Pool\+Table\+Info})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a9c6d1b1150c94754ded1831ef8112ac0}{}\label{inspect_8c_a9c6d1b1150c94754ded1831ef8112ac0}
+\index{inspect.\+c@{inspect.\+c}!Mutex\+Table\+Info@{Mutex\+Table\+Info}}
+\index{Mutex\+Table\+Info@{Mutex\+Table\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Mutex\+Table\+Info}{MutexTableInfo}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Column\+Info\+\_\+t} Mutex\+Table\+Info\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_adee83b80b028d232a967e67d8576b654}{}\label{inspect_8c_adee83b80b028d232a967e67d8576b654}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{\textcolor{stringliteral}{"NAME"},         \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"}, \hyperlink{mutex_8h_ab66a1b76292b571536c72e3795a5640d}{MAX\_NAME\_BYTES},       \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"LOCK COUNT"},   \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*d"}, \textcolor{keyword}{sizeof}(int),          \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"RECURSIVE"},    \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*u"}, \textcolor{keyword}{sizeof}(bool),         \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"WAITING LIST"}, \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"}, \hyperlink{thread_8h_ad14524ab7c2b14d0c553fb37eafcbdf0}{MAX\_THREAD\_NAME\_SIZE}, \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Mutex\+Table\+Info\+Size@{Mutex\+Table\+Info\+Size}}
+\index{Mutex\+Table\+Info\+Size@{Mutex\+Table\+Info\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Mutex\+Table\+Info\+Size}{MutexTableInfoSize}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Mutex\+Table\+Info\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Mutex\+Table\+Info})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a8e0e83eb05cc4eceeb2f42b920acf067}{}\label{inspect_8c_a8e0e83eb05cc4eceeb2f42b920acf067}
+\index{inspect.\+c@{inspect.\+c}!Pid\+To\+Inspect@{Pid\+To\+Inspect}}
+\index{Pid\+To\+Inspect@{Pid\+To\+Inspect}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Pid\+To\+Inspect}{PidToInspect}}]{\setlength{\rightskip}{0pt plus 5cm}pid\+\_\+t Pid\+To\+Inspect = -\/1\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a492420a95432e8059cb190a7a48fa425}{}\label{inspect_8c_a492420a95432e8059cb190a7a48fa425}
+P\+ID of the process to inspect. \index{inspect.\+c@{inspect.\+c}!Refresh\+Interval@{Refresh\+Interval}}
+\index{Refresh\+Interval@{Refresh\+Interval}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Refresh\+Interval}{RefreshInterval}}]{\setlength{\rightskip}{0pt plus 5cm}time\+\_\+t Refresh\+Interval = {\bf D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+R\+E\+S\+H\+\_\+\+I\+N\+T\+E\+R\+V\+AL}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a31dd80cbde26a091edf40615f3027825}{}\label{inspect_8c_a31dd80cbde26a091edf40615f3027825}
+Variable storing the configurable refresh interval in seconds. \index{inspect.\+c@{inspect.\+c}!refresh\+Timer@{refresh\+Timer}}
+\index{refresh\+Timer@{refresh\+Timer}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{refresh\+Timer}{refreshTimer}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t} refresh\+Timer = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a52ee8f00f1d77a7a3f69a01515cd6c04}{}\label{inspect_8c_a52ee8f00f1d77a7a3f69a01515cd6c04}
+Refresh timer for the interval and follow options \index{inspect.\+c@{inspect.\+c}!Semaphore\+Table\+Info@{Semaphore\+Table\+Info}}
+\index{Semaphore\+Table\+Info@{Semaphore\+Table\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Semaphore\+Table\+Info}{SemaphoreTableInfo}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Column\+Info\+\_\+t} Semaphore\+Table\+Info\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a41aaed0d4487f033f79528165b907296}{}\label{inspect_8c_a41aaed0d4487f033f79528165b907296}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{\textcolor{stringliteral}{"NAME"},         \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"}, \hyperlink{limit_8h_a0127b4050ef0672e37f72568f37fbd75}{LIMIT\_MAX\_SEMAPHORE\_NAME\_BYTES}, \textcolor{keyword}{true}
+      ,  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"WAITING LIST"}, \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"}, \hyperlink{thread_8h_ad14524ab7c2b14d0c553fb37eafcbdf0}{MAX\_THREAD\_NAME\_SIZE},           \textcolor{keyword}{true},  0, \textcolor{keyword}{true}
+      \}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Semaphore\+Table\+Info\+Size@{Semaphore\+Table\+Info\+Size}}
+\index{Semaphore\+Table\+Info\+Size@{Semaphore\+Table\+Info\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Semaphore\+Table\+Info\+Size}{SemaphoreTableInfoSize}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Semaphore\+Table\+Info\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Semaphore\+Table\+Info})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a9b14087bb8ff1dd08866e062017d4920}{}\label{inspect_8c_a9b14087bb8ff1dd08866e062017d4920}
+\index{inspect.\+c@{inspect.\+c}!Service\+Obj\+Table\+Info@{Service\+Obj\+Table\+Info}}
+\index{Service\+Obj\+Table\+Info@{Service\+Obj\+Table\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Service\+Obj\+Table\+Info}{ServiceObjTableInfo}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Column\+Info\+\_\+t} Service\+Obj\+Table\+Info\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a5b27b20c677f83b927a1557f338d8ef0}{}\label{inspect_8c_a5b27b20c677f83b927a1557f338d8ef0}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{\textcolor{stringliteral}{"INTERFACE NAME"}, \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  \hyperlink{limit_8h_a06cfcaef1596f177e04ea0a131257c01}{LIMIT\_MAX\_IPC\_INTERFACE\_NAME\_BYTES}
+      , \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"STATE"},          \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  0,                                  \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"THREAD NAME"},    \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  \hyperlink{thread_8h_ad14524ab7c2b14d0c553fb37eafcbdf0}{MAX\_THREAD\_NAME\_SIZE},               \textcolor{keyword}{true},  
+      0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"PROTOCOL ID"},    \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  \hyperlink{limit_8h_ab51f3f9c6e3da08206cfd964b48d3e60}{LIMIT\_MAX\_PROTOCOL\_ID\_BYTES},        \textcolor{keyword}{
+      true},  0, \textcolor{keyword}{false}\},
+    \{\textcolor{stringliteral}{"MAX PAYLOAD"},    \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*zu"}, \textcolor{keyword}{sizeof}(size\_t),                     \textcolor{keyword}{false}, 0, \textcolor{keyword}{false}\},
+    \{\textcolor{stringliteral}{"FD"},             \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*d"},  \textcolor{keyword}{sizeof}(int),                        \textcolor{keyword}{false}, 0, \textcolor{keyword}{false}\}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Service\+Obj\+Table\+Info\+Size@{Service\+Obj\+Table\+Info\+Size}}
+\index{Service\+Obj\+Table\+Info\+Size@{Service\+Obj\+Table\+Info\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Service\+Obj\+Table\+Info\+Size}{ServiceObjTableInfoSize}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Service\+Obj\+Table\+Info\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Service\+Obj\+Table\+Info})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a5df35a7a81a85241ed6c8e3894221416}{}\label{inspect_8c_a5df35a7a81a85241ed6c8e3894221416}
+\index{inspect.\+c@{inspect.\+c}!Service\+State\+Tbl@{Service\+State\+Tbl}}
+\index{Service\+State\+Tbl@{Service\+State\+Tbl}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Service\+State\+Tbl}{ServiceStateTbl}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Defn\+Str\+Mapping\+\_\+t} Service\+State\+Tbl\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a8f2b2be2cde0110164b2cf06ba46c8d1}{}\label{inspect_8c_a8f2b2be2cde0110164b2cf06ba46c8d1}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{
+        LE\_MSG\_INTERFACE\_SERVICE\_CONNECTING,
+        \textcolor{stringliteral}{"connecting"}
+    \},
+    \{
+        LE\_MSG\_INTERFACE\_SERVICE\_ADVERTISED,
+        \textcolor{stringliteral}{"advertised"}
+    \},
+    \{
+        LE\_MSG\_INTERFACE\_SERVICE\_HIDDEN,
+        \textcolor{stringliteral}{"hidden"}
+    \}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Service\+State\+Tbl\+Size@{Service\+State\+Tbl\+Size}}
+\index{Service\+State\+Tbl\+Size@{Service\+State\+Tbl\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Service\+State\+Tbl\+Size}{ServiceStateTblSize}}]{\setlength{\rightskip}{0pt plus 5cm}int Service\+State\+Tbl\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Service\+State\+Tbl})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a5a0bd87d454d7a6ace45ce7ac4088f3d}{}\label{inspect_8c_a5a0bd87d454d7a6ace45ce7ac4088f3d}
+\index{inspect.\+c@{inspect.\+c}!Session\+Obj\+Table\+Info@{Session\+Obj\+Table\+Info}}
+\index{Session\+Obj\+Table\+Info@{Session\+Obj\+Table\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Session\+Obj\+Table\+Info}{SessionObjTableInfo}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Column\+Info\+\_\+t} Session\+Obj\+Table\+Info\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a5d348cc4bf0c2e64bac5d44776d29b2c}{}\label{inspect_8c_a5d348cc4bf0c2e64bac5d44776d29b2c}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{\textcolor{stringliteral}{"INTERFACE NAME"}, \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"}, \hyperlink{limit_8h_a06cfcaef1596f177e04ea0a131257c01}{LIMIT\_MAX\_IPC\_INTERFACE\_NAME\_BYTES}
+      , \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"STATE"},          \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"}, 0,                                  \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"THREAD NAME"},    \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"}, \hyperlink{thread_8h_ad14524ab7c2b14d0c553fb37eafcbdf0}{MAX\_THREAD\_NAME\_SIZE},               \textcolor{keyword}{true},  0
+      , \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"FD"},             \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*d"}, \textcolor{keyword}{sizeof}(int),                        \textcolor{keyword}{false}, 0, \textcolor{keyword}{false}\}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Session\+Obj\+Table\+Info\+Size@{Session\+Obj\+Table\+Info\+Size}}
+\index{Session\+Obj\+Table\+Info\+Size@{Session\+Obj\+Table\+Info\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Session\+Obj\+Table\+Info\+Size}{SessionObjTableInfoSize}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Session\+Obj\+Table\+Info\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Session\+Obj\+Table\+Info})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a412d6f8dc6cf988ebc67f650a51b7ffd}{}\label{inspect_8c_a412d6f8dc6cf988ebc67f650a51b7ffd}
+\index{inspect.\+c@{inspect.\+c}!Session\+State\+Tbl@{Session\+State\+Tbl}}
+\index{Session\+State\+Tbl@{Session\+State\+Tbl}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Session\+State\+Tbl}{SessionStateTbl}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Defn\+Str\+Mapping\+\_\+t} Session\+State\+Tbl\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a28e6cb2d8cb667bf7739b639dca9ad0a}{}\label{inspect_8c_a28e6cb2d8cb667bf7739b639dca9ad0a}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{
+        \hyperlink{messaging_session_8h_a0f289e6988e2663a4fc8cecb9aba018ca0687c6c92d91a3ab5fdc18773c21f8e2}{LE\_MSG\_SESSION\_STATE\_CLOSED},
+        \textcolor{stringliteral}{"closed"}
+    \},
+    \{
+        \hyperlink{messaging_session_8h_a0f289e6988e2663a4fc8cecb9aba018caec16b40bb3196e8efbafb3ccadf5b31c}{LE\_MSG\_SESSION\_STATE\_OPENING},
+        \textcolor{stringliteral}{"waiting"}
+    \},
+    \{
+        \hyperlink{messaging_session_8h_a0f289e6988e2663a4fc8cecb9aba018ca2a3c312ccd05ab297d90783d2a8d8171}{LE\_MSG\_SESSION\_STATE\_OPEN},
+        \textcolor{stringliteral}{"open"}
+    \}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Session\+State\+Tbl\+Size@{Session\+State\+Tbl\+Size}}
+\index{Session\+State\+Tbl\+Size@{Session\+State\+Tbl\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Session\+State\+Tbl\+Size}{SessionStateTblSize}}]{\setlength{\rightskip}{0pt plus 5cm}int Session\+State\+Tbl\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Session\+State\+Tbl})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a8132d7ca57fa798e820cfe1c5ce41258}{}\label{inspect_8c_a8132d7ca57fa798e820cfe1c5ce41258}
+\index{inspect.\+c@{inspect.\+c}!Sub\+Pool\+Str@{Sub\+Pool\+Str}}
+\index{Sub\+Pool\+Str@{Sub\+Pool\+Str}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Sub\+Pool\+Str}{SubPoolStr}}]{\setlength{\rightskip}{0pt plus 5cm}char Sub\+Pool\+Str\mbox{[}$\,$\mbox{]} = \char`\"{}(Sub-\/pool)\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aa51cb71ec28208ef9be51c42a8f59e7c}{}\label{inspect_8c_aa51cb71ec28208ef9be51c42a8f59e7c}
+Strings representing sub-\/pool and super-\/pool. \index{inspect.\+c@{inspect.\+c}!Super\+Pool\+Str@{Super\+Pool\+Str}}
+\index{Super\+Pool\+Str@{Super\+Pool\+Str}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Super\+Pool\+Str}{SuperPoolStr}}]{\setlength{\rightskip}{0pt plus 5cm}char Super\+Pool\+Str\mbox{[}$\,$\mbox{]} = \char`\"{}\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a578335550702a2b93402f7b5453d53fb}{}\label{inspect_8c_a578335550702a2b93402f7b5453d53fb}
+\index{inspect.\+c@{inspect.\+c}!Table\+Line\+Buffer@{Table\+Line\+Buffer}}
+\index{Table\+Line\+Buffer@{Table\+Line\+Buffer}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Table\+Line\+Buffer}{TableLineBuffer}}]{\setlength{\rightskip}{0pt plus 5cm}char$\ast$ Table\+Line\+Buffer\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a2d449cd45c1da3737e93b22b36044858}{}\label{inspect_8c_a2d449cd45c1da3737e93b22b36044858}
+\index{inspect.\+c@{inspect.\+c}!Table\+Line\+Len@{Table\+Line\+Len}}
+\index{Table\+Line\+Len@{Table\+Line\+Len}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Table\+Line\+Len}{TableLineLen}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Table\+Line\+Len = 0\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a9a24ee68c293d28476f928bf2fddf25e}{}\label{inspect_8c_a9a24ee68c293d28476f928bf2fddf25e}
+Line buffer and its associated char length and byte size. \index{inspect.\+c@{inspect.\+c}!Thread\+Obj\+Contention\+Scope\+Tbl@{Thread\+Obj\+Contention\+Scope\+Tbl}}
+\index{Thread\+Obj\+Contention\+Scope\+Tbl@{Thread\+Obj\+Contention\+Scope\+Tbl}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Obj\+Contention\+Scope\+Tbl}{ThreadObjContentionScopeTbl}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Defn\+Str\+Mapping\+\_\+t} Thread\+Obj\+Contention\+Scope\+Tbl\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a8dc38722b0b59c82feb6b29fe3e87026}{}\label{inspect_8c_a8dc38722b0b59c82feb6b29fe3e87026}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{
+        PTHREAD\_SCOPE\_SYSTEM,
+        \textcolor{stringliteral}{"PTHREAD\_SCOPE\_SYSTEM"}
+    \},
+    \{
+        PTHREAD\_SCOPE\_PROCESS,
+        \textcolor{stringliteral}{"PTHREAD\_SCOPE\_PROCESS"}
+    \}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Thread\+Obj\+Contention\+Scope\+Tbl\+Size@{Thread\+Obj\+Contention\+Scope\+Tbl\+Size}}
+\index{Thread\+Obj\+Contention\+Scope\+Tbl\+Size@{Thread\+Obj\+Contention\+Scope\+Tbl\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Obj\+Contention\+Scope\+Tbl\+Size}{ThreadObjContentionScopeTblSize}}]{\setlength{\rightskip}{0pt plus 5cm}int Thread\+Obj\+Contention\+Scope\+Tbl\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Thread\+Obj\+Contention\+Scope\+Tbl})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aed41dd8d659b304ded92702cf0b2c5fa}{}\label{inspect_8c_aed41dd8d659b304ded92702cf0b2c5fa}
+\index{inspect.\+c@{inspect.\+c}!Thread\+Obj\+Detach\+State\+Tbl@{Thread\+Obj\+Detach\+State\+Tbl}}
+\index{Thread\+Obj\+Detach\+State\+Tbl@{Thread\+Obj\+Detach\+State\+Tbl}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Obj\+Detach\+State\+Tbl}{ThreadObjDetachStateTbl}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Defn\+Str\+Mapping\+\_\+t} Thread\+Obj\+Detach\+State\+Tbl\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aa5d9d5040ce19b4aeb5299646d4f6389}{}\label{inspect_8c_aa5d9d5040ce19b4aeb5299646d4f6389}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{
+        PTHREAD\_CREATE\_DETACHED,
+        \textcolor{stringliteral}{"PTHREAD\_CREATE\_DETACHED"}
+    \},
+    \{
+        PTHREAD\_CREATE\_JOINABLE,
+        \textcolor{stringliteral}{"PTHREAD\_CREATE\_JOINABLE"}
+    \}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Thread\+Obj\+Detach\+State\+Tbl\+Size@{Thread\+Obj\+Detach\+State\+Tbl\+Size}}
+\index{Thread\+Obj\+Detach\+State\+Tbl\+Size@{Thread\+Obj\+Detach\+State\+Tbl\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Obj\+Detach\+State\+Tbl\+Size}{ThreadObjDetachStateTblSize}}]{\setlength{\rightskip}{0pt plus 5cm}int Thread\+Obj\+Detach\+State\+Tbl\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Thread\+Obj\+Detach\+State\+Tbl})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ac1319ad23606a52cb2dacac3f7eebbfc}{}\label{inspect_8c_ac1319ad23606a52cb2dacac3f7eebbfc}
+\index{inspect.\+c@{inspect.\+c}!Thread\+Obj\+Inherit\+Sched\+Tbl@{Thread\+Obj\+Inherit\+Sched\+Tbl}}
+\index{Thread\+Obj\+Inherit\+Sched\+Tbl@{Thread\+Obj\+Inherit\+Sched\+Tbl}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Obj\+Inherit\+Sched\+Tbl}{ThreadObjInheritSchedTbl}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Defn\+Str\+Mapping\+\_\+t} Thread\+Obj\+Inherit\+Sched\+Tbl\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a61bf6a1222971f123bdc274435344f57}{}\label{inspect_8c_a61bf6a1222971f123bdc274435344f57}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{
+        PTHREAD\_INHERIT\_SCHED,
+        \textcolor{stringliteral}{"PTHREAD\_INHERIT\_SCHED"}
+    \},
+    \{
+        PTHREAD\_EXPLICIT\_SCHED,
+        \textcolor{stringliteral}{"PTHREAD\_EXPLICIT\_SCHED"}
+    \}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Thread\+Obj\+Inherit\+Sched\+Tbl\+Size@{Thread\+Obj\+Inherit\+Sched\+Tbl\+Size}}
+\index{Thread\+Obj\+Inherit\+Sched\+Tbl\+Size@{Thread\+Obj\+Inherit\+Sched\+Tbl\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Obj\+Inherit\+Sched\+Tbl\+Size}{ThreadObjInheritSchedTblSize}}]{\setlength{\rightskip}{0pt plus 5cm}int Thread\+Obj\+Inherit\+Sched\+Tbl\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Thread\+Obj\+Inherit\+Sched\+Tbl})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a87743988b831ee99a46f99e2b62f4654}{}\label{inspect_8c_a87743988b831ee99a46f99e2b62f4654}
+\index{inspect.\+c@{inspect.\+c}!Thread\+Obj\+Sched\+Pol\+Tbl@{Thread\+Obj\+Sched\+Pol\+Tbl}}
+\index{Thread\+Obj\+Sched\+Pol\+Tbl@{Thread\+Obj\+Sched\+Pol\+Tbl}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Obj\+Sched\+Pol\+Tbl}{ThreadObjSchedPolTbl}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Defn\+Str\+Mapping\+\_\+t} Thread\+Obj\+Sched\+Pol\+Tbl\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_ae6f4ce2e512de41852d94ea7ffbf2714}{}\label{inspect_8c_ae6f4ce2e512de41852d94ea7ffbf2714}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{
+        SCHED\_FIFO,
+        \textcolor{stringliteral}{"SCHED\_FIFO"}
+    \},
+    \{
+        SCHED\_RR,
+        \textcolor{stringliteral}{"SCHED\_RR"}
+    \},
+
+    \{
+        SCHED\_OTHER,
+        \textcolor{stringliteral}{"SCHED\_OTHER"}
+    \}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Thread\+Obj\+Sched\+Pol\+Tbl\+Size@{Thread\+Obj\+Sched\+Pol\+Tbl\+Size}}
+\index{Thread\+Obj\+Sched\+Pol\+Tbl\+Size@{Thread\+Obj\+Sched\+Pol\+Tbl\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Obj\+Sched\+Pol\+Tbl\+Size}{ThreadObjSchedPolTblSize}}]{\setlength{\rightskip}{0pt plus 5cm}int Thread\+Obj\+Sched\+Pol\+Tbl\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Thread\+Obj\+Sched\+Pol\+Tbl})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a2157efb36265bbbb434aacae2a364eb7}{}\label{inspect_8c_a2157efb36265bbbb434aacae2a364eb7}
+\index{inspect.\+c@{inspect.\+c}!Thread\+Obj\+Table\+Info@{Thread\+Obj\+Table\+Info}}
+\index{Thread\+Obj\+Table\+Info@{Thread\+Obj\+Table\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Obj\+Table\+Info}{ThreadObjTableInfo}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Column\+Info\+\_\+t} Thread\+Obj\+Table\+Info\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a07f1b66457647fb32c749459cf983cb6}{}\label{inspect_8c_a07f1b66457647fb32c749459cf983cb6}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{\textcolor{stringliteral}{"NAME"},             \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  \hyperlink{thread_8h_ad14524ab7c2b14d0c553fb37eafcbdf0}{MAX\_THREAD\_NAME\_SIZE}, \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"JOINABLE"},         \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*u"},  \textcolor{keyword}{sizeof}(bool),         \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"STARTED"},          \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*u"},  \textcolor{keyword}{sizeof}(bool),         \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"DETACHSTATE"},      \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  0,                    \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"SCHED POLICY"},     \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  0,                    \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"SCHED PARAM"},      \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*u"},  \textcolor{keyword}{sizeof}(int),          \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"INHERIT SCHED"},    \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  0,                    \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"CONTENTION SCOPE"}, \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  0,                    \textcolor{keyword}{true},  0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"GUARD SIZE"},       \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*zu"}, \textcolor{keyword}{sizeof}(size\_t),       \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"STACK ADDR"},       \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*X"},  \textcolor{keyword}{sizeof}(uint64\_t),     \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"STACK SIZE"},       \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*zu"}, \textcolor{keyword}{sizeof}(size\_t),       \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Thread\+Obj\+Table\+Info\+Size@{Thread\+Obj\+Table\+Info\+Size}}
+\index{Thread\+Obj\+Table\+Info\+Size@{Thread\+Obj\+Table\+Info\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Obj\+Table\+Info\+Size}{ThreadObjTableInfoSize}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Thread\+Obj\+Table\+Info\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Thread\+Obj\+Table\+Info})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_a2908e763d3012e330b724f2884e5577d}{}\label{inspect_8c_a2908e763d3012e330b724f2884e5577d}
+\index{inspect.\+c@{inspect.\+c}!Timer\+Table\+Info@{Timer\+Table\+Info}}
+\index{Timer\+Table\+Info@{Timer\+Table\+Info}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Timer\+Table\+Info}{TimerTableInfo}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Column\+Info\+\_\+t} Timer\+Table\+Info\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_acc1103036ca848766d846ef0b02f5abd}{}\label{inspect_8c_acc1103036ca848766d846ef0b02f5abd}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{\textcolor{stringliteral}{"NAME"},         \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*s"},  \hyperlink{limit_8h_a33a3d0f77fab523550e641240420a904}{LIMIT\_MAX\_TIMER\_NAME\_BYTES}, \textcolor{keyword}{true},  0, \textcolor{keyword}{
+      true}\},
+    \{\textcolor{stringliteral}{"INTERVAL"},     \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*f"},  \textcolor{keyword}{sizeof}(double),             \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"REPEAT COUNT"}, \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*u"},  \textcolor{keyword}{sizeof}(uint32\_t),           \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"ISACTIVE"},     \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*u"},  \textcolor{keyword}{sizeof}(bool),               \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"EXPIRY TIME"},  \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*f"},  \textcolor{keyword}{sizeof}(double),             \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\},
+    \{\textcolor{stringliteral}{"EXPIRY COUNT"}, \textcolor{stringliteral}{"%*s"}, NULL, \textcolor{stringliteral}{"%*u"},  \textcolor{keyword}{sizeof}(uint32\_t),           \textcolor{keyword}{false}, 0, \textcolor{keyword}{true}\}
+\}
+\end{DoxyCode}
+\index{inspect.\+c@{inspect.\+c}!Timer\+Table\+Info\+Size@{Timer\+Table\+Info\+Size}}
+\index{Timer\+Table\+Info\+Size@{Timer\+Table\+Info\+Size}!inspect.\+c@{inspect.\+c}}
+\subsubsection[{\texorpdfstring{Timer\+Table\+Info\+Size}{TimerTableInfoSize}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Timer\+Table\+Info\+Size = {\bf N\+U\+M\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+M\+E\+M\+B\+E\+RS}({\bf Timer\+Table\+Info})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{inspect_8c_aa9b75aea7ce662ab6a55071a98e0f7d4}{}\label{inspect_8c_aa9b75aea7ce662ab6a55071a98e0f7d4}

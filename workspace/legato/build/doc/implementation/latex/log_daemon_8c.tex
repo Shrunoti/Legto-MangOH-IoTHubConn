@@ -1,0 +1,1237 @@
+\hypertarget{log_daemon_8c}{}\section{framework/daemons/linux/log\+Daemon/log\+Daemon.c File Reference}
+\label{log_daemon_8c}\index{framework/daemons/linux/log\+Daemon/log\+Daemon.\+c@{framework/daemons/linux/log\+Daemon/log\+Daemon.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}log.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}log\+Daemon.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_component_name__t}{Component\+Name\+\_\+t}
+\item 
+struct \hyperlink{struct_process_name__t}{Process\+Name\+\_\+t}
+\item 
+struct \hyperlink{struct_trace_name__t}{Trace\+Name\+\_\+t}
+\item 
+struct \hyperlink{struct_running_process__t}{Running\+Process\+\_\+t}
+\item 
+struct \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t}
+\item 
+struct \hyperlink{struct_trace__t}{Trace\+\_\+t}
+\item 
+struct \hyperlink{struct_fd_log__t}{Fd\+Log\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{log_daemon_8c_a10a106cd691842a6a5accbef3cf7774f}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES}~32
+\item 
+\#define \hyperlink{log_daemon_8c_a12e0e31daedad0866a49a35dfa357a40}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+TS}~128
+\item 
+\#define \hyperlink{log_daemon_8c_a895920e1e0172dc9ad130012b1fb3aa1}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+ES}~20
+\item 
+\#define \hyperlink{log_daemon_8c_a0ee102b2e877333111a8a657a0ec9a4a}{M\+A\+X\+\_\+\+C\+M\+D\+\_\+\+D\+A\+T\+A\+\_\+\+B\+Y\+T\+ES}
+\item 
+\#define \hyperlink{log_daemon_8c_a17e333794ae761cd55ec6fd6fc0f1bac}{M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE}~256
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static size\+\_\+t \hyperlink{log_daemon_8c_ad7450365e3238eb0f126f4f2ee2c0f75}{Ipc\+Session\+Hash} (const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$hash\+Key\+Ptr)
+\item 
+static bool \hyperlink{log_daemon_8c_a315bafe0add0384ac20c97197b2dedd3}{Ipc\+Session\+Equals} (const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$hash\+Key1\+Ptr, const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$hash\+Key2\+Ptr)
+\item 
+static size\+\_\+t \hyperlink{log_daemon_8c_a72473c44e3e0e27ad624a17b1b23c23d}{Process\+Id\+Hash} (const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$hash\+Key\+Ptr)
+\item 
+static bool \hyperlink{log_daemon_8c_a2874c38b67bdc1ae38f09fff16b3a02c}{Process\+Id\+Equals} (const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$hash\+Key1\+Ptr, const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$hash\+Key2\+Ptr)
+\item 
+static const char $\ast$ \hyperlink{log_daemon_8c_a79f271bbff8737498d646802e10c3c63}{Get\+Level\+String} (\hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} level)
+\item 
+static \hyperlink{struct_process_name__t}{Process\+Name\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_a9acd5c6e4434f25b9cad3b6603a386b7}{Find\+Process\+Name} (const char $\ast$process\+Name\+Str)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a7829d7117b7d0675b7f2c590aaf1f739}{Delete\+All\+Component\+Names\+For\+Process\+Name} (\hyperlink{struct_process_name__t}{Process\+Name\+\_\+t} $\ast$proc\+Name\+Obj\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a238de698f87c2787317454d4148cd1f5}{Delete\+Process\+Name} (\hyperlink{struct_process_name__t}{Process\+Name\+\_\+t} $\ast$proc\+Name\+Obj\+Ptr)
+\item 
+static \hyperlink{struct_component_name__t}{Component\+Name\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_ac6c724921b5443f988acf5deea4066de}{Find\+Component\+Name} (const \hyperlink{struct_process_name__t}{Process\+Name\+\_\+t} $\ast$proc\+Name\+Obj\+Ptr, const char $\ast$component\+Name\+Str)
+\item 
+static \hyperlink{struct_component_name__t}{Component\+Name\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_a70bd29a783b25c95e2783faac59e4636}{Create\+Component\+Name} (\hyperlink{struct_process_name__t}{Process\+Name\+\_\+t} $\ast$proc\+Name\+Obj\+Ptr, const char $\ast$component\+Name\+Ptr)
+\item 
+static \hyperlink{struct_trace_name__t}{Trace\+Name\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_a652fb17a7fb9b3da34e454cc461ada24}{Create\+Trace\+Name} (\hyperlink{struct_component_name__t}{Component\+Name\+\_\+t} $\ast$comp\+Name\+Obj\+Ptr, const char $\ast$keyword\+Str)
+\item 
+static \hyperlink{struct_process_name__t}{Process\+Name\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_a44d9130b6165b356ce74fc2269a8a099}{Create\+Process\+Name} (const char $\ast$process\+Name\+Str)
+\item 
+static \hyperlink{struct_trace_name__t}{Trace\+Name\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_a365a1692b8ce2a383f2e2fc1608c7048}{Find\+Trace\+Name} (const \hyperlink{struct_component_name__t}{Component\+Name\+\_\+t} $\ast$comp\+Name\+Obj\+Ptr, const char $\ast$trace\+Name\+Str)
+\item 
+static \hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_a24f24bd08053b66051587d0db3b7e4a1}{Find\+Process\+By\+Pid} (pid\+\_\+t pid)
+\item 
+static \hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_ad0816ded08d6942292f883a58044456f}{Find\+Process\+By\+Ipc\+Session} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref)
+\item 
+static \hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_aca0af53ac8d4ce7c0375a9c49929906e}{Create\+Running\+Process} (\hyperlink{struct_process_name__t}{Process\+Name\+\_\+t} $\ast$proc\+Name\+Obj\+Ptr, pid\+\_\+t pid, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref)
+\item 
+static \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_a702ab4aa076db477e132cc7b3f40da4f}{Find\+Log\+Session} (const \hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$proc\+Ptr, const char $\ast$component\+Name\+Str)
+\item 
+static \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_af08b982327306605955692634731a188}{Create\+Log\+Session} (\hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$running\+Proc\+Ptr, const char $\ast$component\+Name\+Ptr)
+\item 
+static \hyperlink{struct_trace__t}{Trace\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_aab301ef3ad1609f9b350a574fda9dc6c}{Find\+Trace} (const \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$log\+Session\+Ptr, const char $\ast$keyword\+Str)
+\item 
+static \hyperlink{struct_trace__t}{Trace\+\_\+t} $\ast$ \hyperlink{log_daemon_8c_a9489be63db88957028570adf2518aa23}{Create\+Trace} (\hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$log\+Session\+Ptr, const char $\ast$keyword\+Str)
+\item 
+static pid\+\_\+t \hyperlink{log_daemon_8c_a40b6c7745f257c60cc6a0e64a8ef15cb}{String\+To\+Pid} (const char $\ast$pid\+Str)
+\item 
+static bool \hyperlink{log_daemon_8c_ae36820af19b9681f5c41138e82ebfa8c}{Parse\+Cmd\+Packet} (const char $\ast$cmd\+Packet\+Ptr, char $\ast$cmd\+Ptr, char $\ast$process\+Name\+Ptr, char $\ast$component\+Name\+Ptr, const char $\ast$$\ast$cmd\+Data\+Ptr\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a458c396b73213c622562b3883b5bba60}{Send\+To\+Log\+Tool} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref, const char $\ast$message\+Str)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a3d1e67532189ecf3aa470d2870884a30}{Update\+Client\+Session\+Settings} (\hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$running\+Proc\+Obj\+Ptr, \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$log\+Session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a24867343f7c7be453ec8ef3c28719045}{Update\+Client\+Trace\+Setting} (\hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$running\+Proc\+Obj\+Ptr, \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$log\+Session\+Ptr, \hyperlink{struct_trace__t}{Trace\+\_\+t} $\ast$trace\+Obj\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a406014b122429a222cf2ffb801fde305}{Copy\+Component\+Settings} (\hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$running\+Proc\+Obj\+Ptr, \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$log\+Session\+Ptr, \hyperlink{struct_component_name__t}{Component\+Name\+\_\+t} $\ast$comp\+Name\+Obj\+Ptr)
+\item 
+static bool \hyperlink{log_daemon_8c_a7edb8ea9efed53f78358c506ea4d9a1c}{Update\+Component\+Settings} (\hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$running\+Proc\+Obj\+Ptr, \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$log\+Session\+Ptr, \hyperlink{struct_process_name__t}{Process\+Name\+\_\+t} $\ast$proc\+Name\+Obj\+Ptr, const char $\ast$component\+Name)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a7a25cf716ca7e548318f1d1bee3f0d2a}{Update\+Proc\+Comp\+Settings} (\hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$running\+Proc\+Obj\+Ptr, \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$log\+Session\+Ptr, \hyperlink{struct_process_name__t}{Process\+Name\+\_\+t} $\ast$proc\+Name\+Obj\+Ptr, const char $\ast$component\+Name)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_ae8486c12f39677f04489f19e205d26d1}{Reg\+Component} (const char $\ast$process\+Name, const char $\ast$component\+Name, const char $\ast$pid\+Str, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a45a900491364ba156e555bae04a3cb80}{Client\+Ipc\+Session\+Closed} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_aa24e2450c971cda345563a4bb3c12fa6}{Set\+For\+Running\+Process} (\hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$running\+Proc\+Obj\+Ptr, const char $\ast$component\+Name, \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$level\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a16611650e37e1d32cafed355667ce907}{Set\+By\+Pid} (pid\+\_\+t pid, const char $\ast$component\+Name, \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$level\+Ptr, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} tool\+Ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a36fa7cbf8072ade2687831023a424b6f}{Set\+For\+All\+Processes} (const char $\ast$component\+Name, \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$level\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a3d6f20c784bc2d43801e643809a832f5}{Create\+Component\+Names\+For\+Running\+Sessions} (\hyperlink{struct_process_name__t}{Process\+Name\+\_\+t} $\ast$proc\+Name\+Obj\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_aaaf449b603ae3bf9f924c3cc84c92ade}{Set\+By\+Process\+Name} (const char $\ast$process\+Name, const char $\ast$component\+Name, \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$level\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_af1fee9215a9d4a166efaf7920b0216f3}{Apply\+Settings} (const char $\ast$process\+Name, const char $\ast$component\+Name, \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$level\+Ptr, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} tool\+Ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a1b0c205c919cb98755822e16e3549471}{Set\+Level} (const char $\ast$process\+Name, const char $\ast$component\+Name, const char $\ast$level\+Str, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} tool\+Ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a9e0de4a521e4a67d8031b5db1c9c15a5}{Set\+Trace\+For\+Component\+Name} (\hyperlink{struct_component_name__t}{Component\+Name\+\_\+t} $\ast$comp\+Name\+Obj\+Ptr, const char $\ast$keyword, bool is\+Enabled)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_af4a322ff1b5e39a5ff4a0d322806cbc0}{Set\+Trace\+For\+Log\+Session} (\hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$running\+Proc\+Obj\+Ptr, \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$log\+Session\+Ptr, const char $\ast$keyword, bool is\+Enabled)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a4d1f74a7559af3c1fc83d681135f8c52}{Set\+Trace\+For\+Running\+Process} (\hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$running\+Proc\+Obj\+Ptr, const char $\ast$component\+Name, const char $\ast$keyword, bool is\+Enabled)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a0fac44fc43fd9fc262aa13ee4661fbbf}{Set\+Trace\+By\+Pid} (pid\+\_\+t pid, const char $\ast$component\+Name, const char $\ast$keyword, bool is\+Enabled, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} tool\+Ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_afbce9b64543b0292977b74d4605cd56f}{Set\+Trace\+For\+All\+Processes} (const char $\ast$component\+Name, const char $\ast$keyword, bool is\+Enabled)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a98cc95ea5304400217522faf23ec5bb7}{Set\+Trace\+By\+Process\+Name} (const char $\ast$process\+Name, const char $\ast$component\+Name, const char $\ast$keyword, bool is\+Enabled)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a41a2600d1079eb6c3801b1f56187dc5d}{Set\+Trace} (const char $\ast$process\+Name, const char $\ast$component\+Name, const char $\ast$keyword, bool is\+Enabled, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} tool\+Ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a05e2f288e5b3af3b734cb77e4809be40}{Send\+Process\+Name\+To\+Log\+Tool} (const \hyperlink{struct_process_name__t}{Process\+Name\+\_\+t} $\ast$proc\+Name\+Obj\+Ptr, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_abb132e4f6b2e91fe5fa87b038cb410c1}{Send\+Trace\+Name\+To\+Log\+Tool} (const char $\ast$name, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_afaabdc81e0aa3093451d1dbb618d1006}{Send\+Component\+Info\+To\+Log\+Tool} (const char $\ast$component\+Name, \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} level, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a8600694ecd788402e1ca693e2125b6ce}{Generate\+Component\+List} (const \hyperlink{struct_component_name__t}{Component\+Name\+\_\+t} $\ast$comp\+Name\+Obj\+Ptr, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_ab4b4d2ee0ca9dc9f47d27ce85244764e}{Generate\+Log\+Session\+List} (const \hyperlink{struct_log_session__t}{Log\+Session\+\_\+t} $\ast$log\+Session\+Obj\+Ptr, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a45c7545ad6764b12c4a07eb2606edeb1}{Send\+Running\+Process\+Info\+To\+Log\+Tool} (const \hyperlink{struct_running_process__t}{Running\+Process\+\_\+t} $\ast$running\+Proc\+Obj\+Ptr, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a19bcd3cd437531ca172cebb62cc99041}{Generate\+List} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a020d8bc1b345a53ced47a946438e0068}{Forget\+Process} (const char $\ast$process\+Name, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} tool\+Ipc\+Session\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_add509b01dda5b955a8a816af1e34e5e8}{Client\+Msg\+Receive\+Handler} (\hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a6a462265b07839e8a38941b5bee55c1f}{Control\+Tool\+Msg\+Receive\+Handler} (\hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_ac0def24c2d87008eb3ad701e9f974c00}{Delete\+Fd\+Log} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, \hyperlink{struct_fd_log__t}{Fd\+Log\+\_\+t} $\ast$fd\+Log\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a24cd8f8f8ab3391636b17f3ca322d4ec}{Log\+Fd\+Messages} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, short events)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_a2b4f7566d4867809505a05c0f61e69bb}{Create\+Fd\+Log\+Monitor} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, const char $\ast$app\+Name\+Ptr, const char $\ast$proc\+Name\+Ptr, pid\+\_\+t pid, \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} log\+Level, const char $\ast$monitor\+Name\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_abb2bd7282fb7a053fcc7631f895d7df9}{log\+Fd\+\_\+\+Std\+Err} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, const char $\ast$proc\+Name, int pid)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_daemon_8c_af581fe99558218a92d8d5eda9e88e208}{log\+Fd\+\_\+\+Std\+Out} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, const char $\ast$proc\+Name, int pid)
+\item 
+\hyperlink{log_daemon_8c_a372840eaf4a3de128cec199758687f31}{le\+\_\+mem\+\_\+\+Expand\+Pool} (\hyperlink{log_daemon_8c_a6e138127e53f6fc87f5556b1181a069e}{Process\+Name\+Pool\+Ref}, \hyperlink{log_daemon_8c_a10a106cd691842a6a5accbef3cf7774f}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES})
+\item 
+\hyperlink{log_daemon_8c_ac7a69e7ec2cefb2ac9968e0316bbaca0}{le\+\_\+mem\+\_\+\+Expand\+Pool} (\hyperlink{log_daemon_8c_aeabf3ee19e53d042dfbbaa0339c6761d}{Component\+Name\+Pool\+Ref}, \hyperlink{log_daemon_8c_a12e0e31daedad0866a49a35dfa357a40}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+TS})
+\item 
+\hyperlink{log_daemon_8c_ab8577fad889e525bd50a2efa87d8575d}{le\+\_\+mem\+\_\+\+Expand\+Pool} (\hyperlink{log_daemon_8c_ac8d5be44807b5a45cb0283da26142912}{Trace\+Name\+Pool\+Ref}, \hyperlink{log_daemon_8c_a895920e1e0172dc9ad130012b1fb3aa1}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+ES})
+\item 
+\hyperlink{log_daemon_8c_a0d48b51d777453a60003e1c7cc7605d4}{le\+\_\+mem\+\_\+\+Expand\+Pool} (\hyperlink{log_daemon_8c_a6a98802d627ff76c1931cd3b9b28e4e9}{Running\+Process\+Pool\+Ref}, \hyperlink{log_daemon_8c_a10a106cd691842a6a5accbef3cf7774f}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES})
+\item 
+\hyperlink{log_daemon_8c_addae654feefce5ff266088806e3e5edc}{le\+\_\+mem\+\_\+\+Expand\+Pool} (\hyperlink{log_daemon_8c_a36ca68a8f5ca021455e2ee8851f32649}{Log\+Session\+Pool\+Ref}, \hyperlink{log_daemon_8c_a12e0e31daedad0866a49a35dfa357a40}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+TS})
+\item 
+\hyperlink{log_daemon_8c_aba93f4ed6b18a53247f3c59db3623142}{le\+\_\+mem\+\_\+\+Expand\+Pool} (\hyperlink{log_daemon_8c_a39884326a30973ca97d849280f7e0451}{Trace\+Pool\+Ref}, \hyperlink{log_daemon_8c_a895920e1e0172dc9ad130012b1fb3aa1}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+ES})
+\item 
+\hyperlink{log_daemon_8c_ae4a9d03d6bae85ea7f9d98d38888a90a}{le\+\_\+mem\+\_\+\+Expand\+Pool} (\hyperlink{log_daemon_8c_ae0419a6fbc15ac995be2d14a7d75b3ce}{Fd\+Log\+Pool\+Ref}, \hyperlink{log_daemon_8c_a10a106cd691842a6a5accbef3cf7774f}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES} $\ast$2)
+\item 
+\hyperlink{log_daemon_8c_a97f4b7f70e40fe5df7736de98c75c900}{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler} (\hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref}, \hyperlink{log_daemon_8c_add509b01dda5b955a8a816af1e34e5e8}{Client\+Msg\+Receive\+Handler}, N\+U\+LL)
+\item 
+\hyperlink{log_daemon_8c_a0532a888d282c5ebae1278fba0aed479}{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler} (\hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref}, \hyperlink{log_daemon_8c_a45a900491364ba156e555bae04a3cb80}{Client\+Ipc\+Session\+Closed}, N\+U\+LL)
+\item 
+\hyperlink{log_daemon_8c_ad477fa97e6402332aa928ba37eccbb3e}{le\+\_\+msg\+\_\+\+Advertise\+Service} (\hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref})
+\item 
+\hyperlink{log_daemon_8c_ac0bfaf2d18afe3c9bd0247007ee4e262}{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler} (\hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref}, \hyperlink{log_daemon_8c_a6a462265b07839e8a38941b5bee55c1f}{Control\+Tool\+Msg\+Receive\+Handler}, N\+U\+LL)
+\item 
+\hyperlink{log_daemon_8c_a4bd1f0df024da0cb002930fa9363c47e}{while} ((\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}==N\+U\+LL)\&\&(\hyperlink{supervisor_8c_a0a4ccfdbe1cf7b37afc60d34e748b066}{errno}==E\+I\+N\+TR))
+\item 
+\hyperlink{log_daemon_8c_acfa472e3c36c727898efff38ab002862}{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF} (\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}==N\+U\+LL,\char`\"{}Failed to redirect standard in to /dev/null.  \%m.\char`\"{})
+\item 
+\hyperlink{log_daemon_8c_ad089d1b40efb2f8131590aa69a22fbdc}{L\+E\+\_\+\+I\+N\+FO} (\char`\"{}Log daemon ready.\char`\"{})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{le__hashmap_8h_ae81c60860dbdb8c59beaf25985e5605a}{le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} \hyperlink{log_daemon_8c_a8cc85209a620c6ea98807a12da7bc3a0}{Process\+Name\+Map\+Ref}
+\item 
+static \hyperlink{le__hashmap_8h_ae81c60860dbdb8c59beaf25985e5605a}{le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} \hyperlink{log_daemon_8c_afbba58e7693c845429f8c2d3c8bef16a}{Ipc\+Session\+Map\+Ref}
+\item 
+static \hyperlink{le__hashmap_8h_ae81c60860dbdb8c59beaf25985e5605a}{le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ae6f5a79c4cc4890db1f4e8c12849b6dc}{Process\+Id\+Map\+Ref}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{log_daemon_8c_aeabf3ee19e53d042dfbbaa0339c6761d}{Component\+Name\+Pool\+Ref} = \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Component\+Name\char`\"{}, sizeof(\hyperlink{struct_component_name__t}{Component\+Name\+\_\+t}))
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{log_daemon_8c_a6e138127e53f6fc87f5556b1181a069e}{Process\+Name\+Pool\+Ref}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ac8d5be44807b5a45cb0283da26142912}{Trace\+Name\+Pool\+Ref} = \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Trace\+Name\char`\"{}, sizeof(\hyperlink{struct_trace_name__t}{Trace\+Name\+\_\+t}))
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{log_daemon_8c_a6a98802d627ff76c1931cd3b9b28e4e9}{Running\+Process\+Pool\+Ref} = \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Running\+Process\char`\"{}, sizeof(\hyperlink{struct_running_process__t}{Running\+Process\+\_\+t}))
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{log_daemon_8c_a36ca68a8f5ca021455e2ee8851f32649}{Log\+Session\+Pool\+Ref} = \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Log\+Session\char`\"{}, sizeof(\hyperlink{struct_log_session__t}{Log\+Session\+\_\+t}))
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{log_daemon_8c_a39884326a30973ca97d849280f7e0451}{Trace\+Pool\+Ref} = \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Traces\char`\"{}, sizeof(\hyperlink{struct_trace__t}{Trace\+\_\+t}))
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ae0419a6fbc15ac995be2d14a7d75b3ce}{Fd\+Log\+Pool\+Ref} = \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Fd\+Logs\char`\"{}, sizeof(\hyperlink{struct_fd_log__t}{Fd\+Log\+\_\+t}))
+\item 
+\hyperlink{log_daemon_8c_a0392d452f926ce36c4852de26b5eca12}{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}
+\item 
+\hyperlink{le__messaging_8h_ac05e9b3268f8fb5776adab6fe11410e5}{le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}{protocol\+Ref}
+\item 
+\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref} = \hyperlink{messaging_interface_8c_adbbb2737069b636028128c74ae407742}{le\+\_\+msg\+\_\+\+Create\+Service}(\hyperlink{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}{protocol\+Ref}, \hyperlink{log_daemon_8h_a6c36a13b96b311f25e73cd5fe80bd534}{L\+O\+G\+\_\+\+C\+L\+I\+E\+N\+T\+\_\+\+S\+E\+R\+V\+I\+C\+E\+\_\+\+N\+A\+ME})
+\item 
+F\+I\+LE $\ast$ \hyperlink{log_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}
+\item 
+\hyperlink{log_daemon_8c_a721c6ff80a6d3e4ad4ffa52a04c60085}{do}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This module contains the Legato Log Control Daemon implementation. This daemon keeps track of all logging sessions of all Legato processes and components and sends updates to those sessions\textquotesingle{} filter settings when instructed to do so by the log control tool.
+
+The Log Control Daemon advertises a service using the Log Control Protocol via the Legato \hyperlink{c_messaging}{Low-\/level Messaging A\+PI}.
+
+All processes open this service and provide the Log Control Daemon with their log sessions\textquotesingle{} identification, which includes the process name and component name.
+
+A command line log control tool is used to set the log settings for components in the system. However, the log control tool does not talk directly with the components, instead the log control tool sends its commands to the Log Control Daemon. The Log Control Daemon saves a copy of those commands, and if the target component is currently connected to the Log Control Daemon, the command is immediately forwarded to the component. If the target component is not yet connected, the Log Control Daemon will forward the stored log control command to the component when it later connects.
+
+For more details on how the log daemon and the log control tool communicate see the help file for the log control tool.
+
+On startup the log daemon reads a configuration file and populates its list of commands from the file ensuring that registered components will receive the initialized configuration from the file.
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000001}{Todo}]Need to add reading of initial configuration file.\end{DoxyRefDesc}
+
+
+\begin{DoxyVerb}                                                   Trace Name <--+-- Enabled Traces List
+                                                                             ^
+                                                                             |
+ Process Name Map ---+---> Process Name ---> Component Name List --+--> Component Name
+                               |     ^                                       |
+                               v     |                                       v
+                        Process List |                                    Settings
+                               |     |
+ IPC Session Map ----------+   |     |
+                           |   |     |
+                           v   v     |
+ Process ID Map ---+---> Running Process ---> Session List --+--> Log Session ---> Settings
+                                                                       |
+                                                                       v
+                                       isEnabled <--- Trace <--+-- Trace List
+\end{DoxyVerb}
+
+
+The Process Name, Component Name, and Trace Name objects are used to hold state for processes and components that have had settings applied using the process name to identify the process. These settings persist as long as the Log Control Daemon remains running, even if the other processes die or aren\textquotesingle{}t running at the time that the settings are applied.
+
+The Running Process objects are used to hold state for actual running processes. Each of these has a list of active log sessions that can be controlled within that running process. Furthermore, each Log Session object has a list of traces that can be enabled or disabled for that process (identified by trace keyword).
+
+There\textquotesingle{}s one I\+PC session for each running process. The I\+PC Session Map is used to find the running process that belongs to an I\+PC session reference when the I\+PC system reports that a session closed. This is how the Log Control Daemon finds out that a client process died.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!M\+A\+X\+\_\+\+C\+M\+D\+\_\+\+D\+A\+T\+A\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+C\+M\+D\+\_\+\+D\+A\+T\+A\+\_\+\+B\+Y\+T\+ES}}
+\index{M\+A\+X\+\_\+\+C\+M\+D\+\_\+\+D\+A\+T\+A\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+C\+M\+D\+\_\+\+D\+A\+T\+A\+\_\+\+B\+Y\+T\+ES}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+C\+M\+D\+\_\+\+D\+A\+T\+A\+\_\+\+B\+Y\+T\+ES}{MAX_CMD_DATA_BYTES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+C\+M\+D\+\_\+\+D\+A\+T\+A\+\_\+\+B\+Y\+T\+ES}\hypertarget{log_daemon_8c_a0ee102b2e877333111a8a657a0ec9a4a}{}\label{log_daemon_8c_a0ee102b2e877333111a8a657a0ec9a4a}
+{\bfseries Value\+:}
+\begin{DoxyCode}
+(  \hyperlink{log_daemon_8h_a65f34a0a9fcfe2325837b9f82a319ed9}{LOG\_MAX\_CMD\_PACKET\_BYTES}       \(\backslash\)
+                                - \hyperlink{limit_8h_ad9d6477d34eae249f1eaafaa28d29fb8}{LIMIT\_MAX\_PROCESS\_NAME\_LEN}     \(\backslash\)
+                                - \hyperlink{limit_8h_a87b04c282499850049caa466ceb9fc87}{LIMIT\_MAX\_COMPONENT\_NAME\_LEN} )
+\end{DoxyCode}
+Maximum length of the data portion in a command packet. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+TS@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+TS}}
+\index{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+TS@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+TS}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+TS}{MAX_EXPECTED_COMPONENTS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+TS~128}\hypertarget{log_daemon_8c_a12e0e31daedad0866a49a35dfa357a40}{}\label{log_daemon_8c_a12e0e31daedad0866a49a35dfa357a40}
+Maximum number of components that we expect to see. Used to set the pool sizes.
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000003}{Todo}]Make this configurable. \end{DoxyRefDesc}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES}}
+\index{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES}{MAX_EXPECTED_PROCESSES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES~32}\hypertarget{log_daemon_8c_a10a106cd691842a6a5accbef3cf7774f}{}\label{log_daemon_8c_a10a106cd691842a6a5accbef3cf7774f}
+Maximum number of processes that we expect to see. Used to set the hashmap and pool sizes.
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000002}{Todo}]Make this configurable. \end{DoxyRefDesc}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+ES@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+ES}}
+\index{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+ES@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+ES}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+ES}{MAX_EXPECTED_TRACES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+ES~20}\hypertarget{log_daemon_8c_a895920e1e0172dc9ad130012b1fb3aa1}{}\label{log_daemon_8c_a895920e1e0172dc9ad130012b1fb3aa1}
+Maximum number of traces that we expect to see. Used to set the pool sizes.
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000004}{Todo}]Make this configurable. \end{DoxyRefDesc}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE@{M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE}}
+\index{M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE@{M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE}{MAX_MSG_SIZE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+M\+S\+G\+\_\+\+S\+I\+ZE~256}\hypertarget{log_daemon_8c_a17e333794ae761cd55ec6fd6fc0f1bac}{}\label{log_daemon_8c_a17e333794ae761cd55ec6fd6fc0f1bac}
+Maximum length of log messages. 
+
+\subsection{Function Documentation}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Apply\+Settings@{Apply\+Settings}}
+\index{Apply\+Settings@{Apply\+Settings}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Apply\+Settings(const char $\ast$process\+Name, const char $\ast$component\+Name, le\+\_\+log\+\_\+\+Level\+\_\+t $\ast$level\+Ptr, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t tool\+Ipc\+Session\+Ref)}{ApplySettings(const char *processName, const char *componentName, le_log_Level_t *levelPtr, le_msg_SessionRef_t toolIpcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Apply\+Settings (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{process\+Name, }
+\item[{const char $\ast$}]{component\+Name, }
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$}]{level\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{tool\+Ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_af1fee9215a9d4a166efaf7920b0216f3}{}\label{log_daemon_8c_af1fee9215a9d4a166efaf7920b0216f3}
+Apply log settings. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em level\+Ptr} & Ptr log level, or N\+U\+LL if not being set. \\
+\hline
+\mbox{\tt in}  & {\em tool\+Ipc\+Session\+Ref} & Reference to log control tool\textquotesingle{}s I\+PC session. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Client\+Ipc\+Session\+Closed@{Client\+Ipc\+Session\+Closed}}
+\index{Client\+Ipc\+Session\+Closed@{Client\+Ipc\+Session\+Closed}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Ipc\+Session\+Closed(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref, void $\ast$context\+Ptr)}{ClientIpcSessionClosed(le_msg_SessionRef_t ipcSessionRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Ipc\+Session\+Closed (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a45a900491364ba156e555bae04a3cb80}{}\label{log_daemon_8c_a45a900491364ba156e555bae04a3cb80}
+Handle the closing of a client I\+PC session, which signals the death of a process. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Client\+Msg\+Receive\+Handler@{Client\+Msg\+Receive\+Handler}}
+\index{Client\+Msg\+Receive\+Handler@{Client\+Msg\+Receive\+Handler}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Msg\+Receive\+Handler(le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref, void $\ast$context\+Ptr)}{ClientMsgReceiveHandler(le_msg_MessageRef_t msgRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Msg\+Receive\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_add509b01dda5b955a8a816af1e34e5e8}{}\label{log_daemon_8c_add509b01dda5b955a8a816af1e34e5e8}
+Process a message received from a connected log session client. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em msg\+Ref} & Reference to the message received. \\
+\hline
+ & {\em context\+Ptr} & Not used. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Control\+Tool\+Msg\+Receive\+Handler@{Control\+Tool\+Msg\+Receive\+Handler}}
+\index{Control\+Tool\+Msg\+Receive\+Handler@{Control\+Tool\+Msg\+Receive\+Handler}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Control\+Tool\+Msg\+Receive\+Handler(le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref, void $\ast$context\+Ptr)}{ControlToolMsgReceiveHandler(le_msg_MessageRef_t msgRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Control\+Tool\+Msg\+Receive\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a6a462265b07839e8a38941b5bee55c1f}{}\label{log_daemon_8c_a6a462265b07839e8a38941b5bee55c1f}
+Process a message received from a connected log control tool. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em msg\+Ref} & Reference to the message received. \\
+\hline
+ & {\em context\+Ptr} & Not used. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Copy\+Component\+Settings@{Copy\+Component\+Settings}}
+\index{Copy\+Component\+Settings@{Copy\+Component\+Settings}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Copy\+Component\+Settings(\+Running\+Process\+\_\+t $\ast$running\+Proc\+Obj\+Ptr, Log\+Session\+\_\+t $\ast$log\+Session\+Ptr, Component\+Name\+\_\+t $\ast$comp\+Name\+Obj\+Ptr)}{CopyComponentSettings(RunningProcess_t *runningProcObjPtr, LogSession_t *logSessionPtr, ComponentName_t *compNameObjPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Copy\+Component\+Settings (
+\begin{DoxyParamCaption}
+\item[{{\bf Running\+Process\+\_\+t} $\ast$}]{running\+Proc\+Obj\+Ptr, }
+\item[{{\bf Log\+Session\+\_\+t} $\ast$}]{log\+Session\+Ptr, }
+\item[{{\bf Component\+Name\+\_\+t} $\ast$}]{comp\+Name\+Obj\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a406014b122429a222cf2ffb801fde305}{}\label{log_daemon_8c_a406014b122429a222cf2ffb801fde305}
+Applies settings from a Component Name object to a Log Session. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Create\+Component\+Name@{Create\+Component\+Name}}
+\index{Create\+Component\+Name@{Create\+Component\+Name}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Component\+Name(\+Process\+Name\+\_\+t $\ast$proc\+Name\+Obj\+Ptr, const char $\ast$component\+Name\+Ptr)}{CreateComponentName(ProcessName_t *procNameObjPtr, const char *componentNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Component\+Name\+\_\+t}$\ast$ Create\+Component\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf Process\+Name\+\_\+t} $\ast$}]{proc\+Name\+Obj\+Ptr, }
+\item[{const char $\ast$}]{component\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a70bd29a783b25c95e2783faac59e4636}{}\label{log_daemon_8c_a70bd29a783b25c95e2783faac59e4636}
+Create a Component Name object for a given Process Name object.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Component Name object. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Create\+Component\+Names\+For\+Running\+Sessions@{Create\+Component\+Names\+For\+Running\+Sessions}}
+\index{Create\+Component\+Names\+For\+Running\+Sessions@{Create\+Component\+Names\+For\+Running\+Sessions}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Component\+Names\+For\+Running\+Sessions(\+Process\+Name\+\_\+t $\ast$proc\+Name\+Obj\+Ptr)}{CreateComponentNamesForRunningSessions(ProcessName_t *procNameObjPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Create\+Component\+Names\+For\+Running\+Sessions (
+\begin{DoxyParamCaption}
+\item[{{\bf Process\+Name\+\_\+t} $\ast$}]{proc\+Name\+Obj\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a3d6f20c784bc2d43801e643809a832f5}{}\label{log_daemon_8c_a3d6f20c784bc2d43801e643809a832f5}
+If there\textquotesingle{}s a running process for a given Process Name object, make sure there\textquotesingle{}s a persistent Component Name object attached to the Process Name object for each Log Session attached to the running process(es). \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Create\+Fd\+Log\+Monitor@{Create\+Fd\+Log\+Monitor}}
+\index{Create\+Fd\+Log\+Monitor@{Create\+Fd\+Log\+Monitor}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Fd\+Log\+Monitor(int fd, const char $\ast$app\+Name\+Ptr, const char $\ast$proc\+Name\+Ptr, pid\+\_\+t pid, le\+\_\+log\+\_\+\+Level\+\_\+t log\+Level, const char $\ast$monitor\+Name\+Ptr)}{CreateFdLogMonitor(int fd, const char *appNamePtr, const char *procNamePtr, pid_t pid, le_log_Level_t logLevel, const char *monitorNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Create\+Fd\+Log\+Monitor (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{const char $\ast$}]{app\+Name\+Ptr, }
+\item[{const char $\ast$}]{proc\+Name\+Ptr, }
+\item[{pid\+\_\+t}]{pid, }
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t}}]{log\+Level, }
+\item[{const char $\ast$}]{monitor\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a2b4f7566d4867809505a05c0f61e69bb}{}\label{log_daemon_8c_a2b4f7566d4867809505a05c0f61e69bb}
+Creates a monitor for an application process\textquotesingle{} file descriptor for logging. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor to log. \\
+\hline
+\mbox{\tt in}  & {\em app\+Name\+Ptr} & Name of the application. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name\+Ptr} & Name of the process. \\
+\hline
+\mbox{\tt in}  & {\em pid} & P\+ID of the process. \\
+\hline
+\mbox{\tt in}  & {\em log\+Level} & Level to log messages from this fd at. \\
+\hline
+\mbox{\tt in}  & {\em monitor\+Name\+Ptr} & Name of monitor. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Create\+Log\+Session@{Create\+Log\+Session}}
+\index{Create\+Log\+Session@{Create\+Log\+Session}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Log\+Session(\+Running\+Process\+\_\+t $\ast$running\+Proc\+Ptr, const char $\ast$component\+Name\+Ptr)}{CreateLogSession(RunningProcess_t *runningProcPtr, const char *componentNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Log\+Session\+\_\+t}$\ast$ Create\+Log\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf Running\+Process\+\_\+t} $\ast$}]{running\+Proc\+Ptr, }
+\item[{const char $\ast$}]{component\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_af08b982327306605955692634731a188}{}\label{log_daemon_8c_af08b982327306605955692634731a188}
+Create a Log Session object for a given Running Process object.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Log Session object. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Create\+Process\+Name@{Create\+Process\+Name}}
+\index{Create\+Process\+Name@{Create\+Process\+Name}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Process\+Name(const char $\ast$process\+Name\+Str)}{CreateProcessName(const char *processNameStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Process\+Name\+\_\+t}$\ast$ Create\+Process\+Name (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{process\+Name\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a44d9130b6165b356ce74fc2269a8a099}{}\label{log_daemon_8c_a44d9130b6165b356ce74fc2269a8a099}
+Create a Process Name object for a given process name.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Process Name object. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Create\+Running\+Process@{Create\+Running\+Process}}
+\index{Create\+Running\+Process@{Create\+Running\+Process}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Running\+Process(\+Process\+Name\+\_\+t $\ast$proc\+Name\+Obj\+Ptr, pid\+\_\+t pid, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref)}{CreateRunningProcess(ProcessName_t *procNameObjPtr, pid_t pid, le_msg_SessionRef_t ipcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Running\+Process\+\_\+t}$\ast$ Create\+Running\+Process (
+\begin{DoxyParamCaption}
+\item[{{\bf Process\+Name\+\_\+t} $\ast$}]{proc\+Name\+Obj\+Ptr, }
+\item[{pid\+\_\+t}]{pid, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_aca0af53ac8d4ce7c0375a9c49929906e}{}\label{log_daemon_8c_aca0af53ac8d4ce7c0375a9c49929906e}
+Create a Running Process object.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Running Process object. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Create\+Trace@{Create\+Trace}}
+\index{Create\+Trace@{Create\+Trace}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Trace(\+Log\+Session\+\_\+t $\ast$log\+Session\+Ptr, const char $\ast$keyword\+Str)}{CreateTrace(LogSession_t *logSessionPtr, const char *keywordStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Trace\+\_\+t}$\ast$ Create\+Trace (
+\begin{DoxyParamCaption}
+\item[{{\bf Log\+Session\+\_\+t} $\ast$}]{log\+Session\+Ptr, }
+\item[{const char $\ast$}]{keyword\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a9489be63db88957028570adf2518aa23}{}\label{log_daemon_8c_a9489be63db88957028570adf2518aa23}
+Create a Trace object for a given Log Session object.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Trace object. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Create\+Trace\+Name@{Create\+Trace\+Name}}
+\index{Create\+Trace\+Name@{Create\+Trace\+Name}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Trace\+Name(\+Component\+Name\+\_\+t $\ast$comp\+Name\+Obj\+Ptr, const char $\ast$keyword\+Str)}{CreateTraceName(ComponentName_t *compNameObjPtr, const char *keywordStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Trace\+Name\+\_\+t}$\ast$ Create\+Trace\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf Component\+Name\+\_\+t} $\ast$}]{comp\+Name\+Obj\+Ptr, }
+\item[{const char $\ast$}]{keyword\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a652fb17a7fb9b3da34e454cc461ada24}{}\label{log_daemon_8c_a652fb17a7fb9b3da34e454cc461ada24}
+Create a Trace Name object for a given Component Name object.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Trace Name object. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Delete\+All\+Component\+Names\+For\+Process\+Name@{Delete\+All\+Component\+Names\+For\+Process\+Name}}
+\index{Delete\+All\+Component\+Names\+For\+Process\+Name@{Delete\+All\+Component\+Names\+For\+Process\+Name}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+All\+Component\+Names\+For\+Process\+Name(\+Process\+Name\+\_\+t $\ast$proc\+Name\+Obj\+Ptr)}{DeleteAllComponentNamesForProcessName(ProcessName_t *procNameObjPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+All\+Component\+Names\+For\+Process\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf Process\+Name\+\_\+t} $\ast$}]{proc\+Name\+Obj\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a7829d7117b7d0675b7f2c590aaf1f739}{}\label{log_daemon_8c_a7829d7117b7d0675b7f2c590aaf1f739}
+Deletes all Component Name objects for a given a Process Name object. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Delete\+Fd\+Log@{Delete\+Fd\+Log}}
+\index{Delete\+Fd\+Log@{Delete\+Fd\+Log}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Fd\+Log(int fd, Fd\+Log\+\_\+t $\ast$fd\+Log\+Ptr)}{DeleteFdLog(int fd, FdLog_t *fdLogPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+Fd\+Log (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{{\bf Fd\+Log\+\_\+t} $\ast$}]{fd\+Log\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_ac0def24c2d87008eb3ad701e9f974c00}{}\label{log_daemon_8c_ac0def24c2d87008eb3ad701e9f974c00}
+Deletes the fd log object and monitor. Closes the associated fd. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & Fd to close. \\
+\hline
+\mbox{\tt in}  & {\em fd\+Log\+Ptr} & Fd log object to delete. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Delete\+Process\+Name@{Delete\+Process\+Name}}
+\index{Delete\+Process\+Name@{Delete\+Process\+Name}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Process\+Name(\+Process\+Name\+\_\+t $\ast$proc\+Name\+Obj\+Ptr)}{DeleteProcessName(ProcessName_t *procNameObjPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+Process\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf Process\+Name\+\_\+t} $\ast$}]{proc\+Name\+Obj\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a238de698f87c2787317454d4148cd1f5}{}\label{log_daemon_8c_a238de698f87c2787317454d4148cd1f5}
+Deletes a Process Name object. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Find\+Component\+Name@{Find\+Component\+Name}}
+\index{Find\+Component\+Name@{Find\+Component\+Name}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Component\+Name(const Process\+Name\+\_\+t $\ast$proc\+Name\+Obj\+Ptr, const char $\ast$component\+Name\+Str)}{FindComponentName(const ProcessName_t *procNameObjPtr, const char *componentNameStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Component\+Name\+\_\+t}$\ast$ Find\+Component\+Name (
+\begin{DoxyParamCaption}
+\item[{const {\bf Process\+Name\+\_\+t} $\ast$}]{proc\+Name\+Obj\+Ptr, }
+\item[{const char $\ast$}]{component\+Name\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_ac6c724921b5443f988acf5deea4066de}{}\label{log_daemon_8c_ac6c724921b5443f988acf5deea4066de}
+Search a given Process Name\textquotesingle{}s list of Component Names.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Component Name object on success. N\+U\+LL if the component name could not be found. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Find\+Log\+Session@{Find\+Log\+Session}}
+\index{Find\+Log\+Session@{Find\+Log\+Session}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Log\+Session(const Running\+Process\+\_\+t $\ast$proc\+Ptr, const char $\ast$component\+Name\+Str)}{FindLogSession(const RunningProcess_t *procPtr, const char *componentNameStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Log\+Session\+\_\+t}$\ast$ Find\+Log\+Session (
+\begin{DoxyParamCaption}
+\item[{const {\bf Running\+Process\+\_\+t} $\ast$}]{proc\+Ptr, }
+\item[{const char $\ast$}]{component\+Name\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a702ab4aa076db477e132cc7b3f40da4f}{}\label{log_daemon_8c_a702ab4aa076db477e132cc7b3f40da4f}
+Search a given Running Process\textquotesingle{}s list of log sessions.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Log Session object on success. N\+U\+LL if the component name could not be found. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Find\+Process\+By\+Ipc\+Session@{Find\+Process\+By\+Ipc\+Session}}
+\index{Find\+Process\+By\+Ipc\+Session@{Find\+Process\+By\+Ipc\+Session}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Process\+By\+Ipc\+Session(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref)}{FindProcessByIpcSession(le_msg_SessionRef_t ipcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Running\+Process\+\_\+t}$\ast$ Find\+Process\+By\+Ipc\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}\hypertarget{log_daemon_8c_ad0816ded08d6942292f883a58044456f}{}\label{log_daemon_8c_ad0816ded08d6942292f883a58044456f}
+Find a Running Process object for a given I\+PC session reference.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Running Process object on success. N\+U\+LL if the process could not be found. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Find\+Process\+By\+Pid@{Find\+Process\+By\+Pid}}
+\index{Find\+Process\+By\+Pid@{Find\+Process\+By\+Pid}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Process\+By\+Pid(pid\+\_\+t pid)}{FindProcessByPid(pid_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Running\+Process\+\_\+t}$\ast$ Find\+Process\+By\+Pid (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}\hypertarget{log_daemon_8c_a24f24bd08053b66051587d0db3b7e4a1}{}\label{log_daemon_8c_a24f24bd08053b66051587d0db3b7e4a1}
+Find a Running Process object for a given process ID.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Running Process object on success. N\+U\+LL if the process could not be found. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Find\+Process\+Name@{Find\+Process\+Name}}
+\index{Find\+Process\+Name@{Find\+Process\+Name}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Process\+Name(const char $\ast$process\+Name\+Str)}{FindProcessName(const char *processNameStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Process\+Name\+\_\+t}$\ast$ Find\+Process\+Name (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{process\+Name\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}\hypertarget{log_daemon_8c_a9acd5c6e4434f25b9cad3b6603a386b7}{}\label{log_daemon_8c_a9acd5c6e4434f25b9cad3b6603a386b7}
+Find a Process Name object for a given process name.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Process Name object on success. N\+U\+LL if the process name could not be found. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Find\+Trace@{Find\+Trace}}
+\index{Find\+Trace@{Find\+Trace}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Trace(const Log\+Session\+\_\+t $\ast$log\+Session\+Ptr, const char $\ast$keyword\+Str)}{FindTrace(const LogSession_t *logSessionPtr, const char *keywordStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Trace\+\_\+t}$\ast$ Find\+Trace (
+\begin{DoxyParamCaption}
+\item[{const {\bf Log\+Session\+\_\+t} $\ast$}]{log\+Session\+Ptr, }
+\item[{const char $\ast$}]{keyword\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_aab301ef3ad1609f9b350a574fda9dc6c}{}\label{log_daemon_8c_aab301ef3ad1609f9b350a574fda9dc6c}
+Search a given Log Session\textquotesingle{}s list of Traces.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Trace object on success. N\+U\+LL if the trace keyword could not be found. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Find\+Trace\+Name@{Find\+Trace\+Name}}
+\index{Find\+Trace\+Name@{Find\+Trace\+Name}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Trace\+Name(const Component\+Name\+\_\+t $\ast$comp\+Name\+Obj\+Ptr, const char $\ast$trace\+Name\+Str)}{FindTraceName(const ComponentName_t *compNameObjPtr, const char *traceNameStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Trace\+Name\+\_\+t}$\ast$ Find\+Trace\+Name (
+\begin{DoxyParamCaption}
+\item[{const {\bf Component\+Name\+\_\+t} $\ast$}]{comp\+Name\+Obj\+Ptr, }
+\item[{const char $\ast$}]{trace\+Name\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a365a1692b8ce2a383f2e2fc1608c7048}{}\label{log_daemon_8c_a365a1692b8ce2a383f2e2fc1608c7048}
+Search a given Component Name\textquotesingle{}s list of enabled traces.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the Trace Name object on success. N\+U\+LL if the trace name could not be found. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Forget\+Process@{Forget\+Process}}
+\index{Forget\+Process@{Forget\+Process}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Forget\+Process(const char $\ast$process\+Name, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t tool\+Ipc\+Session\+Ref)}{ForgetProcess(const char *processName, le_msg_SessionRef_t toolIpcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Forget\+Process (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{process\+Name, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{tool\+Ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a020d8bc1b345a53ced47a946438e0068}{}\label{log_daemon_8c_a020d8bc1b345a53ced47a946438e0068}
+Clears the settings for a given process name out of the data structures.
+
+\begin{DoxyNote}{Note}
+Won\textquotesingle{}t remove settings for processes that are currently running. 
+\end{DoxyNote}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Generate\+Component\+List@{Generate\+Component\+List}}
+\index{Generate\+Component\+List@{Generate\+Component\+List}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Generate\+Component\+List(const Component\+Name\+\_\+t $\ast$comp\+Name\+Obj\+Ptr, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref)}{GenerateComponentList(const ComponentName_t *compNameObjPtr, le_msg_SessionRef_t ipcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Generate\+Component\+List (
+\begin{DoxyParamCaption}
+\item[{const {\bf Component\+Name\+\_\+t} $\ast$}]{comp\+Name\+Obj\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a8600694ecd788402e1ca693e2125b6ce}{}\label{log_daemon_8c_a8600694ecd788402e1ca693e2125b6ce}
+Sends messages to the log tool containing printable, null-\/terminated, U\+T\+F-\/8 strings containing the name of a component, its associated log level and any traces that are enabled for it. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Generate\+List@{Generate\+List}}
+\index{Generate\+List@{Generate\+List}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Generate\+List(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref)}{GenerateList(le_msg_SessionRef_t ipcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Generate\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a19bcd3cd437531ca172cebb62cc99041}{}\label{log_daemon_8c_a19bcd3cd437531ca172cebb62cc99041}
+Sends the list of processes, components, and enabled trace keywords to the log control tool.
+
+\begin{DoxyNote}{Note}
+Sends one message for each line item in the list. The messages are null-\/terminated, printable U\+T\+F-\/8 strings. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em ipc\+Session\+Ref} & Log control tool\textquotesingle{}s current I\+PC session. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Generate\+Log\+Session\+List@{Generate\+Log\+Session\+List}}
+\index{Generate\+Log\+Session\+List@{Generate\+Log\+Session\+List}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Generate\+Log\+Session\+List(const Log\+Session\+\_\+t $\ast$log\+Session\+Obj\+Ptr, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref)}{GenerateLogSessionList(const LogSession_t *logSessionObjPtr, le_msg_SessionRef_t ipcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Generate\+Log\+Session\+List (
+\begin{DoxyParamCaption}
+\item[{const {\bf Log\+Session\+\_\+t} $\ast$}]{log\+Session\+Obj\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_ab4b4d2ee0ca9dc9f47d27ce85244764e}{}\label{log_daemon_8c_ab4b4d2ee0ca9dc9f47d27ce85244764e}
+Sends messages to the log tool containing printable, null-\/terminated, U\+T\+F-\/8 strings containing a log session\textquotesingle{}s component name, its log filter level, and any trace settings for it. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Get\+Level\+String@{Get\+Level\+String}}
+\index{Get\+Level\+String@{Get\+Level\+String}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Level\+String(le\+\_\+log\+\_\+\+Level\+\_\+t level)}{GetLevelString(le_log_Level_t level)}}]{\setlength{\rightskip}{0pt plus 5cm}static const char$\ast$ Get\+Level\+String (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t}}]{level}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a79f271bbff8737498d646802e10c3c63}{}\label{log_daemon_8c_a79f271bbff8737498d646802e10c3c63}
+Fetches a pointer to a constant string containing the name of a log level. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Ipc\+Session\+Equals@{Ipc\+Session\+Equals}}
+\index{Ipc\+Session\+Equals@{Ipc\+Session\+Equals}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Ipc\+Session\+Equals(const void $\ast$hash\+Key1\+Ptr, const void $\ast$hash\+Key2\+Ptr)}{IpcSessionEquals(const void *hashKey1Ptr, const void *hashKey2Ptr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Ipc\+Session\+Equals (
+\begin{DoxyParamCaption}
+\item[{const {\bf void} $\ast$}]{hash\+Key1\+Ptr, }
+\item[{const {\bf void} $\ast$}]{hash\+Key2\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a315bafe0add0384ac20c97197b2dedd3}{}\label{log_daemon_8c_a315bafe0add0384ac20c97197b2dedd3}
+Equality comparison function for I\+PC Session I\+Ds.
+
+\begin{DoxyReturn}{Returns}
+true = the two Session I\+Ds are the same. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Ipc\+Session\+Hash@{Ipc\+Session\+Hash}}
+\index{Ipc\+Session\+Hash@{Ipc\+Session\+Hash}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Ipc\+Session\+Hash(const void $\ast$hash\+Key\+Ptr)}{IpcSessionHash(const void *hashKeyPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Ipc\+Session\+Hash (
+\begin{DoxyParamCaption}
+\item[{const {\bf void} $\ast$}]{hash\+Key\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_ad7450365e3238eb0f126f4f2ee2c0f75}{}\label{log_daemon_8c_ad7450365e3238eb0f126f4f2ee2c0f75}
+Hash computation function for I\+PC Session I\+Ds.
+
+\begin{DoxyReturn}{Returns}
+The hash value computed from a I\+PC Session Reference. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF@{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF}}
+\index{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF@{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+I\+F(file\+Ptr==\+N\+U\+L\+L,""Failed to redirect standard in to /dev/null.  \%m."")}{LE_FATAL_IF(filePtr==NULL,"Failed to redirect standard in to /dev/null.  %m.")}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF (
+\begin{DoxyParamCaption}
+\item[{{\bf file\+Ptr}}]{ = {\ttfamily =NULL}, }
+\item[{\char`\"{}Failed to redirect standard in to /dev/null. \%m.\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_acfa472e3c36c727898efff38ab002862}{}\label{log_daemon_8c_acfa472e3c36c727898efff38ab002862}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!L\+E\+\_\+\+I\+N\+FO@{L\+E\+\_\+\+I\+N\+FO}}
+\index{L\+E\+\_\+\+I\+N\+FO@{L\+E\+\_\+\+I\+N\+FO}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+I\+N\+F\+O(""Log daemon ready."")}{LE_INFO("Log daemon ready.")}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+I\+N\+FO (
+\begin{DoxyParamCaption}
+\item[{\char`\"{}Log daemon ready.\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_ad089d1b40efb2f8131590aa69a22fbdc}{}\label{log_daemon_8c_ad089d1b40efb2f8131590aa69a22fbdc}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}}
+\index{le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Expand\+Pool(\+Process\+Name\+Pool\+Ref, M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+E\+S)}{le_mem_ExpandPool(ProcessNamePoolRef, MAX_EXPECTED_PROCESSES)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Expand\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Process\+Name\+Pool\+Ref}}]{, }
+\item[{{\bf M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_a372840eaf4a3de128cec199758687f31}{}\label{log_daemon_8c_a372840eaf4a3de128cec199758687f31}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}}
+\index{le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Expand\+Pool(\+Component\+Name\+Pool\+Ref, M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+T\+S)}{le_mem_ExpandPool(ComponentNamePoolRef, MAX_EXPECTED_COMPONENTS)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Expand\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Component\+Name\+Pool\+Ref}}]{, }
+\item[{{\bf M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+TS}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_ac7a69e7ec2cefb2ac9968e0316bbaca0}{}\label{log_daemon_8c_ac7a69e7ec2cefb2ac9968e0316bbaca0}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}}
+\index{le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Expand\+Pool(\+Trace\+Name\+Pool\+Ref, M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+E\+S)}{le_mem_ExpandPool(TraceNamePoolRef, MAX_EXPECTED_TRACES)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Expand\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Trace\+Name\+Pool\+Ref}}]{, }
+\item[{{\bf M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+ES}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_ab8577fad889e525bd50a2efa87d8575d}{}\label{log_daemon_8c_ab8577fad889e525bd50a2efa87d8575d}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}}
+\index{le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Expand\+Pool(\+Running\+Process\+Pool\+Ref, M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+E\+S)}{le_mem_ExpandPool(RunningProcessPoolRef, MAX_EXPECTED_PROCESSES)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Expand\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Running\+Process\+Pool\+Ref}}]{, }
+\item[{{\bf M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_a0d48b51d777453a60003e1c7cc7605d4}{}\label{log_daemon_8c_a0d48b51d777453a60003e1c7cc7605d4}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}}
+\index{le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Expand\+Pool(\+Log\+Session\+Pool\+Ref, M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+T\+S)}{le_mem_ExpandPool(LogSessionPoolRef, MAX_EXPECTED_COMPONENTS)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Expand\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Log\+Session\+Pool\+Ref}}]{, }
+\item[{{\bf M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+TS}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_addae654feefce5ff266088806e3e5edc}{}\label{log_daemon_8c_addae654feefce5ff266088806e3e5edc}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}}
+\index{le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Expand\+Pool(\+Trace\+Pool\+Ref, M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+E\+S)}{le_mem_ExpandPool(TracePoolRef, MAX_EXPECTED_TRACES)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Expand\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Trace\+Pool\+Ref}}]{, }
+\item[{{\bf M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+R\+A\+C\+ES}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_aba93f4ed6b18a53247f3c59db3623142}{}\label{log_daemon_8c_aba93f4ed6b18a53247f3c59db3623142}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}}
+\index{le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Expand\+Pool(\+Fd\+Log\+Pool\+Ref, M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+E\+S $\ast$2)}{le_mem_ExpandPool(FdLogPoolRef, MAX_EXPECTED_PROCESSES *2)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Expand\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Fd\+Log\+Pool\+Ref}}]{, }
+\item[{{\bf M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+R\+O\+C\+E\+S\+S\+ES} $\ast$}]{2}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_ae4a9d03d6bae85ea7f9d98d38888a90a}{}\label{log_daemon_8c_ae4a9d03d6bae85ea7f9d98d38888a90a}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler@{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler}}
+\index{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler@{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler(service\+Ref, Client\+Ipc\+Session\+Closed, N\+U\+L\+L)}{le_msg_AddServiceCloseHandler(serviceRef, ClientIpcSessionClosed, NULL)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf service\+Ref}}]{, }
+\item[{{\bf Client\+Ipc\+Session\+Closed}}]{, }
+\item[{N\+U\+LL}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_a0532a888d282c5ebae1278fba0aed479}{}\label{log_daemon_8c_a0532a888d282c5ebae1278fba0aed479}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!le\+\_\+msg\+\_\+\+Advertise\+Service@{le\+\_\+msg\+\_\+\+Advertise\+Service}}
+\index{le\+\_\+msg\+\_\+\+Advertise\+Service@{le\+\_\+msg\+\_\+\+Advertise\+Service}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Advertise\+Service(service\+Ref)}{le_msg_AdvertiseService(serviceRef)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+msg\+\_\+\+Advertise\+Service (
+\begin{DoxyParamCaption}
+\item[{{\bf service\+Ref}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_ad477fa97e6402332aa928ba37eccbb3e}{}\label{log_daemon_8c_ad477fa97e6402332aa928ba37eccbb3e}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler@{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler}}
+\index{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler@{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler(service\+Ref, Client\+Msg\+Receive\+Handler, N\+U\+L\+L)}{le_msg_SetServiceRecvHandler(serviceRef, ClientMsgReceiveHandler, NULL)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf service\+Ref}}]{, }
+\item[{{\bf Client\+Msg\+Receive\+Handler}}]{, }
+\item[{N\+U\+LL}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_a97f4b7f70e40fe5df7736de98c75c900}{}\label{log_daemon_8c_a97f4b7f70e40fe5df7736de98c75c900}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler@{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler}}
+\index{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler@{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler(service\+Ref, Control\+Tool\+Msg\+Receive\+Handler, N\+U\+L\+L)}{le_msg_SetServiceRecvHandler(serviceRef, ControlToolMsgReceiveHandler, NULL)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf service\+Ref}}]{, }
+\item[{{\bf Control\+Tool\+Msg\+Receive\+Handler}}]{, }
+\item[{N\+U\+LL}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_ac0bfaf2d18afe3c9bd0247007ee4e262}{}\label{log_daemon_8c_ac0bfaf2d18afe3c9bd0247007ee4e262}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!log\+Fd\+\_\+\+Std\+Err@{log\+Fd\+\_\+\+Std\+Err}}
+\index{log\+Fd\+\_\+\+Std\+Err@{log\+Fd\+\_\+\+Std\+Err}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{log\+Fd\+\_\+\+Std\+Err(int fd, const char $\ast$app\+Name, const char $\ast$proc\+Name, int pid)}{logFd_StdErr(int fd, const char *appName, const char *procName, int pid)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+Fd\+\_\+\+Std\+Err (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{const char $\ast$}]{app\+Name, }
+\item[{const char $\ast$}]{proc\+Name, }
+\item[{int}]{pid}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_abb2bd7282fb7a053fcc7631f895d7df9}{}\label{log_daemon_8c_abb2bd7282fb7a053fcc7631f895d7df9}
+Registers an application process\textquotesingle{} standard error for logging. Messages from this file descriptor will be logged at L\+E\+\_\+\+L\+O\+G\+\_\+\+E\+RR level.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & stderr file descriptor. \\
+\hline
+\mbox{\tt in}  & {\em app\+Name} & Name of the application. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name} & Name of the process. \\
+\hline
+\mbox{\tt in}  & {\em pid} & P\+ID of the process. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!log\+Fd\+\_\+\+Std\+Out@{log\+Fd\+\_\+\+Std\+Out}}
+\index{log\+Fd\+\_\+\+Std\+Out@{log\+Fd\+\_\+\+Std\+Out}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{log\+Fd\+\_\+\+Std\+Out(int fd, const char $\ast$app\+Name, const char $\ast$proc\+Name, int pid)}{logFd_StdOut(int fd, const char *appName, const char *procName, int pid)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+Fd\+\_\+\+Std\+Out (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{const char $\ast$}]{app\+Name, }
+\item[{const char $\ast$}]{proc\+Name, }
+\item[{int}]{pid}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_af581fe99558218a92d8d5eda9e88e208}{}\label{log_daemon_8c_af581fe99558218a92d8d5eda9e88e208}
+Registers an application process\textquotesingle{} standard out for logging. Messages from this file descriptor will be logged at L\+E\+\_\+\+L\+O\+G\+\_\+\+I\+N\+FO level.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & stdout file descriptor. \\
+\hline
+\mbox{\tt in}  & {\em app\+Name} & Name of the application. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name} & Name of the process. \\
+\hline
+\mbox{\tt in}  & {\em pid} & P\+ID of the process. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Log\+Fd\+Messages@{Log\+Fd\+Messages}}
+\index{Log\+Fd\+Messages@{Log\+Fd\+Messages}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Log\+Fd\+Messages(int fd, short events)}{LogFdMessages(int fd, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Log\+Fd\+Messages (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a24cd8f8f8ab3391636b17f3ca322d4ec}{}\label{log_daemon_8c_a24cd8f8f8ab3391636b17f3ca322d4ec}
+Logs message received from the fd. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Parse\+Cmd\+Packet@{Parse\+Cmd\+Packet}}
+\index{Parse\+Cmd\+Packet@{Parse\+Cmd\+Packet}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Parse\+Cmd\+Packet(const char $\ast$cmd\+Packet\+Ptr, char $\ast$cmd\+Ptr, char $\ast$process\+Name\+Ptr, char $\ast$component\+Name\+Ptr, const char $\ast$$\ast$cmd\+Data\+Ptr\+Ptr)}{ParseCmdPacket(const char *cmdPacketPtr, char *cmdPtr, char *processNamePtr, char *componentNamePtr, const char **cmdDataPtrPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Parse\+Cmd\+Packet (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{cmd\+Packet\+Ptr, }
+\item[{char $\ast$}]{cmd\+Ptr, }
+\item[{char $\ast$}]{process\+Name\+Ptr, }
+\item[{char $\ast$}]{component\+Name\+Ptr, }
+\item[{const char $\ast$$\ast$}]{cmd\+Data\+Ptr\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_ae36820af19b9681f5c41138e82ebfa8c}{}\label{log_daemon_8c_ae36820af19b9681f5c41138e82ebfa8c}
+Parses a command packet, received from the command tool, to get the command code, process name, component name and the command data. The buffer sizes for the process\+Name and component\+Name must be L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+P\+R\+O\+C\+E\+S\+S\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES and L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+N\+A\+M\+E\+\_\+\+S\+I\+ZE, respectively.
+
+\begin{DoxyReturn}{Returns}
+true if success. false if the packet was not formated correctly. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cmd\+Packet\+Ptr} & The command packet. \\
+\hline
+\mbox{\tt out}  & {\em cmd\+Ptr} & Ptr to where the command code should be copied. Can be N\+U\+LL if not needed. \\
+\hline
+\mbox{\tt out}  & {\em process\+Name\+Ptr} & Ptr to buffer to copy the process name into. Can be N\+U\+LL if not needed. \\
+\hline
+\mbox{\tt out}  & {\em component\+Name\+Ptr} & Pointer buffer to copy the component name into. Can be N\+U\+LL if not needed. \\
+\hline
+\mbox{\tt out}  & {\em cmd\+Data\+Ptr\+Ptr} & Set to point to the optional Command\+Data part at the end. Can be N\+U\+LL if not needed. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Process\+Id\+Equals@{Process\+Id\+Equals}}
+\index{Process\+Id\+Equals@{Process\+Id\+Equals}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Id\+Equals(const void $\ast$hash\+Key1\+Ptr, const void $\ast$hash\+Key2\+Ptr)}{ProcessIdEquals(const void *hashKey1Ptr, const void *hashKey2Ptr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Process\+Id\+Equals (
+\begin{DoxyParamCaption}
+\item[{const {\bf void} $\ast$}]{hash\+Key1\+Ptr, }
+\item[{const {\bf void} $\ast$}]{hash\+Key2\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a2874c38b67bdc1ae38f09fff16b3a02c}{}\label{log_daemon_8c_a2874c38b67bdc1ae38f09fff16b3a02c}
+Equality comparison function for Process I\+Ds.
+
+\begin{DoxyReturn}{Returns}
+true = the two Process I\+Ds are the same. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Process\+Id\+Hash@{Process\+Id\+Hash}}
+\index{Process\+Id\+Hash@{Process\+Id\+Hash}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Id\+Hash(const void $\ast$hash\+Key\+Ptr)}{ProcessIdHash(const void *hashKeyPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Process\+Id\+Hash (
+\begin{DoxyParamCaption}
+\item[{const {\bf void} $\ast$}]{hash\+Key\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a72473c44e3e0e27ad624a17b1b23c23d}{}\label{log_daemon_8c_a72473c44e3e0e27ad624a17b1b23c23d}
+Hash computation function for Process I\+Ds.
+
+\begin{DoxyReturn}{Returns}
+The hash value computed from a Process ID. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Reg\+Component@{Reg\+Component}}
+\index{Reg\+Component@{Reg\+Component}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Reg\+Component(const char $\ast$process\+Name, const char $\ast$component\+Name, const char $\ast$pid\+Str, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref)}{RegComponent(const char *processName, const char *componentName, const char *pidStr, le_msg_SessionRef_t ipcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Reg\+Component (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{process\+Name, }
+\item[{const char $\ast$}]{component\+Name, }
+\item[{const char $\ast$}]{pid\+Str, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_ae8486c12f39677f04489f19e205d26d1}{}\label{log_daemon_8c_ae8486c12f39677f04489f19e205d26d1}
+Adds the process/component to our registry if it is not already there.
+
+Searchs the configuration commands list to see if we have any commands for this process/component and sends those commands to it. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Send\+Component\+Info\+To\+Log\+Tool@{Send\+Component\+Info\+To\+Log\+Tool}}
+\index{Send\+Component\+Info\+To\+Log\+Tool@{Send\+Component\+Info\+To\+Log\+Tool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Send\+Component\+Info\+To\+Log\+Tool(const char $\ast$component\+Name, le\+\_\+log\+\_\+\+Level\+\_\+t level, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref)}{SendComponentInfoToLogTool(const char *componentName, le_log_Level_t level, le_msg_SessionRef_t ipcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Send\+Component\+Info\+To\+Log\+Tool (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{component\+Name, }
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t}}]{level, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_afaabdc81e0aa3093451d1dbb618d1006}{}\label{log_daemon_8c_afaabdc81e0aa3093451d1dbb618d1006}
+Sends a message to the log tool containing a printable, null-\/terminated, U\+T\+F-\/8 string containing the name of a component and its associated log level. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Send\+Process\+Name\+To\+Log\+Tool@{Send\+Process\+Name\+To\+Log\+Tool}}
+\index{Send\+Process\+Name\+To\+Log\+Tool@{Send\+Process\+Name\+To\+Log\+Tool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Send\+Process\+Name\+To\+Log\+Tool(const Process\+Name\+\_\+t $\ast$proc\+Name\+Obj\+Ptr, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref)}{SendProcessNameToLogTool(const ProcessName_t *procNameObjPtr, le_msg_SessionRef_t ipcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Send\+Process\+Name\+To\+Log\+Tool (
+\begin{DoxyParamCaption}
+\item[{const {\bf Process\+Name\+\_\+t} $\ast$}]{proc\+Name\+Obj\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a05e2f288e5b3af3b734cb77e4809be40}{}\label{log_daemon_8c_a05e2f288e5b3af3b734cb77e4809be40}
+Sends a message to the log tool containing a printable, null-\/terminated, U\+T\+F-\/8 string containing the name of a process. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Send\+Running\+Process\+Info\+To\+Log\+Tool@{Send\+Running\+Process\+Info\+To\+Log\+Tool}}
+\index{Send\+Running\+Process\+Info\+To\+Log\+Tool@{Send\+Running\+Process\+Info\+To\+Log\+Tool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Send\+Running\+Process\+Info\+To\+Log\+Tool(const Running\+Process\+\_\+t $\ast$running\+Proc\+Obj\+Ptr, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref)}{SendRunningProcessInfoToLogTool(const RunningProcess_t *runningProcObjPtr, le_msg_SessionRef_t ipcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Send\+Running\+Process\+Info\+To\+Log\+Tool (
+\begin{DoxyParamCaption}
+\item[{const {\bf Running\+Process\+\_\+t} $\ast$}]{running\+Proc\+Obj\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a45c7545ad6764b12c4a07eb2606edeb1}{}\label{log_daemon_8c_a45c7545ad6764b12c4a07eb2606edeb1}
+Sends a message to the log tool containing a printable, null-\/terminated, U\+T\+F-\/8 string containing the P\+ID of a running process and all its log session information. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Send\+To\+Log\+Tool@{Send\+To\+Log\+Tool}}
+\index{Send\+To\+Log\+Tool@{Send\+To\+Log\+Tool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Send\+To\+Log\+Tool(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref, const char $\ast$message\+Str)}{SendToLogTool(le_msg_SessionRef_t ipcSessionRef, const char *messageStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Send\+To\+Log\+Tool (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref, }
+\item[{const char $\ast$}]{message\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a458c396b73213c622562b3883b5bba60}{}\label{log_daemon_8c_a458c396b73213c622562b3883b5bba60}
+Sends a message to a log control tool. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Send\+Trace\+Name\+To\+Log\+Tool@{Send\+Trace\+Name\+To\+Log\+Tool}}
+\index{Send\+Trace\+Name\+To\+Log\+Tool@{Send\+Trace\+Name\+To\+Log\+Tool}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Send\+Trace\+Name\+To\+Log\+Tool(const char $\ast$name, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t ipc\+Session\+Ref)}{SendTraceNameToLogTool(const char *name, le_msg_SessionRef_t ipcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Send\+Trace\+Name\+To\+Log\+Tool (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{name, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_abb132e4f6b2e91fe5fa87b038cb410c1}{}\label{log_daemon_8c_abb132e4f6b2e91fe5fa87b038cb410c1}
+Sends messages to the log tool containing printable, null-\/terminated, U\+T\+F-\/8 strings containing the name of a component and any traces that are enabled for it. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+By\+Pid@{Set\+By\+Pid}}
+\index{Set\+By\+Pid@{Set\+By\+Pid}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+By\+Pid(pid\+\_\+t pid, const char $\ast$component\+Name, le\+\_\+log\+\_\+\+Level\+\_\+t $\ast$level\+Ptr, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t tool\+Ipc\+Session\+Ref)}{SetByPid(pid_t pid, const char *componentName, le_log_Level_t *levelPtr, le_msg_SessionRef_t toolIpcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+By\+Pid (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{pid, }
+\item[{const char $\ast$}]{component\+Name, }
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$}]{level\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{tool\+Ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a16611650e37e1d32cafed355667ce907}{}\label{log_daemon_8c_a16611650e37e1d32cafed355667ce907}
+Sets log settings for a specific process ID. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em level\+Ptr} & Ptr log level, or N\+U\+LL if not being set. \\
+\hline
+\mbox{\tt in}  & {\em tool\+Ipc\+Session\+Ref} & Reference to log control tool\textquotesingle{}s I\+PC session. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+By\+Process\+Name@{Set\+By\+Process\+Name}}
+\index{Set\+By\+Process\+Name@{Set\+By\+Process\+Name}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+By\+Process\+Name(const char $\ast$process\+Name, const char $\ast$component\+Name, le\+\_\+log\+\_\+\+Level\+\_\+t $\ast$level\+Ptr)}{SetByProcessName(const char *processName, const char *componentName, le_log_Level_t *levelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+By\+Process\+Name (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{process\+Name, }
+\item[{const char $\ast$}]{component\+Name, }
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$}]{level\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_aaaf449b603ae3bf9f924c3cc84c92ade}{}\label{log_daemon_8c_aaaf449b603ae3bf9f924c3cc84c92ade}
+Sets the log settings for all processes that share the same name. This setting will survive as long as the Log Control Daemon continues to run or until it is changed at the request of the log control tool. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em level\+Ptr} & Ptr log level, or N\+U\+LL if not being set. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+For\+All\+Processes@{Set\+For\+All\+Processes}}
+\index{Set\+For\+All\+Processes@{Set\+For\+All\+Processes}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+For\+All\+Processes(const char $\ast$component\+Name, le\+\_\+log\+\_\+\+Level\+\_\+t $\ast$level\+Ptr)}{SetForAllProcesses(const char *componentName, le_log_Level_t *levelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+For\+All\+Processes (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{component\+Name, }
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$}]{level\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a36fa7cbf8072ade2687831023a424b6f}{}\label{log_daemon_8c_a36fa7cbf8072ade2687831023a424b6f}
+Sets the log level for all processes that already exist in the Log Control Daemon\textquotesingle{}s data structures. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em level\+Ptr} & Ptr log level, or N\+U\+LL if not being set. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+For\+Running\+Process@{Set\+For\+Running\+Process}}
+\index{Set\+For\+Running\+Process@{Set\+For\+Running\+Process}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+For\+Running\+Process(\+Running\+Process\+\_\+t $\ast$running\+Proc\+Obj\+Ptr, const char $\ast$component\+Name, le\+\_\+log\+\_\+\+Level\+\_\+t $\ast$level\+Ptr)}{SetForRunningProcess(RunningProcess_t *runningProcObjPtr, const char *componentName, le_log_Level_t *levelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+For\+Running\+Process (
+\begin{DoxyParamCaption}
+\item[{{\bf Running\+Process\+\_\+t} $\ast$}]{running\+Proc\+Obj\+Ptr, }
+\item[{const char $\ast$}]{component\+Name, }
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$}]{level\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_aa24e2450c971cda345563a4bb3c12fa6}{}\label{log_daemon_8c_aa24e2450c971cda345563a4bb3c12fa6}
+Sets log settings for a specific running process. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em level\+Ptr} & Ptr log level, or N\+U\+LL if not being set. \\
+\hline
+\end{DoxyParams}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+Level@{Set\+Level}}
+\index{Set\+Level@{Set\+Level}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Level(const char $\ast$process\+Name, const char $\ast$component\+Name, const char $\ast$level\+Str, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t tool\+Ipc\+Session\+Ref)}{SetLevel(const char *processName, const char *componentName, const char *levelStr, le_msg_SessionRef_t toolIpcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Level (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{process\+Name, }
+\item[{const char $\ast$}]{component\+Name, }
+\item[{const char $\ast$}]{level\+Str, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{tool\+Ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a1b0c205c919cb98755822e16e3549471}{}\label{log_daemon_8c_a1b0c205c919cb98755822e16e3549471}
+Sets the log level for a given process/component. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+Trace@{Set\+Trace}}
+\index{Set\+Trace@{Set\+Trace}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Trace(const char $\ast$process\+Name, const char $\ast$component\+Name, const char $\ast$keyword, bool is\+Enabled, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t tool\+Ipc\+Session\+Ref)}{SetTrace(const char *processName, const char *componentName, const char *keyword, bool isEnabled, le_msg_SessionRef_t toolIpcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Trace (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{process\+Name, }
+\item[{const char $\ast$}]{component\+Name, }
+\item[{const char $\ast$}]{keyword, }
+\item[{bool}]{is\+Enabled, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{tool\+Ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a41a2600d1079eb6c3801b1f56187dc5d}{}\label{log_daemon_8c_a41a2600d1079eb6c3801b1f56187dc5d}
+Enable/disable a trace. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+Trace\+By\+Pid@{Set\+Trace\+By\+Pid}}
+\index{Set\+Trace\+By\+Pid@{Set\+Trace\+By\+Pid}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Trace\+By\+Pid(pid\+\_\+t pid, const char $\ast$component\+Name, const char $\ast$keyword, bool is\+Enabled, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t tool\+Ipc\+Session\+Ref)}{SetTraceByPid(pid_t pid, const char *componentName, const char *keyword, bool isEnabled, le_msg_SessionRef_t toolIpcSessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Trace\+By\+Pid (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{pid, }
+\item[{const char $\ast$}]{component\+Name, }
+\item[{const char $\ast$}]{keyword, }
+\item[{bool}]{is\+Enabled, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{tool\+Ipc\+Session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a0fac44fc43fd9fc262aa13ee4661fbbf}{}\label{log_daemon_8c_a0fac44fc43fd9fc262aa13ee4661fbbf}
+Sets (enables or disables) a trace for a specific running process identified by process ID. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+Trace\+By\+Process\+Name@{Set\+Trace\+By\+Process\+Name}}
+\index{Set\+Trace\+By\+Process\+Name@{Set\+Trace\+By\+Process\+Name}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Trace\+By\+Process\+Name(const char $\ast$process\+Name, const char $\ast$component\+Name, const char $\ast$keyword, bool is\+Enabled)}{SetTraceByProcessName(const char *processName, const char *componentName, const char *keyword, bool isEnabled)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Trace\+By\+Process\+Name (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{process\+Name, }
+\item[{const char $\ast$}]{component\+Name, }
+\item[{const char $\ast$}]{keyword, }
+\item[{bool}]{is\+Enabled}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a98cc95ea5304400217522faf23ec5bb7}{}\label{log_daemon_8c_a98cc95ea5304400217522faf23ec5bb7}
+Sets (enables or disables) a trace for all processes sharing a particular process name. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+Trace\+For\+All\+Processes@{Set\+Trace\+For\+All\+Processes}}
+\index{Set\+Trace\+For\+All\+Processes@{Set\+Trace\+For\+All\+Processes}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Trace\+For\+All\+Processes(const char $\ast$component\+Name, const char $\ast$keyword, bool is\+Enabled)}{SetTraceForAllProcesses(const char *componentName, const char *keyword, bool isEnabled)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Trace\+For\+All\+Processes (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{component\+Name, }
+\item[{const char $\ast$}]{keyword, }
+\item[{bool}]{is\+Enabled}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_afbce9b64543b0292977b74d4605cd56f}{}\label{log_daemon_8c_afbce9b64543b0292977b74d4605cd56f}
+Sets (enables or disables) a trace for A\+LL processes. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+Trace\+For\+Component\+Name@{Set\+Trace\+For\+Component\+Name}}
+\index{Set\+Trace\+For\+Component\+Name@{Set\+Trace\+For\+Component\+Name}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Trace\+For\+Component\+Name(\+Component\+Name\+\_\+t $\ast$comp\+Name\+Obj\+Ptr, const char $\ast$keyword, bool is\+Enabled)}{SetTraceForComponentName(ComponentName_t *compNameObjPtr, const char *keyword, bool isEnabled)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Trace\+For\+Component\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf Component\+Name\+\_\+t} $\ast$}]{comp\+Name\+Obj\+Ptr, }
+\item[{const char $\ast$}]{keyword, }
+\item[{bool}]{is\+Enabled}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a9e0de4a521e4a67d8031b5db1c9c15a5}{}\label{log_daemon_8c_a9e0de4a521e4a67d8031b5db1c9c15a5}
+Sets (enables or disables) a trace for a specific component name. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+Trace\+For\+Log\+Session@{Set\+Trace\+For\+Log\+Session}}
+\index{Set\+Trace\+For\+Log\+Session@{Set\+Trace\+For\+Log\+Session}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Trace\+For\+Log\+Session(\+Running\+Process\+\_\+t $\ast$running\+Proc\+Obj\+Ptr, Log\+Session\+\_\+t $\ast$log\+Session\+Ptr, const char $\ast$keyword, bool is\+Enabled)}{SetTraceForLogSession(RunningProcess_t *runningProcObjPtr, LogSession_t *logSessionPtr, const char *keyword, bool isEnabled)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Trace\+For\+Log\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf Running\+Process\+\_\+t} $\ast$}]{running\+Proc\+Obj\+Ptr, }
+\item[{{\bf Log\+Session\+\_\+t} $\ast$}]{log\+Session\+Ptr, }
+\item[{const char $\ast$}]{keyword, }
+\item[{bool}]{is\+Enabled}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_af4a322ff1b5e39a5ff4a0d322806cbc0}{}\label{log_daemon_8c_af4a322ff1b5e39a5ff4a0d322806cbc0}
+Sets (enables or disables) a trace for a specific log session. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Set\+Trace\+For\+Running\+Process@{Set\+Trace\+For\+Running\+Process}}
+\index{Set\+Trace\+For\+Running\+Process@{Set\+Trace\+For\+Running\+Process}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Trace\+For\+Running\+Process(\+Running\+Process\+\_\+t $\ast$running\+Proc\+Obj\+Ptr, const char $\ast$component\+Name, const char $\ast$keyword, bool is\+Enabled)}{SetTraceForRunningProcess(RunningProcess_t *runningProcObjPtr, const char *componentName, const char *keyword, bool isEnabled)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Trace\+For\+Running\+Process (
+\begin{DoxyParamCaption}
+\item[{{\bf Running\+Process\+\_\+t} $\ast$}]{running\+Proc\+Obj\+Ptr, }
+\item[{const char $\ast$}]{component\+Name, }
+\item[{const char $\ast$}]{keyword, }
+\item[{bool}]{is\+Enabled}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a4d1f74a7559af3c1fc83d681135f8c52}{}\label{log_daemon_8c_a4d1f74a7559af3c1fc83d681135f8c52}
+Sets (enables or disables) a trace for a specific running process. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!String\+To\+Pid@{String\+To\+Pid}}
+\index{String\+To\+Pid@{String\+To\+Pid}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{String\+To\+Pid(const char $\ast$pid\+Str)}{StringToPid(const char *pidStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static pid\+\_\+t String\+To\+Pid (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{pid\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a40b6c7745f257c60cc6a0e64a8ef15cb}{}\label{log_daemon_8c_a40b6c7745f257c60cc6a0e64a8ef15cb}
+Converts a string into a process ID.
+
+\begin{DoxyReturn}{Returns}
+The P\+ID, or -\/1 on error. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Update\+Client\+Session\+Settings@{Update\+Client\+Session\+Settings}}
+\index{Update\+Client\+Session\+Settings@{Update\+Client\+Session\+Settings}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Update\+Client\+Session\+Settings(\+Running\+Process\+\_\+t $\ast$running\+Proc\+Obj\+Ptr, Log\+Session\+\_\+t $\ast$log\+Session\+Ptr)}{UpdateClientSessionSettings(RunningProcess_t *runningProcObjPtr, LogSession_t *logSessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Update\+Client\+Session\+Settings (
+\begin{DoxyParamCaption}
+\item[{{\bf Running\+Process\+\_\+t} $\ast$}]{running\+Proc\+Obj\+Ptr, }
+\item[{{\bf Log\+Session\+\_\+t} $\ast$}]{log\+Session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a3d1e67532189ecf3aa470d2870884a30}{}\label{log_daemon_8c_a3d1e67532189ecf3aa470d2870884a30}
+Sends a client an update to its log session settings. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Update\+Client\+Trace\+Setting@{Update\+Client\+Trace\+Setting}}
+\index{Update\+Client\+Trace\+Setting@{Update\+Client\+Trace\+Setting}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Update\+Client\+Trace\+Setting(\+Running\+Process\+\_\+t $\ast$running\+Proc\+Obj\+Ptr, Log\+Session\+\_\+t $\ast$log\+Session\+Ptr, Trace\+\_\+t $\ast$trace\+Obj\+Ptr)}{UpdateClientTraceSetting(RunningProcess_t *runningProcObjPtr, LogSession_t *logSessionPtr, Trace_t *traceObjPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Update\+Client\+Trace\+Setting (
+\begin{DoxyParamCaption}
+\item[{{\bf Running\+Process\+\_\+t} $\ast$}]{running\+Proc\+Obj\+Ptr, }
+\item[{{\bf Log\+Session\+\_\+t} $\ast$}]{log\+Session\+Ptr, }
+\item[{{\bf Trace\+\_\+t} $\ast$}]{trace\+Obj\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a24867343f7c7be453ec8ef3c28719045}{}\label{log_daemon_8c_a24867343f7c7be453ec8ef3c28719045}
+Sends a client an update to one of its trace settings. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Update\+Component\+Settings@{Update\+Component\+Settings}}
+\index{Update\+Component\+Settings@{Update\+Component\+Settings}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Update\+Component\+Settings(\+Running\+Process\+\_\+t $\ast$running\+Proc\+Obj\+Ptr, Log\+Session\+\_\+t $\ast$log\+Session\+Ptr, Process\+Name\+\_\+t $\ast$proc\+Name\+Obj\+Ptr, const char $\ast$component\+Name)}{UpdateComponentSettings(RunningProcess_t *runningProcObjPtr, LogSession_t *logSessionPtr, ProcessName_t *procNameObjPtr, const char *componentName)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Update\+Component\+Settings (
+\begin{DoxyParamCaption}
+\item[{{\bf Running\+Process\+\_\+t} $\ast$}]{running\+Proc\+Obj\+Ptr, }
+\item[{{\bf Log\+Session\+\_\+t} $\ast$}]{log\+Session\+Ptr, }
+\item[{{\bf Process\+Name\+\_\+t} $\ast$}]{proc\+Name\+Obj\+Ptr, }
+\item[{const char $\ast$}]{component\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a7edb8ea9efed53f78358c506ea4d9a1c}{}\label{log_daemon_8c_a7edb8ea9efed53f78358c506ea4d9a1c}
+Updates the component settings for log\+Session\+Ptr in the running\+Proc\+Obj\+Ptr by copying the settings from the component named component\+Name in proc\+Name\+Obj\+Ptr, if it exists. If the component named component\+Name does not exist the component settings are copied from the wild card component.
+
+\begin{DoxyReturn}{Returns}
+true if the setting was successfully updated. false otherwise. 
+\end{DoxyReturn}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Update\+Proc\+Comp\+Settings@{Update\+Proc\+Comp\+Settings}}
+\index{Update\+Proc\+Comp\+Settings@{Update\+Proc\+Comp\+Settings}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Update\+Proc\+Comp\+Settings(\+Running\+Process\+\_\+t $\ast$running\+Proc\+Obj\+Ptr, Log\+Session\+\_\+t $\ast$log\+Session\+Ptr, Process\+Name\+\_\+t $\ast$proc\+Name\+Obj\+Ptr, const char $\ast$component\+Name)}{UpdateProcCompSettings(RunningProcess_t *runningProcObjPtr, LogSession_t *logSessionPtr, ProcessName_t *procNameObjPtr, const char *componentName)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Update\+Proc\+Comp\+Settings (
+\begin{DoxyParamCaption}
+\item[{{\bf Running\+Process\+\_\+t} $\ast$}]{running\+Proc\+Obj\+Ptr, }
+\item[{{\bf Log\+Session\+\_\+t} $\ast$}]{log\+Session\+Ptr, }
+\item[{{\bf Process\+Name\+\_\+t} $\ast$}]{proc\+Name\+Obj\+Ptr, }
+\item[{const char $\ast$}]{component\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a7a25cf716ca7e548318f1d1bee3f0d2a}{}\label{log_daemon_8c_a7a25cf716ca7e548318f1d1bee3f0d2a}
+Updates the process and component settings for log\+Session\+Ptr in the running\+Proc\+Obj\+Ptr by copying the settings from the proc\+Name\+Obj\+Ptr/component\+Name. If proc\+Name\+Obj\+Ptr is N\+U\+LL then the wild card process is used. If the component\+Name does not exist then the wild card component is used. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!while@{while}}
+\index{while@{while}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{while((file\+Ptr==\+N\+U\+L\+L)\&\&(errno==\+E\+I\+N\+T\+R))}{while((filePtr==NULL)&&(errno==EINTR))}}]{\setlength{\rightskip}{0pt plus 5cm}while (
+\begin{DoxyParamCaption}
+\item[{({\bf file\+Ptr}==N\+U\+LL)\&\&({\bf errno}==E\+I\+N\+TR)}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_daemon_8c_a4bd1f0df024da0cb002930fa9363c47e}{}\label{log_daemon_8c_a4bd1f0df024da0cb002930fa9363c47e}
+
+
+\subsection{Variable Documentation}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}}
+\index{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}{COMPONENT_INIT}}]{\setlength{\rightskip}{0pt plus 5cm}C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}\hypertarget{log_daemon_8c_a0392d452f926ce36c4852de26b5eca12}{}\label{log_daemon_8c_a0392d452f926ce36c4852de26b5eca12}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+    
+    \hyperlink{log_daemon_8c_a6e138127e53f6fc87f5556b1181a069e}{ProcessNamePoolRef} = \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\_mem\_CreatePool}(\textcolor{stringliteral}{"ProcessName"}, \textcolor{keyword}{sizeof}(
+      \hyperlink{struct_process_name__t}{ProcessName\_t}))
+\end{DoxyCode}
+The main function for the log daemon. Listens for commands from process/components and log tools and processes the commands. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Component\+Name\+Pool\+Ref@{Component\+Name\+Pool\+Ref}}
+\index{Component\+Name\+Pool\+Ref@{Component\+Name\+Pool\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Component\+Name\+Pool\+Ref}{ComponentNamePoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}Component\+Name\+Pool\+Ref = {\bf le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Component\+Name\char`\"{}, sizeof({\bf Component\+Name\+\_\+t}))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_aeabf3ee19e53d042dfbbaa0339c6761d}{}\label{log_daemon_8c_aeabf3ee19e53d042dfbbaa0339c6761d}
+Pool from which Component Name objects are allocated. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!do@{do}}
+\index{do@{do}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{do}{do}}]{\setlength{\rightskip}{0pt plus 5cm}do}\hypertarget{log_daemon_8c_a721c6ff80a6d3e4ad4ffa52a04c60085}{}\label{log_daemon_8c_a721c6ff80a6d3e4ad4ffa52a04c60085}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+        \hyperlink{log_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{filePtr} = freopen(\textcolor{stringliteral}{"/dev/null"}, \textcolor{stringliteral}{"r"}, stdin)
+\end{DoxyCode}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Fd\+Log\+Pool\+Ref@{Fd\+Log\+Pool\+Ref}}
+\index{Fd\+Log\+Pool\+Ref@{Fd\+Log\+Pool\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Fd\+Log\+Pool\+Ref}{FdLogPoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}Fd\+Log\+Pool\+Ref = {\bf le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Fd\+Logs\char`\"{}, sizeof({\bf Fd\+Log\+\_\+t}))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_ae0419a6fbc15ac995be2d14a7d75b3ce}{}\label{log_daemon_8c_ae0419a6fbc15ac995be2d14a7d75b3ce}
+Pool for file descriptor logging objects. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!file\+Ptr@{file\+Ptr}}
+\index{file\+Ptr@{file\+Ptr}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{file\+Ptr}{filePtr}}]{\setlength{\rightskip}{0pt plus 5cm}F\+I\+LE$\ast$ file\+Ptr}\hypertarget{log_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{}\label{log_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Ipc\+Session\+Map\+Ref@{Ipc\+Session\+Map\+Ref}}
+\index{Ipc\+Session\+Map\+Ref@{Ipc\+Session\+Map\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Ipc\+Session\+Map\+Ref}{IpcSessionMapRef}}]{\setlength{\rightskip}{0pt plus 5cm}Ipc\+Session\+Map\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_afbba58e7693c845429f8c2d3c8bef16a}{}\label{log_daemon_8c_afbba58e7693c845429f8c2d3c8bef16a}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+= \hyperlink{le__hashmap_8h_ade79896a5b2ceec82c570fe21f7efe3a}{le\_hashmap\_Create}(\textcolor{stringliteral}{"IPCSession"},
+                                          \hyperlink{log_daemon_8c_a10a106cd691842a6a5accbef3cf7774f}{MAX\_EXPECTED\_PROCESSES},
+                                          \hyperlink{log_daemon_8c_ad7450365e3238eb0f126f4f2ee2c0f75}{IpcSessionHash},
+                                          \hyperlink{log_daemon_8c_a315bafe0add0384ac20c97197b2dedd3}{IpcSessionEquals})
+\end{DoxyCode}
+Hash map of Running Process objects, keyed by I\+PC session reference.
+
+Value pointer points to a \hyperlink{struct_running_process__t}{Running\+Process\+\_\+t}. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Log\+Session\+Pool\+Ref@{Log\+Session\+Pool\+Ref}}
+\index{Log\+Session\+Pool\+Ref@{Log\+Session\+Pool\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Log\+Session\+Pool\+Ref}{LogSessionPoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}Log\+Session\+Pool\+Ref = {\bf le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Log\+Session\char`\"{}, sizeof({\bf Log\+Session\+\_\+t}))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a36ca68a8f5ca021455e2ee8851f32649}{}\label{log_daemon_8c_a36ca68a8f5ca021455e2ee8851f32649}
+Pool from which Log Session objects are allocated. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Process\+Id\+Map\+Ref@{Process\+Id\+Map\+Ref}}
+\index{Process\+Id\+Map\+Ref@{Process\+Id\+Map\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Id\+Map\+Ref}{ProcessIdMapRef}}]{\setlength{\rightskip}{0pt plus 5cm}Process\+Id\+Map\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_ae6f5a79c4cc4890db1f4e8c12849b6dc}{}\label{log_daemon_8c_ae6f5a79c4cc4890db1f4e8c12849b6dc}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+= \hyperlink{le__hashmap_8h_ade79896a5b2ceec82c570fe21f7efe3a}{le\_hashmap\_Create}(\textcolor{stringliteral}{"ProcessID"},
+                                          \hyperlink{log_daemon_8c_a10a106cd691842a6a5accbef3cf7774f}{MAX\_EXPECTED\_PROCESSES},
+                                          \hyperlink{log_daemon_8c_a72473c44e3e0e27ad624a17b1b23c23d}{ProcessIdHash},
+                                          \hyperlink{log_daemon_8c_a2874c38b67bdc1ae38f09fff16b3a02c}{ProcessIdEquals})
+\end{DoxyCode}
+Hash map of Running Process objects, keyed by P\+ID.
+
+Value pointer points to a \hyperlink{struct_running_process__t}{Running\+Process\+\_\+t}. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Process\+Name\+Map\+Ref@{Process\+Name\+Map\+Ref}}
+\index{Process\+Name\+Map\+Ref@{Process\+Name\+Map\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Name\+Map\+Ref}{ProcessNameMapRef}}]{\setlength{\rightskip}{0pt plus 5cm}Process\+Name\+Map\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a8cc85209a620c6ea98807a12da7bc3a0}{}\label{log_daemon_8c_a8cc85209a620c6ea98807a12da7bc3a0}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+= \hyperlink{le__hashmap_8h_ade79896a5b2ceec82c570fe21f7efe3a}{le\_hashmap\_Create}(\textcolor{stringliteral}{"ProcessName"},
+                                          \hyperlink{log_daemon_8c_a10a106cd691842a6a5accbef3cf7774f}{MAX\_EXPECTED\_PROCESSES},
+                                          \hyperlink{le__hashmap_8h_a3ff75de814b38d4c4283379acb406b65}{le\_hashmap\_HashString},
+                                          \hyperlink{le__hashmap_8h_a63d2b6c0689ece50ce979557029b8483}{le\_hashmap\_EqualsString})
+\end{DoxyCode}
+Hash map of Process Name objects, keyed by process name string.
+
+Value pointer points to a \hyperlink{struct_process_name__t}{Process\+Name\+\_\+t}. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Process\+Name\+Pool\+Ref@{Process\+Name\+Pool\+Ref}}
+\index{Process\+Name\+Pool\+Ref@{Process\+Name\+Pool\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Name\+Pool\+Ref}{ProcessNamePoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Process\+Name\+Pool\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a6e138127e53f6fc87f5556b1181a069e}{}\label{log_daemon_8c_a6e138127e53f6fc87f5556b1181a069e}
+Pool from which Process Name objects are allocated. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!protocol\+Ref@{protocol\+Ref}}
+\index{protocol\+Ref@{protocol\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{protocol\+Ref}{protocolRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} protocol\+Ref}\hypertarget{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}{}\label{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+= \hyperlink{le__messaging_8h_adcd1ff1a6906433aaa6d7038125c4473}{le\_msg\_GetProtocolRef}(\hyperlink{log_daemon_8h_aa7e23a73fa763a7bed27af349e976a02}{LOG\_CONTROL\_PROTOCOL\_ID},
+                                                             
+      \hyperlink{log_daemon_8h_a65f34a0a9fcfe2325837b9f82a319ed9}{LOG\_MAX\_CMD\_PACKET\_BYTES})
+\end{DoxyCode}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Running\+Process\+Pool\+Ref@{Running\+Process\+Pool\+Ref}}
+\index{Running\+Process\+Pool\+Ref@{Running\+Process\+Pool\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Running\+Process\+Pool\+Ref}{RunningProcessPoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}Running\+Process\+Pool\+Ref = {\bf le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Running\+Process\char`\"{}, sizeof({\bf Running\+Process\+\_\+t}))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a6a98802d627ff76c1931cd3b9b28e4e9}{}\label{log_daemon_8c_a6a98802d627ff76c1931cd3b9b28e4e9}
+Pool from which Running Process objects are allocated. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!service\+Ref@{service\+Ref}}
+\index{service\+Ref@{service\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{service\+Ref}{serviceRef}}]{\setlength{\rightskip}{0pt plus 5cm}service\+Ref = {\bf le\+\_\+msg\+\_\+\+Create\+Service}({\bf protocol\+Ref}, {\bf L\+O\+G\+\_\+\+C\+L\+I\+E\+N\+T\+\_\+\+S\+E\+R\+V\+I\+C\+E\+\_\+\+N\+A\+ME})}\hypertarget{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{}\label{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}
+\index{log\+Daemon.\+c@{log\+Daemon.\+c}!Trace\+Name\+Pool\+Ref@{Trace\+Name\+Pool\+Ref}}
+\index{Trace\+Name\+Pool\+Ref@{Trace\+Name\+Pool\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Trace\+Name\+Pool\+Ref}{TraceNamePoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}Trace\+Name\+Pool\+Ref = {\bf le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Trace\+Name\char`\"{}, sizeof({\bf Trace\+Name\+\_\+t}))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_ac8d5be44807b5a45cb0283da26142912}{}\label{log_daemon_8c_ac8d5be44807b5a45cb0283da26142912}
+Pool from which Trace Name objects are allocated. \index{log\+Daemon.\+c@{log\+Daemon.\+c}!Trace\+Pool\+Ref@{Trace\+Pool\+Ref}}
+\index{Trace\+Pool\+Ref@{Trace\+Pool\+Ref}!log\+Daemon.\+c@{log\+Daemon.\+c}}
+\subsubsection[{\texorpdfstring{Trace\+Pool\+Ref}{TracePoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}Trace\+Pool\+Ref = {\bf le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Traces\char`\"{}, sizeof({\bf Trace\+\_\+t}))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{log_daemon_8c_a39884326a30973ca97d849280f7e0451}{}\label{log_daemon_8c_a39884326a30973ca97d849280f7e0451}
+Pool from which Trace objects are allocated. 

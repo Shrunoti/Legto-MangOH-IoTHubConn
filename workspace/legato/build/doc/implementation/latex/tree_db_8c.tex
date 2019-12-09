@@ -1,0 +1,2213 @@
+\hypertarget{tree_db_8c}{}\section{framework/daemons/linux/config\+Tree/tree\+Db.c File Reference}
+\label{tree_db_8c}\index{framework/daemons/linux/config\+Tree/tree\+Db.\+c@{framework/daemons/linux/config\+Tree/tree\+Db.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}interfaces.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dynamic\+String.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}tree\+Path.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}tree\+Db.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}tree\+User.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}node\+Iterator.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sys\+Paths.\+h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_registration__t}{Registration\+\_\+t}
+\item 
+struct \hyperlink{struct_handler__t}{Handler\+\_\+t}
+\item 
+struct \hyperlink{struct_clean_up_context__t}{Clean\+Up\+Context\+\_\+t}
+\item 
+struct \hyperlink{struct_node__t}{Node\+\_\+t}
+\item 
+struct \hyperlink{struct_tree__t}{Tree\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{tree_db_8c_a1d2150932161254475a1d66bb3f4b283}{C\+F\+G\+\_\+\+M\+A\+X\+\_\+\+P\+A\+T\+H\+\_\+\+S\+I\+ZE}~\hyperlink{le__cfg__interface_8h_aea00ee500b7beccc4bf46ab637190a55}{L\+E\+\_\+\+C\+F\+G\+\_\+\+S\+T\+R\+\_\+\+L\+E\+N\+\_\+\+B\+Y\+T\+ES}
+\begin{DoxyCompactList}\small\item\em Maximum path size for the config tree. \end{DoxyCompactList}\item 
+\#define \hyperlink{tree_db_8c_ac040648019c6f080627383473d8cbf90}{S\+M\+A\+L\+L\+\_\+\+S\+TR}~24
+\begin{DoxyCompactList}\small\item\em Maximum size (in bytes) of a \char`\"{}small\char`\"{} string, including the null terminator. \end{DoxyCompactList}\item 
+\#define \hyperlink{tree_db_8c_a33d27fb36c713eeb0d0f162cc66d3bc4}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}~\char`\"{}node\+Pool\char`\"{}
+\begin{DoxyCompactList}\small\item\em The name of the memory pool that handles tree nodes. \end{DoxyCompactList}\item 
+\#define \hyperlink{tree_db_8c_a77a1663e198f24eacafc9993a6348b83}{C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+C\+O\+L\+L\+E\+C\+T\+I\+O\+N\+\_\+\+N\+A\+ME}~\char`\"{}tree\+Collection\char`\"{}
+\begin{DoxyCompactList}\small\item\em Name of the tree collection object. \end{DoxyCompactList}\item 
+\#define \hyperlink{tree_db_8c_a18e9b111a0029eb831cc0dd63df38694}{C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}~\char`\"{}tree\+Pool\char`\"{}
+\begin{DoxyCompactList}\small\item\em Name of the tree object memory pool. \end{DoxyCompactList}\item 
+\#define \hyperlink{tree_db_8c_acfb377e7f9fa38575a27525554eafb96}{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+G\+\_\+\+N\+A\+ME}~\char`\"{}handler\+Lookup\+Map\char`\"{}
+\begin{DoxyCompactList}\small\item\em Name of the registration hash map. \end{DoxyCompactList}\item 
+\#define \hyperlink{tree_db_8c_a9ad0f3709694950515a1da680f9d1f48}{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}~\char`\"{}Handler\+Pool\char`\"{}
+\begin{DoxyCompactList}\small\item\em Name of the handler pool. \end{DoxyCompactList}\item 
+\#define \hyperlink{tree_db_8c_ad48ec5d2934db9009585b9b0148776d3}{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+F\+\_\+\+M\+AP}~\char`\"{}Handler\+Safe\+Ref\+Map\char`\"{}
+\begin{DoxyCompactList}\small\item\em Name of the safe ref map. \end{DoxyCompactList}\item 
+\#define \hyperlink{tree_db_8c_a18eb78d729670dab82f263c5c7217b36}{C\+F\+G\+\_\+\+R\+E\+G\+I\+S\+T\+R\+A\+T\+I\+O\+N\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}~\char`\"{}Registration\+Pool\char`\"{}
+\begin{DoxyCompactList}\small\item\em Name of the registration pool. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{tree_db_8c_ab361d964c747f936e1145315ca16ea47}{Node\+Flags\+\_\+t} \{ \hyperlink{tree_db_8c_ab361d964c747f936e1145315ca16ea47a5a41b78319ba3ec9233f6a96c7bdcbef}{N\+O\+D\+E\+\_\+\+F\+L\+A\+G\+S\+\_\+\+U\+N\+S\+ET} = 0x0, 
+\hyperlink{tree_db_8c_ab361d964c747f936e1145315ca16ea47aaf5972f4b9ce3378b2bd330f07007eb1}{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+S\+H\+A\+D\+OW} = 0x1, 
+\hyperlink{tree_db_8c_ab361d964c747f936e1145315ca16ea47ac486114fd93d00a5e9728bb9a9495a61}{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+M\+O\+D\+I\+F\+I\+ED} = 0x2, 
+\hyperlink{tree_db_8c_ab361d964c747f936e1145315ca16ea47afce87e648111574c9c5a58a77f0d1679}{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+D\+E\+L\+E\+T\+ED} = 0x4
+ \}
+\item 
+enum \hyperlink{tree_db_8c_abf84b8f73da30c0f59581856a399081c}{Token\+Type\+\_\+t} \{ \\*
+\hyperlink{tree_db_8c_abf84b8f73da30c0f59581856a399081ca0ec791991afec319e84f7623f12798d1}{T\+T\+\_\+\+E\+M\+P\+T\+Y\+\_\+\+V\+A\+L\+UE}, 
+\hyperlink{tree_db_8c_abf84b8f73da30c0f59581856a399081ca43c8c77641c4545ce7d002bca8aae76d}{T\+T\+\_\+\+B\+O\+O\+L\+\_\+\+V\+A\+L\+UE}, 
+\hyperlink{tree_db_8c_abf84b8f73da30c0f59581856a399081ca746a1982344999c3304b7d183d840904}{T\+T\+\_\+\+I\+N\+T\+\_\+\+V\+A\+L\+UE}, 
+\hyperlink{tree_db_8c_abf84b8f73da30c0f59581856a399081ca3e9ac347a8d588c04ba93a9f47594a53}{T\+T\+\_\+\+F\+L\+O\+A\+T\+\_\+\+V\+A\+L\+UE}, 
+\\*
+\hyperlink{tree_db_8c_abf84b8f73da30c0f59581856a399081cadbf70b317814f19b46998b1573e3fcf6}{T\+T\+\_\+\+S\+T\+R\+I\+N\+G\+\_\+\+V\+A\+L\+UE}, 
+\hyperlink{tree_db_8c_abf84b8f73da30c0f59581856a399081ca0259fd42762a0ea0af0348a0775841cc}{T\+T\+\_\+\+O\+P\+E\+N\+\_\+\+G\+R\+O\+UP}, 
+\hyperlink{tree_db_8c_abf84b8f73da30c0f59581856a399081cab0d2c0ea27c3f0d34f50b986a6776a44}{T\+T\+\_\+\+C\+L\+O\+S\+E\+\_\+\+G\+R\+O\+UP}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_ad845f815b0be9dec5ff1c5c5d8b926cf}{Clear\+Flags} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static bool \hyperlink{tree_db_8c_a9d0bbdf06dbb42f80fd6b25a87338203}{Is\+Shadow} (const \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a5210465652e8ed342b1fcefdc640915c}{Set\+Shadow\+Flag} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static bool \hyperlink{tree_db_8c_a9c40e5a2d264e327a1c126731557f186}{Is\+Modified} (const \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_af1bdd31fb708825c72d358a134d75863}{Set\+Modified\+Flag} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a1abfd033d4acf015aa377cd52459f98e}{Clear\+Modified\+Flag} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static bool \hyperlink{tree_db_8c_a23bd35183bc80e5c8cef037b8269d8c6}{Is\+Deleted} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a5a2cd1127af464adfdbc3df22611af2a}{Set\+Deleted\+Flag} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a525bd7e40c31aa04929518cf9c80a6be}{Clear\+Deleted\+Flag} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_a6a04f6edef8e5c2f156f1ae7911474fb}{New\+Node} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a27482a2ae9a1fb3c7b7ec9a695d96bb9}{Node\+Destructor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$object\+Ptr)
+\item 
+static \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_a26c2aebdfec6cac5067b62462d10734d}{New\+Shadow\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_a7fd9220bcfae40718c0816015efa2534}{New\+Child\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_ab82a0474fb23163257867d1da54b98e4}{Shadow\+Children} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} shadow\+Parent\+Ref)
+\item 
+static \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_a9366048e13281055356da484455e0e6b}{Get\+Root\+Parent\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_af2668e7f84734219b4dc2ea2d68bdc60}{Get\+Named\+Child} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, const char $\ast$name\+Ref)
+\item 
+static \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_a293eb0a99331851f95a0a365f4b21a20}{Create\+Named\+Child} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, const char $\ast$name\+Ref)
+\item 
+static bool \hyperlink{tree_db_8c_a572c67f3e42f63987ee79fdd000236bd}{Node\+Exists} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} parent\+Ref, const char $\ast$name\+Ptr)
+\item 
+static bool \hyperlink{tree_db_8c_aad64c3592e30b0863e6bb11112445504}{Is\+String\+Type} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a1d60e38003fbe7112a221acabb00eb7d}{Propagate\+Value} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a212568aa9a31f85f77965d325dbf9f0f}{Merge\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_acdc3deaa866d7651cdaa1af4a32684e8}{Trigger\+Callbacks} (\hyperlink{le__path_iter_8h_a0facb15e56e7ef896384eca415a7147a}{le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t} path\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a039a361f670ec53e5460be4c723e9497}{Fire\+Triggered\+Callbacks} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static bool \hyperlink{tree_db_8c_a81b0026bf10d6a10914b6de8153583d6}{Was\+Renamed} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static bool \hyperlink{tree_db_8c_a51a23d7113d59c99551b9fe51510fc4d}{Original\+To\+Be\+Cleared} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a660316db535f70efab92e076beb7a41c}{Append\+Node\+Name} (\hyperlink{le__path_iter_8h_a0facb15e56e7ef896384eca415a7147a}{le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t} path\+Ref, \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{le__path_iter_8h_a0facb15e56e7ef896384eca415a7147a}{le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t} \hyperlink{tree_db_8c_a20acfad30e9881702ba88f583b9219f9}{Create\+Base\+Path} (const char $\ast$tree\+Name\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_aa6cbc66756117aa48c7a344625a3fb35}{Generate\+Path} (\hyperlink{le__path_iter_8h_a0facb15e56e7ef896384eca415a7147a}{le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t} path\+Ref, \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a7a936d8d289347caeb52062f7422d173}{Fire\+All\+Children} (\hyperlink{le__path_iter_8h_a0facb15e56e7ef896384eca415a7147a}{le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t} path\+Ref, \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a0e359e2e423db3c14ff5c5a1c5fac741}{Fire\+Lost\+Children} (\hyperlink{le__path_iter_8h_a0facb15e56e7ef896384eca415a7147a}{le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t} path\+Ref, \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} shadow\+Node\+Ref)
+\item 
+static bool \hyperlink{tree_db_8c_a55278f0ec11d9f01659f04b1747ce49b}{Internal\+Merge\+Tree} (const char $\ast$tree\+Name\+Ptr, \hyperlink{le__path_iter_8h_a0facb15e56e7ef896384eca415a7147a}{le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t} path\+Ref, \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, bool force\+Fire)
+\item 
+\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} \hyperlink{tree_db_8c_aded268e476a2cbe389a883a6c2e4e840}{New\+Tree} (const char $\ast$tree\+Name\+Ref, \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} root\+Node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a2d1f95f730790f77ca22c4d02772f240}{Tree\+Destructor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$object\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a2ef080f13a32aa7b1c03ae5ff19f6311}{Get\+Tree\+Path} (const char $\ast$tree\+Name\+Ref, int revision\+Id, char $\ast$path\+Buffer, size\+\_\+t path\+Size)
+\item 
+static bool \hyperlink{tree_db_8c_a8c38e418f1c39a5fd6434799356ae1e5}{Tree\+File\+Exists} (const char $\ast$tree\+Name\+Ref, int revision\+Id)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a7683048eb46c44f96f9665a7e249f5e3}{Update\+Revision} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref)
+\item 
+static signed char \hyperlink{tree_db_8c_aed40cb98ef22f2456a89721fdf6a6215}{Peek\+Char} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr})
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_ac8cf20797f03f5cea044d5ea3b1b91fe}{Skip\+White\+Space} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr})
+\item 
+static bool \hyperlink{tree_db_8c_a0d3c7e2de6f15e1a6369c251ded6ffba}{Read\+Bool\+Token} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}, char $\ast$string\+Ptr, size\+\_\+t string\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_ab323bf866b81a03427988a5a0b58a95a}{Read\+Text\+Literal} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}, char $\ast$string\+Ptr, size\+\_\+t string\+Size, signed char terminal)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_aa898408307fcdc5ded9abf52bd9a7890}{Read\+Int\+Token} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}, char $\ast$string\+Ptr, size\+\_\+t string\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_ae000d45ede8b33a7a1c83c3767c44d89}{Read\+Float\+Token} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}, char $\ast$string\+Ptr, size\+\_\+t string\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_ab583482f47731bbf45223f773b1b4a89}{Read\+String\+Token} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}, char $\ast$string\+Ptr, size\+\_\+t string\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_aafe34d54cf948766c8f7757c6430f993}{Read\+Token} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}, char $\ast$string\+Ptr, size\+\_\+t string\+Size, \hyperlink{tree_db_8c_abf84b8f73da30c0f59581856a399081c}{Token\+Type\+\_\+t} $\ast$type\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_a6f1c4f507613c9fb29ce3d678cb8de32}{Write\+File} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}, const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$data\+Ptr, size\+\_\+t data\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_a0dbe2898ee7a0f2f0e6cb6b415b46483}{Write\+String\+Value} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}, char start\+Char, char end\+Char, const char $\ast$string\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_a5ec2191abb48e0af3b12ba93487a5d2b}{Internal\+Read\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}, size\+\_\+t path\+Len)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_a6e0b7b3e24537ff117cb74ed6c99de6b}{Internal\+Write\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr})
+\item 
+static size\+\_\+t \hyperlink{tree_db_8c_a2c650f533aa69eb0cf6554a83fe10639}{Compute\+Path\+Length} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a3b055aad19c7a20efbeee5ec870609dc}{Increment\+Revision} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a1510933e7795b1e4feb64a10c9910afc}{Load\+Tree} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a61b737a2655a66139d953f3a865064c7}{Remove\+Handler} (\hyperlink{struct_registration__t}{Registration\+\_\+t} $\ast$registration\+Ptr, \hyperlink{struct_handler__t}{Handler\+\_\+t} $\ast$handler\+Ptr)
+\item 
+static bool \hyperlink{tree_db_8c_a90aad69f300ed59722d6c9de0e38ed1d}{On\+Handler\+Registration\+Cleanup} (const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$key\+Ptr, const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$value\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a2dd154e0b3394d969c274c0cec6b1379}{Delete\+Tree\+File} (const char $\ast$file\+Path\+Ptr)
+\item 
+static \hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_a84358cd16cfcbc5a010e4969c514c13f}{Get\+Path\+Base\+Node\+Ref} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, \hyperlink{le__path_iter_8h_a0facb15e56e7ef896384eca415a7147a}{le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t} node\+Path\+Ref)
+\item 
+static F\+I\+LE $\ast$ \hyperlink{tree_db_8c_a6f4326887ef33aa8d74f5acb2d9d9a87}{Open\+File\+Ptr} (int descriptor, const char $\ast$mode)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_ab53b61f46e43e5f9271218114b72ed93}{Close\+File\+Ptr} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a78f89d64e5eebcd89a5f82f6062df6a2}{tdb\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} \hyperlink{tree_db_8c_a306a040d44fb19e180cc38a02786c3f0}{tdb\+\_\+\+Get\+Tree} (const char $\ast$tree\+Name\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_ab3b082fee4c950679508fcd8a537f2d6}{tdb\+\_\+\+Delete\+Tree} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref)
+\item 
+\hyperlink{le__hashmap_8h_a8ab2021261a368add28c1be14f248459}{le\+\_\+hashmap\+\_\+\+It\+\_\+\+Ref\+\_\+t} \hyperlink{tree_db_8c_ab9d039df65d1ed148f4039bb35cb54f1}{tdb\+\_\+\+Get\+Tree\+Iter\+Ref} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} \hyperlink{tree_db_8c_a3a9ac5770a561d89230e2e332748b65b}{tdb\+\_\+\+Shadow\+Tree} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref)
+\item 
+const char $\ast$ \hyperlink{tree_db_8c_a3abdd9449cafce1ed0771255ca879f1a}{tdb\+\_\+\+Get\+Tree\+Name} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref)
+\item 
+\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_ab4874d17afa8e018317e13a3958c54ec}{tdb\+\_\+\+Get\+Root\+Node} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref)
+\item 
+\hyperlink{node_iterator_8h_a4e97d8e792de584da776be7c732785ba}{ni\+\_\+\+Iterator\+Ref\+\_\+t} \hyperlink{tree_db_8c_a062c5719ea223afa2e5988ed52ed45f6}{tdb\+\_\+\+Get\+Active\+Write\+Iter} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref)
+\item 
+bool \hyperlink{tree_db_8c_a410d806b05efffbd5ddeecd570eb903a}{tdb\+\_\+\+Has\+Active\+Readers} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a9480076d6f6b9e81a5f7ba23b11c8d1e}{tdb\+\_\+\+Register\+Iterator} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref, \hyperlink{node_iterator_8h_a4e97d8e792de584da776be7c732785ba}{ni\+\_\+\+Iterator\+Ref\+\_\+t} iterator\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a127e1eb483d42f3a43113f365ac3c549}{tdb\+\_\+\+Unregister\+Iterator} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref, \hyperlink{node_iterator_8h_a4e97d8e792de584da776be7c732785ba}{ni\+\_\+\+Iterator\+Ref\+\_\+t} iterator\+Ref)
+\item 
+\hyperlink{structle__sls___list__t}{le\+\_\+sls\+\_\+\+List\+\_\+t} $\ast$ \hyperlink{tree_db_8c_a14583d573fd4525dd6c484a375b5c6b3}{tdb\+\_\+\+Get\+Request\+Queue} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_acb1ce1662066e003f5fbd52b4ee890fb}{tdb\+\_\+\+Merge\+Tree} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} shadow\+Tree\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_ad638fcbdfbfc14902b272c5f478ba2c6}{tdb\+\_\+\+Release\+Tree} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref)
+\item 
+bool \hyperlink{tree_db_8c_ab92e4a08b6254a34e472cc132b26e8fe}{tdb\+\_\+\+Read\+Tree\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, int descriptor)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_ad3c12e5b99c4ba79bc62b29017951e16}{tdb\+\_\+\+Write\+Tree\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, int descriptor)
+\item 
+\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_ad9d01c31c17ca3b93f05697f3f56c94c}{tdb\+\_\+\+Get\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} base\+Node\+Ref, \hyperlink{le__path_iter_8h_a0facb15e56e7ef896384eca415a7147a}{le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t} node\+Path\+Ref)
+\item 
+\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_a517454cc3b7167ed66d95627f1f5c572}{tdb\+\_\+\+Create\+Node\+Path} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} base\+Node\+Ref, \hyperlink{le__path_iter_8h_a0facb15e56e7ef896384eca415a7147a}{le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t} node\+Path\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a714b199b2967bc9eaff3a0ec15b3e625}{tdb\+\_\+\+Ensure\+Exists} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_aec7a3eb915700198471d87e51f706633}{tdb\+\_\+\+Get\+Node\+Name} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, char $\ast$string\+Ptr, size\+\_\+t max\+Size)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_a1755de1db64ca8422d417a8f200329da}{tdb\+\_\+\+Set\+Node\+Name} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, const char $\ast$string\+Ptr)
+\item 
+\hyperlink{le__cfg__interface_8h_a29c8480b3310d1235487d7ea96d8b57d}{le\+\_\+cfg\+\_\+node\+Type\+\_\+t} \hyperlink{tree_db_8c_a247bb725886cd54c13dac1477b14890c}{tdb\+\_\+\+Get\+Node\+Type} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+bool \hyperlink{tree_db_8c_a80659908b38710fbfcf8387fc15e146c}{tdb\+\_\+\+Is\+Node\+Empty} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a9204da20bf3252cab912e8a3b9b7946e}{tdb\+\_\+\+Set\+Empty} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_ad59de42b89edac4a0524ba4e45fbd720}{tdb\+\_\+\+Delete\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_a10a04b805a0c8fcac19fb6df001f773b}{tdb\+\_\+\+Get\+Node\+Parent} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_a2172344c2e0ee9bfb4d0e9da4ed7bbe4}{tdb\+\_\+\+Get\+First\+Child\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_aa9332440dde7b18f8fbbfa0c056adb57}{tdb\+\_\+\+Get\+Next\+Sibling\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_a57c9b668274155fb0610c14148235de2}{tdb\+\_\+\+Get\+First\+Active\+Child\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} \hyperlink{tree_db_8c_acb5d3d571db2701dbeb5299a96da4755}{tdb\+\_\+\+Get\+Next\+Active\+Sibling\+Node} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{tree_db_8c_a1f7208f09af1b41c184eeb959d27d03a}{tdb\+\_\+\+Get\+Value\+As\+String} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, char $\ast$string\+Ptr, size\+\_\+t max\+Size, const char $\ast$default\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_ab1198d88087cb397af57659bdf739965}{tdb\+\_\+\+Set\+Value\+As\+String} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, const char $\ast$string\+Ptr)
+\item 
+bool \hyperlink{tree_db_8c_a3c8e27185c37eb6cc1236108dc6012dc}{tdb\+\_\+\+Get\+Value\+As\+Bool} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, bool default\+Value)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a9d8b01887c1ff295b20dd2e6ba4590d9}{tdb\+\_\+\+Set\+Value\+As\+Bool} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, bool value)
+\item 
+int32\+\_\+t \hyperlink{tree_db_8c_a09b692bc3916ebd333400c28597ba8a6}{tdb\+\_\+\+Get\+Value\+As\+Int} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, int32\+\_\+t default\+Value)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_aa4aa96b7c5ad2c2ca781d84eddf79f19}{tdb\+\_\+\+Set\+Value\+As\+Int} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, int value)
+\item 
+double \hyperlink{tree_db_8c_a751199f9adcf50dc9479123722399656}{tdb\+\_\+\+Get\+Value\+As\+Float} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, double default\+Value)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a4392c9e1c636c45a7d2b7615e1ff9aa4}{tdb\+\_\+\+Set\+Value\+As\+Float} (\hyperlink{tree_db_8h_a4c1f526addd1a1042694efa439a97801}{tdb\+\_\+\+Node\+Ref\+\_\+t} node\+Ref, double value)
+\item 
+\hyperlink{le__cfg__interface_8h_ad02e652d8ea74b6e8ebb8125190e5244}{le\+\_\+cfg\+\_\+\+Change\+Handler\+Ref\+\_\+t} \hyperlink{tree_db_8c_a2f8c87a4a71a798a14c370b9e7584acd}{tdb\+\_\+\+Add\+Change\+Handler} (\hyperlink{tree_db_8h_aa4d033a6e03f068d0e99455012b060c3}{tdb\+\_\+\+Tree\+Ref\+\_\+t} tree\+Ref, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, const char $\ast$path\+Ptr, \hyperlink{le__cfg__interface_8h_ac9b4508a0faa6a5d91a4bace0b8976c0}{le\+\_\+cfg\+\_\+\+Change\+Handler\+Func\+\_\+t} handler\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a0e3094c1396b8ecb809128aba4b33cc2}{tdb\+\_\+\+Remove\+Change\+Handler} (\hyperlink{le__cfg__interface_8h_ad02e652d8ea74b6e8ebb8125190e5244}{le\+\_\+cfg\+\_\+\+Change\+Handler\+Ref\+\_\+t} handler\+Ref, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{tree_db_8c_a7bf4447ad56a556ef9f98d9a63e31461}{tdb\+\_\+\+Clean\+Up\+Handlers} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{tree_db_8c_a75e60404be593a1cb3da6b157e99daed}{Node\+Pool\+Ref} = N\+U\+LL
+\begin{DoxyCompactList}\small\item\em The memory pool responsible for tree nodes. \end{DoxyCompactList}\item 
+static \hyperlink{le__hashmap_8h_ae81c60860dbdb8c59beaf25985e5605a}{le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} \hyperlink{tree_db_8c_ae7a7425deb87e7fef2393d7c0c7f7937}{Tree\+Collection\+Ref} = N\+U\+LL
+\begin{DoxyCompactList}\small\item\em The collection of configuration trees managed by the system. \end{DoxyCompactList}\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{tree_db_8c_ac408daa3e257b1656fee369b70f0ccbf}{Tree\+Pool\+Ref} = N\+U\+LL
+\begin{DoxyCompactList}\small\item\em Pool from which Tree objects are allocated. \end{DoxyCompactList}\item 
+static \hyperlink{le__hashmap_8h_ae81c60860dbdb8c59beaf25985e5605a}{le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} \hyperlink{tree_db_8c_a16a5b1215e0378f31bda019c89e3c66d}{Handler\+Registration\+Map} = N\+U\+LL
+\begin{DoxyCompactList}\small\item\em Hash map to keep track of event registrations based on the registered node path. \end{DoxyCompactList}\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{tree_db_8c_a064d209e4eaa951f501a7ca768d37300}{Handler\+Pool} = N\+U\+LL
+\begin{DoxyCompactList}\small\item\em Pool for registered change handlers. \end{DoxyCompactList}\item 
+static \hyperlink{le__safe_ref_8h_aaf8fb3412fb840cb50366856affaf69b}{le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} \hyperlink{tree_db_8c_adf4d46a94a2018b6b577b5704c0ac579}{Handler\+Safe\+Ref\+Map} = N\+U\+LL
+\begin{DoxyCompactList}\small\item\em Safe ref map for the change handler objects. \end{DoxyCompactList}\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{tree_db_8c_a6449750b904a7aa35f8a0eae7f7d8a22}{Registration\+Pool} = N\+U\+LL
+\begin{DoxyCompactList}\small\item\em Pool to handle the registration objects. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Implementation of the low level tree DB structure. This code also handles the persisting of the tree db to the filesystem.
+
+The tree structure looks like this\+:
+
+\begin{DoxyVerb}    Shadow Tree ------------+----------+  +------------------------+
+                            |          |  |                        |
+                            v          v  v                        |
+    Tree Collection --*--> Tree --+--> Node --+--> Child List --*--+
+                                  |           |
+                                  |           +--> Value
+                                  |           |
+                                  |           +--> Handler List --*--> Handler
+                                  |
+                                  +--> Request Queue
+                                  |
+                                  +--> Write Iterator Reference
+                                  |
+                                  +--> Read Iterator Count\end{DoxyVerb}
+ \begin{DoxyVerb}The Tree Collection holds Tree objects. There's one Tree object for each configuration tree.
+They are indexed by tree name.
+
+Each Tree object has a single "root" Node.
+
+Each Node can have either a value or a list of child Nodes.
+
+When a write transaction is started for a Tree, the iterator reference for that transaction
+is recorded in the Tree object.  When the transaction is committed or cancelled, that reference
+is cleared out.
+
+When a read transaction is started for a Tree, the count of read iterators in that Tree is
+incremented.  When it ends, the count is decremented.
+
+When client requests are received that cannot be processed immediately, because of the state
+of the tree the request is for (e.g., if a write transaction commit request is received while
+there are read transactions in progress on the tree), then the request is queued onto the tree's
+Request Queue.
+
+<b>Shadow Trees:</b>
+
+In addition, there's the notion of a "Shadow Tree", which is a tree that contains changes
+that have been made to another tree in a write transaction that has not yet been committed.
+Each node in a shadow tree is called a "Shadow Node".
+
+When a write transaction is started on a tree, a shadow tree is created for that tree, and
+a shadow node is created for the root node.  As a shadow node is traversed (using the normal
+tree traversal functions), new shadow nodes are created for any nodes that have been traversed
+to and any of their sibling nodes.  When changes are made to a node, the new value is stored
+in the shadow node.  When new nodes are added, a new shadow node is created in the shadow
+tree.  When nodes are deleted, the shadow node is marked "deleted".
+
+When a write transaction is cancelled, the shadow tree and all its shadow nodes are discarded.
+
+When a write transaction is committed, the shadow tree is traversed, and any changes found
+in it are applied to the "original" tree that the shadow tree was shadowing.  This process is
+called "merging".
+
+Shadow Trees don't have handlers, request queues, write iterator references or read iterator
+counts.
+
+<b>Event Handler Registration:</b>
+
+The config tree allows clients to register callbacks to be notified if certian sections of a
+configuration tree is modified.
+
+The way this works is that a global hash map of registrations is maintained.  With the hash being
+generated from the path to the tree and node of interest.  So, if an program was interested in
+watching the apps collection in the system tree it would use the path:
+\end{DoxyVerb}
+
+
+\begin{DoxyVerb}system:/apps \end{DoxyVerb}
+ \begin{DoxyVerb}For each unique path a registration object is created, and that registration object will hold a
+list of event handlers for the node.
+\end{DoxyVerb}
+
+
+\begin{DoxyVerb}    +------------------------+
+    | HandlerRegistrationMap |
+    +------------------------+
+      |
+      | Hash of 'system:/apps'  +--------------+
+      *------------------------>| Registration |
+                                +--------------+
+                                    |
+                                    |  List of handlers  +---------+
+                                    +--------------------| Handler |
+                                    |                    +---------+
+                                    |                       |
+                                    |                       +- Function Pointer
+                                    |                       +- Context Pointer
+                                    |                       +- Other data...
+                                    |
+                                    |                    +---------+
+                                    +--------------------| Handler |
+                                    |                    +---------+
+                                    |
+                                    .
+                                    .
+                                    .\end{DoxyVerb}
+
+
+The system also employs the use of Safe\+Refs to keep track of each registered handler so that a handler can quickly and easily remove a handler as required.
+
+When a merge occurs each modified node path is checked against the registration map. If there is a registration object for that node each of the registered handlers is invoked.
+
+Handlers are registered in this hash map so that the target node doesn\textquotesingle{}t need to actually exist in order to have a handler registed for it. In fact, a handler will be called when a node is deleted and when it is recreated.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}}
+\index{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}{CFG_HANDLER_POOL_NAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME~\char`\"{}Handler\+Pool\char`\"{}}\hypertarget{tree_db_8c_a9ad0f3709694950515a1da680f9d1f48}{}\label{tree_db_8c_a9ad0f3709694950515a1da680f9d1f48}
+
+
+Name of the handler pool. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+F\+\_\+\+M\+AP@{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+F\+\_\+\+M\+AP}}
+\index{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+F\+\_\+\+M\+AP@{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+F\+\_\+\+M\+AP}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+F\+\_\+\+M\+AP}{CFG_HANDLER_REF_MAP}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+F\+\_\+\+M\+AP~\char`\"{}Handler\+Safe\+Ref\+Map\char`\"{}}\hypertarget{tree_db_8c_ad48ec5d2934db9009585b9b0148776d3}{}\label{tree_db_8c_ad48ec5d2934db9009585b9b0148776d3}
+
+
+Name of the safe ref map. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+G\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+G\+\_\+\+N\+A\+ME}}
+\index{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+G\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+G\+\_\+\+N\+A\+ME}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+G\+\_\+\+N\+A\+ME}{CFG_HANDLER_REG_NAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+H\+A\+N\+D\+L\+E\+R\+\_\+\+R\+E\+G\+\_\+\+N\+A\+ME~\char`\"{}handler\+Lookup\+Map\char`\"{}}\hypertarget{tree_db_8c_acfb377e7f9fa38575a27525554eafb96}{}\label{tree_db_8c_acfb377e7f9fa38575a27525554eafb96}
+
+
+Name of the registration hash map. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!C\+F\+G\+\_\+\+M\+A\+X\+\_\+\+P\+A\+T\+H\+\_\+\+S\+I\+ZE@{C\+F\+G\+\_\+\+M\+A\+X\+\_\+\+P\+A\+T\+H\+\_\+\+S\+I\+ZE}}
+\index{C\+F\+G\+\_\+\+M\+A\+X\+\_\+\+P\+A\+T\+H\+\_\+\+S\+I\+ZE@{C\+F\+G\+\_\+\+M\+A\+X\+\_\+\+P\+A\+T\+H\+\_\+\+S\+I\+ZE}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+M\+A\+X\+\_\+\+P\+A\+T\+H\+\_\+\+S\+I\+ZE}{CFG_MAX_PATH_SIZE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+M\+A\+X\+\_\+\+P\+A\+T\+H\+\_\+\+S\+I\+ZE~{\bf L\+E\+\_\+\+C\+F\+G\+\_\+\+S\+T\+R\+\_\+\+L\+E\+N\+\_\+\+B\+Y\+T\+ES}}\hypertarget{tree_db_8c_a1d2150932161254475a1d66bb3f4b283}{}\label{tree_db_8c_a1d2150932161254475a1d66bb3f4b283}
+
+
+Maximum path size for the config tree. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}{CFG_NODE_POOL_NAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME~\char`\"{}node\+Pool\char`\"{}}\hypertarget{tree_db_8c_a33d27fb36c713eeb0d0f162cc66d3bc4}{}\label{tree_db_8c_a33d27fb36c713eeb0d0f162cc66d3bc4}
+
+
+The name of the memory pool that handles tree nodes. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!C\+F\+G\+\_\+\+R\+E\+G\+I\+S\+T\+R\+A\+T\+I\+O\+N\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+R\+E\+G\+I\+S\+T\+R\+A\+T\+I\+O\+N\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}}
+\index{C\+F\+G\+\_\+\+R\+E\+G\+I\+S\+T\+R\+A\+T\+I\+O\+N\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+R\+E\+G\+I\+S\+T\+R\+A\+T\+I\+O\+N\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+R\+E\+G\+I\+S\+T\+R\+A\+T\+I\+O\+N\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}{CFG_REGISTRATION_POOL_NAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+R\+E\+G\+I\+S\+T\+R\+A\+T\+I\+O\+N\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME~\char`\"{}Registration\+Pool\char`\"{}}\hypertarget{tree_db_8c_a18eb78d729670dab82f263c5c7217b36}{}\label{tree_db_8c_a18eb78d729670dab82f263c5c7217b36}
+
+
+Name of the registration pool. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+C\+O\+L\+L\+E\+C\+T\+I\+O\+N\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+C\+O\+L\+L\+E\+C\+T\+I\+O\+N\+\_\+\+N\+A\+ME}}
+\index{C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+C\+O\+L\+L\+E\+C\+T\+I\+O\+N\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+C\+O\+L\+L\+E\+C\+T\+I\+O\+N\+\_\+\+N\+A\+ME}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+C\+O\+L\+L\+E\+C\+T\+I\+O\+N\+\_\+\+N\+A\+ME}{CFG_TREE_COLLECTION_NAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+C\+O\+L\+L\+E\+C\+T\+I\+O\+N\+\_\+\+N\+A\+ME~\char`\"{}tree\+Collection\char`\"{}}\hypertarget{tree_db_8c_a77a1663e198f24eacafc9993a6348b83}{}\label{tree_db_8c_a77a1663e198f24eacafc9993a6348b83}
+
+
+Name of the tree collection object. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}}
+\index{C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME@{C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}{CFG_TREE_POOL_NAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+T\+R\+E\+E\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME~\char`\"{}tree\+Pool\char`\"{}}\hypertarget{tree_db_8c_a18e9b111a0029eb831cc0dd63df38694}{}\label{tree_db_8c_a18e9b111a0029eb831cc0dd63df38694}
+
+
+Name of the tree object memory pool. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!S\+M\+A\+L\+L\+\_\+\+S\+TR@{S\+M\+A\+L\+L\+\_\+\+S\+TR}}
+\index{S\+M\+A\+L\+L\+\_\+\+S\+TR@{S\+M\+A\+L\+L\+\_\+\+S\+TR}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{S\+M\+A\+L\+L\+\_\+\+S\+TR}{SMALL_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\+M\+A\+L\+L\+\_\+\+S\+TR~24}\hypertarget{tree_db_8c_ac040648019c6f080627383473d8cbf90}{}\label{tree_db_8c_ac040648019c6f080627383473d8cbf90}
+
+
+Maximum size (in bytes) of a \char`\"{}small\char`\"{} string, including the null terminator. 
+
+
+
+\subsection{Enumeration Type Documentation}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Node\+Flags\+\_\+t@{Node\+Flags\+\_\+t}}
+\index{Node\+Flags\+\_\+t@{Node\+Flags\+\_\+t}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Node\+Flags\+\_\+t}{NodeFlags_t}}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf Node\+Flags\+\_\+t}}\hypertarget{tree_db_8c_ab361d964c747f936e1145315ca16ea47}{}\label{tree_db_8c_ab361d964c747f936e1145315ca16ea47}
+Flags that can be set on a node to allow the code to keep track of the various changes as they\textquotesingle{}re made to the nodes. \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{N\+O\+D\+E\+\_\+\+F\+L\+A\+G\+S\+\_\+\+U\+N\+S\+ET@{N\+O\+D\+E\+\_\+\+F\+L\+A\+G\+S\+\_\+\+U\+N\+S\+ET}!tree\+Db.\+c@{tree\+Db.\+c}}\index{tree\+Db.\+c@{tree\+Db.\+c}!N\+O\+D\+E\+\_\+\+F\+L\+A\+G\+S\+\_\+\+U\+N\+S\+ET@{N\+O\+D\+E\+\_\+\+F\+L\+A\+G\+S\+\_\+\+U\+N\+S\+ET}}\item[{\em 
+N\+O\+D\+E\+\_\+\+F\+L\+A\+G\+S\+\_\+\+U\+N\+S\+ET\hypertarget{tree_db_8c_ab361d964c747f936e1145315ca16ea47a5a41b78319ba3ec9233f6a96c7bdcbef}{}\label{tree_db_8c_ab361d964c747f936e1145315ca16ea47a5a41b78319ba3ec9233f6a96c7bdcbef}
+}]No flags have been set. \index{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+S\+H\+A\+D\+OW@{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+S\+H\+A\+D\+OW}!tree\+Db.\+c@{tree\+Db.\+c}}\index{tree\+Db.\+c@{tree\+Db.\+c}!N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+S\+H\+A\+D\+OW@{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+S\+H\+A\+D\+OW}}\item[{\em 
+N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+S\+H\+A\+D\+OW\hypertarget{tree_db_8c_ab361d964c747f936e1145315ca16ea47aaf5972f4b9ce3378b2bd330f07007eb1}{}\label{tree_db_8c_ab361d964c747f936e1145315ca16ea47aaf5972f4b9ce3378b2bd330f07007eb1}
+}]The node is a shadow for a node in another tree. \index{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+M\+O\+D\+I\+F\+I\+ED@{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+M\+O\+D\+I\+F\+I\+ED}!tree\+Db.\+c@{tree\+Db.\+c}}\index{tree\+Db.\+c@{tree\+Db.\+c}!N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+M\+O\+D\+I\+F\+I\+ED@{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+M\+O\+D\+I\+F\+I\+ED}}\item[{\em 
+N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+M\+O\+D\+I\+F\+I\+ED\hypertarget{tree_db_8c_ab361d964c747f936e1145315ca16ea47ac486114fd93d00a5e9728bb9a9495a61}{}\label{tree_db_8c_ab361d964c747f936e1145315ca16ea47ac486114fd93d00a5e9728bb9a9495a61}
+}]This node has been modified. \index{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+D\+E\+L\+E\+T\+ED@{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+D\+E\+L\+E\+T\+ED}!tree\+Db.\+c@{tree\+Db.\+c}}\index{tree\+Db.\+c@{tree\+Db.\+c}!N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+D\+E\+L\+E\+T\+ED@{N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+D\+E\+L\+E\+T\+ED}}\item[{\em 
+N\+O\+D\+E\+\_\+\+I\+S\+\_\+\+D\+E\+L\+E\+T\+ED\hypertarget{tree_db_8c_ab361d964c747f936e1145315ca16ea47afce87e648111574c9c5a58a77f0d1679}{}\label{tree_db_8c_ab361d964c747f936e1145315ca16ea47afce87e648111574c9c5a58a77f0d1679}
+}]This node has been marked as deleted, the actual deletion will take place later. \end{description}
+\end{Desc}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Token\+Type\+\_\+t@{Token\+Type\+\_\+t}}
+\index{Token\+Type\+\_\+t@{Token\+Type\+\_\+t}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Token\+Type\+\_\+t}{TokenType_t}}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf Token\+Type\+\_\+t}}\hypertarget{tree_db_8c_abf84b8f73da30c0f59581856a399081c}{}\label{tree_db_8c_abf84b8f73da30c0f59581856a399081c}
+Types of lexical tokens that can be found in configuration data files. \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{T\+T\+\_\+\+E\+M\+P\+T\+Y\+\_\+\+V\+A\+L\+UE@{T\+T\+\_\+\+E\+M\+P\+T\+Y\+\_\+\+V\+A\+L\+UE}!tree\+Db.\+c@{tree\+Db.\+c}}\index{tree\+Db.\+c@{tree\+Db.\+c}!T\+T\+\_\+\+E\+M\+P\+T\+Y\+\_\+\+V\+A\+L\+UE@{T\+T\+\_\+\+E\+M\+P\+T\+Y\+\_\+\+V\+A\+L\+UE}}\item[{\em 
+T\+T\+\_\+\+E\+M\+P\+T\+Y\+\_\+\+V\+A\+L\+UE\hypertarget{tree_db_8c_abf84b8f73da30c0f59581856a399081ca0ec791991afec319e84f7623f12798d1}{}\label{tree_db_8c_abf84b8f73da30c0f59581856a399081ca0ec791991afec319e84f7623f12798d1}
+}]Node without any value. \index{T\+T\+\_\+\+B\+O\+O\+L\+\_\+\+V\+A\+L\+UE@{T\+T\+\_\+\+B\+O\+O\+L\+\_\+\+V\+A\+L\+UE}!tree\+Db.\+c@{tree\+Db.\+c}}\index{tree\+Db.\+c@{tree\+Db.\+c}!T\+T\+\_\+\+B\+O\+O\+L\+\_\+\+V\+A\+L\+UE@{T\+T\+\_\+\+B\+O\+O\+L\+\_\+\+V\+A\+L\+UE}}\item[{\em 
+T\+T\+\_\+\+B\+O\+O\+L\+\_\+\+V\+A\+L\+UE\hypertarget{tree_db_8c_abf84b8f73da30c0f59581856a399081ca43c8c77641c4545ce7d002bca8aae76d}{}\label{tree_db_8c_abf84b8f73da30c0f59581856a399081ca43c8c77641c4545ce7d002bca8aae76d}
+}]Boolean value. \index{T\+T\+\_\+\+I\+N\+T\+\_\+\+V\+A\+L\+UE@{T\+T\+\_\+\+I\+N\+T\+\_\+\+V\+A\+L\+UE}!tree\+Db.\+c@{tree\+Db.\+c}}\index{tree\+Db.\+c@{tree\+Db.\+c}!T\+T\+\_\+\+I\+N\+T\+\_\+\+V\+A\+L\+UE@{T\+T\+\_\+\+I\+N\+T\+\_\+\+V\+A\+L\+UE}}\item[{\em 
+T\+T\+\_\+\+I\+N\+T\+\_\+\+V\+A\+L\+UE\hypertarget{tree_db_8c_abf84b8f73da30c0f59581856a399081ca746a1982344999c3304b7d183d840904}{}\label{tree_db_8c_abf84b8f73da30c0f59581856a399081ca746a1982344999c3304b7d183d840904}
+}]Signed integer. \index{T\+T\+\_\+\+F\+L\+O\+A\+T\+\_\+\+V\+A\+L\+UE@{T\+T\+\_\+\+F\+L\+O\+A\+T\+\_\+\+V\+A\+L\+UE}!tree\+Db.\+c@{tree\+Db.\+c}}\index{tree\+Db.\+c@{tree\+Db.\+c}!T\+T\+\_\+\+F\+L\+O\+A\+T\+\_\+\+V\+A\+L\+UE@{T\+T\+\_\+\+F\+L\+O\+A\+T\+\_\+\+V\+A\+L\+UE}}\item[{\em 
+T\+T\+\_\+\+F\+L\+O\+A\+T\+\_\+\+V\+A\+L\+UE\hypertarget{tree_db_8c_abf84b8f73da30c0f59581856a399081ca3e9ac347a8d588c04ba93a9f47594a53}{}\label{tree_db_8c_abf84b8f73da30c0f59581856a399081ca3e9ac347a8d588c04ba93a9f47594a53}
+}]Floating point number. \index{T\+T\+\_\+\+S\+T\+R\+I\+N\+G\+\_\+\+V\+A\+L\+UE@{T\+T\+\_\+\+S\+T\+R\+I\+N\+G\+\_\+\+V\+A\+L\+UE}!tree\+Db.\+c@{tree\+Db.\+c}}\index{tree\+Db.\+c@{tree\+Db.\+c}!T\+T\+\_\+\+S\+T\+R\+I\+N\+G\+\_\+\+V\+A\+L\+UE@{T\+T\+\_\+\+S\+T\+R\+I\+N\+G\+\_\+\+V\+A\+L\+UE}}\item[{\em 
+T\+T\+\_\+\+S\+T\+R\+I\+N\+G\+\_\+\+V\+A\+L\+UE\hypertarget{tree_db_8c_abf84b8f73da30c0f59581856a399081cadbf70b317814f19b46998b1573e3fcf6}{}\label{tree_db_8c_abf84b8f73da30c0f59581856a399081cadbf70b317814f19b46998b1573e3fcf6}
+}]U\+T\+F-\/8 text string. \index{T\+T\+\_\+\+O\+P\+E\+N\+\_\+\+G\+R\+O\+UP@{T\+T\+\_\+\+O\+P\+E\+N\+\_\+\+G\+R\+O\+UP}!tree\+Db.\+c@{tree\+Db.\+c}}\index{tree\+Db.\+c@{tree\+Db.\+c}!T\+T\+\_\+\+O\+P\+E\+N\+\_\+\+G\+R\+O\+UP@{T\+T\+\_\+\+O\+P\+E\+N\+\_\+\+G\+R\+O\+UP}}\item[{\em 
+T\+T\+\_\+\+O\+P\+E\+N\+\_\+\+G\+R\+O\+UP\hypertarget{tree_db_8c_abf84b8f73da30c0f59581856a399081ca0259fd42762a0ea0af0348a0775841cc}{}\label{tree_db_8c_abf84b8f73da30c0f59581856a399081ca0259fd42762a0ea0af0348a0775841cc}
+}]Start of grouping. \index{T\+T\+\_\+\+C\+L\+O\+S\+E\+\_\+\+G\+R\+O\+UP@{T\+T\+\_\+\+C\+L\+O\+S\+E\+\_\+\+G\+R\+O\+UP}!tree\+Db.\+c@{tree\+Db.\+c}}\index{tree\+Db.\+c@{tree\+Db.\+c}!T\+T\+\_\+\+C\+L\+O\+S\+E\+\_\+\+G\+R\+O\+UP@{T\+T\+\_\+\+C\+L\+O\+S\+E\+\_\+\+G\+R\+O\+UP}}\item[{\em 
+T\+T\+\_\+\+C\+L\+O\+S\+E\+\_\+\+G\+R\+O\+UP\hypertarget{tree_db_8c_abf84b8f73da30c0f59581856a399081cab0d2c0ea27c3f0d34f50b986a6776a44}{}\label{tree_db_8c_abf84b8f73da30c0f59581856a399081cab0d2c0ea27c3f0d34f50b986a6776a44}
+}]End of grouping. \end{description}
+\end{Desc}
+
+
+\subsection{Function Documentation}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Append\+Node\+Name@{Append\+Node\+Name}}
+\index{Append\+Node\+Name@{Append\+Node\+Name}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Append\+Node\+Name(le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t path\+Ref, tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{AppendNodeName(le_pathIter_Ref_t pathRef, tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Append\+Node\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t}}]{path\+Ref, }
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a660316db535f70efab92e076beb7a41c}{}\label{tree_db_8c_a660316db535f70efab92e076beb7a41c}
+Append the name of a node onto the end of a path object. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em path\+Ref} & The path we\textquotesingle{}re appending to. \\
+\hline
+\mbox{\tt in}  & {\em node\+Ref} & The node we\textquotesingle{}re appending. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Clear\+Deleted\+Flag@{Clear\+Deleted\+Flag}}
+\index{Clear\+Deleted\+Flag@{Clear\+Deleted\+Flag}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Clear\+Deleted\+Flag(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{ClearDeletedFlag(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Clear\+Deleted\+Flag (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a525bd7e40c31aa04929518cf9c80a6be}{}\label{tree_db_8c_a525bd7e40c31aa04929518cf9c80a6be}
+Clear the deleted flag on a node. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to update. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Clear\+Flags@{Clear\+Flags}}
+\index{Clear\+Flags@{Clear\+Flags}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Clear\+Flags(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{ClearFlags(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Clear\+Flags (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_ad845f815b0be9dec5ff1c5c5d8b926cf}{}\label{tree_db_8c_ad845f815b0be9dec5ff1c5c5d8b926cf}
+Clear all flags from the given node. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to update. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Clear\+Modified\+Flag@{Clear\+Modified\+Flag}}
+\index{Clear\+Modified\+Flag@{Clear\+Modified\+Flag}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Clear\+Modified\+Flag(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{ClearModifiedFlag(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Clear\+Modified\+Flag (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a1abfd033d4acf015aa377cd52459f98e}{}\label{tree_db_8c_a1abfd033d4acf015aa377cd52459f98e}
+Clear the modified flag. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to update. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Close\+File\+Ptr@{Close\+File\+Ptr}}
+\index{Close\+File\+Ptr@{Close\+File\+Ptr}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Close\+File\+Ptr(\+F\+I\+L\+E $\ast$file\+Ptr)}{CloseFilePtr(FILE *filePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Close\+File\+Ptr (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_ab53b61f46e43e5f9271218114b72ed93}{}\label{tree_db_8c_ab53b61f46e43e5f9271218114b72ed93}
+Close the file pointer and flush any data left unwritten. 
+\begin{DoxyParams}{Parameters}
+{\em file\+Ptr} & The file pointer to close. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Compute\+Path\+Length@{Compute\+Path\+Length}}
+\index{Compute\+Path\+Length@{Compute\+Path\+Length}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Compute\+Path\+Length(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{ComputePathLength(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Compute\+Path\+Length (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a2c650f533aa69eb0cf6554a83fe10639}{}\label{tree_db_8c_a2c650f533aa69eb0cf6554a83fe10639}
+Calculate the number of bytes required to store a node path, including seperators and a trailing N\+U\+LL.
+
+\begin{DoxyReturn}{Returns}
+The amount of bytes required to store the whole path string. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & Compute a path for this node. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Create\+Base\+Path@{Create\+Base\+Path}}
+\index{Create\+Base\+Path@{Create\+Base\+Path}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Base\+Path(const char $\ast$tree\+Name\+Ptr)}{CreateBasePath(const char *treeNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t} Create\+Base\+Path (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{tree\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a20acfad30e9881702ba88f583b9219f9}{}\label{tree_db_8c_a20acfad30e9881702ba88f583b9219f9}
+Create a new config path for the tree name given.
+
+\begin{DoxyReturn}{Returns}
+A new config path, rooted on the given tree. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Name\+Ptr} & The tree name to use for the new path object. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Create\+Named\+Child@{Create\+Named\+Child}}
+\index{Create\+Named\+Child@{Create\+Named\+Child}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Named\+Child(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, const char $\ast$name\+Ref)}{CreateNamedChild(tdb_NodeRef_t nodeRef, const char *nameRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf tdb\+\_\+\+Node\+Ref\+\_\+t} Create\+Named\+Child (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{const char $\ast$}]{name\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a293eb0a99331851f95a0a365f4b21a20}{}\label{tree_db_8c_a293eb0a99331851f95a0a365f4b21a20}
+Called to create a named child in a nodes child collection. However, this function will only create nodes on shadow trees.
+
+\begin{DoxyReturn}{Returns}
+Reference to newly created child node, or N\+U\+LL if it can not be created. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to search. \\
+\hline
+\mbox{\tt in}  & {\em name\+Ref} & The name we\textquotesingle{}re searching for. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Delete\+Tree\+File@{Delete\+Tree\+File}}
+\index{Delete\+Tree\+File@{Delete\+Tree\+File}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Tree\+File(const char $\ast$file\+Path\+Ptr)}{DeleteTreeFile(const char *filePathPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+Tree\+File (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{file\+Path\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a2dd154e0b3394d969c274c0cec6b1379}{}\label{tree_db_8c_a2dd154e0b3394d969c274c0cec6b1379}
+Call this function to delete a tree file from the filesystem. 
+\begin{DoxyParams}{Parameters}
+{\em file\+Path\+Ptr} & Path to the tree file in question. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Fire\+All\+Children@{Fire\+All\+Children}}
+\index{Fire\+All\+Children@{Fire\+All\+Children}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Fire\+All\+Children(le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t path\+Ref, tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{FireAllChildren(le_pathIter_Ref_t pathRef, tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Fire\+All\+Children (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t}}]{path\+Ref, }
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a7a936d8d289347caeb52062f7422d173}{}\label{tree_db_8c_a7a936d8d289347caeb52062f7422d173}
+Trigger callbacks for this node and all of it\textquotesingle{}s children. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em path\+Ref} & Path to the parent of the current node. \\
+\hline
+\mbox{\tt in}  & {\em node\+Ref} & Node and any children to merge. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Fire\+Lost\+Children@{Fire\+Lost\+Children}}
+\index{Fire\+Lost\+Children@{Fire\+Lost\+Children}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Fire\+Lost\+Children(le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t path\+Ref, tdb\+\_\+\+Node\+Ref\+\_\+t shadow\+Node\+Ref)}{FireLostChildren(le_pathIter_Ref_t pathRef, tdb_NodeRef_t shadowNodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Fire\+Lost\+Children (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t}}]{path\+Ref, }
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{shadow\+Node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a0e359e2e423db3c14ff5c5a1c5fac741}{}\label{tree_db_8c_a0e359e2e423db3c14ff5c5a1c5fac741}
+Check a given shadow node and the original node it\textquotesingle{}s shadowing. If the original has children that will be lost because of a merge, then we need to fire callbacks for those nodes that are about to go away.
+
+The algorithm employed by this function is as follows\+: \begin{DoxyVerb}1. Check the original node for the given shadow node.  If it exists and is a stem node,
+   mark all of the children as deleted.  (This is done with the expectation that the
+   original tree does not have nodes with the deleted flag set.)
+
+2. Go through the shadow collection, and any shadow children that have links to the original
+   nodes, clear the deleted flag.  These nodes are still considered "live."
+
+3. Travers the original children one more time.  For any node that is still marked as
+   deleted we queue up an event handler.  As this node has been removed from the colection
+   and will be removed as part of the final merge.  The delete flag is also cleared at this
+   step to ensure that there are no external side effects.\end{DoxyVerb}
+ 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em path\+Ref} & Path to the parent of the current node. \\
+\hline
+\mbox{\tt in}  & {\em shadow\+Node\+Ref} & Node and any children to merge. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Fire\+Triggered\+Callbacks@{Fire\+Triggered\+Callbacks}}
+\index{Fire\+Triggered\+Callbacks@{Fire\+Triggered\+Callbacks}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Fire\+Triggered\+Callbacks(void)}{FireTriggeredCallbacks(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Fire\+Triggered\+Callbacks (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a039a361f670ec53e5460be4c723e9497}{}\label{tree_db_8c_a039a361f670ec53e5460be4c723e9497}
+Go through all of the registered event callbacks, and fire the call backs for each of the registrations that has been makred as triggered.
+
+Once this is done, the triggered flag is cleared for next time. \index{tree\+Db.\+c@{tree\+Db.\+c}!Generate\+Path@{Generate\+Path}}
+\index{Generate\+Path@{Generate\+Path}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Generate\+Path(le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t path\+Ref, tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{GeneratePath(le_pathIter_Ref_t pathRef, tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Generate\+Path (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t}}]{path\+Ref, }
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_aa6cbc66756117aa48c7a344625a3fb35}{}\label{tree_db_8c_aa6cbc66756117aa48c7a344625a3fb35}
+Generate a config path to the given node. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em path\+Ref} & The path object we\textquotesingle{}re updating. \\
+\hline
+\mbox{\tt in}  & {\em node\+Ref} & The node we\textquotesingle{}re creating a path for. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Get\+Named\+Child@{Get\+Named\+Child}}
+\index{Get\+Named\+Child@{Get\+Named\+Child}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Named\+Child(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, const char $\ast$name\+Ref)}{GetNamedChild(tdb_NodeRef_t nodeRef, const char *nameRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf tdb\+\_\+\+Node\+Ref\+\_\+t} Get\+Named\+Child (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{const char $\ast$}]{name\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_af2668e7f84734219b4dc2ea2d68bdc60}{}\label{tree_db_8c_af2668e7f84734219b4dc2ea2d68bdc60}
+Called to look for a named child in a given node\textquotesingle{}s child collection.
+
+\begin{DoxyReturn}{Returns}
+Reference to the found child node, or N\+U\+LL if a node was not found. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to search. \\
+\hline
+\mbox{\tt in}  & {\em name\+Ref} & The name we\textquotesingle{}re searching for. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Get\+Path\+Base\+Node\+Ref@{Get\+Path\+Base\+Node\+Ref}}
+\index{Get\+Path\+Base\+Node\+Ref@{Get\+Path\+Base\+Node\+Ref}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Path\+Base\+Node\+Ref(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t node\+Path\+Ref)}{GetPathBaseNodeRef(tdb_NodeRef_t nodeRef, le_pathIter_Ref_t nodePathRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf tdb\+\_\+\+Node\+Ref\+\_\+t} Get\+Path\+Base\+Node\+Ref (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{{\bf le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t}}]{node\+Path\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a84358cd16cfcbc5a010e4969c514c13f}{}\label{tree_db_8c_a84358cd16cfcbc5a010e4969c514c13f}
+Find the root node represented by the path ref.
+
+If the path is an absolute path, then the base node for the reference is the root node of the tree in question.
+
+If the path is a relative path, then the base node of the request is the node given.
+
+\begin{DoxyReturn}{Returns}
+A reference to the base node of the operation. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The base node to start from. \\
+\hline
+\mbox{\tt in}  & {\em node\+Path\+Ref} & The path we\textquotesingle{}re searching for in the tree. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Get\+Root\+Parent\+Node@{Get\+Root\+Parent\+Node}}
+\index{Get\+Root\+Parent\+Node@{Get\+Root\+Parent\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Root\+Parent\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{GetRootParentNode(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf tdb\+\_\+\+Node\+Ref\+\_\+t} Get\+Root\+Parent\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a9366048e13281055356da484455e0e6b}{}\label{tree_db_8c_a9366048e13281055356da484455e0e6b}
+Search up through a node tree until we find the root node. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & Find the greatest grand parent of this node. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Get\+Tree\+Path@{Get\+Tree\+Path}}
+\index{Get\+Tree\+Path@{Get\+Tree\+Path}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Tree\+Path(const char $\ast$tree\+Name\+Ref, int revision\+Id, char $\ast$path\+Buffer, size\+\_\+t path\+Size)}{GetTreePath(const char *treeNameRef, int revisionId, char *pathBuffer, size_t pathSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Get\+Tree\+Path (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{tree\+Name\+Ref, }
+\item[{int}]{revision\+Id, }
+\item[{char $\ast$}]{path\+Buffer, }
+\item[{size\+\_\+t}]{path\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a2ef080f13a32aa7b1c03ae5ff19f6311}{}\label{tree_db_8c_a2ef080f13a32aa7b1c03ae5ff19f6311}
+Create a path to a tree file with the given revision id.
+
+\begin{DoxyReturn}{Returns}
+A string\+Buffer backed string containing the full path to the tree file. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Name\+Ref} & The name of the tree we\textquotesingle{}re generating a name for. \\
+\hline
+\mbox{\tt in}  & {\em revision\+Id} & Generate a name based on the tree revision. \\
+\hline
+\mbox{\tt in}  & {\em path\+Buffer} & Buffer to hold the new path. \\
+\hline
+\mbox{\tt in}  & {\em path\+Size} & Size of the path buffer. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Increment\+Revision@{Increment\+Revision}}
+\index{Increment\+Revision@{Increment\+Revision}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Increment\+Revision(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref)}{IncrementRevision(tdb_TreeRef_t treeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Increment\+Revision (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a3b055aad19c7a20efbeee5ec870609dc}{}\label{tree_db_8c_a3b055aad19c7a20efbeee5ec870609dc}
+Bump up the version id of this tree. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & Increment the revision of this tree. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Internal\+Merge\+Tree@{Internal\+Merge\+Tree}}
+\index{Internal\+Merge\+Tree@{Internal\+Merge\+Tree}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Internal\+Merge\+Tree(const char $\ast$tree\+Name\+Ptr, le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t path\+Ref, tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, bool force\+Fire)}{InternalMergeTree(const char *treeNamePtr, le_pathIter_Ref_t pathRef, tdb_NodeRef_t nodeRef, bool forceFire)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Internal\+Merge\+Tree (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{tree\+Name\+Ptr, }
+\item[{{\bf le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t}}]{path\+Ref, }
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{bool}]{force\+Fire}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a55278f0ec11d9f01659f04b1747ce49b}{}\label{tree_db_8c_a55278f0ec11d9f01659f04b1747ce49b}
+Recursive function to merge a collection of shadow nodes with the original tree.
+
+\begin{DoxyReturn}{Returns}
+True if the given node or any if it\textquotesingle{}s children have been modified. False if not. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Name\+Ptr} & The name of the tree we\textquotesingle{}re merging. \\
+\hline
+\mbox{\tt in}  & {\em path\+Ref} & Path to the parent of hte current node. \\
+\hline
+\mbox{\tt in}  & {\em node\+Ref} & Node and any children to merge. \\
+\hline
+\mbox{\tt in}  & {\em force\+Fire} & Should update handlers be fired for this node and all it\textquotesingle{}s children, regardless of wether or not this node has been directly modified? \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Internal\+Read\+Node@{Internal\+Read\+Node}}
+\index{Internal\+Read\+Node@{Internal\+Read\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Internal\+Read\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, F\+I\+L\+E $\ast$file\+Ptr, size\+\_\+t path\+Len)}{InternalReadNode(tdb_NodeRef_t nodeRef, FILE *filePtr, size_t pathLen)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Internal\+Read\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{F\+I\+LE $\ast$}]{file\+Ptr, }
+\item[{size\+\_\+t}]{path\+Len}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a5ec2191abb48e0af3b12ba93487a5d2b}{}\label{tree_db_8c_a5ec2191abb48e0af3b12ba93487a5d2b}
+Read a node value from the given file. If the value is a collection, then read in those nodes too.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the read is successful. L\+E\+\_\+\+F\+O\+R\+M\+A\+T\+\_\+\+E\+R\+R\+OR if parse errors are encountered. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the end of file is reached. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node we\textquotesingle{}re reading a value for. \\
+\hline
+\mbox{\tt in}  & {\em file\+Ptr} & The file we\textquotesingle{}re reading the value from. \\
+\hline
+\mbox{\tt in}  & {\em path\+Len} & The length of the path including node\+Ref. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Internal\+Write\+Node@{Internal\+Write\+Node}}
+\index{Internal\+Write\+Node@{Internal\+Write\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Internal\+Write\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, F\+I\+L\+E $\ast$file\+Ptr)}{InternalWriteNode(tdb_NodeRef_t nodeRef, FILE *filePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Internal\+Write\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{F\+I\+LE $\ast$}]{file\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a6e0b7b3e24537ff117cb74ed6c99de6b}{}\label{tree_db_8c_a6e0b7b3e24537ff117cb74ed6c99de6b}
+Serialize a tree node and it\textquotesingle{}s children to a file in the filesystem.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the write succeeded, L\+E\+\_\+\+I\+O\+\_\+\+E\+R\+R\+OR if the write failed. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node being written. \\
+\hline
+\mbox{\tt in}  & {\em file\+Ptr} & The file being written to. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Is\+Deleted@{Is\+Deleted}}
+\index{Is\+Deleted@{Is\+Deleted}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Deleted(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{IsDeleted(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Deleted (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a23bd35183bc80e5c8cef037b8269d8c6}{}\label{tree_db_8c_a23bd35183bc80e5c8cef037b8269d8c6}
+Has the node been marked as deleted? 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to read. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Is\+Modified@{Is\+Modified}}
+\index{Is\+Modified@{Is\+Modified}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Modified(const tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{IsModified(const tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Modified (
+\begin{DoxyParamCaption}
+\item[{const {\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a9c40e5a2d264e327a1c126731557f186}{}\label{tree_db_8c_a9c40e5a2d264e327a1c126731557f186}
+Check to see if this node has been modified. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to read. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Is\+Shadow@{Is\+Shadow}}
+\index{Is\+Shadow@{Is\+Shadow}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Shadow(const tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{IsShadow(const tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Shadow (
+\begin{DoxyParamCaption}
+\item[{const {\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a9d0bbdf06dbb42f80fd6b25a87338203}{}\label{tree_db_8c_a9d0bbdf06dbb42f80fd6b25a87338203}
+Check to see if this node is in fact a shadow node. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to check. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Is\+String\+Type@{Is\+String\+Type}}
+\index{Is\+String\+Type@{Is\+String\+Type}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Is\+String\+Type(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{IsStringType(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+String\+Type (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_aad64c3592e30b0863e6bb11112445504}{}\label{tree_db_8c_aad64c3592e30b0863e6bb11112445504}
+Check the given node type and see if it should have a string value.
+
+\begin{DoxyReturn}{Returns}
+True if the given node could hold a string value. False if not. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to read. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Load\+Tree@{Load\+Tree}}
+\index{Load\+Tree@{Load\+Tree}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Load\+Tree(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref)}{LoadTree(tdb_TreeRef_t treeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Load\+Tree (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a1510933e7795b1e4feb64a10c9910afc}{}\label{tree_db_8c_a1510933e7795b1e4feb64a10c9910afc}
+Attempt to load a configuration tree from a config file. This function will look for the latest valid version of the config file and load that one. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree object to load from the filesystem. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Merge\+Node@{Merge\+Node}}
+\index{Merge\+Node@{Merge\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Merge\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{MergeNode(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Merge\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a212568aa9a31f85f77965d325dbf9f0f}{}\label{tree_db_8c_a212568aa9a31f85f77965d325dbf9f0f}
+Merge a shadow node with the original it represents. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The shadow node to merge. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!New\+Child\+Node@{New\+Child\+Node}}
+\index{New\+Child\+Node@{New\+Child\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{New\+Child\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{NewChildNode(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf tdb\+\_\+\+Node\+Ref\+\_\+t} New\+Child\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a7fd9220bcfae40718c0816015efa2534}{}\label{tree_db_8c_a7fd9220bcfae40718c0816015efa2534}
+Create a new node and insert it into the given node\textquotesingle{}s children collection.
+
+\begin{DoxyReturn}{Returns}
+The newly create node, already inserted into the supplied node\textquotesingle{}s child collection. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to be given with a new child. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!New\+Node@{New\+Node}}
+\index{New\+Node@{New\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{New\+Node(void)}{NewNode(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf tdb\+\_\+\+Node\+Ref\+\_\+t} New\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a6a04f6edef8e5c2f156f1ae7911474fb}{}\label{tree_db_8c_a6a04f6edef8e5c2f156f1ae7911474fb}
+Allocate a new node and fill out it\textquotesingle{}s default information.
+
+\begin{DoxyReturn}{Returns}
+The newly created node. 
+\end{DoxyReturn}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!New\+Shadow\+Node@{New\+Shadow\+Node}}
+\index{New\+Shadow\+Node@{New\+Shadow\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{New\+Shadow\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{NewShadowNode(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf tdb\+\_\+\+Node\+Ref\+\_\+t} New\+Shadow\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a26c2aebdfec6cac5067b62462d10734d}{}\label{tree_db_8c_a26c2aebdfec6cac5067b62462d10734d}
+Allocate a new node from our pool, and turn it into a shadow of an existing node.
+
+\begin{DoxyReturn}{Returns}
+A new node that shadows the existing node. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to shadow. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!New\+Tree@{New\+Tree}}
+\index{New\+Tree@{New\+Tree}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{New\+Tree(const char $\ast$tree\+Name\+Ref, tdb\+\_\+\+Node\+Ref\+\_\+t root\+Node\+Ref)}{NewTree(const char *treeNameRef, tdb_NodeRef_t rootNodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t} New\+Tree (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{tree\+Name\+Ref, }
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{root\+Node\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_aded268e476a2cbe389a883a6c2e4e840}{}\label{tree_db_8c_aded268e476a2cbe389a883a6c2e4e840}
+Create a new tree object and set it to default values.
+
+\begin{DoxyReturn}{Returns}
+A ref to the newly created tree object. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Name\+Ref} & The name of the new tree. \\
+\hline
+\mbox{\tt in}  & {\em root\+Node\+Ref} & The root node of this new tree. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Node\+Destructor@{Node\+Destructor}}
+\index{Node\+Destructor@{Node\+Destructor}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Node\+Destructor(void $\ast$object\+Ptr)}{NodeDestructor(void *objectPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Node\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{object\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a27482a2ae9a1fb3c7b7ec9a695d96bb9}{}\label{tree_db_8c_a27482a2ae9a1fb3c7b7ec9a695d96bb9}
+The node destructor function. This will take care of freeing a node\textquotesingle{}s string values and any children it may have. Called automaticly by the memory system when a node is released. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em object\+Ptr} & The generic object to free. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Node\+Exists@{Node\+Exists}}
+\index{Node\+Exists@{Node\+Exists}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Node\+Exists(tdb\+\_\+\+Node\+Ref\+\_\+t parent\+Ref, const char $\ast$name\+Ptr)}{NodeExists(tdb_NodeRef_t parentRef, const char *namePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Node\+Exists (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{parent\+Ref, }
+\item[{const char $\ast$}]{name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a572c67f3e42f63987ee79fdd000236bd}{}\label{tree_db_8c_a572c67f3e42f63987ee79fdd000236bd}
+Check to see if a given node exists within a node\textquotesingle{}s child collection.
+
+\begin{DoxyReturn}{Returns}
+True if the given node exists within the parent node\textquotesingle{}s collection. False if not. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em parent\+Ref} & The parent node to search. \\
+\hline
+\mbox{\tt in}  & {\em name\+Ptr} & The name to search for. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!On\+Handler\+Registration\+Cleanup@{On\+Handler\+Registration\+Cleanup}}
+\index{On\+Handler\+Registration\+Cleanup@{On\+Handler\+Registration\+Cleanup}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{On\+Handler\+Registration\+Cleanup(const void $\ast$key\+Ptr, const void $\ast$value\+Ptr, void $\ast$context\+Ptr)}{OnHandlerRegistrationCleanup(const void *keyPtr, const void *valuePtr, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool On\+Handler\+Registration\+Cleanup (
+\begin{DoxyParamCaption}
+\item[{const {\bf void} $\ast$}]{key\+Ptr, }
+\item[{const {\bf void} $\ast$}]{value\+Ptr, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a90aad69f300ed59722d6c9de0e38ed1d}{}\label{tree_db_8c_a90aad69f300ed59722d6c9de0e38ed1d}
+This function is called by the hash map For\+Each function, which is invoked when a session closed event occurs.
+
+This function takes care of cleaning out orphaned event handlers from the registration objects currently stored in the registration hash map. If a given registration handler is no longer required then the object itself is queued for deletion. It is queued and not deleted in place because the hash map does not support deleting objects in the middle of an iteration.
+
+\begin{DoxyReturn}{Returns}
+True. This function always returns true to indicate that iteration should continue until the end of the hash map. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em key\+Ptr} & The key used by this hash entry. \\
+\hline
+\mbox{\tt in}  & {\em value\+Ptr} & The registration object. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Context info including the ref for the session that closed. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Open\+File\+Ptr@{Open\+File\+Ptr}}
+\index{Open\+File\+Ptr@{Open\+File\+Ptr}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Open\+File\+Ptr(int descriptor, const char $\ast$mode)}{OpenFilePtr(int descriptor, const char *mode)}}]{\setlength{\rightskip}{0pt plus 5cm}static F\+I\+LE$\ast$ Open\+File\+Ptr (
+\begin{DoxyParamCaption}
+\item[{int}]{descriptor, }
+\item[{const char $\ast$}]{mode}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a6f4326887ef33aa8d74f5acb2d9d9a87}{}\label{tree_db_8c_a6f4326887ef33aa8d74f5acb2d9d9a87}
+Create a new C style file pointer from the P\+O\+S\+IX file descriptor.
+
+\begin{DoxyReturn}{Returns}
+A file pointer that may be read or written if successful. A null pointer otherwise. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em descriptor} & The P\+O\+S\+IX file descriptor to create a file pointer from. \\
+\hline
+\mbox{\tt in}  & {\em mode} & The mode to open the file pointer in. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Original\+To\+Be\+Cleared@{Original\+To\+Be\+Cleared}}
+\index{Original\+To\+Be\+Cleared@{Original\+To\+Be\+Cleared}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Original\+To\+Be\+Cleared(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{OriginalToBeCleared(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Original\+To\+Be\+Cleared (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a51a23d7113d59c99551b9fe51510fc4d}{}\label{tree_db_8c_a51a23d7113d59c99551b9fe51510fc4d}
+Check the original non-\/shadow node to see if it will need to be cleared during the merge.
+
+\begin{DoxyReturn}{Returns}
+True if the merge will clear out the original value. False if not. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The shadow node to check. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Peek\+Char@{Peek\+Char}}
+\index{Peek\+Char@{Peek\+Char}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Peek\+Char(\+F\+I\+L\+E $\ast$file\+Ptr)}{PeekChar(FILE *filePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static signed char Peek\+Char (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_aed40cb98ef22f2456a89721fdf6a6215}{}\label{tree_db_8c_aed40cb98ef22f2456a89721fdf6a6215}
+Peek into the input stream one character ahead. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Ptr} & The file stream to peek into. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Propagate\+Value@{Propagate\+Value}}
+\index{Propagate\+Value@{Propagate\+Value}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Propagate\+Value(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{PropagateValue(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Propagate\+Value (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a1d60e38003fbe7112a221acabb00eb7d}{}\label{tree_db_8c_a1d60e38003fbe7112a221acabb00eb7d}
+This function will copy a string value from an original tree node into a node that has shadowed it. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node ref to update. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Read\+Bool\+Token@{Read\+Bool\+Token}}
+\index{Read\+Bool\+Token@{Read\+Bool\+Token}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Read\+Bool\+Token(\+F\+I\+L\+E $\ast$file\+Ptr, char $\ast$string\+Ptr, size\+\_\+t string\+Size)}{ReadBoolToken(FILE *filePtr, char *stringPtr, size_t stringSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Read\+Bool\+Token (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr, }
+\item[{char $\ast$}]{string\+Ptr, }
+\item[{size\+\_\+t}]{string\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a0d3c7e2de6f15e1a6369c251ded6ffba}{}\label{tree_db_8c_a0d3c7e2de6f15e1a6369c251ded6ffba}
+Read a boolean literal from the input file.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the literal could be read. L\+E\+\_\+\+F\+O\+R\+M\+A\+T\+\_\+\+E\+R\+R\+OR if the literal could not be read. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Ptr} & The file we\textquotesingle{}re reading from. \\
+\hline
+\mbox{\tt out}  & {\em string\+Ptr} & String buffer to hold the token we\textquotesingle{}ve read. \\
+\hline
+\mbox{\tt in}  & {\em string\+Size} & How big is the supplied string buffer? \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Read\+Float\+Token@{Read\+Float\+Token}}
+\index{Read\+Float\+Token@{Read\+Float\+Token}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Read\+Float\+Token(\+F\+I\+L\+E $\ast$file\+Ptr, char $\ast$string\+Ptr, size\+\_\+t string\+Size)}{ReadFloatToken(FILE *filePtr, char *stringPtr, size_t stringSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Read\+Float\+Token (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr, }
+\item[{char $\ast$}]{string\+Ptr, }
+\item[{size\+\_\+t}]{string\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_ae000d45ede8b33a7a1c83c3767c44d89}{}\label{tree_db_8c_ae000d45ede8b33a7a1c83c3767c44d89}
+Read a floating point token string from the file.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the string is read from the file. L\+E\+\_\+\+F\+O\+R\+M\+A\+T\+\_\+\+E\+R\+R\+OR if the text fails to be read from the file. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Ptr} & The file we\textquotesingle{}re reading from. \\
+\hline
+\mbox{\tt out}  & {\em string\+Ptr} & String buffer to hold the token we\textquotesingle{}ve read. \\
+\hline
+\mbox{\tt in}  & {\em string\+Size} & How big is the supplied string buffer? \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Read\+Int\+Token@{Read\+Int\+Token}}
+\index{Read\+Int\+Token@{Read\+Int\+Token}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Read\+Int\+Token(\+F\+I\+L\+E $\ast$file\+Ptr, char $\ast$string\+Ptr, size\+\_\+t string\+Size)}{ReadIntToken(FILE *filePtr, char *stringPtr, size_t stringSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Read\+Int\+Token (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr, }
+\item[{char $\ast$}]{string\+Ptr, }
+\item[{size\+\_\+t}]{string\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_aa898408307fcdc5ded9abf52bd9a7890}{}\label{tree_db_8c_aa898408307fcdc5ded9abf52bd9a7890}
+Read an integer token string from the file.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the string is read from the file. L\+E\+\_\+\+F\+O\+R\+M\+A\+T\+\_\+\+E\+R\+R\+OR if the text fails to be read from the file. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Ptr} & The file we\textquotesingle{}re reading from. \\
+\hline
+\mbox{\tt out}  & {\em string\+Ptr} & String buffer to hold the token we\textquotesingle{}ve read. \\
+\hline
+\mbox{\tt in}  & {\em string\+Size} & How big is the supplied string buffer? \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Read\+String\+Token@{Read\+String\+Token}}
+\index{Read\+String\+Token@{Read\+String\+Token}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Read\+String\+Token(\+F\+I\+L\+E $\ast$file\+Ptr, char $\ast$string\+Ptr, size\+\_\+t string\+Size)}{ReadStringToken(FILE *filePtr, char *stringPtr, size_t stringSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Read\+String\+Token (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr, }
+\item[{char $\ast$}]{string\+Ptr, }
+\item[{size\+\_\+t}]{string\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_ab583482f47731bbf45223f773b1b4a89}{}\label{tree_db_8c_ab583482f47731bbf45223f773b1b4a89}
+Read a string from the config tree file.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the string is read from the file. L\+E\+\_\+\+F\+O\+R\+M\+A\+T\+\_\+\+E\+R\+R\+OR if the text fails to be read from the file. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Ptr} & The file we\textquotesingle{}re reading from. \\
+\hline
+\mbox{\tt out}  & {\em string\+Ptr} & String buffer to hold the token we\textquotesingle{}ve read. \\
+\hline
+\mbox{\tt in}  & {\em string\+Size} & How big is the supplied string buffer? \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Read\+Text\+Literal@{Read\+Text\+Literal}}
+\index{Read\+Text\+Literal@{Read\+Text\+Literal}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Read\+Text\+Literal(\+F\+I\+L\+E $\ast$file\+Ptr, char $\ast$string\+Ptr, size\+\_\+t string\+Size, signed char terminal)}{ReadTextLiteral(FILE *filePtr, char *stringPtr, size_t stringSize, signed char terminal)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Read\+Text\+Literal (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr, }
+\item[{char $\ast$}]{string\+Ptr, }
+\item[{size\+\_\+t}]{string\+Size, }
+\item[{signed char}]{terminal}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_ab323bf866b81a03427988a5a0b58a95a}{}\label{tree_db_8c_ab323bf866b81a03427988a5a0b58a95a}
+Read a textual literal from the input file, the read is terminated successfuly if the terminal character is found.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the string is read from the file. L\+E\+\_\+\+F\+O\+R\+M\+A\+T\+\_\+\+E\+R\+R\+OR if the text fails to be read from the file. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Ptr} & The file we\textquotesingle{}re reading from. \\
+\hline
+\mbox{\tt out}  & {\em string\+Ptr} & String buffer to hold the token we\textquotesingle{}ve read. \\
+\hline
+\mbox{\tt in}  & {\em string\+Size} & How big is the supplied string buffer? \\
+\hline
+\mbox{\tt in}  & {\em terminal} & The terminal character we\textquotesingle{}re searching for. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Read\+Token@{Read\+Token}}
+\index{Read\+Token@{Read\+Token}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Read\+Token(\+F\+I\+L\+E $\ast$file\+Ptr, char $\ast$string\+Ptr, size\+\_\+t string\+Size, Token\+Type\+\_\+t $\ast$type\+Ptr)}{ReadToken(FILE *filePtr, char *stringPtr, size_t stringSize, TokenType_t *typePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Read\+Token (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr, }
+\item[{char $\ast$}]{string\+Ptr, }
+\item[{size\+\_\+t}]{string\+Size, }
+\item[{{\bf Token\+Type\+\_\+t} $\ast$}]{type\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_aafe34d54cf948766c8f7757c6430f993}{}\label{tree_db_8c_aafe34d54cf948766c8f7757c6430f993}
+Read a token from the input stream.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if a token could be read. L\+E\+\_\+\+O\+U\+T\+\_\+\+O\+F\+\_\+\+R\+A\+N\+GE if the end of the stream is reached before a token could be finished. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Ptr} & The file we\textquotesingle{}re reading from. \\
+\hline
+\mbox{\tt out}  & {\em string\+Ptr} & String buffer to hold the token we\textquotesingle{}ve read. \\
+\hline
+\mbox{\tt in}  & {\em string\+Size} & How big is the supplied string buffer? \\
+\hline
+\mbox{\tt out}  & {\em type\+Ptr} & The type of token read from the file. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Remove\+Handler@{Remove\+Handler}}
+\index{Remove\+Handler@{Remove\+Handler}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Remove\+Handler(\+Registration\+\_\+t $\ast$registration\+Ptr, Handler\+\_\+t $\ast$handler\+Ptr)}{RemoveHandler(Registration_t *registrationPtr, Handler_t *handlerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Remove\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf Registration\+\_\+t} $\ast$}]{registration\+Ptr, }
+\item[{{\bf Handler\+\_\+t} $\ast$}]{handler\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a61b737a2655a66139d953f3a865064c7}{}\label{tree_db_8c_a61b737a2655a66139d953f3a865064c7}
+Removes the handler object from the given registration object. This function will also free the memory that the handler object had used. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em registration\+Ptr} & The registration object to remove the link from. \\
+\hline
+\mbox{\tt in}  & {\em handler\+Ptr} & The handler object we\textquotesingle{}re removing. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Set\+Deleted\+Flag@{Set\+Deleted\+Flag}}
+\index{Set\+Deleted\+Flag@{Set\+Deleted\+Flag}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Deleted\+Flag(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{SetDeletedFlag(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Deleted\+Flag (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a5a2cd1127af464adfdbc3df22611af2a}{}\label{tree_db_8c_a5a2cd1127af464adfdbc3df22611af2a}
+Set the deleted flag on the node. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to update. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Set\+Modified\+Flag@{Set\+Modified\+Flag}}
+\index{Set\+Modified\+Flag@{Set\+Modified\+Flag}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Modified\+Flag(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{SetModifiedFlag(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Modified\+Flag (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_af1bdd31fb708825c72d358a134d75863}{}\label{tree_db_8c_af1bdd31fb708825c72d358a134d75863}
+Mark the node as modified. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to update. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Set\+Shadow\+Flag@{Set\+Shadow\+Flag}}
+\index{Set\+Shadow\+Flag@{Set\+Shadow\+Flag}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Shadow\+Flag(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{SetShadowFlag(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Shadow\+Flag (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a5210465652e8ed342b1fcefdc640915c}{}\label{tree_db_8c_a5210465652e8ed342b1fcefdc640915c}
+Set the shadow flag in this node. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to update. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Shadow\+Children@{Shadow\+Children}}
+\index{Shadow\+Children@{Shadow\+Children}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Shadow\+Children(tdb\+\_\+\+Node\+Ref\+\_\+t shadow\+Parent\+Ref)}{ShadowChildren(tdb_NodeRef_t shadowParentRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Shadow\+Children (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{shadow\+Parent\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_ab82a0474fb23163257867d1da54b98e4}{}\label{tree_db_8c_ab82a0474fb23163257867d1da54b98e4}
+Called to shadow a node\textquotesingle{}s collection of children. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em shadow\+Parent\+Ref} & The node we\textquotesingle{}re shadowing the children of. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Skip\+White\+Space@{Skip\+White\+Space}}
+\index{Skip\+White\+Space@{Skip\+White\+Space}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Skip\+White\+Space(\+F\+I\+L\+E $\ast$file\+Ptr)}{SkipWhiteSpace(FILE *filePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Skip\+White\+Space (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_ac8cf20797f03f5cea044d5ea3b1b91fe}{}\label{tree_db_8c_ac8cf20797f03f5cea044d5ea3b1b91fe}
+Skip any whitespace encountered in the input stream. Stop skipping once we hit a valid token.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the whitespace is skiped and there is still more file to read. L\+E\+\_\+\+O\+U\+T\+\_\+\+O\+F\+\_\+\+R\+A\+N\+GE if the end of the file is hit. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Ptr} & The file stream to seek through. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Add\+Change\+Handler@{tdb\+\_\+\+Add\+Change\+Handler}}
+\index{tdb\+\_\+\+Add\+Change\+Handler@{tdb\+\_\+\+Add\+Change\+Handler}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Add\+Change\+Handler(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, const char $\ast$path\+Ptr, le\+\_\+cfg\+\_\+\+Change\+Handler\+Func\+\_\+t handler\+Ptr, void $\ast$context\+Ptr)}{tdb_AddChangeHandler(tdb_TreeRef_t treeRef, le_msg_SessionRef_t sessionRef, const char *pathPtr, le_cfg_ChangeHandlerFunc_t handlerPtr, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+cfg\+\_\+\+Change\+Handler\+Ref\+\_\+t} tdb\+\_\+\+Add\+Change\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{const char $\ast$}]{path\+Ptr, }
+\item[{{\bf le\+\_\+cfg\+\_\+\+Change\+Handler\+Func\+\_\+t}}]{handler\+Ptr, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a2f8c87a4a71a798a14c370b9e7584acd}{}\label{tree_db_8c_a2f8c87a4a71a798a14c370b9e7584acd}
+Registers a handler function to be called when a node at or below a given path changes.
+
+\begin{DoxyReturn}{Returns}
+A new safe ref backed object, or N\+U\+LL if the creation failed. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree to register the handler on. \\
+\hline
+\mbox{\tt in}  & {\em session\+Ref} & The session that the request came in on. \\
+\hline
+\mbox{\tt in}  & {\em path\+Ptr} & Path of the node to watch. \\
+\hline
+\mbox{\tt in}  & {\em handler\+Ptr} & Function to call back. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Opaque value to pass to the function when called. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Clean\+Up\+Handlers@{tdb\+\_\+\+Clean\+Up\+Handlers}}
+\index{tdb\+\_\+\+Clean\+Up\+Handlers@{tdb\+\_\+\+Clean\+Up\+Handlers}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Clean\+Up\+Handlers(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{tdb_CleanUpHandlers(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Clean\+Up\+Handlers (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a7bf4447ad56a556ef9f98d9a63e31461}{}\label{tree_db_8c_a7bf4447ad56a556ef9f98d9a63e31461}
+Clean out any event handlers registered on the given session. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & The session that\textquotesingle{}s been closed. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Create\+Node\+Path@{tdb\+\_\+\+Create\+Node\+Path}}
+\index{tdb\+\_\+\+Create\+Node\+Path@{tdb\+\_\+\+Create\+Node\+Path}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Create\+Node\+Path(tdb\+\_\+\+Node\+Ref\+\_\+t base\+Node\+Ref, le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t node\+Path\+Ref)}{tdb_CreateNodePath(tdb_NodeRef_t baseNodeRef, le_pathIter_Ref_t nodePathRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf tdb\+\_\+\+Node\+Ref\+\_\+t} tdb\+\_\+\+Create\+Node\+Path (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{base\+Node\+Ref, }
+\item[{{\bf le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t}}]{node\+Path\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a517454cc3b7167ed66d95627f1f5c572}{}\label{tree_db_8c_a517454cc3b7167ed66d95627f1f5c572}
+Traverse the given path and create nodes as needed.
+
+\begin{DoxyReturn}{Returns}
+The found or newly created node at the end of the given path. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em base\+Node\+Ref} & The base node to start from. \\
+\hline
+\mbox{\tt in}  & {\em node\+Path\+Ref} & The path we\textquotesingle{}re creating within the tree. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Delete\+Node@{tdb\+\_\+\+Delete\+Node}}
+\index{tdb\+\_\+\+Delete\+Node@{tdb\+\_\+\+Delete\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Delete\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{tdb_DeleteNode(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Delete\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_ad59de42b89edac4a0524ba4e45fbd720}{}\label{tree_db_8c_ad59de42b89edac4a0524ba4e45fbd720}
+Delete a given node from it\textquotesingle{}s tree. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to delete. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Delete\+Tree@{tdb\+\_\+\+Delete\+Tree}}
+\index{tdb\+\_\+\+Delete\+Tree@{tdb\+\_\+\+Delete\+Tree}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Delete\+Tree(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref)}{tdb_DeleteTree(tdb_TreeRef_t treeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Delete\+Tree (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_ab3b082fee4c950679508fcd8a537f2d6}{}\label{tree_db_8c_ab3b082fee4c950679508fcd8a537f2d6}
+Called to delete the given tree both from memory and from the filesystem.
+
+If the given tree has active iterators on it, then it will only be marked for deletion. After all of the iterators close, the tree will be removed from the system automatically. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree object to permanently delete. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Ensure\+Exists@{tdb\+\_\+\+Ensure\+Exists}}
+\index{tdb\+\_\+\+Ensure\+Exists@{tdb\+\_\+\+Ensure\+Exists}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Ensure\+Exists(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{tdb_EnsureExists(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Ensure\+Exists (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a714b199b2967bc9eaff3a0ec15b3e625}{}\label{tree_db_8c_a714b199b2967bc9eaff3a0ec15b3e625}
+Make sure that the given node and any of it\textquotesingle{}s parents are not marked as having been deleted. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & Update this node, and all of it\textquotesingle{}s parentage and make sure none of them are marked for deletion. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Active\+Write\+Iter@{tdb\+\_\+\+Get\+Active\+Write\+Iter}}
+\index{tdb\+\_\+\+Get\+Active\+Write\+Iter@{tdb\+\_\+\+Get\+Active\+Write\+Iter}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Active\+Write\+Iter(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref)}{tdb_GetActiveWriteIter(tdb_TreeRef_t treeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf ni\+\_\+\+Iterator\+Ref\+\_\+t} tdb\+\_\+\+Get\+Active\+Write\+Iter (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a062c5719ea223afa2e5988ed52ed45f6}{}\label{tree_db_8c_a062c5719ea223afa2e5988ed52ed45f6}
+Get a pointer to the write iterator that\textquotesingle{}s active on the current tree.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the write iterator currently active on the tree. N\+U\+LL if there isn\textquotesingle{}t an iterator on the tree. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree object to read. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+First\+Active\+Child\+Node@{tdb\+\_\+\+Get\+First\+Active\+Child\+Node}}
+\index{tdb\+\_\+\+Get\+First\+Active\+Child\+Node@{tdb\+\_\+\+Get\+First\+Active\+Child\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+First\+Active\+Child\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{tdb_GetFirstActiveChildNode(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf tdb\+\_\+\+Node\+Ref\+\_\+t} tdb\+\_\+\+Get\+First\+Active\+Child\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a57c9b668274155fb0610c14148235de2}{}\label{tree_db_8c_a57c9b668274155fb0610c14148235de2}
+Like tdb\+\_\+\+Get\+First\+Child\+Node this will return a child of the given parent node. However, this function will ignore all nodes that are marked as deleted.
+
+\begin{DoxyReturn}{Returns}
+The first not-\/deleted child node of the given node. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & Get the first child of this node. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+First\+Child\+Node@{tdb\+\_\+\+Get\+First\+Child\+Node}}
+\index{tdb\+\_\+\+Get\+First\+Child\+Node@{tdb\+\_\+\+Get\+First\+Child\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+First\+Child\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{tdb_GetFirstChildNode(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf tdb\+\_\+\+Node\+Ref\+\_\+t} tdb\+\_\+\+Get\+First\+Child\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a2172344c2e0ee9bfb4d0e9da4ed7bbe4}{}\label{tree_db_8c_a2172344c2e0ee9bfb4d0e9da4ed7bbe4}
+Called to get the first child node of this node. If this node has no children, then return N\+U\+LL.
+
+\begin{DoxyReturn}{Returns}
+The first child of the given node. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & Get the first child of this node. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Next\+Active\+Sibling\+Node@{tdb\+\_\+\+Get\+Next\+Active\+Sibling\+Node}}
+\index{tdb\+\_\+\+Get\+Next\+Active\+Sibling\+Node@{tdb\+\_\+\+Get\+Next\+Active\+Sibling\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Next\+Active\+Sibling\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{tdb_GetNextActiveSiblingNode(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf tdb\+\_\+\+Node\+Ref\+\_\+t} tdb\+\_\+\+Get\+Next\+Active\+Sibling\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_acb5d3d571db2701dbeb5299a96da4755}{}\label{tree_db_8c_acb5d3d571db2701dbeb5299a96da4755}
+This function will return the first active, that is not deleted, sibling of the given node.
+
+\begin{DoxyReturn}{Returns}
+The next \char`\"{}live\char`\"{} node in the sibling chain. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node object to iterate from. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Next\+Sibling\+Node@{tdb\+\_\+\+Get\+Next\+Sibling\+Node}}
+\index{tdb\+\_\+\+Get\+Next\+Sibling\+Node@{tdb\+\_\+\+Get\+Next\+Sibling\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Next\+Sibling\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{tdb_GetNextSiblingNode(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf tdb\+\_\+\+Node\+Ref\+\_\+t} tdb\+\_\+\+Get\+Next\+Sibling\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_aa9332440dde7b18f8fbbfa0c056adb57}{}\label{tree_db_8c_aa9332440dde7b18f8fbbfa0c056adb57}
+Get the next sibling for a given node.
+
+\begin{DoxyReturn}{Returns}
+The next sibling node for the given node. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node object to iterate from. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Node@{tdb\+\_\+\+Get\+Node}}
+\index{tdb\+\_\+\+Get\+Node@{tdb\+\_\+\+Get\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t base\+Node\+Ref, le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t node\+Path\+Ref)}{tdb_GetNode(tdb_NodeRef_t baseNodeRef, le_pathIter_Ref_t nodePathRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf tdb\+\_\+\+Node\+Ref\+\_\+t} tdb\+\_\+\+Get\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{base\+Node\+Ref, }
+\item[{{\bf le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t}}]{node\+Path\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_ad9d01c31c17ca3b93f05697f3f56c94c}{}\label{tree_db_8c_ad9d01c31c17ca3b93f05697f3f56c94c}
+Given a base node and a path, find another node in the tree.
+
+\begin{DoxyReturn}{Returns}
+A reference to the required node if found, N\+U\+LL if not. N\+U\+LL is also returned if the path is eitehr too big to process or if a node name within the path is too large. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em base\+Node\+Ref} & The base node to start from. \\
+\hline
+\mbox{\tt in}  & {\em node\+Path\+Ref} & The path we\textquotesingle{}re searching for in the tree. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Node\+Name@{tdb\+\_\+\+Get\+Node\+Name}}
+\index{tdb\+\_\+\+Get\+Node\+Name@{tdb\+\_\+\+Get\+Node\+Name}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Node\+Name(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, char $\ast$string\+Ptr, size\+\_\+t max\+Size)}{tdb_GetNodeName(tdb_NodeRef_t nodeRef, char *stringPtr, size_t maxSize)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} tdb\+\_\+\+Get\+Node\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{char $\ast$}]{string\+Ptr, }
+\item[{size\+\_\+t}]{max\+Size}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_aec7a3eb915700198471d87e51f706633}{}\label{tree_db_8c_aec7a3eb915700198471d87e51f706633}
+Get the name of a given node.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the name copied successfuly. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if not. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to read. \\
+\hline
+\mbox{\tt out}  & {\em string\+Ptr} & Destination buffer to hold the name. \\
+\hline
+\mbox{\tt in}  & {\em max\+Size} & Size of this buffer. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Node\+Parent@{tdb\+\_\+\+Get\+Node\+Parent}}
+\index{tdb\+\_\+\+Get\+Node\+Parent@{tdb\+\_\+\+Get\+Node\+Parent}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Node\+Parent(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{tdb_GetNodeParent(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf tdb\+\_\+\+Node\+Ref\+\_\+t} tdb\+\_\+\+Get\+Node\+Parent (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a10a04b805a0c8fcac19fb6df001f773b}{}\label{tree_db_8c_a10a04b805a0c8fcac19fb6df001f773b}
+Get the parent of the given node.
+
+\begin{DoxyReturn}{Returns}
+The parent node of the given node. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node object to read the parent object from. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Node\+Type@{tdb\+\_\+\+Get\+Node\+Type}}
+\index{tdb\+\_\+\+Get\+Node\+Type@{tdb\+\_\+\+Get\+Node\+Type}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Node\+Type(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{tdb_GetNodeType(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+cfg\+\_\+node\+Type\+\_\+t} tdb\+\_\+\+Get\+Node\+Type (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a247bb725886cd54c13dac1477b14890c}{}\label{tree_db_8c_a247bb725886cd54c13dac1477b14890c}
+Call to read out what kind of value the node object holds.
+
+\begin{DoxyReturn}{Returns}
+A member of the le\+\_\+cfg\+\_\+node\+Type\+\_\+t indicating the type of node in question. If the node is N\+U\+LL or is marked as deleted, then L\+E\+\_\+\+C\+F\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+D\+O\+E\+S\+N\+T\+\_\+\+E\+X\+I\+ST. Othwerwise if the value is empty or the node is an empty collection L\+E\+\_\+\+C\+F\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+E\+M\+P\+TY is returned. The node\textquotesingle{}s recorded type is returned in all other cases. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to read. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Request\+Queue@{tdb\+\_\+\+Get\+Request\+Queue}}
+\index{tdb\+\_\+\+Get\+Request\+Queue@{tdb\+\_\+\+Get\+Request\+Queue}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Request\+Queue(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref)}{tdb_GetRequestQueue(tdb_TreeRef_t treeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+sls\+\_\+\+List\+\_\+t}$\ast$ tdb\+\_\+\+Get\+Request\+Queue (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a14583d573fd4525dd6c484a375b5c6b3}{}\label{tree_db_8c_a14583d573fd4525dd6c484a375b5c6b3}
+Get the list of requests on this tree.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the request queue for this tree. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree object to read. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Root\+Node@{tdb\+\_\+\+Get\+Root\+Node}}
+\index{tdb\+\_\+\+Get\+Root\+Node@{tdb\+\_\+\+Get\+Root\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Root\+Node(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref)}{tdb_GetRootNode(tdb_TreeRef_t treeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf tdb\+\_\+\+Node\+Ref\+\_\+t} tdb\+\_\+\+Get\+Root\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_ab4874d17afa8e018317e13a3958c54ec}{}\label{tree_db_8c_ab4874d17afa8e018317e13a3958c54ec}
+Called to get the root node of a tree object.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the root node of a tree. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree object to read. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Tree@{tdb\+\_\+\+Get\+Tree}}
+\index{tdb\+\_\+\+Get\+Tree@{tdb\+\_\+\+Get\+Tree}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Tree(const char $\ast$tree\+Name\+Ptr)}{tdb_GetTree(const char *treeNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t} tdb\+\_\+\+Get\+Tree (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{tree\+Name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a306a040d44fb19e180cc38a02786c3f0}{}\label{tree_db_8c_a306a040d44fb19e180cc38a02786c3f0}
+Get the named tree.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the named tree object. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Name\+Ptr} & The tree to load. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Tree\+Iter\+Ref@{tdb\+\_\+\+Get\+Tree\+Iter\+Ref}}
+\index{tdb\+\_\+\+Get\+Tree\+Iter\+Ref@{tdb\+\_\+\+Get\+Tree\+Iter\+Ref}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Tree\+Iter\+Ref(void)}{tdb_GetTreeIterRef(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+hashmap\+\_\+\+It\+\_\+\+Ref\+\_\+t} tdb\+\_\+\+Get\+Tree\+Iter\+Ref (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_ab9d039df65d1ed148f4039bb35cb54f1}{}\label{tree_db_8c_ab9d039df65d1ed148f4039bb35cb54f1}
+Called to get the poitner to the tree collection iterator.
+
+\begin{DoxyReturn}{Returns}
+Reference to the tree collection iterator. 
+\end{DoxyReturn}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Tree\+Name@{tdb\+\_\+\+Get\+Tree\+Name}}
+\index{tdb\+\_\+\+Get\+Tree\+Name@{tdb\+\_\+\+Get\+Tree\+Name}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Tree\+Name(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref)}{tdb_GetTreeName(tdb_TreeRef_t treeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ tdb\+\_\+\+Get\+Tree\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a3abdd9449cafce1ed0771255ca879f1a}{}\label{tree_db_8c_a3abdd9449cafce1ed0771255ca879f1a}
+Called to create a new tree that shadows an existing one.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the tree name string. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree object to read. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Value\+As\+Bool@{tdb\+\_\+\+Get\+Value\+As\+Bool}}
+\index{tdb\+\_\+\+Get\+Value\+As\+Bool@{tdb\+\_\+\+Get\+Value\+As\+Bool}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Value\+As\+Bool(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, bool default\+Value)}{tdb_GetValueAsBool(tdb_NodeRef_t nodeRef, bool defaultValue)}}]{\setlength{\rightskip}{0pt plus 5cm}bool tdb\+\_\+\+Get\+Value\+As\+Bool (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{bool}]{default\+Value}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a3c8e27185c37eb6cc1236108dc6012dc}{}\label{tree_db_8c_a3c8e27185c37eb6cc1236108dc6012dc}
+Read the given node and interpret it as a boolean value.
+
+\begin{DoxyReturn}{Returns}
+The node\textquotesingle{}s value as a 32-\/bit boolean. If the node doesn\textquotesingle{}t exists or has the wrong type the default value is returned instead. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to read. \\
+\hline
+\mbox{\tt in}  & {\em default\+Value} & Default value to use in the event that the requested value doesn\textquotesingle{}t exist. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Value\+As\+Float@{tdb\+\_\+\+Get\+Value\+As\+Float}}
+\index{tdb\+\_\+\+Get\+Value\+As\+Float@{tdb\+\_\+\+Get\+Value\+As\+Float}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Value\+As\+Float(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, double default\+Value)}{tdb_GetValueAsFloat(tdb_NodeRef_t nodeRef, double defaultValue)}}]{\setlength{\rightskip}{0pt plus 5cm}double tdb\+\_\+\+Get\+Value\+As\+Float (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{double}]{default\+Value}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a751199f9adcf50dc9479123722399656}{}\label{tree_db_8c_a751199f9adcf50dc9479123722399656}
+Read the given node and interpret it as a floating point value.
+
+\begin{DoxyReturn}{Returns}
+The node\textquotesingle{}s value as a 64-\/bit floating point number. If the value is an int, it is converted. Otherwise, the default value is returned. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to read. \\
+\hline
+\mbox{\tt in}  & {\em default\+Value} & Default value to use in the event that the requested value doesn\textquotesingle{}t exist. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Value\+As\+Int@{tdb\+\_\+\+Get\+Value\+As\+Int}}
+\index{tdb\+\_\+\+Get\+Value\+As\+Int@{tdb\+\_\+\+Get\+Value\+As\+Int}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Value\+As\+Int(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, int32\+\_\+t default\+Value)}{tdb_GetValueAsInt(tdb_NodeRef_t nodeRef, int32_t defaultValue)}}]{\setlength{\rightskip}{0pt plus 5cm}int32\+\_\+t tdb\+\_\+\+Get\+Value\+As\+Int (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{int32\+\_\+t}]{default\+Value}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a09b692bc3916ebd333400c28597ba8a6}{}\label{tree_db_8c_a09b692bc3916ebd333400c28597ba8a6}
+Read the given node and interpret it as an integer value.
+
+\begin{DoxyReturn}{Returns}
+The node\textquotesingle{}s current value as an int. If the value was originaly a float then it is rounded. If the node doesn\textquotesingle{}t exist or is some other type then the default value is returned. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to read from. \\
+\hline
+\mbox{\tt in}  & {\em default\+Value} & Default value to use in the event that the requested value doesn\textquotesingle{}t exist. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Get\+Value\+As\+String@{tdb\+\_\+\+Get\+Value\+As\+String}}
+\index{tdb\+\_\+\+Get\+Value\+As\+String@{tdb\+\_\+\+Get\+Value\+As\+String}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Get\+Value\+As\+String(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, char $\ast$string\+Ptr, size\+\_\+t max\+Size, const char $\ast$default\+Ptr)}{tdb_GetValueAsString(tdb_NodeRef_t nodeRef, char *stringPtr, size_t maxSize, const char *defaultPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} tdb\+\_\+\+Get\+Value\+As\+String (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{char $\ast$}]{string\+Ptr, }
+\item[{size\+\_\+t}]{max\+Size, }
+\item[{const char $\ast$}]{default\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a1f7208f09af1b41c184eeb959d27d03a}{}\label{tree_db_8c_a1f7208f09af1b41c184eeb959d27d03a}
+Get the nodes string value and copy into the destination buffer.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the value is copied ok. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the value can not fit in the supplied buffer. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node object to read. \\
+\hline
+\mbox{\tt out}  & {\em string\+Ptr} & Target buffer for the value string. \\
+\hline
+\mbox{\tt in}  & {\em max\+Size} & Maximum size the buffer can hold. \\
+\hline
+\mbox{\tt in}  & {\em default\+Ptr} & Default value to use in the event that the requested value doesn\textquotesingle{}t exist. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Has\+Active\+Readers@{tdb\+\_\+\+Has\+Active\+Readers}}
+\index{tdb\+\_\+\+Has\+Active\+Readers@{tdb\+\_\+\+Has\+Active\+Readers}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Has\+Active\+Readers(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref)}{tdb_HasActiveReaders(tdb_TreeRef_t treeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}bool tdb\+\_\+\+Has\+Active\+Readers (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a410d806b05efffbd5ddeecd570eb903a}{}\label{tree_db_8c_a410d806b05efffbd5ddeecd570eb903a}
+Call to check for any active read iterator\textquotesingle{}s on the tree.
+
+\begin{DoxyReturn}{Returns}
+True if there are active iterators on the tree, False otherwise. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree object to read. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Init@{tdb\+\_\+\+Init}}
+\index{tdb\+\_\+\+Init@{tdb\+\_\+\+Init}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Init(void)}{tdb_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a78f89d64e5eebcd89a5f82f6062df6a2}{}\label{tree_db_8c_a78f89d64e5eebcd89a5f82f6062df6a2}
+Initialize the tree DB subsystem, and automaticly load the system tree from the filesystem. \index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Is\+Node\+Empty@{tdb\+\_\+\+Is\+Node\+Empty}}
+\index{tdb\+\_\+\+Is\+Node\+Empty@{tdb\+\_\+\+Is\+Node\+Empty}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Is\+Node\+Empty(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{tdb_IsNodeEmpty(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}bool tdb\+\_\+\+Is\+Node\+Empty (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a80659908b38710fbfcf8387fc15e146c}{}\label{tree_db_8c_a80659908b38710fbfcf8387fc15e146c}
+Is the node currently empty?
+
+\begin{DoxyReturn}{Returns}
+If tdb\+\_\+\+Get\+Node\+Type would return either L\+E\+\_\+\+C\+F\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+E\+M\+P\+TY or L\+E\+\_\+\+C\+F\+G\+\_\+\+T\+Y\+P\+E\+\_\+\+D\+O\+E\+S\+N\+T\+\_\+\+E\+X\+I\+ST then this function will return true. Otherwise this function will return false. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to read. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Merge\+Tree@{tdb\+\_\+\+Merge\+Tree}}
+\index{tdb\+\_\+\+Merge\+Tree@{tdb\+\_\+\+Merge\+Tree}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Merge\+Tree(tdb\+\_\+\+Tree\+Ref\+\_\+t shadow\+Tree\+Ref)}{tdb_MergeTree(tdb_TreeRef_t shadowTreeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Merge\+Tree (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{shadow\+Tree\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_acb1ce1662066e003f5fbd52b4ee890fb}{}\label{tree_db_8c_acb1ce1662066e003f5fbd52b4ee890fb}
+Merge a shadow tree into the original tree it was created from. Once the change is merged the updated tree is serialized to the filesystem. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em shadow\+Tree\+Ref} & Merge the nodes from this tree into their base tree. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Read\+Tree\+Node@{tdb\+\_\+\+Read\+Tree\+Node}}
+\index{tdb\+\_\+\+Read\+Tree\+Node@{tdb\+\_\+\+Read\+Tree\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Read\+Tree\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, int descriptor)}{tdb_ReadTreeNode(tdb_NodeRef_t nodeRef, int descriptor)}}]{\setlength{\rightskip}{0pt plus 5cm}bool tdb\+\_\+\+Read\+Tree\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{int}]{descriptor}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_ab92e4a08b6254a34e472cc132b26e8fe}{}\label{tree_db_8c_ab92e4a08b6254a34e472cc132b26e8fe}
+Read a configuration tree node\textquotesingle{}s contents from the file system.
+
+\begin{DoxyNote}{Note}
+On exit the descriptor\textquotesingle{}s file pointer will be at E\+OF. If the function fails, then the file pointer will be somewhere in the middle of the file.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+True if the read is successful, or false if not. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to write the new data to. \\
+\hline
+\mbox{\tt in}  & {\em descriptor} & The file to read from. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Register\+Iterator@{tdb\+\_\+\+Register\+Iterator}}
+\index{tdb\+\_\+\+Register\+Iterator@{tdb\+\_\+\+Register\+Iterator}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Register\+Iterator(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref, ni\+\_\+\+Iterator\+Ref\+\_\+t iterator\+Ref)}{tdb_RegisterIterator(tdb_TreeRef_t treeRef, ni_IteratorRef_t iteratorRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Register\+Iterator (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref, }
+\item[{{\bf ni\+\_\+\+Iterator\+Ref\+\_\+t}}]{iterator\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a9480076d6f6b9e81a5f7ba23b11c8d1e}{}\label{tree_db_8c_a9480076d6f6b9e81a5f7ba23b11c8d1e}
+Register an iterator on the given tree. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree object to update. \\
+\hline
+\mbox{\tt in}  & {\em iterator\+Ref} & The iterator object we\textquotesingle{}re registering. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Release\+Tree@{tdb\+\_\+\+Release\+Tree}}
+\index{tdb\+\_\+\+Release\+Tree@{tdb\+\_\+\+Release\+Tree}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Release\+Tree(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref)}{tdb_ReleaseTree(tdb_TreeRef_t treeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Release\+Tree (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_ad638fcbdfbfc14902b272c5f478ba2c6}{}\label{tree_db_8c_ad638fcbdfbfc14902b272c5f478ba2c6}
+Call this to realease a tree. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree to free. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Remove\+Change\+Handler@{tdb\+\_\+\+Remove\+Change\+Handler}}
+\index{tdb\+\_\+\+Remove\+Change\+Handler@{tdb\+\_\+\+Remove\+Change\+Handler}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Remove\+Change\+Handler(le\+\_\+cfg\+\_\+\+Change\+Handler\+Ref\+\_\+t handler\+Ref, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{tdb_RemoveChangeHandler(le_cfg_ChangeHandlerRef_t handlerRef, le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Remove\+Change\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+cfg\+\_\+\+Change\+Handler\+Ref\+\_\+t}}]{handler\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a0e3094c1396b8ecb809128aba4b33cc2}{}\label{tree_db_8c_a0e3094c1396b8ecb809128aba4b33cc2}
+Deregisters a handler function that was registered using \hyperlink{tree_db_8c_a2f8c87a4a71a798a14c370b9e7584acd}{tdb\+\_\+\+Add\+Change\+Handler()}. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em handler\+Ref} & Reference returned by \hyperlink{tree_db_8c_a2f8c87a4a71a798a14c370b9e7584acd}{tdb\+\_\+\+Add\+Change\+Handler()}. \\
+\hline
+\mbox{\tt in}  & {\em session\+Ref} & The session of the user making this request. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Set\+Empty@{tdb\+\_\+\+Set\+Empty}}
+\index{tdb\+\_\+\+Set\+Empty@{tdb\+\_\+\+Set\+Empty}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Set\+Empty(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{tdb_SetEmpty(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Set\+Empty (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a9204da20bf3252cab912e8a3b9b7946e}{}\label{tree_db_8c_a9204da20bf3252cab912e8a3b9b7946e}
+Clear out the data from a node, releasing any children it may have. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to clear. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Set\+Node\+Name@{tdb\+\_\+\+Set\+Node\+Name}}
+\index{tdb\+\_\+\+Set\+Node\+Name@{tdb\+\_\+\+Set\+Node\+Name}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Set\+Node\+Name(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, const char $\ast$string\+Ptr)}{tdb_SetNodeName(tdb_NodeRef_t nodeRef, const char *stringPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} tdb\+\_\+\+Set\+Node\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{const char $\ast$}]{string\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a1755de1db64ca8422d417a8f200329da}{}\label{tree_db_8c_a1755de1db64ca8422d417a8f200329da}
+Set the name of a given node. But also validate the name as there are certain names that nodes shouldn\textquotesingle{}t have.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the set is successful. L\+E\+\_\+\+F\+O\+R\+M\+A\+T\+\_\+\+E\+R\+R\+OR if the name contains illegial characters, or otherwise would not work as a node name. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the name is too long. L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE, if there is another node with the new name in the same collection. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to update. \\
+\hline
+\mbox{\tt in}  & {\em string\+Ptr} & New name for the node. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Set\+Value\+As\+Bool@{tdb\+\_\+\+Set\+Value\+As\+Bool}}
+\index{tdb\+\_\+\+Set\+Value\+As\+Bool@{tdb\+\_\+\+Set\+Value\+As\+Bool}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Set\+Value\+As\+Bool(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, bool value)}{tdb_SetValueAsBool(tdb_NodeRef_t nodeRef, bool value)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Set\+Value\+As\+Bool (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{bool}]{value}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a9d8b01887c1ff295b20dd2e6ba4590d9}{}\label{tree_db_8c_a9d8b01887c1ff295b20dd2e6ba4590d9}
+Overwite a node value as a new boolen value.. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to write to. \\
+\hline
+\mbox{\tt in}  & {\em value} & The new value to write to that node. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Set\+Value\+As\+Float@{tdb\+\_\+\+Set\+Value\+As\+Float}}
+\index{tdb\+\_\+\+Set\+Value\+As\+Float@{tdb\+\_\+\+Set\+Value\+As\+Float}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Set\+Value\+As\+Float(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, double value)}{tdb_SetValueAsFloat(tdb_NodeRef_t nodeRef, double value)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Set\+Value\+As\+Float (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{double}]{value}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a4392c9e1c636c45a7d2b7615e1ff9aa4}{}\label{tree_db_8c_a4392c9e1c636c45a7d2b7615e1ff9aa4}
+Overwite a given node\textquotesingle{}s value with a floating point one. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to write \\
+\hline
+\mbox{\tt in}  & {\em value} & The value to write to that node. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Set\+Value\+As\+Int@{tdb\+\_\+\+Set\+Value\+As\+Int}}
+\index{tdb\+\_\+\+Set\+Value\+As\+Int@{tdb\+\_\+\+Set\+Value\+As\+Int}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Set\+Value\+As\+Int(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, int value)}{tdb_SetValueAsInt(tdb_NodeRef_t nodeRef, int value)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Set\+Value\+As\+Int (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{int}]{value}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_aa4aa96b7c5ad2c2ca781d84eddf79f19}{}\label{tree_db_8c_aa4aa96b7c5ad2c2ca781d84eddf79f19}
+Set an integer value to a given node, overwriting the previous value. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to write to. \\
+\hline
+\mbox{\tt in}  & {\em value} & The value to write. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Set\+Value\+As\+String@{tdb\+\_\+\+Set\+Value\+As\+String}}
+\index{tdb\+\_\+\+Set\+Value\+As\+String@{tdb\+\_\+\+Set\+Value\+As\+String}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Set\+Value\+As\+String(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, const char $\ast$string\+Ptr)}{tdb_SetValueAsString(tdb_NodeRef_t nodeRef, const char *stringPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Set\+Value\+As\+String (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{const char $\ast$}]{string\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_ab1198d88087cb397af57659bdf739965}{}\label{tree_db_8c_ab1198d88087cb397af57659bdf739965}
+Set the given node to a string value. If the given node is a stem then all children will be lost. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & The node to set. \\
+\hline
+\mbox{\tt in}  & {\em string\+Ptr} & The value to write to the node. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Shadow\+Tree@{tdb\+\_\+\+Shadow\+Tree}}
+\index{tdb\+\_\+\+Shadow\+Tree@{tdb\+\_\+\+Shadow\+Tree}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Shadow\+Tree(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref)}{tdb_ShadowTree(tdb_TreeRef_t treeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t} tdb\+\_\+\+Shadow\+Tree (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a3a9ac5770a561d89230e2e332748b65b}{}\label{tree_db_8c_a3a9ac5770a561d89230e2e332748b65b}
+Called to create a new tree that shadows an existing one.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the new shadow tree. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree to shadow. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Unregister\+Iterator@{tdb\+\_\+\+Unregister\+Iterator}}
+\index{tdb\+\_\+\+Unregister\+Iterator@{tdb\+\_\+\+Unregister\+Iterator}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Unregister\+Iterator(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref, ni\+\_\+\+Iterator\+Ref\+\_\+t iterator\+Ref)}{tdb_UnregisterIterator(tdb_TreeRef_t treeRef, ni_IteratorRef_t iteratorRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} tdb\+\_\+\+Unregister\+Iterator (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref, }
+\item[{{\bf ni\+\_\+\+Iterator\+Ref\+\_\+t}}]{iterator\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_a127e1eb483d42f3a43113f365ac3c549}{}\label{tree_db_8c_a127e1eb483d42f3a43113f365ac3c549}
+Remove a prior iterator registration from a tree object. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & The tree object to update. \\
+\hline
+\mbox{\tt in}  & {\em iterator\+Ref} & The iterator object we\textquotesingle{}re removing from the tree. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!tdb\+\_\+\+Write\+Tree\+Node@{tdb\+\_\+\+Write\+Tree\+Node}}
+\index{tdb\+\_\+\+Write\+Tree\+Node@{tdb\+\_\+\+Write\+Tree\+Node}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{tdb\+\_\+\+Write\+Tree\+Node(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref, int descriptor)}{tdb_WriteTreeNode(tdb_NodeRef_t nodeRef, int descriptor)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} tdb\+\_\+\+Write\+Tree\+Node (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref, }
+\item[{int}]{descriptor}
+\end{DoxyParamCaption}
+)}\hypertarget{tree_db_8c_ad3c12e5b99c4ba79bc62b29017951e16}{}\label{tree_db_8c_ad3c12e5b99c4ba79bc62b29017951e16}
+Serialize a tree node and it\textquotesingle{}s children to a file in the filesystem.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the write succeeded, L\+E\+\_\+\+I\+O\+\_\+\+E\+R\+R\+OR if the write failed. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & Write the contents of this node to a file descriptor. \\
+\hline
+\mbox{\tt in}  & {\em descriptor} & The file descriptor to write to. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Tree\+Destructor@{Tree\+Destructor}}
+\index{Tree\+Destructor@{Tree\+Destructor}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Tree\+Destructor(void $\ast$object\+Ptr)}{TreeDestructor(void *objectPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Tree\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{object\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a2d1f95f730790f77ca22c4d02772f240}{}\label{tree_db_8c_a2d1f95f730790f77ca22c4d02772f240}
+Destructor called when a tree object is to be freed from memory. 
+\begin{DoxyParams}{Parameters}
+{\em object\+Ptr} & The memory object to destruct. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Tree\+File\+Exists@{Tree\+File\+Exists}}
+\index{Tree\+File\+Exists@{Tree\+File\+Exists}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Tree\+File\+Exists(const char $\ast$tree\+Name\+Ref, int revision\+Id)}{TreeFileExists(const char *treeNameRef, int revisionId)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Tree\+File\+Exists (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{tree\+Name\+Ref, }
+\item[{int}]{revision\+Id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a8c38e418f1c39a5fd6434799356ae1e5}{}\label{tree_db_8c_a8c38e418f1c39a5fd6434799356ae1e5}
+Check to see if a config\+Tree file at the given revision already exists in the filesystem.
+
+\begin{DoxyNote}{Note}
+If the tree file exists, but is empty, then it is invalid and will be deleted.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+True if the named file exists, false otherwise. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Name\+Ref} & Name of the tree to check. \\
+\hline
+\mbox{\tt in}  & {\em revision\+Id} & The revision of the tree to check against. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Trigger\+Callbacks@{Trigger\+Callbacks}}
+\index{Trigger\+Callbacks@{Trigger\+Callbacks}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Trigger\+Callbacks(le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t path\+Ref)}{TriggerCallbacks(le_pathIter_Ref_t pathRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Trigger\+Callbacks (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+path\+Iter\+\_\+\+Ref\+\_\+t}}]{path\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_acdc3deaa866d7651cdaa1af4a32684e8}{}\label{tree_db_8c_acdc3deaa866d7651cdaa1af4a32684e8}
+Called to fire any callbacks registered on the given node path. If nothing is registered on the given path, nothing happens. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em path\+Ref} & The path to search for callback registrations. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Update\+Revision@{Update\+Revision}}
+\index{Update\+Revision@{Update\+Revision}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Update\+Revision(tdb\+\_\+\+Tree\+Ref\+\_\+t tree\+Ref)}{UpdateRevision(tdb_TreeRef_t treeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Update\+Revision (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Tree\+Ref\+\_\+t}}]{tree\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a7683048eb46c44f96f9665a7e249f5e3}{}\label{tree_db_8c_a7683048eb46c44f96f9665a7e249f5e3}
+Check the filesystem and get the current \char`\"{}valid\char`\"{} version of the file and update the tree object with that version number.
+
+If there are two files for a given tree, we use the older one. The idea being, if there are two versions of the same file in the filesystem then there was a system failure during a save operation. So we abandon the newer (probably incomplete) file and go with the older file; unless the size of the older file is zero, which can happen if deletion of that file is interrupted. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em tree\+Ref} & Update the revision for this tree object. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Was\+Renamed@{Was\+Renamed}}
+\index{Was\+Renamed@{Was\+Renamed}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Was\+Renamed(tdb\+\_\+\+Node\+Ref\+\_\+t node\+Ref)}{WasRenamed(tdb_NodeRef_t nodeRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Was\+Renamed (
+\begin{DoxyParamCaption}
+\item[{{\bf tdb\+\_\+\+Node\+Ref\+\_\+t}}]{node\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a81b0026bf10d6a10914b6de8153583d6}{}\label{tree_db_8c_a81b0026bf10d6a10914b6de8153583d6}
+Check the given node to see if it was renamed.
+
+\begin{DoxyReturn}{Returns}
+True if the node was renamed within this transaction. False if not. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em node\+Ref} & Check this node to see if it was renamed in this transaction. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Write\+File@{Write\+File}}
+\index{Write\+File@{Write\+File}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Write\+File(\+F\+I\+L\+E $\ast$file\+Ptr, const void $\ast$data\+Ptr, size\+\_\+t data\+Size)}{WriteFile(FILE *filePtr, const void *dataPtr, size_t dataSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Write\+File (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr, }
+\item[{const {\bf void} $\ast$}]{data\+Ptr, }
+\item[{size\+\_\+t}]{data\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a6f1c4f507613c9fb29ce3d678cb8de32}{}\label{tree_db_8c_a6f1c4f507613c9fb29ce3d678cb8de32}
+Write data to the output stream. This function will record any faults to the system log.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the write succeeded, L\+E\+\_\+\+I\+O\+\_\+\+E\+R\+R\+OR if the write failed. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Ptr} & The file being written to. \\
+\hline
+\mbox{\tt in}  & {\em data\+Ptr} & The data being written to the file. \\
+\hline
+\mbox{\tt in}  & {\em data\+Size} & The amount of data being written. \\
+\hline
+\end{DoxyParams}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Write\+String\+Value@{Write\+String\+Value}}
+\index{Write\+String\+Value@{Write\+String\+Value}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Write\+String\+Value(\+F\+I\+L\+E $\ast$file\+Ptr, char start\+Char, char end\+Char, const char $\ast$string\+Ptr)}{WriteStringValue(FILE *filePtr, char startChar, char endChar, const char *stringPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Write\+String\+Value (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr, }
+\item[{char}]{start\+Char, }
+\item[{char}]{end\+Char, }
+\item[{const char $\ast$}]{string\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a0dbe2898ee7a0f2f0e6cb6b415b46483}{}\label{tree_db_8c_a0dbe2898ee7a0f2f0e6cb6b415b46483}
+Write a string token to the output stream. This function will write the string and escape all control characters as it does so.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the write succeeded, L\+E\+\_\+\+I\+O\+\_\+\+E\+R\+R\+OR if the write failed. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Ptr} & The file to write to. \\
+\hline
+\mbox{\tt in}  & {\em start\+Char} & The delimiter to use. \\
+\hline
+\mbox{\tt in}  & {\em end\+Char} & The closing delimiter to use. \\
+\hline
+\mbox{\tt in}  & {\em string\+Ptr} & The actual string to write. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Variable Documentation}
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Handler\+Pool@{Handler\+Pool}}
+\index{Handler\+Pool@{Handler\+Pool}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Handler\+Pool}{HandlerPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Handler\+Pool = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a064d209e4eaa951f501a7ca768d37300}{}\label{tree_db_8c_a064d209e4eaa951f501a7ca768d37300}
+
+
+Pool for registered change handlers. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Handler\+Registration\+Map@{Handler\+Registration\+Map}}
+\index{Handler\+Registration\+Map@{Handler\+Registration\+Map}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Handler\+Registration\+Map}{HandlerRegistrationMap}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} Handler\+Registration\+Map = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a16a5b1215e0378f31bda019c89e3c66d}{}\label{tree_db_8c_a16a5b1215e0378f31bda019c89e3c66d}
+
+
+Hash map to keep track of event registrations based on the registered node path. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Handler\+Safe\+Ref\+Map@{Handler\+Safe\+Ref\+Map}}
+\index{Handler\+Safe\+Ref\+Map@{Handler\+Safe\+Ref\+Map}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Handler\+Safe\+Ref\+Map}{HandlerSafeRefMap}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} Handler\+Safe\+Ref\+Map = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_adf4d46a94a2018b6b577b5704c0ac579}{}\label{tree_db_8c_adf4d46a94a2018b6b577b5704c0ac579}
+
+
+Safe ref map for the change handler objects. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Node\+Pool\+Ref@{Node\+Pool\+Ref}}
+\index{Node\+Pool\+Ref@{Node\+Pool\+Ref}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Node\+Pool\+Ref}{NodePoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Node\+Pool\+Ref = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a75e60404be593a1cb3da6b157e99daed}{}\label{tree_db_8c_a75e60404be593a1cb3da6b157e99daed}
+
+
+The memory pool responsible for tree nodes. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Registration\+Pool@{Registration\+Pool}}
+\index{Registration\+Pool@{Registration\+Pool}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Registration\+Pool}{RegistrationPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Registration\+Pool = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_a6449750b904a7aa35f8a0eae7f7d8a22}{}\label{tree_db_8c_a6449750b904a7aa35f8a0eae7f7d8a22}
+
+
+Pool to handle the registration objects. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Tree\+Collection\+Ref@{Tree\+Collection\+Ref}}
+\index{Tree\+Collection\+Ref@{Tree\+Collection\+Ref}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Tree\+Collection\+Ref}{TreeCollectionRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} Tree\+Collection\+Ref = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_ae7a7425deb87e7fef2393d7c0c7f7937}{}\label{tree_db_8c_ae7a7425deb87e7fef2393d7c0c7f7937}
+
+
+The collection of configuration trees managed by the system. 
+
+\index{tree\+Db.\+c@{tree\+Db.\+c}!Tree\+Pool\+Ref@{Tree\+Pool\+Ref}}
+\index{Tree\+Pool\+Ref@{Tree\+Pool\+Ref}!tree\+Db.\+c@{tree\+Db.\+c}}
+\subsubsection[{\texorpdfstring{Tree\+Pool\+Ref}{TreePoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Tree\+Pool\+Ref = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{tree_db_8c_ac408daa3e257b1656fee369b70f0ccbf}{}\label{tree_db_8c_ac408daa3e257b1656fee369b70f0ccbf}
+
+
+Pool from which Tree objects are allocated. 
+

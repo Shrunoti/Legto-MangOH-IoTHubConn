@@ -1,0 +1,217 @@
+\hypertarget{internal_config_8c}{}\section{framework/daemons/linux/config\+Tree/internal\+Config.c File Reference}
+\label{internal_config_8c}\index{framework/daemons/linux/config\+Tree/internal\+Config.\+c@{framework/daemons/linux/config\+Tree/internal\+Config.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}interfaces.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}tree\+Db.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}tree\+User.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}node\+Iterator.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}internal\+Config.\+h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{internal_config_8c_a88372b5d5913451cd09023be99a2bc5b}{G\+L\+O\+B\+A\+L\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+P\+A\+TH}~\char`\"{}/config\+Tree\char`\"{}
+\begin{DoxyCompactList}\small\item\em Path to the config\+Tree\textquotesingle{}s global configuration. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{internal_config_8c_a82c345f0ffe52a3f480706aad356672c}{On\+Global\+Config\+Changed} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static bool \hyperlink{internal_config_8c_a762ea099109b8638a15994e9dd7dad5b}{Check\+Permission\+Str} (\hyperlink{node_iterator_8h_a4e97d8e792de584da776be7c732785ba}{ni\+\_\+\+Iterator\+Ref\+\_\+t} iterator\+Ref, \hyperlink{tree_user_8h_a2dff366cb61aff633d83fc1598574fb7}{tu\+\_\+\+Tree\+Permission\+\_\+t} permission)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{internal_config_8c_a4f7bae3a0756b68aea8cd0ebd0053e7a}{ic\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+bool \hyperlink{internal_config_8c_a738b0102fcfddb5da7086a71bb9ccb1b}{ic\+\_\+\+Check\+Tree\+Permission} (\hyperlink{tree_user_8h_a2dff366cb61aff633d83fc1598574fb7}{tu\+\_\+\+Tree\+Permission\+\_\+t} permission, const char $\ast$user\+Name, const char $\ast$tree\+Name)
+\item 
+time\+\_\+t \hyperlink{internal_config_8c_ad4f3f7bbb61756473103475b61c40dad}{ic\+\_\+\+Get\+Transaction\+Timeout} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static time\+\_\+t \hyperlink{internal_config_8c_a6914b70139fb7514e4fed51b3757c7f5}{Transaction\+Timeout} = 0
+\begin{DoxyCompactList}\small\item\em Cached value for the transaction timeout. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This module handles the details for managing the config\+Tree\textquotesingle{}s own configuration. The config\+Tree looks in the \char`\"{}system\char`\"{} tree for all of it\textquotesingle{}s configuration.\hypertarget{internal_config_8c_cfg_acl}{}\subsection{The config\+Tree A\+C\+Ls}\label{internal_config_8c_cfg_acl}
+\begin{DoxyVerb}While the root user can access any and all trees, all other users of the system are more locked
+down.  Every non-root user of the configTree is allowed read access to their own default tree.
+(That is a tree with the same name as the user.)  However these users are not allowed to write
+to this tree, or access any other trees in the system.
+
+To try to access other trees results in access termination.
+
+To grant an app user access to other trees in the system the configTree uses two sets of
+white lists.  One to grant read only access, a second to grant read and write access.  To
+actually grant this access, simply enter the tree name in the appropriate list.
+
+The structure of the ACL config data is as follows:
+\end{DoxyVerb}
+
+
+\begin{DoxyVerb}/
+  apps/
+    myApp/
+      configLimits/
+        acl/
+          someReadableTree<string> == read
+          someWriteableTree<string> == write
+\end{DoxyVerb}
+ \begin{DoxyVerb}Where, myApp is the name of the application user in question.  So, given the above configuration
+the application 'myApp' has read access to the trees, 'myApp,' and 'someReadableTree.'  The
+application also has write access to the tree 'someWriteableTree.'  However all other trees in
+the system are off limits.
+
+If you wanted instead to grant 'myApp' read access to all of the trees in the system then you
+would instead put the special value 'allAccess' into the configLimits collection with the value
+of "read", it would look as follows:
+\end{DoxyVerb}
+
+
+\begin{DoxyVerb}/
+  apps/
+    myApp/
+      configLimits/
+        allAccess<string> == read
+        acl/
+          someWriteableTree<string> == write
+\end{DoxyVerb}
+ \begin{DoxyVerb}If instead you wanted the application to have read and write access to all trees in the system,
+you would set the value allAccess to "write" instead.
+
+If the user is not an application, then the configuration is exactly the same, except it's
+stored under the users collection instead of under the apps collection.
+\end{DoxyVerb}
+
+
+\begin{DoxyVerb}/
+  apps/
+    myApp/
+      configLimits/
+        acl/
+          someReadableTree<string> == read
+          someWriteableTree<string> == write
+  users/
+    SomeUser/
+      configLimits/
+        allAccess<string> == write
+\end{DoxyVerb}
+\hypertarget{internal_config_8c_cfg_timeout}{}\subsection{The config\+Tree Timeout}\label{internal_config_8c_cfg_timeout}
+\begin{DoxyVerb}The configTree's transaction timeout is configured under:
+\end{DoxyVerb}
+
+
+\begin{DoxyVerb}/
+  configTree/
+    transactionTimeout<int> == 30
+\end{DoxyVerb}
+ \begin{DoxyVerb}This value is used for both read and write transactions.  If this value is not set then a value
+of 30 seconds is used as the default.
+
+So, once a transaction is created using either le_cfg_CreateReadTxn, or le_cfg_CreateWriteTxn it
+has the configured amount of time to complete.  If the transaction is not completed within the
+timeout then the client that owns the transaction is disconnected so that other pending
+transactions may continue.
+\end{DoxyVerb}
+
+
+
+
+
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{internal\+Config.\+c@{internal\+Config.\+c}!G\+L\+O\+B\+A\+L\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+P\+A\+TH@{G\+L\+O\+B\+A\+L\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+P\+A\+TH}}
+\index{G\+L\+O\+B\+A\+L\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+P\+A\+TH@{G\+L\+O\+B\+A\+L\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+P\+A\+TH}!internal\+Config.\+c@{internal\+Config.\+c}}
+\subsubsection[{\texorpdfstring{G\+L\+O\+B\+A\+L\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+P\+A\+TH}{GLOBAL_CONFIG_PATH}}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\+L\+O\+B\+A\+L\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+P\+A\+TH~\char`\"{}/config\+Tree\char`\"{}}\hypertarget{internal_config_8c_a88372b5d5913451cd09023be99a2bc5b}{}\label{internal_config_8c_a88372b5d5913451cd09023be99a2bc5b}
+
+
+Path to the config\+Tree\textquotesingle{}s global configuration. 
+
+
+
+\subsection{Function Documentation}
+\index{internal\+Config.\+c@{internal\+Config.\+c}!Check\+Permission\+Str@{Check\+Permission\+Str}}
+\index{Check\+Permission\+Str@{Check\+Permission\+Str}!internal\+Config.\+c@{internal\+Config.\+c}}
+\subsubsection[{\texorpdfstring{Check\+Permission\+Str(ni\+\_\+\+Iterator\+Ref\+\_\+t iterator\+Ref, tu\+\_\+\+Tree\+Permission\+\_\+t permission)}{CheckPermissionStr(ni_IteratorRef_t iteratorRef, tu_TreePermission_t permission)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Check\+Permission\+Str (
+\begin{DoxyParamCaption}
+\item[{{\bf ni\+\_\+\+Iterator\+Ref\+\_\+t}}]{iterator\+Ref, }
+\item[{{\bf tu\+\_\+\+Tree\+Permission\+\_\+t}}]{permission}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{internal_config_8c_a762ea099109b8638a15994e9dd7dad5b}{}\label{internal_config_8c_a762ea099109b8638a15994e9dd7dad5b}
+Check the node that the iterator is positioned at and check to see if the requested permission is satisfied by the string value found there.
+
+\begin{DoxyReturn}{Returns}
+A true if the requested permission is satified by the string value found in the config. False is returned if the config is not present or corrupt somehow. False is also returned if the requred permission is not set in the config. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em iterator\+Ref} & The iterator to read from. \\
+\hline
+\mbox{\tt in}  & {\em permission} & The permission we\textquotesingle{}re looking for. \\
+\hline
+\end{DoxyParams}
+\index{internal\+Config.\+c@{internal\+Config.\+c}!ic\+\_\+\+Check\+Tree\+Permission@{ic\+\_\+\+Check\+Tree\+Permission}}
+\index{ic\+\_\+\+Check\+Tree\+Permission@{ic\+\_\+\+Check\+Tree\+Permission}!internal\+Config.\+c@{internal\+Config.\+c}}
+\subsubsection[{\texorpdfstring{ic\+\_\+\+Check\+Tree\+Permission(tu\+\_\+\+Tree\+Permission\+\_\+t permission, const char $\ast$user\+Name, const char $\ast$tree\+Name)}{ic_CheckTreePermission(tu_TreePermission_t permission, const char *userName, const char *treeName)}}]{\setlength{\rightskip}{0pt plus 5cm}bool ic\+\_\+\+Check\+Tree\+Permission (
+\begin{DoxyParamCaption}
+\item[{{\bf tu\+\_\+\+Tree\+Permission\+\_\+t}}]{permission, }
+\item[{const char $\ast$}]{user\+Name, }
+\item[{const char $\ast$}]{tree\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{internal_config_8c_a738b0102fcfddb5da7086a71bb9ccb1b}{}\label{internal_config_8c_a738b0102fcfddb5da7086a71bb9ccb1b}
+Function called to check if the given user has the requested permission on the given tree.
+
+\begin{DoxyReturn}{Returns}
+True if the user has the requested permission on the tree, false if not. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em permission} & Try to get a tree with this permission. \\
+\hline
+\mbox{\tt in}  & {\em user\+Name} & The user we\textquotesingle{}re looking up in the config. \\
+\hline
+\mbox{\tt in}  & {\em tree\+Name} & The name of the tree we\textquotesingle{}re looking for. \\
+\hline
+\end{DoxyParams}
+\index{internal\+Config.\+c@{internal\+Config.\+c}!ic\+\_\+\+Get\+Transaction\+Timeout@{ic\+\_\+\+Get\+Transaction\+Timeout}}
+\index{ic\+\_\+\+Get\+Transaction\+Timeout@{ic\+\_\+\+Get\+Transaction\+Timeout}!internal\+Config.\+c@{internal\+Config.\+c}}
+\subsubsection[{\texorpdfstring{ic\+\_\+\+Get\+Transaction\+Timeout(void)}{ic_GetTransactionTimeout(void)}}]{\setlength{\rightskip}{0pt plus 5cm}time\+\_\+t ic\+\_\+\+Get\+Transaction\+Timeout (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{internal_config_8c_ad4f3f7bbb61756473103475b61c40dad}{}\label{internal_config_8c_ad4f3f7bbb61756473103475b61c40dad}
+Read the current transaction timeout from the configtree\textquotesingle{}s internal data.
+
+\begin{DoxyReturn}{Returns}
+A timeout count in seconds. 
+\end{DoxyReturn}
+\index{internal\+Config.\+c@{internal\+Config.\+c}!ic\+\_\+\+Init@{ic\+\_\+\+Init}}
+\index{ic\+\_\+\+Init@{ic\+\_\+\+Init}!internal\+Config.\+c@{internal\+Config.\+c}}
+\subsubsection[{\texorpdfstring{ic\+\_\+\+Init(void)}{ic_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} ic\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{internal_config_8c_a4f7bae3a0756b68aea8cd0ebd0053e7a}{}\label{internal_config_8c_a4f7bae3a0756b68aea8cd0ebd0053e7a}
+Initialize and load the config\+Tree\textquotesingle{}s internal configuration. \index{internal\+Config.\+c@{internal\+Config.\+c}!On\+Global\+Config\+Changed@{On\+Global\+Config\+Changed}}
+\index{On\+Global\+Config\+Changed@{On\+Global\+Config\+Changed}!internal\+Config.\+c@{internal\+Config.\+c}}
+\subsubsection[{\texorpdfstring{On\+Global\+Config\+Changed(void $\ast$context\+Ptr)}{OnGlobalConfigChanged(void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} On\+Global\+Config\+Changed (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{internal_config_8c_a82c345f0ffe52a3f480706aad356672c}{}\label{internal_config_8c_a82c345f0ffe52a3f480706aad356672c}
+Everytime the config\+Tree\textquotesingle{}s global configuration changes, this function is called to load the updated data. 
+\begin{DoxyParams}{Parameters}
+{\em context\+Ptr} & User data pointer, however this is unused here. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Variable Documentation}
+\index{internal\+Config.\+c@{internal\+Config.\+c}!Transaction\+Timeout@{Transaction\+Timeout}}
+\index{Transaction\+Timeout@{Transaction\+Timeout}!internal\+Config.\+c@{internal\+Config.\+c}}
+\subsubsection[{\texorpdfstring{Transaction\+Timeout}{TransactionTimeout}}]{\setlength{\rightskip}{0pt plus 5cm}time\+\_\+t Transaction\+Timeout = 0\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{internal_config_8c_a6914b70139fb7514e4fed51b3757c7f5}{}\label{internal_config_8c_a6914b70139fb7514e4fed51b3757c7f5}
+
+
+Cached value for the transaction timeout. 
+

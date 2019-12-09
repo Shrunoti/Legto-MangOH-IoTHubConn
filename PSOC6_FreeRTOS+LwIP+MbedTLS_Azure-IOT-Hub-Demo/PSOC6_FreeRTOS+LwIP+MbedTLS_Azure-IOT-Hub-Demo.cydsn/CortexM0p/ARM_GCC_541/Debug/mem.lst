@@ -1,0 +1,1782 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"mem.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.mem_init,"ax",%progbits
+  20              		.align	2
+  21              		.global	mem_init
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	mem_init, %function
+  25              	mem_init:
+  26              	.LFB53:
+  27              		.file 1 "Source\\LwIP\\src\\core\\mem.c"
+   1:Source\LwIP\src\core/mem.c **** /**
+   2:Source\LwIP\src\core/mem.c ****  * @file
+   3:Source\LwIP\src\core/mem.c ****  * Dynamic memory manager
+   4:Source\LwIP\src\core/mem.c ****  *
+   5:Source\LwIP\src\core/mem.c ****  * This is a lightweight replacement for the standard C library malloc().
+   6:Source\LwIP\src\core/mem.c ****  *
+   7:Source\LwIP\src\core/mem.c ****  * If you want to use the standard C library malloc() instead, define
+   8:Source\LwIP\src\core/mem.c ****  * MEM_LIBC_MALLOC to 1 in your lwipopts.h
+   9:Source\LwIP\src\core/mem.c ****  *
+  10:Source\LwIP\src\core/mem.c ****  * To let mem_malloc() use pools (prevents fragmentation and is much faster than
+  11:Source\LwIP\src\core/mem.c ****  * a heap but might waste some memory), define MEM_USE_POOLS to 1, define
+  12:Source\LwIP\src\core/mem.c ****  * MEMP_USE_CUSTOM_POOLS to 1 and create a file "lwippools.h" that includes a list
+  13:Source\LwIP\src\core/mem.c ****  * of pools like this (more pools can be added between _START and _END):
+  14:Source\LwIP\src\core/mem.c ****  *
+  15:Source\LwIP\src\core/mem.c ****  * Define three pools with sizes 256, 512, and 1512 bytes
+  16:Source\LwIP\src\core/mem.c ****  * LWIP_MALLOC_MEMPOOL_START
+  17:Source\LwIP\src\core/mem.c ****  * LWIP_MALLOC_MEMPOOL(20, 256)
+  18:Source\LwIP\src\core/mem.c ****  * LWIP_MALLOC_MEMPOOL(10, 512)
+  19:Source\LwIP\src\core/mem.c ****  * LWIP_MALLOC_MEMPOOL(5, 1512)
+  20:Source\LwIP\src\core/mem.c ****  * LWIP_MALLOC_MEMPOOL_END
+  21:Source\LwIP\src\core/mem.c ****  */
+  22:Source\LwIP\src\core/mem.c **** 
+  23:Source\LwIP\src\core/mem.c **** /*
+  24:Source\LwIP\src\core/mem.c ****  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
+  25:Source\LwIP\src\core/mem.c ****  * All rights reserved.
+  26:Source\LwIP\src\core/mem.c ****  *
+  27:Source\LwIP\src\core/mem.c ****  * Redistribution and use in source and binary forms, with or without modification,
+  28:Source\LwIP\src\core/mem.c ****  * are permitted provided that the following conditions are met:
+  29:Source\LwIP\src\core/mem.c ****  *
+  30:Source\LwIP\src\core/mem.c ****  * 1. Redistributions of source code must retain the above copyright notice,
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 2
+
+
+  31:Source\LwIP\src\core/mem.c ****  *    this list of conditions and the following disclaimer.
+  32:Source\LwIP\src\core/mem.c ****  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  33:Source\LwIP\src\core/mem.c ****  *    this list of conditions and the following disclaimer in the documentation
+  34:Source\LwIP\src\core/mem.c ****  *    and/or other materials provided with the distribution.
+  35:Source\LwIP\src\core/mem.c ****  * 3. The name of the author may not be used to endorse or promote products
+  36:Source\LwIP\src\core/mem.c ****  *    derived from this software without specific prior written permission.
+  37:Source\LwIP\src\core/mem.c ****  *
+  38:Source\LwIP\src\core/mem.c ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+  39:Source\LwIP\src\core/mem.c ****  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+  40:Source\LwIP\src\core/mem.c ****  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+  41:Source\LwIP\src\core/mem.c ****  * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  42:Source\LwIP\src\core/mem.c ****  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+  43:Source\LwIP\src\core/mem.c ****  * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  44:Source\LwIP\src\core/mem.c ****  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  45:Source\LwIP\src\core/mem.c ****  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+  46:Source\LwIP\src\core/mem.c ****  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+  47:Source\LwIP\src\core/mem.c ****  * OF SUCH DAMAGE.
+  48:Source\LwIP\src\core/mem.c ****  *
+  49:Source\LwIP\src\core/mem.c ****  * This file is part of the lwIP TCP/IP stack.
+  50:Source\LwIP\src\core/mem.c ****  *
+  51:Source\LwIP\src\core/mem.c ****  * Author: Adam Dunkels <adam@sics.se>
+  52:Source\LwIP\src\core/mem.c ****  *         Simon Goldschmidt
+  53:Source\LwIP\src\core/mem.c ****  *
+  54:Source\LwIP\src\core/mem.c ****  */
+  55:Source\LwIP\src\core/mem.c **** 
+  56:Source\LwIP\src\core/mem.c **** #include "lwip/opt.h"
+  57:Source\LwIP\src\core/mem.c **** #include "lwip/mem.h"
+  58:Source\LwIP\src\core/mem.c **** #include "lwip/def.h"
+  59:Source\LwIP\src\core/mem.c **** #include "lwip/sys.h"
+  60:Source\LwIP\src\core/mem.c **** #include "lwip/stats.h"
+  61:Source\LwIP\src\core/mem.c **** #include "lwip/err.h"
+  62:Source\LwIP\src\core/mem.c **** 
+  63:Source\LwIP\src\core/mem.c **** #include <string.h>
+  64:Source\LwIP\src\core/mem.c **** 
+  65:Source\LwIP\src\core/mem.c **** #if MEM_LIBC_MALLOC
+  66:Source\LwIP\src\core/mem.c **** #include <stdlib.h> /* for malloc()/free() */
+  67:Source\LwIP\src\core/mem.c **** #endif
+  68:Source\LwIP\src\core/mem.c **** 
+  69:Source\LwIP\src\core/mem.c **** #if MEM_LIBC_MALLOC || MEM_USE_POOLS
+  70:Source\LwIP\src\core/mem.c **** 
+  71:Source\LwIP\src\core/mem.c **** /** mem_init is not used when using pools instead of a heap or using
+  72:Source\LwIP\src\core/mem.c ****  * C library malloc().
+  73:Source\LwIP\src\core/mem.c ****  */
+  74:Source\LwIP\src\core/mem.c **** void
+  75:Source\LwIP\src\core/mem.c **** mem_init(void)
+  76:Source\LwIP\src\core/mem.c **** {
+  28              		.loc 1 76 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  77:Source\LwIP\src\core/mem.c **** }
+  33              		.loc 1 77 0
+  34              		@ sp needed
+  35 0000 7047     		bx	lr
+  36              		.cfi_endproc
+  37              	.LFE53:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 3
+
+
+  38              		.size	mem_init, .-mem_init
+  39 0002 C046     		.section	.text.mem_trim,"ax",%progbits
+  40              		.align	2
+  41              		.global	mem_trim
+  42              		.code	16
+  43              		.thumb_func
+  44              		.type	mem_trim, %function
+  45              	mem_trim:
+  46              	.LFB54:
+  78:Source\LwIP\src\core/mem.c **** 
+  79:Source\LwIP\src\core/mem.c **** /** mem_trim is not used when using pools instead of a heap or using
+  80:Source\LwIP\src\core/mem.c ****  * C library malloc(): we can't free part of a pool element and the stack
+  81:Source\LwIP\src\core/mem.c ****  * support mem_trim() to return a different pointer
+  82:Source\LwIP\src\core/mem.c ****  */
+  83:Source\LwIP\src\core/mem.c **** void*
+  84:Source\LwIP\src\core/mem.c **** mem_trim(void *mem, mem_size_t size)
+  85:Source\LwIP\src\core/mem.c **** {
+  47              		.loc 1 85 0
+  48              		.cfi_startproc
+  49              		@ args = 0, pretend = 0, frame = 0
+  50              		@ frame_needed = 0, uses_anonymous_args = 0
+  51              		@ link register save eliminated.
+  52              	.LVL0:
+  86:Source\LwIP\src\core/mem.c ****   LWIP_UNUSED_ARG(size);
+  87:Source\LwIP\src\core/mem.c ****   return mem;
+  88:Source\LwIP\src\core/mem.c **** }
+  53              		.loc 1 88 0
+  54              		@ sp needed
+  55 0000 7047     		bx	lr
+  56              		.cfi_endproc
+  57              	.LFE54:
+  58              		.size	mem_trim, .-mem_trim
+  59 0002 C046     		.section	.text.mem_malloc,"ax",%progbits
+  60              		.align	2
+  61              		.global	mem_malloc
+  62              		.code	16
+  63              		.thumb_func
+  64              		.type	mem_malloc, %function
+  65              	mem_malloc:
+  66              	.LFB55:
+  89:Source\LwIP\src\core/mem.c **** #endif /* MEM_LIBC_MALLOC || MEM_USE_POOLS */
+  90:Source\LwIP\src\core/mem.c **** 
+  91:Source\LwIP\src\core/mem.c **** #if MEM_LIBC_MALLOC
+  92:Source\LwIP\src\core/mem.c **** /* lwIP heap implemented using C library malloc() */
+  93:Source\LwIP\src\core/mem.c **** 
+  94:Source\LwIP\src\core/mem.c **** /* in case C library malloc() needs extra protection,
+  95:Source\LwIP\src\core/mem.c ****  * allow these defines to be overridden.
+  96:Source\LwIP\src\core/mem.c ****  */
+  97:Source\LwIP\src\core/mem.c **** #ifndef mem_clib_free
+  98:Source\LwIP\src\core/mem.c **** //#define mem_clib_free free
+  99:Source\LwIP\src\core/mem.c **** #define mem_clib_free vPortFree
+ 100:Source\LwIP\src\core/mem.c **** #endif
+ 101:Source\LwIP\src\core/mem.c **** #ifndef mem_clib_malloc
+ 102:Source\LwIP\src\core/mem.c **** //#define mem_clib_malloc malloc
+ 103:Source\LwIP\src\core/mem.c **** #define mem_clib_malloc pvPortMalloc
+ 104:Source\LwIP\src\core/mem.c **** #endif
+ 105:Source\LwIP\src\core/mem.c **** #ifndef mem_clib_calloc
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 4
+
+
+ 106:Source\LwIP\src\core/mem.c **** #define mem_clib_calloc calloc
+ 107:Source\LwIP\src\core/mem.c **** #endif
+ 108:Source\LwIP\src\core/mem.c **** 
+ 109:Source\LwIP\src\core/mem.c **** #if LWIP_STATS && MEM_STATS
+ 110:Source\LwIP\src\core/mem.c **** #define MEM_LIBC_STATSHELPER_SIZE LWIP_MEM_ALIGN_SIZE(sizeof(mem_size_t))
+ 111:Source\LwIP\src\core/mem.c **** #else
+ 112:Source\LwIP\src\core/mem.c **** #define MEM_LIBC_STATSHELPER_SIZE 0
+ 113:Source\LwIP\src\core/mem.c **** #endif
+ 114:Source\LwIP\src\core/mem.c **** 
+ 115:Source\LwIP\src\core/mem.c **** /**
+ 116:Source\LwIP\src\core/mem.c ****  * Allocate a block of memory with a minimum of 'size' bytes.
+ 117:Source\LwIP\src\core/mem.c ****  *
+ 118:Source\LwIP\src\core/mem.c ****  * @param size is the minimum size of the requested block in bytes.
+ 119:Source\LwIP\src\core/mem.c ****  * @return pointer to allocated memory or NULL if no free memory was found.
+ 120:Source\LwIP\src\core/mem.c ****  *
+ 121:Source\LwIP\src\core/mem.c ****  * Note that the returned value must always be aligned (as defined by MEM_ALIGNMENT).
+ 122:Source\LwIP\src\core/mem.c ****  */
+ 123:Source\LwIP\src\core/mem.c **** void *
+ 124:Source\LwIP\src\core/mem.c **** mem_malloc(mem_size_t size)
+ 125:Source\LwIP\src\core/mem.c **** {
+  67              		.loc 1 125 0
+  68              		.cfi_startproc
+  69              		@ args = 0, pretend = 0, frame = 0
+  70              		@ frame_needed = 0, uses_anonymous_args = 0
+  71              	.LVL1:
+  72 0000 10B5     		push	{r4, lr}
+  73              		.cfi_def_cfa_offset 8
+  74              		.cfi_offset 4, -8
+  75              		.cfi_offset 14, -4
+ 126:Source\LwIP\src\core/mem.c ****   void* ret = mem_clib_malloc(size + MEM_LIBC_STATSHELPER_SIZE);
+  76              		.loc 1 126 0
+  77 0002 FFF7FEFF 		bl	pvPortMalloc
+  78              	.LVL2:
+ 127:Source\LwIP\src\core/mem.c ****   if (ret == NULL) {
+ 128:Source\LwIP\src\core/mem.c ****     MEM_STATS_INC(err);
+ 129:Source\LwIP\src\core/mem.c ****   } else {
+ 130:Source\LwIP\src\core/mem.c ****     LWIP_ASSERT("malloc() must return aligned memory", LWIP_MEM_ALIGN(ret) == ret);
+ 131:Source\LwIP\src\core/mem.c **** #if LWIP_STATS && MEM_STATS
+ 132:Source\LwIP\src\core/mem.c ****     *(mem_size_t*)ret = size;
+ 133:Source\LwIP\src\core/mem.c ****     ret = (u8_t*)ret + MEM_LIBC_STATSHELPER_SIZE;
+ 134:Source\LwIP\src\core/mem.c ****     MEM_STATS_INC_USED(used, size);
+ 135:Source\LwIP\src\core/mem.c **** #endif
+ 136:Source\LwIP\src\core/mem.c ****   }
+ 137:Source\LwIP\src\core/mem.c ****   return ret;
+ 138:Source\LwIP\src\core/mem.c **** }
+  79              		.loc 1 138 0
+  80              		@ sp needed
+  81 0006 10BD     		pop	{r4, pc}
+  82              		.cfi_endproc
+  83              	.LFE55:
+  84              		.size	mem_malloc, .-mem_malloc
+  85              		.section	.text.mem_free,"ax",%progbits
+  86              		.align	2
+  87              		.global	mem_free
+  88              		.code	16
+  89              		.thumb_func
+  90              		.type	mem_free, %function
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 5
+
+
+  91              	mem_free:
+  92              	.LFB56:
+ 139:Source\LwIP\src\core/mem.c **** 
+ 140:Source\LwIP\src\core/mem.c **** /** Put memory back on the heap
+ 141:Source\LwIP\src\core/mem.c ****  *
+ 142:Source\LwIP\src\core/mem.c ****  * @param rmem is the pointer as returned by a previous call to mem_malloc()
+ 143:Source\LwIP\src\core/mem.c ****  */
+ 144:Source\LwIP\src\core/mem.c **** void
+ 145:Source\LwIP\src\core/mem.c **** mem_free(void *rmem)
+ 146:Source\LwIP\src\core/mem.c **** {
+  93              		.loc 1 146 0
+  94              		.cfi_startproc
+  95              		@ args = 0, pretend = 0, frame = 0
+  96              		@ frame_needed = 0, uses_anonymous_args = 0
+  97              	.LVL3:
+  98 0000 10B5     		push	{r4, lr}
+  99              		.cfi_def_cfa_offset 8
+ 100              		.cfi_offset 4, -8
+ 101              		.cfi_offset 14, -4
+ 147:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("rmem != NULL", (rmem != NULL));
+ 148:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("rmem == MEM_ALIGN(rmem)", (rmem == LWIP_MEM_ALIGN(rmem)));
+ 149:Source\LwIP\src\core/mem.c **** #if LWIP_STATS && MEM_STATS
+ 150:Source\LwIP\src\core/mem.c ****   rmem = (u8_t*)rmem - MEM_LIBC_STATSHELPER_SIZE;
+ 151:Source\LwIP\src\core/mem.c ****   MEM_STATS_DEC_USED(used, *(mem_size_t*)rmem);
+ 152:Source\LwIP\src\core/mem.c **** #endif
+ 153:Source\LwIP\src\core/mem.c ****   mem_clib_free(rmem);
+ 102              		.loc 1 153 0
+ 103 0002 FFF7FEFF 		bl	vPortFree
+ 104              	.LVL4:
+ 154:Source\LwIP\src\core/mem.c **** }
+ 105              		.loc 1 154 0
+ 106              		@ sp needed
+ 107 0006 10BD     		pop	{r4, pc}
+ 108              		.cfi_endproc
+ 109              	.LFE56:
+ 110              		.size	mem_free, .-mem_free
+ 111              		.section	.text.mem_calloc,"ax",%progbits
+ 112              		.align	2
+ 113              		.global	mem_calloc
+ 114              		.code	16
+ 115              		.thumb_func
+ 116              		.type	mem_calloc, %function
+ 117              	mem_calloc:
+ 118              	.LFB57:
+ 155:Source\LwIP\src\core/mem.c **** 
+ 156:Source\LwIP\src\core/mem.c **** #elif MEM_USE_POOLS
+ 157:Source\LwIP\src\core/mem.c **** 
+ 158:Source\LwIP\src\core/mem.c **** /* lwIP heap implemented with different sized pools */
+ 159:Source\LwIP\src\core/mem.c **** 
+ 160:Source\LwIP\src\core/mem.c **** /**
+ 161:Source\LwIP\src\core/mem.c ****  * Allocate memory: determine the smallest pool that is big enough
+ 162:Source\LwIP\src\core/mem.c ****  * to contain an element of 'size' and get an element from that pool.
+ 163:Source\LwIP\src\core/mem.c ****  *
+ 164:Source\LwIP\src\core/mem.c ****  * @param size the size in bytes of the memory needed
+ 165:Source\LwIP\src\core/mem.c ****  * @return a pointer to the allocated memory or NULL if the pool is empty
+ 166:Source\LwIP\src\core/mem.c ****  */
+ 167:Source\LwIP\src\core/mem.c **** void *
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 6
+
+
+ 168:Source\LwIP\src\core/mem.c **** mem_malloc(mem_size_t size)
+ 169:Source\LwIP\src\core/mem.c **** {
+ 170:Source\LwIP\src\core/mem.c ****   void *ret;
+ 171:Source\LwIP\src\core/mem.c ****   struct memp_malloc_helper *element = NULL;
+ 172:Source\LwIP\src\core/mem.c ****   memp_t poolnr;
+ 173:Source\LwIP\src\core/mem.c ****   mem_size_t required_size = size + LWIP_MEM_ALIGN_SIZE(sizeof(struct memp_malloc_helper));
+ 174:Source\LwIP\src\core/mem.c **** 
+ 175:Source\LwIP\src\core/mem.c ****   for (poolnr = MEMP_POOL_FIRST; poolnr <= MEMP_POOL_LAST; poolnr = (memp_t)(poolnr + 1)) {
+ 176:Source\LwIP\src\core/mem.c ****     /* is this pool big enough to hold an element of the required size
+ 177:Source\LwIP\src\core/mem.c ****        plus a struct memp_malloc_helper that saves the pool this element came from? */
+ 178:Source\LwIP\src\core/mem.c ****     if (required_size <= memp_pools[poolnr]->size) {
+ 179:Source\LwIP\src\core/mem.c ****       element = (struct memp_malloc_helper*)memp_malloc(poolnr);
+ 180:Source\LwIP\src\core/mem.c ****       if (element == NULL) {
+ 181:Source\LwIP\src\core/mem.c ****         /* No need to DEBUGF or ASSERT: This error is already taken care of in memp.c */
+ 182:Source\LwIP\src\core/mem.c **** #if MEM_USE_POOLS_TRY_BIGGER_POOL
+ 183:Source\LwIP\src\core/mem.c ****         /** Try a bigger pool if this one is empty! */
+ 184:Source\LwIP\src\core/mem.c ****         if (poolnr < MEMP_POOL_LAST) {
+ 185:Source\LwIP\src\core/mem.c ****           continue;
+ 186:Source\LwIP\src\core/mem.c ****         }
+ 187:Source\LwIP\src\core/mem.c **** #endif /* MEM_USE_POOLS_TRY_BIGGER_POOL */
+ 188:Source\LwIP\src\core/mem.c ****         MEM_STATS_INC(err);
+ 189:Source\LwIP\src\core/mem.c ****         return NULL;
+ 190:Source\LwIP\src\core/mem.c ****       }
+ 191:Source\LwIP\src\core/mem.c ****       break;
+ 192:Source\LwIP\src\core/mem.c ****     }
+ 193:Source\LwIP\src\core/mem.c ****   }
+ 194:Source\LwIP\src\core/mem.c ****   if (poolnr > MEMP_POOL_LAST) {
+ 195:Source\LwIP\src\core/mem.c ****     LWIP_ASSERT("mem_malloc(): no pool is that big!", 0);
+ 196:Source\LwIP\src\core/mem.c ****     MEM_STATS_INC(err);
+ 197:Source\LwIP\src\core/mem.c ****     return NULL;
+ 198:Source\LwIP\src\core/mem.c ****   }
+ 199:Source\LwIP\src\core/mem.c **** 
+ 200:Source\LwIP\src\core/mem.c ****   /* save the pool number this element came from */
+ 201:Source\LwIP\src\core/mem.c ****   element->poolnr = poolnr;
+ 202:Source\LwIP\src\core/mem.c ****   /* and return a pointer to the memory directly after the struct memp_malloc_helper */
+ 203:Source\LwIP\src\core/mem.c ****   ret = (u8_t*)element + LWIP_MEM_ALIGN_SIZE(sizeof(struct memp_malloc_helper));
+ 204:Source\LwIP\src\core/mem.c **** 
+ 205:Source\LwIP\src\core/mem.c **** #if MEMP_OVERFLOW_CHECK || (LWIP_STATS && MEM_STATS)
+ 206:Source\LwIP\src\core/mem.c ****   /* truncating to u16_t is safe because struct memp_desc::size is u16_t */
+ 207:Source\LwIP\src\core/mem.c ****   element->size = (u16_t)size;
+ 208:Source\LwIP\src\core/mem.c ****   MEM_STATS_INC_USED(used, element->size);
+ 209:Source\LwIP\src\core/mem.c **** #endif /* MEMP_OVERFLOW_CHECK || (LWIP_STATS && MEM_STATS) */
+ 210:Source\LwIP\src\core/mem.c **** #if MEMP_OVERFLOW_CHECK
+ 211:Source\LwIP\src\core/mem.c ****   /* initialize unused memory (diff between requested size and selected pool's size) */
+ 212:Source\LwIP\src\core/mem.c ****   memset((u8_t*)ret + size, 0xcd, memp_pools[poolnr]->size - size);
+ 213:Source\LwIP\src\core/mem.c **** #endif /* MEMP_OVERFLOW_CHECK */
+ 214:Source\LwIP\src\core/mem.c ****   return ret;
+ 215:Source\LwIP\src\core/mem.c **** }
+ 216:Source\LwIP\src\core/mem.c **** 
+ 217:Source\LwIP\src\core/mem.c **** /**
+ 218:Source\LwIP\src\core/mem.c ****  * Free memory previously allocated by mem_malloc. Loads the pool number
+ 219:Source\LwIP\src\core/mem.c ****  * and calls memp_free with that pool number to put the element back into
+ 220:Source\LwIP\src\core/mem.c ****  * its pool
+ 221:Source\LwIP\src\core/mem.c ****  *
+ 222:Source\LwIP\src\core/mem.c ****  * @param rmem the memory element to free
+ 223:Source\LwIP\src\core/mem.c ****  */
+ 224:Source\LwIP\src\core/mem.c **** void
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 7
+
+
+ 225:Source\LwIP\src\core/mem.c **** mem_free(void *rmem)
+ 226:Source\LwIP\src\core/mem.c **** {
+ 227:Source\LwIP\src\core/mem.c ****   struct memp_malloc_helper *hmem;
+ 228:Source\LwIP\src\core/mem.c **** 
+ 229:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("rmem != NULL", (rmem != NULL));
+ 230:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("rmem == MEM_ALIGN(rmem)", (rmem == LWIP_MEM_ALIGN(rmem)));
+ 231:Source\LwIP\src\core/mem.c **** 
+ 232:Source\LwIP\src\core/mem.c ****   /* get the original struct memp_malloc_helper */
+ 233:Source\LwIP\src\core/mem.c ****   /* cast through void* to get rid of alignment warnings */
+ 234:Source\LwIP\src\core/mem.c ****   hmem = (struct memp_malloc_helper*)(void*)((u8_t*)rmem - LWIP_MEM_ALIGN_SIZE(sizeof(struct memp_m
+ 235:Source\LwIP\src\core/mem.c **** 
+ 236:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("hmem != NULL", (hmem != NULL));
+ 237:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("hmem == MEM_ALIGN(hmem)", (hmem == LWIP_MEM_ALIGN(hmem)));
+ 238:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("hmem->poolnr < MEMP_MAX", (hmem->poolnr < MEMP_MAX));
+ 239:Source\LwIP\src\core/mem.c **** 
+ 240:Source\LwIP\src\core/mem.c ****   MEM_STATS_DEC_USED(used, hmem->size);
+ 241:Source\LwIP\src\core/mem.c **** #if MEMP_OVERFLOW_CHECK
+ 242:Source\LwIP\src\core/mem.c ****   {
+ 243:Source\LwIP\src\core/mem.c ****      u16_t i;
+ 244:Source\LwIP\src\core/mem.c ****      LWIP_ASSERT("MEM_USE_POOLS: invalid chunk size",
+ 245:Source\LwIP\src\core/mem.c ****         hmem->size <= memp_pools[hmem->poolnr]->size);
+ 246:Source\LwIP\src\core/mem.c ****      /* check that unused memory remained untouched (diff between requested size and selected pool'
+ 247:Source\LwIP\src\core/mem.c ****      for (i = hmem->size; i < memp_pools[hmem->poolnr]->size; i++) {
+ 248:Source\LwIP\src\core/mem.c ****         u8_t data = *((u8_t*)rmem + i);
+ 249:Source\LwIP\src\core/mem.c ****         LWIP_ASSERT("MEM_USE_POOLS: mem overflow detected", data == 0xcd);
+ 250:Source\LwIP\src\core/mem.c ****      }
+ 251:Source\LwIP\src\core/mem.c ****   }
+ 252:Source\LwIP\src\core/mem.c **** #endif /* MEMP_OVERFLOW_CHECK */
+ 253:Source\LwIP\src\core/mem.c **** 
+ 254:Source\LwIP\src\core/mem.c ****   /* and put it in the pool we saved earlier */
+ 255:Source\LwIP\src\core/mem.c ****   memp_free(hmem->poolnr, hmem);
+ 256:Source\LwIP\src\core/mem.c **** }
+ 257:Source\LwIP\src\core/mem.c **** 
+ 258:Source\LwIP\src\core/mem.c **** #else /* MEM_USE_POOLS */
+ 259:Source\LwIP\src\core/mem.c **** /* lwIP replacement for your libc malloc() */
+ 260:Source\LwIP\src\core/mem.c **** 
+ 261:Source\LwIP\src\core/mem.c **** /**
+ 262:Source\LwIP\src\core/mem.c ****  * The heap is made up as a list of structs of this type.
+ 263:Source\LwIP\src\core/mem.c ****  * This does not have to be aligned since for getting its size,
+ 264:Source\LwIP\src\core/mem.c ****  * we only use the macro SIZEOF_STRUCT_MEM, which automatically aligns.
+ 265:Source\LwIP\src\core/mem.c ****  */
+ 266:Source\LwIP\src\core/mem.c **** struct mem {
+ 267:Source\LwIP\src\core/mem.c ****   /** index (-> ram[next]) of the next struct */
+ 268:Source\LwIP\src\core/mem.c ****   mem_size_t next;
+ 269:Source\LwIP\src\core/mem.c ****   /** index (-> ram[prev]) of the previous struct */
+ 270:Source\LwIP\src\core/mem.c ****   mem_size_t prev;
+ 271:Source\LwIP\src\core/mem.c ****   /** 1: this area is used; 0: this area is unused */
+ 272:Source\LwIP\src\core/mem.c ****   u8_t used;
+ 273:Source\LwIP\src\core/mem.c **** };
+ 274:Source\LwIP\src\core/mem.c **** 
+ 275:Source\LwIP\src\core/mem.c **** /** All allocated blocks will be MIN_SIZE bytes big, at least!
+ 276:Source\LwIP\src\core/mem.c ****  * MIN_SIZE can be overridden to suit your needs. Smaller values save space,
+ 277:Source\LwIP\src\core/mem.c ****  * larger values could prevent too small blocks to fragment the RAM too much. */
+ 278:Source\LwIP\src\core/mem.c **** #ifndef MIN_SIZE
+ 279:Source\LwIP\src\core/mem.c **** #define MIN_SIZE             12
+ 280:Source\LwIP\src\core/mem.c **** #endif /* MIN_SIZE */
+ 281:Source\LwIP\src\core/mem.c **** /* some alignment macros: we define them here for better source code layout */
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 8
+
+
+ 282:Source\LwIP\src\core/mem.c **** #define MIN_SIZE_ALIGNED     LWIP_MEM_ALIGN_SIZE(MIN_SIZE)
+ 283:Source\LwIP\src\core/mem.c **** #define SIZEOF_STRUCT_MEM    LWIP_MEM_ALIGN_SIZE(sizeof(struct mem))
+ 284:Source\LwIP\src\core/mem.c **** #define MEM_SIZE_ALIGNED     LWIP_MEM_ALIGN_SIZE(MEM_SIZE)
+ 285:Source\LwIP\src\core/mem.c **** 
+ 286:Source\LwIP\src\core/mem.c **** /** If you want to relocate the heap to external memory, simply define
+ 287:Source\LwIP\src\core/mem.c ****  * LWIP_RAM_HEAP_POINTER as a void-pointer to that location.
+ 288:Source\LwIP\src\core/mem.c ****  * If so, make sure the memory at that location is big enough (see below on
+ 289:Source\LwIP\src\core/mem.c ****  * how that space is calculated). */
+ 290:Source\LwIP\src\core/mem.c **** #ifndef LWIP_RAM_HEAP_POINTER
+ 291:Source\LwIP\src\core/mem.c **** /** the heap. we need one struct mem at the end and some room for alignment */
+ 292:Source\LwIP\src\core/mem.c **** LWIP_DECLARE_MEMORY_ALIGNED(ram_heap, MEM_SIZE_ALIGNED + (2U*SIZEOF_STRUCT_MEM));
+ 293:Source\LwIP\src\core/mem.c **** #define LWIP_RAM_HEAP_POINTER ram_heap
+ 294:Source\LwIP\src\core/mem.c **** #endif /* LWIP_RAM_HEAP_POINTER */
+ 295:Source\LwIP\src\core/mem.c **** 
+ 296:Source\LwIP\src\core/mem.c **** /** pointer to the heap (ram_heap): for alignment, ram is now a pointer instead of an array */
+ 297:Source\LwIP\src\core/mem.c **** static u8_t *ram;
+ 298:Source\LwIP\src\core/mem.c **** /** the last entry, always unused! */
+ 299:Source\LwIP\src\core/mem.c **** static struct mem *ram_end;
+ 300:Source\LwIP\src\core/mem.c **** /** pointer to the lowest free block, this is used for faster search */
+ 301:Source\LwIP\src\core/mem.c **** static struct mem *lfree;
+ 302:Source\LwIP\src\core/mem.c **** 
+ 303:Source\LwIP\src\core/mem.c **** /** concurrent access protection */
+ 304:Source\LwIP\src\core/mem.c **** #if !NO_SYS
+ 305:Source\LwIP\src\core/mem.c **** static sys_mutex_t mem_mutex;
+ 306:Source\LwIP\src\core/mem.c **** #endif
+ 307:Source\LwIP\src\core/mem.c **** 
+ 308:Source\LwIP\src\core/mem.c **** #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
+ 309:Source\LwIP\src\core/mem.c **** 
+ 310:Source\LwIP\src\core/mem.c **** static volatile u8_t mem_free_count;
+ 311:Source\LwIP\src\core/mem.c **** 
+ 312:Source\LwIP\src\core/mem.c **** /* Allow mem_free from other (e.g. interrupt) context */
+ 313:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_FREE_DECL_PROTECT()  SYS_ARCH_DECL_PROTECT(lev_free)
+ 314:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_FREE_PROTECT()       SYS_ARCH_PROTECT(lev_free)
+ 315:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_FREE_UNPROTECT()     SYS_ARCH_UNPROTECT(lev_free)
+ 316:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_ALLOC_DECL_PROTECT() SYS_ARCH_DECL_PROTECT(lev_alloc)
+ 317:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_ALLOC_PROTECT()      SYS_ARCH_PROTECT(lev_alloc)
+ 318:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_ALLOC_UNPROTECT()    SYS_ARCH_UNPROTECT(lev_alloc)
+ 319:Source\LwIP\src\core/mem.c **** 
+ 320:Source\LwIP\src\core/mem.c **** #else /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
+ 321:Source\LwIP\src\core/mem.c **** 
+ 322:Source\LwIP\src\core/mem.c **** /* Protect the heap only by using a semaphore */
+ 323:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_FREE_DECL_PROTECT()
+ 324:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_FREE_PROTECT()    sys_mutex_lock(&mem_mutex)
+ 325:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_FREE_UNPROTECT()  sys_mutex_unlock(&mem_mutex)
+ 326:Source\LwIP\src\core/mem.c **** /* mem_malloc is protected using semaphore AND LWIP_MEM_ALLOC_PROTECT */
+ 327:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_ALLOC_DECL_PROTECT()
+ 328:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_ALLOC_PROTECT()
+ 329:Source\LwIP\src\core/mem.c **** #define LWIP_MEM_ALLOC_UNPROTECT()
+ 330:Source\LwIP\src\core/mem.c **** 
+ 331:Source\LwIP\src\core/mem.c **** #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
+ 332:Source\LwIP\src\core/mem.c **** 
+ 333:Source\LwIP\src\core/mem.c **** 
+ 334:Source\LwIP\src\core/mem.c **** /**
+ 335:Source\LwIP\src\core/mem.c ****  * "Plug holes" by combining adjacent empty struct mems.
+ 336:Source\LwIP\src\core/mem.c ****  * After this function is through, there should not exist
+ 337:Source\LwIP\src\core/mem.c ****  * one empty struct mem pointing to another empty struct mem.
+ 338:Source\LwIP\src\core/mem.c ****  *
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 9
+
+
+ 339:Source\LwIP\src\core/mem.c ****  * @param mem this points to a struct mem which just has been freed
+ 340:Source\LwIP\src\core/mem.c ****  * @internal this function is only called by mem_free() and mem_trim()
+ 341:Source\LwIP\src\core/mem.c ****  *
+ 342:Source\LwIP\src\core/mem.c ****  * This assumes access to the heap is protected by the calling function
+ 343:Source\LwIP\src\core/mem.c ****  * already.
+ 344:Source\LwIP\src\core/mem.c ****  */
+ 345:Source\LwIP\src\core/mem.c **** static void
+ 346:Source\LwIP\src\core/mem.c **** plug_holes(struct mem *mem)
+ 347:Source\LwIP\src\core/mem.c **** {
+ 348:Source\LwIP\src\core/mem.c ****   struct mem *nmem;
+ 349:Source\LwIP\src\core/mem.c ****   struct mem *pmem;
+ 350:Source\LwIP\src\core/mem.c **** 
+ 351:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("plug_holes: mem >= ram", (u8_t *)mem >= ram);
+ 352:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("plug_holes: mem < ram_end", (u8_t *)mem < (u8_t *)ram_end);
+ 353:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("plug_holes: mem->used == 0", mem->used == 0);
+ 354:Source\LwIP\src\core/mem.c **** 
+ 355:Source\LwIP\src\core/mem.c ****   /* plug hole forward */
+ 356:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("plug_holes: mem->next <= MEM_SIZE_ALIGNED", mem->next <= MEM_SIZE_ALIGNED);
+ 357:Source\LwIP\src\core/mem.c **** 
+ 358:Source\LwIP\src\core/mem.c ****   nmem = (struct mem *)(void *)&ram[mem->next];
+ 359:Source\LwIP\src\core/mem.c ****   if (mem != nmem && nmem->used == 0 && (u8_t *)nmem != (u8_t *)ram_end) {
+ 360:Source\LwIP\src\core/mem.c ****     /* if mem->next is unused and not end of ram, combine mem and mem->next */
+ 361:Source\LwIP\src\core/mem.c ****     if (lfree == nmem) {
+ 362:Source\LwIP\src\core/mem.c ****       lfree = mem;
+ 363:Source\LwIP\src\core/mem.c ****     }
+ 364:Source\LwIP\src\core/mem.c ****     mem->next = nmem->next;
+ 365:Source\LwIP\src\core/mem.c ****     ((struct mem *)(void *)&ram[nmem->next])->prev = (mem_size_t)((u8_t *)mem - ram);
+ 366:Source\LwIP\src\core/mem.c ****   }
+ 367:Source\LwIP\src\core/mem.c **** 
+ 368:Source\LwIP\src\core/mem.c ****   /* plug hole backward */
+ 369:Source\LwIP\src\core/mem.c ****   pmem = (struct mem *)(void *)&ram[mem->prev];
+ 370:Source\LwIP\src\core/mem.c ****   if (pmem != mem && pmem->used == 0) {
+ 371:Source\LwIP\src\core/mem.c ****     /* if mem->prev is unused, combine mem and mem->prev */
+ 372:Source\LwIP\src\core/mem.c ****     if (lfree == mem) {
+ 373:Source\LwIP\src\core/mem.c ****       lfree = pmem;
+ 374:Source\LwIP\src\core/mem.c ****     }
+ 375:Source\LwIP\src\core/mem.c ****     pmem->next = mem->next;
+ 376:Source\LwIP\src\core/mem.c ****     ((struct mem *)(void *)&ram[mem->next])->prev = (mem_size_t)((u8_t *)pmem - ram);
+ 377:Source\LwIP\src\core/mem.c ****   }
+ 378:Source\LwIP\src\core/mem.c **** }
+ 379:Source\LwIP\src\core/mem.c **** 
+ 380:Source\LwIP\src\core/mem.c **** /**
+ 381:Source\LwIP\src\core/mem.c ****  * Zero the heap and initialize start, end and lowest-free
+ 382:Source\LwIP\src\core/mem.c ****  */
+ 383:Source\LwIP\src\core/mem.c **** void
+ 384:Source\LwIP\src\core/mem.c **** mem_init(void)
+ 385:Source\LwIP\src\core/mem.c **** {
+ 386:Source\LwIP\src\core/mem.c ****   struct mem *mem;
+ 387:Source\LwIP\src\core/mem.c **** 
+ 388:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("Sanity check alignment",
+ 389:Source\LwIP\src\core/mem.c ****     (SIZEOF_STRUCT_MEM & (MEM_ALIGNMENT-1)) == 0);
+ 390:Source\LwIP\src\core/mem.c **** 
+ 391:Source\LwIP\src\core/mem.c ****   /* align the heap */
+ 392:Source\LwIP\src\core/mem.c ****   ram = (u8_t *)LWIP_MEM_ALIGN(LWIP_RAM_HEAP_POINTER);
+ 393:Source\LwIP\src\core/mem.c ****   /* initialize the start of the heap */
+ 394:Source\LwIP\src\core/mem.c ****   mem = (struct mem *)(void *)ram;
+ 395:Source\LwIP\src\core/mem.c ****   mem->next = MEM_SIZE_ALIGNED;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 10
+
+
+ 396:Source\LwIP\src\core/mem.c ****   mem->prev = 0;
+ 397:Source\LwIP\src\core/mem.c ****   mem->used = 0;
+ 398:Source\LwIP\src\core/mem.c ****   /* initialize the end of the heap */
+ 399:Source\LwIP\src\core/mem.c ****   ram_end = (struct mem *)(void *)&ram[MEM_SIZE_ALIGNED];
+ 400:Source\LwIP\src\core/mem.c ****   ram_end->used = 1;
+ 401:Source\LwIP\src\core/mem.c ****   ram_end->next = MEM_SIZE_ALIGNED;
+ 402:Source\LwIP\src\core/mem.c ****   ram_end->prev = MEM_SIZE_ALIGNED;
+ 403:Source\LwIP\src\core/mem.c **** 
+ 404:Source\LwIP\src\core/mem.c ****   /* initialize the lowest-free pointer to the start of the heap */
+ 405:Source\LwIP\src\core/mem.c ****   lfree = (struct mem *)(void *)ram;
+ 406:Source\LwIP\src\core/mem.c **** 
+ 407:Source\LwIP\src\core/mem.c ****   MEM_STATS_AVAIL(avail, MEM_SIZE_ALIGNED);
+ 408:Source\LwIP\src\core/mem.c **** 
+ 409:Source\LwIP\src\core/mem.c ****   if (sys_mutex_new(&mem_mutex) != ERR_OK) {
+ 410:Source\LwIP\src\core/mem.c ****     LWIP_ASSERT("failed to create mem_mutex", 0);
+ 411:Source\LwIP\src\core/mem.c ****   }
+ 412:Source\LwIP\src\core/mem.c **** }
+ 413:Source\LwIP\src\core/mem.c **** 
+ 414:Source\LwIP\src\core/mem.c **** /**
+ 415:Source\LwIP\src\core/mem.c ****  * Put a struct mem back on the heap
+ 416:Source\LwIP\src\core/mem.c ****  *
+ 417:Source\LwIP\src\core/mem.c ****  * @param rmem is the data portion of a struct mem as returned by a previous
+ 418:Source\LwIP\src\core/mem.c ****  *             call to mem_malloc()
+ 419:Source\LwIP\src\core/mem.c ****  */
+ 420:Source\LwIP\src\core/mem.c **** void
+ 421:Source\LwIP\src\core/mem.c **** mem_free(void *rmem)
+ 422:Source\LwIP\src\core/mem.c **** {
+ 423:Source\LwIP\src\core/mem.c ****   struct mem *mem;
+ 424:Source\LwIP\src\core/mem.c ****   LWIP_MEM_FREE_DECL_PROTECT();
+ 425:Source\LwIP\src\core/mem.c **** 
+ 426:Source\LwIP\src\core/mem.c ****   if (rmem == NULL) {
+ 427:Source\LwIP\src\core/mem.c ****     LWIP_DEBUGF(MEM_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_LEVEL_SERIOUS, ("mem_free(p == NULL) was call
+ 428:Source\LwIP\src\core/mem.c ****     return;
+ 429:Source\LwIP\src\core/mem.c ****   }
+ 430:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("mem_free: sanity check alignment", (((mem_ptr_t)rmem) & (MEM_ALIGNMENT-1)) == 0);
+ 431:Source\LwIP\src\core/mem.c **** 
+ 432:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("mem_free: legal memory", (u8_t *)rmem >= (u8_t *)ram &&
+ 433:Source\LwIP\src\core/mem.c ****     (u8_t *)rmem < (u8_t *)ram_end);
+ 434:Source\LwIP\src\core/mem.c **** 
+ 435:Source\LwIP\src\core/mem.c ****   if ((u8_t *)rmem < (u8_t *)ram || (u8_t *)rmem >= (u8_t *)ram_end) {
+ 436:Source\LwIP\src\core/mem.c ****     SYS_ARCH_DECL_PROTECT(lev);
+ 437:Source\LwIP\src\core/mem.c ****     LWIP_DEBUGF(MEM_DEBUG | LWIP_DBG_LEVEL_SEVERE, ("mem_free: illegal memory\n"));
+ 438:Source\LwIP\src\core/mem.c ****     /* protect mem stats from concurrent access */
+ 439:Source\LwIP\src\core/mem.c ****     SYS_ARCH_PROTECT(lev);
+ 440:Source\LwIP\src\core/mem.c ****     MEM_STATS_INC(illegal);
+ 441:Source\LwIP\src\core/mem.c ****     SYS_ARCH_UNPROTECT(lev);
+ 442:Source\LwIP\src\core/mem.c ****     return;
+ 443:Source\LwIP\src\core/mem.c ****   }
+ 444:Source\LwIP\src\core/mem.c ****   /* protect the heap from concurrent access */
+ 445:Source\LwIP\src\core/mem.c ****   LWIP_MEM_FREE_PROTECT();
+ 446:Source\LwIP\src\core/mem.c ****   /* Get the corresponding struct mem ... */
+ 447:Source\LwIP\src\core/mem.c ****   /* cast through void* to get rid of alignment warnings */
+ 448:Source\LwIP\src\core/mem.c ****   mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
+ 449:Source\LwIP\src\core/mem.c ****   /* ... which has to be in a used state ... */
+ 450:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("mem_free: mem->used", mem->used);
+ 451:Source\LwIP\src\core/mem.c ****   /* ... and is now unused. */
+ 452:Source\LwIP\src\core/mem.c ****   mem->used = 0;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 11
+
+
+ 453:Source\LwIP\src\core/mem.c **** 
+ 454:Source\LwIP\src\core/mem.c ****   if (mem < lfree) {
+ 455:Source\LwIP\src\core/mem.c ****     /* the newly freed struct is now the lowest */
+ 456:Source\LwIP\src\core/mem.c ****     lfree = mem;
+ 457:Source\LwIP\src\core/mem.c ****   }
+ 458:Source\LwIP\src\core/mem.c **** 
+ 459:Source\LwIP\src\core/mem.c ****   MEM_STATS_DEC_USED(used, mem->next - (mem_size_t)(((u8_t *)mem - ram)));
+ 460:Source\LwIP\src\core/mem.c **** 
+ 461:Source\LwIP\src\core/mem.c ****   /* finally, see if prev or next are free also */
+ 462:Source\LwIP\src\core/mem.c ****   plug_holes(mem);
+ 463:Source\LwIP\src\core/mem.c **** #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
+ 464:Source\LwIP\src\core/mem.c ****   mem_free_count = 1;
+ 465:Source\LwIP\src\core/mem.c **** #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
+ 466:Source\LwIP\src\core/mem.c ****   LWIP_MEM_FREE_UNPROTECT();
+ 467:Source\LwIP\src\core/mem.c **** }
+ 468:Source\LwIP\src\core/mem.c **** 
+ 469:Source\LwIP\src\core/mem.c **** /**
+ 470:Source\LwIP\src\core/mem.c ****  * Shrink memory returned by mem_malloc().
+ 471:Source\LwIP\src\core/mem.c ****  *
+ 472:Source\LwIP\src\core/mem.c ****  * @param rmem pointer to memory allocated by mem_malloc the is to be shrinked
+ 473:Source\LwIP\src\core/mem.c ****  * @param newsize required size after shrinking (needs to be smaller than or
+ 474:Source\LwIP\src\core/mem.c ****  *                equal to the previous size)
+ 475:Source\LwIP\src\core/mem.c ****  * @return for compatibility reasons: is always == rmem, at the moment
+ 476:Source\LwIP\src\core/mem.c ****  *         or NULL if newsize is > old size, in which case rmem is NOT touched
+ 477:Source\LwIP\src\core/mem.c ****  *         or freed!
+ 478:Source\LwIP\src\core/mem.c ****  */
+ 479:Source\LwIP\src\core/mem.c **** void *
+ 480:Source\LwIP\src\core/mem.c **** mem_trim(void *rmem, mem_size_t newsize)
+ 481:Source\LwIP\src\core/mem.c **** {
+ 482:Source\LwIP\src\core/mem.c ****   mem_size_t size;
+ 483:Source\LwIP\src\core/mem.c ****   mem_size_t ptr, ptr2;
+ 484:Source\LwIP\src\core/mem.c ****   struct mem *mem, *mem2;
+ 485:Source\LwIP\src\core/mem.c ****   /* use the FREE_PROTECT here: it protects with sem OR SYS_ARCH_PROTECT */
+ 486:Source\LwIP\src\core/mem.c ****   LWIP_MEM_FREE_DECL_PROTECT();
+ 487:Source\LwIP\src\core/mem.c **** 
+ 488:Source\LwIP\src\core/mem.c ****   /* Expand the size of the allocated memory region so that we can
+ 489:Source\LwIP\src\core/mem.c ****      adjust for alignment. */
+ 490:Source\LwIP\src\core/mem.c ****   newsize = LWIP_MEM_ALIGN_SIZE(newsize);
+ 491:Source\LwIP\src\core/mem.c **** 
+ 492:Source\LwIP\src\core/mem.c ****   if (newsize < MIN_SIZE_ALIGNED) {
+ 493:Source\LwIP\src\core/mem.c ****     /* every data block must be at least MIN_SIZE_ALIGNED long */
+ 494:Source\LwIP\src\core/mem.c ****     newsize = MIN_SIZE_ALIGNED;
+ 495:Source\LwIP\src\core/mem.c ****   }
+ 496:Source\LwIP\src\core/mem.c **** 
+ 497:Source\LwIP\src\core/mem.c ****   if (newsize > MEM_SIZE_ALIGNED) {
+ 498:Source\LwIP\src\core/mem.c ****     return NULL;
+ 499:Source\LwIP\src\core/mem.c ****   }
+ 500:Source\LwIP\src\core/mem.c **** 
+ 501:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("mem_trim: legal memory", (u8_t *)rmem >= (u8_t *)ram &&
+ 502:Source\LwIP\src\core/mem.c ****    (u8_t *)rmem < (u8_t *)ram_end);
+ 503:Source\LwIP\src\core/mem.c **** 
+ 504:Source\LwIP\src\core/mem.c ****   if ((u8_t *)rmem < (u8_t *)ram || (u8_t *)rmem >= (u8_t *)ram_end) {
+ 505:Source\LwIP\src\core/mem.c ****     SYS_ARCH_DECL_PROTECT(lev);
+ 506:Source\LwIP\src\core/mem.c ****     LWIP_DEBUGF(MEM_DEBUG | LWIP_DBG_LEVEL_SEVERE, ("mem_trim: illegal memory\n"));
+ 507:Source\LwIP\src\core/mem.c ****     /* protect mem stats from concurrent access */
+ 508:Source\LwIP\src\core/mem.c ****     SYS_ARCH_PROTECT(lev);
+ 509:Source\LwIP\src\core/mem.c ****     MEM_STATS_INC(illegal);
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 12
+
+
+ 510:Source\LwIP\src\core/mem.c ****     SYS_ARCH_UNPROTECT(lev);
+ 511:Source\LwIP\src\core/mem.c ****     return rmem;
+ 512:Source\LwIP\src\core/mem.c ****   }
+ 513:Source\LwIP\src\core/mem.c ****   /* Get the corresponding struct mem ... */
+ 514:Source\LwIP\src\core/mem.c ****   /* cast through void* to get rid of alignment warnings */
+ 515:Source\LwIP\src\core/mem.c ****   mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
+ 516:Source\LwIP\src\core/mem.c ****   /* ... and its offset pointer */
+ 517:Source\LwIP\src\core/mem.c ****   ptr = (mem_size_t)((u8_t *)mem - ram);
+ 518:Source\LwIP\src\core/mem.c **** 
+ 519:Source\LwIP\src\core/mem.c ****   size = mem->next - ptr - SIZEOF_STRUCT_MEM;
+ 520:Source\LwIP\src\core/mem.c ****   LWIP_ASSERT("mem_trim can only shrink memory", newsize <= size);
+ 521:Source\LwIP\src\core/mem.c ****   if (newsize > size) {
+ 522:Source\LwIP\src\core/mem.c ****     /* not supported */
+ 523:Source\LwIP\src\core/mem.c ****     return NULL;
+ 524:Source\LwIP\src\core/mem.c ****   }
+ 525:Source\LwIP\src\core/mem.c ****   if (newsize == size) {
+ 526:Source\LwIP\src\core/mem.c ****     /* No change in size, simply return */
+ 527:Source\LwIP\src\core/mem.c ****     return rmem;
+ 528:Source\LwIP\src\core/mem.c ****   }
+ 529:Source\LwIP\src\core/mem.c **** 
+ 530:Source\LwIP\src\core/mem.c ****   /* protect the heap from concurrent access */
+ 531:Source\LwIP\src\core/mem.c ****   LWIP_MEM_FREE_PROTECT();
+ 532:Source\LwIP\src\core/mem.c **** 
+ 533:Source\LwIP\src\core/mem.c ****   mem2 = (struct mem *)(void *)&ram[mem->next];
+ 534:Source\LwIP\src\core/mem.c ****   if (mem2->used == 0) {
+ 535:Source\LwIP\src\core/mem.c ****     /* The next struct is unused, we can simply move it at little */
+ 536:Source\LwIP\src\core/mem.c ****     mem_size_t next;
+ 537:Source\LwIP\src\core/mem.c ****     /* remember the old next pointer */
+ 538:Source\LwIP\src\core/mem.c ****     next = mem2->next;
+ 539:Source\LwIP\src\core/mem.c ****     /* create new struct mem which is moved directly after the shrinked mem */
+ 540:Source\LwIP\src\core/mem.c ****     ptr2 = ptr + SIZEOF_STRUCT_MEM + newsize;
+ 541:Source\LwIP\src\core/mem.c ****     if (lfree == mem2) {
+ 542:Source\LwIP\src\core/mem.c ****       lfree = (struct mem *)(void *)&ram[ptr2];
+ 543:Source\LwIP\src\core/mem.c ****     }
+ 544:Source\LwIP\src\core/mem.c ****     mem2 = (struct mem *)(void *)&ram[ptr2];
+ 545:Source\LwIP\src\core/mem.c ****     mem2->used = 0;
+ 546:Source\LwIP\src\core/mem.c ****     /* restore the next pointer */
+ 547:Source\LwIP\src\core/mem.c ****     mem2->next = next;
+ 548:Source\LwIP\src\core/mem.c ****     /* link it back to mem */
+ 549:Source\LwIP\src\core/mem.c ****     mem2->prev = ptr;
+ 550:Source\LwIP\src\core/mem.c ****     /* link mem to it */
+ 551:Source\LwIP\src\core/mem.c ****     mem->next = ptr2;
+ 552:Source\LwIP\src\core/mem.c ****     /* last thing to restore linked list: as we have moved mem2,
+ 553:Source\LwIP\src\core/mem.c ****      * let 'mem2->next->prev' point to mem2 again. but only if mem2->next is not
+ 554:Source\LwIP\src\core/mem.c ****      * the end of the heap */
+ 555:Source\LwIP\src\core/mem.c ****     if (mem2->next != MEM_SIZE_ALIGNED) {
+ 556:Source\LwIP\src\core/mem.c ****       ((struct mem *)(void *)&ram[mem2->next])->prev = ptr2;
+ 557:Source\LwIP\src\core/mem.c ****     }
+ 558:Source\LwIP\src\core/mem.c ****     MEM_STATS_DEC_USED(used, (size - newsize));
+ 559:Source\LwIP\src\core/mem.c ****     /* no need to plug holes, we've already done that */
+ 560:Source\LwIP\src\core/mem.c ****   } else if (newsize + SIZEOF_STRUCT_MEM + MIN_SIZE_ALIGNED <= size) {
+ 561:Source\LwIP\src\core/mem.c ****     /* Next struct is used but there's room for another struct mem with
+ 562:Source\LwIP\src\core/mem.c ****      * at least MIN_SIZE_ALIGNED of data.
+ 563:Source\LwIP\src\core/mem.c ****      * Old size ('size') must be big enough to contain at least 'newsize' plus a struct mem
+ 564:Source\LwIP\src\core/mem.c ****      * ('SIZEOF_STRUCT_MEM') with some data ('MIN_SIZE_ALIGNED').
+ 565:Source\LwIP\src\core/mem.c ****      * @todo we could leave out MIN_SIZE_ALIGNED. We would create an empty
+ 566:Source\LwIP\src\core/mem.c ****      *       region that couldn't hold data, but when mem->next gets freed,
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 13
+
+
+ 567:Source\LwIP\src\core/mem.c ****      *       the 2 regions would be combined, resulting in more free memory */
+ 568:Source\LwIP\src\core/mem.c ****     ptr2 = ptr + SIZEOF_STRUCT_MEM + newsize;
+ 569:Source\LwIP\src\core/mem.c ****     mem2 = (struct mem *)(void *)&ram[ptr2];
+ 570:Source\LwIP\src\core/mem.c ****     if (mem2 < lfree) {
+ 571:Source\LwIP\src\core/mem.c ****       lfree = mem2;
+ 572:Source\LwIP\src\core/mem.c ****     }
+ 573:Source\LwIP\src\core/mem.c ****     mem2->used = 0;
+ 574:Source\LwIP\src\core/mem.c ****     mem2->next = mem->next;
+ 575:Source\LwIP\src\core/mem.c ****     mem2->prev = ptr;
+ 576:Source\LwIP\src\core/mem.c ****     mem->next = ptr2;
+ 577:Source\LwIP\src\core/mem.c ****     if (mem2->next != MEM_SIZE_ALIGNED) {
+ 578:Source\LwIP\src\core/mem.c ****       ((struct mem *)(void *)&ram[mem2->next])->prev = ptr2;
+ 579:Source\LwIP\src\core/mem.c ****     }
+ 580:Source\LwIP\src\core/mem.c ****     MEM_STATS_DEC_USED(used, (size - newsize));
+ 581:Source\LwIP\src\core/mem.c ****     /* the original mem->next is used, so no need to plug holes! */
+ 582:Source\LwIP\src\core/mem.c ****   }
+ 583:Source\LwIP\src\core/mem.c ****   /* else {
+ 584:Source\LwIP\src\core/mem.c ****     next struct mem is used but size between mem and mem2 is not big enough
+ 585:Source\LwIP\src\core/mem.c ****     to create another struct mem
+ 586:Source\LwIP\src\core/mem.c ****     -> don't do anyhting.
+ 587:Source\LwIP\src\core/mem.c ****     -> the remaining space stays unused since it is too small
+ 588:Source\LwIP\src\core/mem.c ****   } */
+ 589:Source\LwIP\src\core/mem.c **** #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
+ 590:Source\LwIP\src\core/mem.c ****   mem_free_count = 1;
+ 591:Source\LwIP\src\core/mem.c **** #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
+ 592:Source\LwIP\src\core/mem.c ****   LWIP_MEM_FREE_UNPROTECT();
+ 593:Source\LwIP\src\core/mem.c ****   return rmem;
+ 594:Source\LwIP\src\core/mem.c **** }
+ 595:Source\LwIP\src\core/mem.c **** 
+ 596:Source\LwIP\src\core/mem.c **** /**
+ 597:Source\LwIP\src\core/mem.c ****  * Allocate a block of memory with a minimum of 'size' bytes.
+ 598:Source\LwIP\src\core/mem.c ****  *
+ 599:Source\LwIP\src\core/mem.c ****  * @param size is the minimum size of the requested block in bytes.
+ 600:Source\LwIP\src\core/mem.c ****  * @return pointer to allocated memory or NULL if no free memory was found.
+ 601:Source\LwIP\src\core/mem.c ****  *
+ 602:Source\LwIP\src\core/mem.c ****  * Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
+ 603:Source\LwIP\src\core/mem.c ****  */
+ 604:Source\LwIP\src\core/mem.c **** void *
+ 605:Source\LwIP\src\core/mem.c **** mem_malloc(mem_size_t size)
+ 606:Source\LwIP\src\core/mem.c **** {
+ 607:Source\LwIP\src\core/mem.c ****   mem_size_t ptr, ptr2;
+ 608:Source\LwIP\src\core/mem.c ****   struct mem *mem, *mem2;
+ 609:Source\LwIP\src\core/mem.c **** #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
+ 610:Source\LwIP\src\core/mem.c ****   u8_t local_mem_free_count = 0;
+ 611:Source\LwIP\src\core/mem.c **** #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
+ 612:Source\LwIP\src\core/mem.c ****   LWIP_MEM_ALLOC_DECL_PROTECT();
+ 613:Source\LwIP\src\core/mem.c **** 
+ 614:Source\LwIP\src\core/mem.c ****   if (size == 0) {
+ 615:Source\LwIP\src\core/mem.c ****     return NULL;
+ 616:Source\LwIP\src\core/mem.c ****   }
+ 617:Source\LwIP\src\core/mem.c **** 
+ 618:Source\LwIP\src\core/mem.c ****   /* Expand the size of the allocated memory region so that we can
+ 619:Source\LwIP\src\core/mem.c ****      adjust for alignment. */
+ 620:Source\LwIP\src\core/mem.c ****   size = LWIP_MEM_ALIGN_SIZE(size);
+ 621:Source\LwIP\src\core/mem.c **** 
+ 622:Source\LwIP\src\core/mem.c ****   if (size < MIN_SIZE_ALIGNED) {
+ 623:Source\LwIP\src\core/mem.c ****     /* every data block must be at least MIN_SIZE_ALIGNED long */
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 14
+
+
+ 624:Source\LwIP\src\core/mem.c ****     size = MIN_SIZE_ALIGNED;
+ 625:Source\LwIP\src\core/mem.c ****   }
+ 626:Source\LwIP\src\core/mem.c **** 
+ 627:Source\LwIP\src\core/mem.c ****   if (size > MEM_SIZE_ALIGNED) {
+ 628:Source\LwIP\src\core/mem.c ****     return NULL;
+ 629:Source\LwIP\src\core/mem.c ****   }
+ 630:Source\LwIP\src\core/mem.c **** 
+ 631:Source\LwIP\src\core/mem.c ****   /* protect the heap from concurrent access */
+ 632:Source\LwIP\src\core/mem.c ****   sys_mutex_lock(&mem_mutex);
+ 633:Source\LwIP\src\core/mem.c ****   LWIP_MEM_ALLOC_PROTECT();
+ 634:Source\LwIP\src\core/mem.c **** #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
+ 635:Source\LwIP\src\core/mem.c ****   /* run as long as a mem_free disturbed mem_malloc or mem_trim */
+ 636:Source\LwIP\src\core/mem.c ****   do {
+ 637:Source\LwIP\src\core/mem.c ****     local_mem_free_count = 0;
+ 638:Source\LwIP\src\core/mem.c **** #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
+ 639:Source\LwIP\src\core/mem.c **** 
+ 640:Source\LwIP\src\core/mem.c ****     /* Scan through the heap searching for a free block that is big enough,
+ 641:Source\LwIP\src\core/mem.c ****      * beginning with the lowest free block.
+ 642:Source\LwIP\src\core/mem.c ****      */
+ 643:Source\LwIP\src\core/mem.c ****     for (ptr = (mem_size_t)((u8_t *)lfree - ram); ptr < MEM_SIZE_ALIGNED - size;
+ 644:Source\LwIP\src\core/mem.c ****          ptr = ((struct mem *)(void *)&ram[ptr])->next) {
+ 645:Source\LwIP\src\core/mem.c ****       mem = (struct mem *)(void *)&ram[ptr];
+ 646:Source\LwIP\src\core/mem.c **** #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
+ 647:Source\LwIP\src\core/mem.c ****       mem_free_count = 0;
+ 648:Source\LwIP\src\core/mem.c ****       LWIP_MEM_ALLOC_UNPROTECT();
+ 649:Source\LwIP\src\core/mem.c ****       /* allow mem_free or mem_trim to run */
+ 650:Source\LwIP\src\core/mem.c ****       LWIP_MEM_ALLOC_PROTECT();
+ 651:Source\LwIP\src\core/mem.c ****       if (mem_free_count != 0) {
+ 652:Source\LwIP\src\core/mem.c ****         /* If mem_free or mem_trim have run, we have to restart since they
+ 653:Source\LwIP\src\core/mem.c ****            could have altered our current struct mem. */
+ 654:Source\LwIP\src\core/mem.c ****         local_mem_free_count = 1;
+ 655:Source\LwIP\src\core/mem.c ****         break;
+ 656:Source\LwIP\src\core/mem.c ****       }
+ 657:Source\LwIP\src\core/mem.c **** #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
+ 658:Source\LwIP\src\core/mem.c **** 
+ 659:Source\LwIP\src\core/mem.c ****       if ((!mem->used) &&
+ 660:Source\LwIP\src\core/mem.c ****           (mem->next - (ptr + SIZEOF_STRUCT_MEM)) >= size) {
+ 661:Source\LwIP\src\core/mem.c ****         /* mem is not used and at least perfect fit is possible:
+ 662:Source\LwIP\src\core/mem.c ****          * mem->next - (ptr + SIZEOF_STRUCT_MEM) gives us the 'user data size' of mem */
+ 663:Source\LwIP\src\core/mem.c **** 
+ 664:Source\LwIP\src\core/mem.c ****         if (mem->next - (ptr + SIZEOF_STRUCT_MEM) >= (size + SIZEOF_STRUCT_MEM + MIN_SIZE_ALIGNED))
+ 665:Source\LwIP\src\core/mem.c ****           /* (in addition to the above, we test if another struct mem (SIZEOF_STRUCT_MEM) containin
+ 666:Source\LwIP\src\core/mem.c ****            * at least MIN_SIZE_ALIGNED of data also fits in the 'user data space' of 'mem')
+ 667:Source\LwIP\src\core/mem.c ****            * -> split large block, create empty remainder,
+ 668:Source\LwIP\src\core/mem.c ****            * remainder must be large enough to contain MIN_SIZE_ALIGNED data: if
+ 669:Source\LwIP\src\core/mem.c ****            * mem->next - (ptr + (2*SIZEOF_STRUCT_MEM)) == size,
+ 670:Source\LwIP\src\core/mem.c ****            * struct mem would fit in but no data between mem2 and mem2->next
+ 671:Source\LwIP\src\core/mem.c ****            * @todo we could leave out MIN_SIZE_ALIGNED. We would create an empty
+ 672:Source\LwIP\src\core/mem.c ****            *       region that couldn't hold data, but when mem->next gets freed,
+ 673:Source\LwIP\src\core/mem.c ****            *       the 2 regions would be combined, resulting in more free memory
+ 674:Source\LwIP\src\core/mem.c ****            */
+ 675:Source\LwIP\src\core/mem.c ****           ptr2 = ptr + SIZEOF_STRUCT_MEM + size;
+ 676:Source\LwIP\src\core/mem.c ****           /* create mem2 struct */
+ 677:Source\LwIP\src\core/mem.c ****           mem2 = (struct mem *)(void *)&ram[ptr2];
+ 678:Source\LwIP\src\core/mem.c ****           mem2->used = 0;
+ 679:Source\LwIP\src\core/mem.c ****           mem2->next = mem->next;
+ 680:Source\LwIP\src\core/mem.c ****           mem2->prev = ptr;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 15
+
+
+ 681:Source\LwIP\src\core/mem.c ****           /* and insert it between mem and mem->next */
+ 682:Source\LwIP\src\core/mem.c ****           mem->next = ptr2;
+ 683:Source\LwIP\src\core/mem.c ****           mem->used = 1;
+ 684:Source\LwIP\src\core/mem.c **** 
+ 685:Source\LwIP\src\core/mem.c ****           if (mem2->next != MEM_SIZE_ALIGNED) {
+ 686:Source\LwIP\src\core/mem.c ****             ((struct mem *)(void *)&ram[mem2->next])->prev = ptr2;
+ 687:Source\LwIP\src\core/mem.c ****           }
+ 688:Source\LwIP\src\core/mem.c ****           MEM_STATS_INC_USED(used, (size + SIZEOF_STRUCT_MEM));
+ 689:Source\LwIP\src\core/mem.c ****         } else {
+ 690:Source\LwIP\src\core/mem.c ****           /* (a mem2 struct does no fit into the user data space of mem and mem->next will always
+ 691:Source\LwIP\src\core/mem.c ****            * be used at this point: if not we have 2 unused structs in a row, plug_holes should hav
+ 692:Source\LwIP\src\core/mem.c ****            * take care of this).
+ 693:Source\LwIP\src\core/mem.c ****            * -> near fit or exact fit: do not split, no mem2 creation
+ 694:Source\LwIP\src\core/mem.c ****            * also can't move mem->next directly behind mem, since mem->next
+ 695:Source\LwIP\src\core/mem.c ****            * will always be used at this point!
+ 696:Source\LwIP\src\core/mem.c ****            */
+ 697:Source\LwIP\src\core/mem.c ****           mem->used = 1;
+ 698:Source\LwIP\src\core/mem.c ****           MEM_STATS_INC_USED(used, mem->next - (mem_size_t)((u8_t *)mem - ram));
+ 699:Source\LwIP\src\core/mem.c ****         }
+ 700:Source\LwIP\src\core/mem.c **** #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
+ 701:Source\LwIP\src\core/mem.c **** mem_malloc_adjust_lfree:
+ 702:Source\LwIP\src\core/mem.c **** #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
+ 703:Source\LwIP\src\core/mem.c ****         if (mem == lfree) {
+ 704:Source\LwIP\src\core/mem.c ****           struct mem *cur = lfree;
+ 705:Source\LwIP\src\core/mem.c ****           /* Find next free block after mem and update lowest free pointer */
+ 706:Source\LwIP\src\core/mem.c ****           while (cur->used && cur != ram_end) {
+ 707:Source\LwIP\src\core/mem.c **** #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
+ 708:Source\LwIP\src\core/mem.c ****             mem_free_count = 0;
+ 709:Source\LwIP\src\core/mem.c ****             LWIP_MEM_ALLOC_UNPROTECT();
+ 710:Source\LwIP\src\core/mem.c ****             /* prevent high interrupt latency... */
+ 711:Source\LwIP\src\core/mem.c ****             LWIP_MEM_ALLOC_PROTECT();
+ 712:Source\LwIP\src\core/mem.c ****             if (mem_free_count != 0) {
+ 713:Source\LwIP\src\core/mem.c ****               /* If mem_free or mem_trim have run, we have to restart since they
+ 714:Source\LwIP\src\core/mem.c ****                  could have altered our current struct mem or lfree. */
+ 715:Source\LwIP\src\core/mem.c ****               goto mem_malloc_adjust_lfree;
+ 716:Source\LwIP\src\core/mem.c ****             }
+ 717:Source\LwIP\src\core/mem.c **** #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
+ 718:Source\LwIP\src\core/mem.c ****             cur = (struct mem *)(void *)&ram[cur->next];
+ 719:Source\LwIP\src\core/mem.c ****           }
+ 720:Source\LwIP\src\core/mem.c ****           lfree = cur;
+ 721:Source\LwIP\src\core/mem.c ****           LWIP_ASSERT("mem_malloc: !lfree->used", ((lfree == ram_end) || (!lfree->used)));
+ 722:Source\LwIP\src\core/mem.c ****         }
+ 723:Source\LwIP\src\core/mem.c ****         LWIP_MEM_ALLOC_UNPROTECT();
+ 724:Source\LwIP\src\core/mem.c ****         sys_mutex_unlock(&mem_mutex);
+ 725:Source\LwIP\src\core/mem.c ****         LWIP_ASSERT("mem_malloc: allocated memory not above ram_end.",
+ 726:Source\LwIP\src\core/mem.c ****          (mem_ptr_t)mem + SIZEOF_STRUCT_MEM + size <= (mem_ptr_t)ram_end);
+ 727:Source\LwIP\src\core/mem.c ****         LWIP_ASSERT("mem_malloc: allocated memory properly aligned.",
+ 728:Source\LwIP\src\core/mem.c ****          ((mem_ptr_t)mem + SIZEOF_STRUCT_MEM) % MEM_ALIGNMENT == 0);
+ 729:Source\LwIP\src\core/mem.c ****         LWIP_ASSERT("mem_malloc: sanity check alignment",
+ 730:Source\LwIP\src\core/mem.c ****           (((mem_ptr_t)mem) & (MEM_ALIGNMENT-1)) == 0);
+ 731:Source\LwIP\src\core/mem.c **** 
+ 732:Source\LwIP\src\core/mem.c ****         return (u8_t *)mem + SIZEOF_STRUCT_MEM;
+ 733:Source\LwIP\src\core/mem.c ****       }
+ 734:Source\LwIP\src\core/mem.c ****     }
+ 735:Source\LwIP\src\core/mem.c **** #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
+ 736:Source\LwIP\src\core/mem.c ****     /* if we got interrupted by a mem_free, try again */
+ 737:Source\LwIP\src\core/mem.c ****   } while (local_mem_free_count != 0);
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 16
+
+
+ 738:Source\LwIP\src\core/mem.c **** #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
+ 739:Source\LwIP\src\core/mem.c ****   LWIP_DEBUGF(MEM_DEBUG | LWIP_DBG_LEVEL_SERIOUS, ("mem_malloc: could not allocate %"S16_F" bytes\n
+ 740:Source\LwIP\src\core/mem.c ****   MEM_STATS_INC(err);
+ 741:Source\LwIP\src\core/mem.c ****   LWIP_MEM_ALLOC_UNPROTECT();
+ 742:Source\LwIP\src\core/mem.c ****   sys_mutex_unlock(&mem_mutex);
+ 743:Source\LwIP\src\core/mem.c ****   return NULL;
+ 744:Source\LwIP\src\core/mem.c **** }
+ 745:Source\LwIP\src\core/mem.c **** 
+ 746:Source\LwIP\src\core/mem.c **** #endif /* MEM_USE_POOLS */
+ 747:Source\LwIP\src\core/mem.c **** 
+ 748:Source\LwIP\src\core/mem.c **** #if MEM_LIBC_MALLOC && (!LWIP_STATS || !MEM_STATS)
+ 749:Source\LwIP\src\core/mem.c **** void *
+ 750:Source\LwIP\src\core/mem.c **** mem_calloc(mem_size_t count, mem_size_t size)
+ 751:Source\LwIP\src\core/mem.c **** {
+ 119              		.loc 1 751 0
+ 120              		.cfi_startproc
+ 121              		@ args = 0, pretend = 0, frame = 0
+ 122              		@ frame_needed = 0, uses_anonymous_args = 0
+ 123              	.LVL5:
+ 124 0000 10B5     		push	{r4, lr}
+ 125              		.cfi_def_cfa_offset 8
+ 126              		.cfi_offset 4, -8
+ 127              		.cfi_offset 14, -4
+ 752:Source\LwIP\src\core/mem.c ****   return mem_clib_calloc(count, size);
+ 128              		.loc 1 752 0
+ 129 0002 FFF7FEFF 		bl	calloc
+ 130              	.LVL6:
+ 753:Source\LwIP\src\core/mem.c **** }
+ 131              		.loc 1 753 0
+ 132              		@ sp needed
+ 133 0006 10BD     		pop	{r4, pc}
+ 134              		.cfi_endproc
+ 135              	.LFE57:
+ 136              		.size	mem_calloc, .-mem_calloc
+ 137              		.text
+ 138              	.Letext0:
+ 139              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 140              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 141              		.file 4 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 142              		.file 5 ".\\Source\\LwIP\\src\\include/lwip/arch.h"
+ 143              		.file 6 ".\\Source\\LwIP\\src\\include/lwip/mem.h"
+ 144              		.file 7 ".\\Source\\FreeRTOS\\10.0.1\\Source\\include/portable.h"
+ 145              		.file 8 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 146              		.section	.debug_info,"",%progbits
+ 147              	.Ldebug_info0:
+ 148 0000 FA010000 		.4byte	0x1fa
+ 149 0004 0400     		.2byte	0x4
+ 150 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 151 000a 04       		.byte	0x4
+ 152 000b 01       		.uleb128 0x1
+ 153 000c EE010000 		.4byte	.LASF28
+ 154 0010 0C       		.byte	0xc
+ 155 0011 34000000 		.4byte	.LASF29
+ 156 0015 C3000000 		.4byte	.LASF30
+ 157 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 158 001d 00000000 		.4byte	0
+ 159 0021 00000000 		.4byte	.Ldebug_line0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 17
+
+
+ 160 0025 02       		.uleb128 0x2
+ 161 0026 01       		.byte	0x1
+ 162 0027 06       		.byte	0x6
+ 163 0028 80020000 		.4byte	.LASF0
+ 164 002c 02       		.uleb128 0x2
+ 165 002d 01       		.byte	0x1
+ 166 002e 08       		.byte	0x8
+ 167 002f 93000000 		.4byte	.LASF1
+ 168 0033 02       		.uleb128 0x2
+ 169 0034 02       		.byte	0x2
+ 170 0035 05       		.byte	0x5
+ 171 0036 B1010000 		.4byte	.LASF2
+ 172 003a 02       		.uleb128 0x2
+ 173 003b 02       		.byte	0x2
+ 174 003c 07       		.byte	0x7
+ 175 003d 4F000000 		.4byte	.LASF3
+ 176 0041 02       		.uleb128 0x2
+ 177 0042 04       		.byte	0x4
+ 178 0043 05       		.byte	0x5
+ 179 0044 CE010000 		.4byte	.LASF4
+ 180 0048 02       		.uleb128 0x2
+ 181 0049 04       		.byte	0x4
+ 182 004a 07       		.byte	0x7
+ 183 004b 76000000 		.4byte	.LASF5
+ 184 004f 02       		.uleb128 0x2
+ 185 0050 08       		.byte	0x8
+ 186 0051 05       		.byte	0x5
+ 187 0052 91010000 		.4byte	.LASF6
+ 188 0056 02       		.uleb128 0x2
+ 189 0057 08       		.byte	0x8
+ 190 0058 07       		.byte	0x7
+ 191 0059 68010000 		.4byte	.LASF7
+ 192 005d 03       		.uleb128 0x3
+ 193 005e 18000000 		.4byte	.LASF9
+ 194 0062 02       		.byte	0x2
+ 195 0063 C8       		.byte	0xc8
+ 196 0064 68000000 		.4byte	0x68
+ 197 0068 04       		.uleb128 0x4
+ 198 0069 04       		.byte	0x4
+ 199 006a 05       		.byte	0x5
+ 200 006b 696E7400 		.ascii	"int\000"
+ 201 006f 02       		.uleb128 0x2
+ 202 0070 04       		.byte	0x4
+ 203 0071 07       		.byte	0x7
+ 204 0072 B6000000 		.4byte	.LASF8
+ 205 0076 03       		.uleb128 0x3
+ 206 0077 07000000 		.4byte	.LASF10
+ 207 007b 03       		.byte	0x3
+ 208 007c D8       		.byte	0xd8
+ 209 007d 6F000000 		.4byte	0x6f
+ 210 0081 02       		.uleb128 0x2
+ 211 0082 08       		.byte	0x8
+ 212 0083 04       		.byte	0x4
+ 213 0084 E2010000 		.4byte	.LASF11
+ 214 0088 05       		.uleb128 0x5
+ 215 0089 04       		.byte	0x4
+ 216 008a 02       		.uleb128 0x2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 18
+
+
+ 217 008b 04       		.byte	0x4
+ 218 008c 07       		.byte	0x7
+ 219 008d 7F010000 		.4byte	.LASF12
+ 220 0091 02       		.uleb128 0x2
+ 221 0092 01       		.byte	0x1
+ 222 0093 08       		.byte	0x8
+ 223 0094 9F010000 		.4byte	.LASF13
+ 224 0098 03       		.uleb128 0x3
+ 225 0099 AD000000 		.4byte	.LASF14
+ 226 009d 04       		.byte	0x4
+ 227 009e 43       		.byte	0x43
+ 228 009f 5D000000 		.4byte	0x5d
+ 229 00a3 02       		.uleb128 0x2
+ 230 00a4 04       		.byte	0x4
+ 231 00a5 04       		.byte	0x4
+ 232 00a6 6B000000 		.4byte	.LASF15
+ 233 00aa 02       		.uleb128 0x2
+ 234 00ab 08       		.byte	0x8
+ 235 00ac 04       		.byte	0x4
+ 236 00ad A1000000 		.4byte	.LASF16
+ 237 00b1 03       		.uleb128 0x3
+ 238 00b2 0E000000 		.4byte	.LASF17
+ 239 00b6 05       		.byte	0x5
+ 240 00b7 7D       		.byte	0x7d
+ 241 00b8 98000000 		.4byte	0x98
+ 242 00bc 03       		.uleb128 0x3
+ 243 00bd 29000000 		.4byte	.LASF18
+ 244 00c1 06       		.byte	0x6
+ 245 00c2 32       		.byte	0x32
+ 246 00c3 76000000 		.4byte	0x76
+ 247 00c7 06       		.uleb128 0x6
+ 248 00c8 62000000 		.4byte	.LASF31
+ 249 00cc 01       		.byte	0x1
+ 250 00cd 4B       		.byte	0x4b
+ 251 00ce 00000000 		.4byte	.LFB53
+ 252 00d2 02000000 		.4byte	.LFE53-.LFB53
+ 253 00d6 01       		.uleb128 0x1
+ 254 00d7 9C       		.byte	0x9c
+ 255 00d8 07       		.uleb128 0x7
+ 256 00d9 C5010000 		.4byte	.LASF20
+ 257 00dd 01       		.byte	0x1
+ 258 00de 54       		.byte	0x54
+ 259 00df 88000000 		.4byte	0x88
+ 260 00e3 00000000 		.4byte	.LFB54
+ 261 00e7 02000000 		.4byte	.LFE54-.LFB54
+ 262 00eb 01       		.uleb128 0x1
+ 263 00ec 9C       		.byte	0x9c
+ 264 00ed 0C010000 		.4byte	0x10c
+ 265 00f1 08       		.uleb128 0x8
+ 266 00f2 6D656D00 		.ascii	"mem\000"
+ 267 00f6 01       		.byte	0x1
+ 268 00f7 54       		.byte	0x54
+ 269 00f8 88000000 		.4byte	0x88
+ 270 00fc 01       		.uleb128 0x1
+ 271 00fd 50       		.byte	0x50
+ 272 00fe 09       		.uleb128 0x9
+ 273 00ff 71000000 		.4byte	.LASF19
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 19
+
+
+ 274 0103 01       		.byte	0x1
+ 275 0104 54       		.byte	0x54
+ 276 0105 BC000000 		.4byte	0xbc
+ 277 0109 01       		.uleb128 0x1
+ 278 010a 51       		.byte	0x51
+ 279 010b 00       		.byte	0
+ 280 010c 07       		.uleb128 0x7
+ 281 010d 88000000 		.4byte	.LASF21
+ 282 0111 01       		.byte	0x1
+ 283 0112 7C       		.byte	0x7c
+ 284 0113 88000000 		.4byte	0x88
+ 285 0117 00000000 		.4byte	.LFB55
+ 286 011b 08000000 		.4byte	.LFE55-.LFB55
+ 287 011f 01       		.uleb128 0x1
+ 288 0120 9C       		.byte	0x9c
+ 289 0121 53010000 		.4byte	0x153
+ 290 0125 0A       		.uleb128 0xa
+ 291 0126 71000000 		.4byte	.LASF19
+ 292 012a 01       		.byte	0x1
+ 293 012b 7C       		.byte	0x7c
+ 294 012c BC000000 		.4byte	0xbc
+ 295 0130 00000000 		.4byte	.LLST0
+ 296 0134 0B       		.uleb128 0xb
+ 297 0135 72657400 		.ascii	"ret\000"
+ 298 0139 01       		.byte	0x1
+ 299 013a 7E       		.byte	0x7e
+ 300 013b 88000000 		.4byte	0x88
+ 301 013f 01       		.uleb128 0x1
+ 302 0140 50       		.byte	0x50
+ 303 0141 0C       		.uleb128 0xc
+ 304 0142 06000000 		.4byte	.LVL2
+ 305 0146 DC010000 		.4byte	0x1dc
+ 306 014a 0D       		.uleb128 0xd
+ 307 014b 01       		.uleb128 0x1
+ 308 014c 50       		.byte	0x50
+ 309 014d 03       		.uleb128 0x3
+ 310 014e F3       		.byte	0xf3
+ 311 014f 01       		.uleb128 0x1
+ 312 0150 50       		.byte	0x50
+ 313 0151 00       		.byte	0
+ 314 0152 00       		.byte	0
+ 315 0153 0E       		.uleb128 0xe
+ 316 0154 88010000 		.4byte	.LASF32
+ 317 0158 01       		.byte	0x1
+ 318 0159 91       		.byte	0x91
+ 319 015a 00000000 		.4byte	.LFB56
+ 320 015e 08000000 		.4byte	.LFE56-.LFB56
+ 321 0162 01       		.uleb128 0x1
+ 322 0163 9C       		.byte	0x9c
+ 323 0164 89010000 		.4byte	0x189
+ 324 0168 0A       		.uleb128 0xa
+ 325 0169 A8000000 		.4byte	.LASF22
+ 326 016d 01       		.byte	0x1
+ 327 016e 91       		.byte	0x91
+ 328 016f 88000000 		.4byte	0x88
+ 329 0173 21000000 		.4byte	.LLST1
+ 330 0177 0C       		.uleb128 0xc
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 20
+
+
+ 331 0178 06000000 		.4byte	.LVL4
+ 332 017c E7010000 		.4byte	0x1e7
+ 333 0180 0D       		.uleb128 0xd
+ 334 0181 01       		.uleb128 0x1
+ 335 0182 50       		.byte	0x50
+ 336 0183 03       		.uleb128 0x3
+ 337 0184 F3       		.byte	0xf3
+ 338 0185 01       		.uleb128 0x1
+ 339 0186 50       		.byte	0x50
+ 340 0187 00       		.byte	0
+ 341 0188 00       		.byte	0
+ 342 0189 0F       		.uleb128 0xf
+ 343 018a D7010000 		.4byte	.LASF23
+ 344 018e 01       		.byte	0x1
+ 345 018f EE02     		.2byte	0x2ee
+ 346 0191 88000000 		.4byte	0x88
+ 347 0195 00000000 		.4byte	.LFB57
+ 348 0199 08000000 		.4byte	.LFE57-.LFB57
+ 349 019d 01       		.uleb128 0x1
+ 350 019e 9C       		.byte	0x9c
+ 351 019f DC010000 		.4byte	0x1dc
+ 352 01a3 10       		.uleb128 0x10
+ 353 01a4 23000000 		.4byte	.LASF24
+ 354 01a8 01       		.byte	0x1
+ 355 01a9 EE02     		.2byte	0x2ee
+ 356 01ab BC000000 		.4byte	0xbc
+ 357 01af 42000000 		.4byte	.LLST2
+ 358 01b3 10       		.uleb128 0x10
+ 359 01b4 71000000 		.4byte	.LASF19
+ 360 01b8 01       		.byte	0x1
+ 361 01b9 EE02     		.2byte	0x2ee
+ 362 01bb BC000000 		.4byte	0xbc
+ 363 01bf 63000000 		.4byte	.LLST3
+ 364 01c3 0C       		.uleb128 0xc
+ 365 01c4 06000000 		.4byte	.LVL6
+ 366 01c8 F2010000 		.4byte	0x1f2
+ 367 01cc 0D       		.uleb128 0xd
+ 368 01cd 01       		.uleb128 0x1
+ 369 01ce 50       		.byte	0x50
+ 370 01cf 03       		.uleb128 0x3
+ 371 01d0 F3       		.byte	0xf3
+ 372 01d1 01       		.uleb128 0x1
+ 373 01d2 50       		.byte	0x50
+ 374 01d3 0D       		.uleb128 0xd
+ 375 01d4 01       		.uleb128 0x1
+ 376 01d5 51       		.byte	0x51
+ 377 01d6 03       		.uleb128 0x3
+ 378 01d7 F3       		.byte	0xf3
+ 379 01d8 01       		.uleb128 0x1
+ 380 01d9 51       		.byte	0x51
+ 381 01da 00       		.byte	0
+ 382 01db 00       		.byte	0
+ 383 01dc 11       		.uleb128 0x11
+ 384 01dd A4010000 		.4byte	.LASF25
+ 385 01e1 A4010000 		.4byte	.LASF25
+ 386 01e5 07       		.byte	0x7
+ 387 01e6 81       		.byte	0x81
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 21
+
+
+ 388 01e7 11       		.uleb128 0x11
+ 389 01e8 BB010000 		.4byte	.LASF26
+ 390 01ec BB010000 		.4byte	.LASF26
+ 391 01f0 07       		.byte	0x7
+ 392 01f1 82       		.byte	0x82
+ 393 01f2 11       		.uleb128 0x11
+ 394 01f3 00000000 		.4byte	.LASF27
+ 395 01f7 00000000 		.4byte	.LASF27
+ 396 01fb 08       		.byte	0x8
+ 397 01fc 56       		.byte	0x56
+ 398 01fd 00       		.byte	0
+ 399              		.section	.debug_abbrev,"",%progbits
+ 400              	.Ldebug_abbrev0:
+ 401 0000 01       		.uleb128 0x1
+ 402 0001 11       		.uleb128 0x11
+ 403 0002 01       		.byte	0x1
+ 404 0003 25       		.uleb128 0x25
+ 405 0004 0E       		.uleb128 0xe
+ 406 0005 13       		.uleb128 0x13
+ 407 0006 0B       		.uleb128 0xb
+ 408 0007 03       		.uleb128 0x3
+ 409 0008 0E       		.uleb128 0xe
+ 410 0009 1B       		.uleb128 0x1b
+ 411 000a 0E       		.uleb128 0xe
+ 412 000b 55       		.uleb128 0x55
+ 413 000c 17       		.uleb128 0x17
+ 414 000d 11       		.uleb128 0x11
+ 415 000e 01       		.uleb128 0x1
+ 416 000f 10       		.uleb128 0x10
+ 417 0010 17       		.uleb128 0x17
+ 418 0011 00       		.byte	0
+ 419 0012 00       		.byte	0
+ 420 0013 02       		.uleb128 0x2
+ 421 0014 24       		.uleb128 0x24
+ 422 0015 00       		.byte	0
+ 423 0016 0B       		.uleb128 0xb
+ 424 0017 0B       		.uleb128 0xb
+ 425 0018 3E       		.uleb128 0x3e
+ 426 0019 0B       		.uleb128 0xb
+ 427 001a 03       		.uleb128 0x3
+ 428 001b 0E       		.uleb128 0xe
+ 429 001c 00       		.byte	0
+ 430 001d 00       		.byte	0
+ 431 001e 03       		.uleb128 0x3
+ 432 001f 16       		.uleb128 0x16
+ 433 0020 00       		.byte	0
+ 434 0021 03       		.uleb128 0x3
+ 435 0022 0E       		.uleb128 0xe
+ 436 0023 3A       		.uleb128 0x3a
+ 437 0024 0B       		.uleb128 0xb
+ 438 0025 3B       		.uleb128 0x3b
+ 439 0026 0B       		.uleb128 0xb
+ 440 0027 49       		.uleb128 0x49
+ 441 0028 13       		.uleb128 0x13
+ 442 0029 00       		.byte	0
+ 443 002a 00       		.byte	0
+ 444 002b 04       		.uleb128 0x4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 22
+
+
+ 445 002c 24       		.uleb128 0x24
+ 446 002d 00       		.byte	0
+ 447 002e 0B       		.uleb128 0xb
+ 448 002f 0B       		.uleb128 0xb
+ 449 0030 3E       		.uleb128 0x3e
+ 450 0031 0B       		.uleb128 0xb
+ 451 0032 03       		.uleb128 0x3
+ 452 0033 08       		.uleb128 0x8
+ 453 0034 00       		.byte	0
+ 454 0035 00       		.byte	0
+ 455 0036 05       		.uleb128 0x5
+ 456 0037 0F       		.uleb128 0xf
+ 457 0038 00       		.byte	0
+ 458 0039 0B       		.uleb128 0xb
+ 459 003a 0B       		.uleb128 0xb
+ 460 003b 00       		.byte	0
+ 461 003c 00       		.byte	0
+ 462 003d 06       		.uleb128 0x6
+ 463 003e 2E       		.uleb128 0x2e
+ 464 003f 00       		.byte	0
+ 465 0040 3F       		.uleb128 0x3f
+ 466 0041 19       		.uleb128 0x19
+ 467 0042 03       		.uleb128 0x3
+ 468 0043 0E       		.uleb128 0xe
+ 469 0044 3A       		.uleb128 0x3a
+ 470 0045 0B       		.uleb128 0xb
+ 471 0046 3B       		.uleb128 0x3b
+ 472 0047 0B       		.uleb128 0xb
+ 473 0048 27       		.uleb128 0x27
+ 474 0049 19       		.uleb128 0x19
+ 475 004a 11       		.uleb128 0x11
+ 476 004b 01       		.uleb128 0x1
+ 477 004c 12       		.uleb128 0x12
+ 478 004d 06       		.uleb128 0x6
+ 479 004e 40       		.uleb128 0x40
+ 480 004f 18       		.uleb128 0x18
+ 481 0050 9742     		.uleb128 0x2117
+ 482 0052 19       		.uleb128 0x19
+ 483 0053 00       		.byte	0
+ 484 0054 00       		.byte	0
+ 485 0055 07       		.uleb128 0x7
+ 486 0056 2E       		.uleb128 0x2e
+ 487 0057 01       		.byte	0x1
+ 488 0058 3F       		.uleb128 0x3f
+ 489 0059 19       		.uleb128 0x19
+ 490 005a 03       		.uleb128 0x3
+ 491 005b 0E       		.uleb128 0xe
+ 492 005c 3A       		.uleb128 0x3a
+ 493 005d 0B       		.uleb128 0xb
+ 494 005e 3B       		.uleb128 0x3b
+ 495 005f 0B       		.uleb128 0xb
+ 496 0060 27       		.uleb128 0x27
+ 497 0061 19       		.uleb128 0x19
+ 498 0062 49       		.uleb128 0x49
+ 499 0063 13       		.uleb128 0x13
+ 500 0064 11       		.uleb128 0x11
+ 501 0065 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 23
+
+
+ 502 0066 12       		.uleb128 0x12
+ 503 0067 06       		.uleb128 0x6
+ 504 0068 40       		.uleb128 0x40
+ 505 0069 18       		.uleb128 0x18
+ 506 006a 9742     		.uleb128 0x2117
+ 507 006c 19       		.uleb128 0x19
+ 508 006d 01       		.uleb128 0x1
+ 509 006e 13       		.uleb128 0x13
+ 510 006f 00       		.byte	0
+ 511 0070 00       		.byte	0
+ 512 0071 08       		.uleb128 0x8
+ 513 0072 05       		.uleb128 0x5
+ 514 0073 00       		.byte	0
+ 515 0074 03       		.uleb128 0x3
+ 516 0075 08       		.uleb128 0x8
+ 517 0076 3A       		.uleb128 0x3a
+ 518 0077 0B       		.uleb128 0xb
+ 519 0078 3B       		.uleb128 0x3b
+ 520 0079 0B       		.uleb128 0xb
+ 521 007a 49       		.uleb128 0x49
+ 522 007b 13       		.uleb128 0x13
+ 523 007c 02       		.uleb128 0x2
+ 524 007d 18       		.uleb128 0x18
+ 525 007e 00       		.byte	0
+ 526 007f 00       		.byte	0
+ 527 0080 09       		.uleb128 0x9
+ 528 0081 05       		.uleb128 0x5
+ 529 0082 00       		.byte	0
+ 530 0083 03       		.uleb128 0x3
+ 531 0084 0E       		.uleb128 0xe
+ 532 0085 3A       		.uleb128 0x3a
+ 533 0086 0B       		.uleb128 0xb
+ 534 0087 3B       		.uleb128 0x3b
+ 535 0088 0B       		.uleb128 0xb
+ 536 0089 49       		.uleb128 0x49
+ 537 008a 13       		.uleb128 0x13
+ 538 008b 02       		.uleb128 0x2
+ 539 008c 18       		.uleb128 0x18
+ 540 008d 00       		.byte	0
+ 541 008e 00       		.byte	0
+ 542 008f 0A       		.uleb128 0xa
+ 543 0090 05       		.uleb128 0x5
+ 544 0091 00       		.byte	0
+ 545 0092 03       		.uleb128 0x3
+ 546 0093 0E       		.uleb128 0xe
+ 547 0094 3A       		.uleb128 0x3a
+ 548 0095 0B       		.uleb128 0xb
+ 549 0096 3B       		.uleb128 0x3b
+ 550 0097 0B       		.uleb128 0xb
+ 551 0098 49       		.uleb128 0x49
+ 552 0099 13       		.uleb128 0x13
+ 553 009a 02       		.uleb128 0x2
+ 554 009b 17       		.uleb128 0x17
+ 555 009c 00       		.byte	0
+ 556 009d 00       		.byte	0
+ 557 009e 0B       		.uleb128 0xb
+ 558 009f 34       		.uleb128 0x34
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 24
+
+
+ 559 00a0 00       		.byte	0
+ 560 00a1 03       		.uleb128 0x3
+ 561 00a2 08       		.uleb128 0x8
+ 562 00a3 3A       		.uleb128 0x3a
+ 563 00a4 0B       		.uleb128 0xb
+ 564 00a5 3B       		.uleb128 0x3b
+ 565 00a6 0B       		.uleb128 0xb
+ 566 00a7 49       		.uleb128 0x49
+ 567 00a8 13       		.uleb128 0x13
+ 568 00a9 02       		.uleb128 0x2
+ 569 00aa 18       		.uleb128 0x18
+ 570 00ab 00       		.byte	0
+ 571 00ac 00       		.byte	0
+ 572 00ad 0C       		.uleb128 0xc
+ 573 00ae 898201   		.uleb128 0x4109
+ 574 00b1 01       		.byte	0x1
+ 575 00b2 11       		.uleb128 0x11
+ 576 00b3 01       		.uleb128 0x1
+ 577 00b4 31       		.uleb128 0x31
+ 578 00b5 13       		.uleb128 0x13
+ 579 00b6 00       		.byte	0
+ 580 00b7 00       		.byte	0
+ 581 00b8 0D       		.uleb128 0xd
+ 582 00b9 8A8201   		.uleb128 0x410a
+ 583 00bc 00       		.byte	0
+ 584 00bd 02       		.uleb128 0x2
+ 585 00be 18       		.uleb128 0x18
+ 586 00bf 9142     		.uleb128 0x2111
+ 587 00c1 18       		.uleb128 0x18
+ 588 00c2 00       		.byte	0
+ 589 00c3 00       		.byte	0
+ 590 00c4 0E       		.uleb128 0xe
+ 591 00c5 2E       		.uleb128 0x2e
+ 592 00c6 01       		.byte	0x1
+ 593 00c7 3F       		.uleb128 0x3f
+ 594 00c8 19       		.uleb128 0x19
+ 595 00c9 03       		.uleb128 0x3
+ 596 00ca 0E       		.uleb128 0xe
+ 597 00cb 3A       		.uleb128 0x3a
+ 598 00cc 0B       		.uleb128 0xb
+ 599 00cd 3B       		.uleb128 0x3b
+ 600 00ce 0B       		.uleb128 0xb
+ 601 00cf 27       		.uleb128 0x27
+ 602 00d0 19       		.uleb128 0x19
+ 603 00d1 11       		.uleb128 0x11
+ 604 00d2 01       		.uleb128 0x1
+ 605 00d3 12       		.uleb128 0x12
+ 606 00d4 06       		.uleb128 0x6
+ 607 00d5 40       		.uleb128 0x40
+ 608 00d6 18       		.uleb128 0x18
+ 609 00d7 9742     		.uleb128 0x2117
+ 610 00d9 19       		.uleb128 0x19
+ 611 00da 01       		.uleb128 0x1
+ 612 00db 13       		.uleb128 0x13
+ 613 00dc 00       		.byte	0
+ 614 00dd 00       		.byte	0
+ 615 00de 0F       		.uleb128 0xf
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 25
+
+
+ 616 00df 2E       		.uleb128 0x2e
+ 617 00e0 01       		.byte	0x1
+ 618 00e1 3F       		.uleb128 0x3f
+ 619 00e2 19       		.uleb128 0x19
+ 620 00e3 03       		.uleb128 0x3
+ 621 00e4 0E       		.uleb128 0xe
+ 622 00e5 3A       		.uleb128 0x3a
+ 623 00e6 0B       		.uleb128 0xb
+ 624 00e7 3B       		.uleb128 0x3b
+ 625 00e8 05       		.uleb128 0x5
+ 626 00e9 27       		.uleb128 0x27
+ 627 00ea 19       		.uleb128 0x19
+ 628 00eb 49       		.uleb128 0x49
+ 629 00ec 13       		.uleb128 0x13
+ 630 00ed 11       		.uleb128 0x11
+ 631 00ee 01       		.uleb128 0x1
+ 632 00ef 12       		.uleb128 0x12
+ 633 00f0 06       		.uleb128 0x6
+ 634 00f1 40       		.uleb128 0x40
+ 635 00f2 18       		.uleb128 0x18
+ 636 00f3 9742     		.uleb128 0x2117
+ 637 00f5 19       		.uleb128 0x19
+ 638 00f6 01       		.uleb128 0x1
+ 639 00f7 13       		.uleb128 0x13
+ 640 00f8 00       		.byte	0
+ 641 00f9 00       		.byte	0
+ 642 00fa 10       		.uleb128 0x10
+ 643 00fb 05       		.uleb128 0x5
+ 644 00fc 00       		.byte	0
+ 645 00fd 03       		.uleb128 0x3
+ 646 00fe 0E       		.uleb128 0xe
+ 647 00ff 3A       		.uleb128 0x3a
+ 648 0100 0B       		.uleb128 0xb
+ 649 0101 3B       		.uleb128 0x3b
+ 650 0102 05       		.uleb128 0x5
+ 651 0103 49       		.uleb128 0x49
+ 652 0104 13       		.uleb128 0x13
+ 653 0105 02       		.uleb128 0x2
+ 654 0106 17       		.uleb128 0x17
+ 655 0107 00       		.byte	0
+ 656 0108 00       		.byte	0
+ 657 0109 11       		.uleb128 0x11
+ 658 010a 2E       		.uleb128 0x2e
+ 659 010b 00       		.byte	0
+ 660 010c 3F       		.uleb128 0x3f
+ 661 010d 19       		.uleb128 0x19
+ 662 010e 3C       		.uleb128 0x3c
+ 663 010f 19       		.uleb128 0x19
+ 664 0110 6E       		.uleb128 0x6e
+ 665 0111 0E       		.uleb128 0xe
+ 666 0112 03       		.uleb128 0x3
+ 667 0113 0E       		.uleb128 0xe
+ 668 0114 3A       		.uleb128 0x3a
+ 669 0115 0B       		.uleb128 0xb
+ 670 0116 3B       		.uleb128 0x3b
+ 671 0117 0B       		.uleb128 0xb
+ 672 0118 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 26
+
+
+ 673 0119 00       		.byte	0
+ 674 011a 00       		.byte	0
+ 675              		.section	.debug_loc,"",%progbits
+ 676              	.Ldebug_loc0:
+ 677              	.LLST0:
+ 678 0000 00000000 		.4byte	.LVL1
+ 679 0004 05000000 		.4byte	.LVL2-1
+ 680 0008 0100     		.2byte	0x1
+ 681 000a 50       		.byte	0x50
+ 682 000b 05000000 		.4byte	.LVL2-1
+ 683 000f 08000000 		.4byte	.LFE55
+ 684 0013 0400     		.2byte	0x4
+ 685 0015 F3       		.byte	0xf3
+ 686 0016 01       		.uleb128 0x1
+ 687 0017 50       		.byte	0x50
+ 688 0018 9F       		.byte	0x9f
+ 689 0019 00000000 		.4byte	0
+ 690 001d 00000000 		.4byte	0
+ 691              	.LLST1:
+ 692 0021 00000000 		.4byte	.LVL3
+ 693 0025 05000000 		.4byte	.LVL4-1
+ 694 0029 0100     		.2byte	0x1
+ 695 002b 50       		.byte	0x50
+ 696 002c 05000000 		.4byte	.LVL4-1
+ 697 0030 08000000 		.4byte	.LFE56
+ 698 0034 0400     		.2byte	0x4
+ 699 0036 F3       		.byte	0xf3
+ 700 0037 01       		.uleb128 0x1
+ 701 0038 50       		.byte	0x50
+ 702 0039 9F       		.byte	0x9f
+ 703 003a 00000000 		.4byte	0
+ 704 003e 00000000 		.4byte	0
+ 705              	.LLST2:
+ 706 0042 00000000 		.4byte	.LVL5
+ 707 0046 05000000 		.4byte	.LVL6-1
+ 708 004a 0100     		.2byte	0x1
+ 709 004c 50       		.byte	0x50
+ 710 004d 05000000 		.4byte	.LVL6-1
+ 711 0051 08000000 		.4byte	.LFE57
+ 712 0055 0400     		.2byte	0x4
+ 713 0057 F3       		.byte	0xf3
+ 714 0058 01       		.uleb128 0x1
+ 715 0059 50       		.byte	0x50
+ 716 005a 9F       		.byte	0x9f
+ 717 005b 00000000 		.4byte	0
+ 718 005f 00000000 		.4byte	0
+ 719              	.LLST3:
+ 720 0063 00000000 		.4byte	.LVL5
+ 721 0067 05000000 		.4byte	.LVL6-1
+ 722 006b 0100     		.2byte	0x1
+ 723 006d 51       		.byte	0x51
+ 724 006e 05000000 		.4byte	.LVL6-1
+ 725 0072 08000000 		.4byte	.LFE57
+ 726 0076 0400     		.2byte	0x4
+ 727 0078 F3       		.byte	0xf3
+ 728 0079 01       		.uleb128 0x1
+ 729 007a 51       		.byte	0x51
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 27
+
+
+ 730 007b 9F       		.byte	0x9f
+ 731 007c 00000000 		.4byte	0
+ 732 0080 00000000 		.4byte	0
+ 733              		.section	.debug_aranges,"",%progbits
+ 734 0000 3C000000 		.4byte	0x3c
+ 735 0004 0200     		.2byte	0x2
+ 736 0006 00000000 		.4byte	.Ldebug_info0
+ 737 000a 04       		.byte	0x4
+ 738 000b 00       		.byte	0
+ 739 000c 0000     		.2byte	0
+ 740 000e 0000     		.2byte	0
+ 741 0010 00000000 		.4byte	.LFB53
+ 742 0014 02000000 		.4byte	.LFE53-.LFB53
+ 743 0018 00000000 		.4byte	.LFB54
+ 744 001c 02000000 		.4byte	.LFE54-.LFB54
+ 745 0020 00000000 		.4byte	.LFB55
+ 746 0024 08000000 		.4byte	.LFE55-.LFB55
+ 747 0028 00000000 		.4byte	.LFB56
+ 748 002c 08000000 		.4byte	.LFE56-.LFB56
+ 749 0030 00000000 		.4byte	.LFB57
+ 750 0034 08000000 		.4byte	.LFE57-.LFB57
+ 751 0038 00000000 		.4byte	0
+ 752 003c 00000000 		.4byte	0
+ 753              		.section	.debug_ranges,"",%progbits
+ 754              	.Ldebug_ranges0:
+ 755 0000 00000000 		.4byte	.LFB53
+ 756 0004 02000000 		.4byte	.LFE53
+ 757 0008 00000000 		.4byte	.LFB54
+ 758 000c 02000000 		.4byte	.LFE54
+ 759 0010 00000000 		.4byte	.LFB55
+ 760 0014 08000000 		.4byte	.LFE55
+ 761 0018 00000000 		.4byte	.LFB56
+ 762 001c 08000000 		.4byte	.LFE56
+ 763 0020 00000000 		.4byte	.LFB57
+ 764 0024 08000000 		.4byte	.LFE57
+ 765 0028 00000000 		.4byte	0
+ 766 002c 00000000 		.4byte	0
+ 767              		.section	.debug_line,"",%progbits
+ 768              	.Ldebug_line0:
+ 769 0000 EC020000 		.section	.debug_str,"MS",%progbits,1
+ 769      02008C02 
+ 769      00000201 
+ 769      FB0E0D00 
+ 769      01010101 
+ 770              	.LASF27:
+ 771 0000 63616C6C 		.ascii	"calloc\000"
+ 771      6F6300
+ 772              	.LASF10:
+ 773 0007 73697A65 		.ascii	"size_t\000"
+ 773      5F7400
+ 774              	.LASF17:
+ 775 000e 6D656D5F 		.ascii	"mem_ptr_t\000"
+ 775      7074725F 
+ 775      7400
+ 776              	.LASF9:
+ 777 0018 5F5F696E 		.ascii	"__intptr_t\000"
+ 777      74707472 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 28
+
+
+ 777      5F7400
+ 778              	.LASF24:
+ 779 0023 636F756E 		.ascii	"count\000"
+ 779      7400
+ 780              	.LASF18:
+ 781 0029 6D656D5F 		.ascii	"mem_size_t\000"
+ 781      73697A65 
+ 781      5F7400
+ 782              	.LASF29:
+ 783 0034 536F7572 		.ascii	"Source\\LwIP\\src\\core\\mem.c\000"
+ 783      63655C4C 
+ 783      7749505C 
+ 783      7372635C 
+ 783      636F7265 
+ 784              	.LASF3:
+ 785 004f 73686F72 		.ascii	"short unsigned int\000"
+ 785      7420756E 
+ 785      7369676E 
+ 785      65642069 
+ 785      6E7400
+ 786              	.LASF31:
+ 787 0062 6D656D5F 		.ascii	"mem_init\000"
+ 787      696E6974 
+ 787      00
+ 788              	.LASF15:
+ 789 006b 666C6F61 		.ascii	"float\000"
+ 789      7400
+ 790              	.LASF19:
+ 791 0071 73697A65 		.ascii	"size\000"
+ 791      00
+ 792              	.LASF5:
+ 793 0076 6C6F6E67 		.ascii	"long unsigned int\000"
+ 793      20756E73 
+ 793      69676E65 
+ 793      6420696E 
+ 793      7400
+ 794              	.LASF21:
+ 795 0088 6D656D5F 		.ascii	"mem_malloc\000"
+ 795      6D616C6C 
+ 795      6F6300
+ 796              	.LASF1:
+ 797 0093 756E7369 		.ascii	"unsigned char\000"
+ 797      676E6564 
+ 797      20636861 
+ 797      7200
+ 798              	.LASF16:
+ 799 00a1 646F7562 		.ascii	"double\000"
+ 799      6C6500
+ 800              	.LASF22:
+ 801 00a8 726D656D 		.ascii	"rmem\000"
+ 801      00
+ 802              	.LASF14:
+ 803 00ad 696E7470 		.ascii	"intptr_t\000"
+ 803      74725F74 
+ 803      00
+ 804              	.LASF8:
+ 805 00b6 756E7369 		.ascii	"unsigned int\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 29
+
+
+ 805      676E6564 
+ 805      20696E74 
+ 805      00
+ 806              	.LASF30:
+ 807 00c3 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 807      73657273 
+ 807      5C506875 
+ 807      6F6E675C 
+ 807      446F6375 
+ 808 00f1 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 808      6F742D73 
+ 808      646B2D69 
+ 808      6F742D64 
+ 808      65765C50 
+ 809 0122 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 809      494F542D 
+ 809      4875622D 
+ 809      44656D6F 
+ 809      5C50534F 
+ 810 0154 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 810      2D487562 
+ 810      2D44656D 
+ 810      6F2E6379 
+ 810      64736E00 
+ 811              	.LASF7:
+ 812 0168 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 812      206C6F6E 
+ 812      6720756E 
+ 812      7369676E 
+ 812      65642069 
+ 813              	.LASF12:
+ 814 017f 73697A65 		.ascii	"sizetype\000"
+ 814      74797065 
+ 814      00
+ 815              	.LASF32:
+ 816 0188 6D656D5F 		.ascii	"mem_free\000"
+ 816      66726565 
+ 816      00
+ 817              	.LASF6:
+ 818 0191 6C6F6E67 		.ascii	"long long int\000"
+ 818      206C6F6E 
+ 818      6720696E 
+ 818      7400
+ 819              	.LASF13:
+ 820 019f 63686172 		.ascii	"char\000"
+ 820      00
+ 821              	.LASF25:
+ 822 01a4 7076506F 		.ascii	"pvPortMalloc\000"
+ 822      72744D61 
+ 822      6C6C6F63 
+ 822      00
+ 823              	.LASF2:
+ 824 01b1 73686F72 		.ascii	"short int\000"
+ 824      7420696E 
+ 824      7400
+ 825              	.LASF26:
+ 826 01bb 76506F72 		.ascii	"vPortFree\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccJ4yk3b.s 			page 30
+
+
+ 826      74467265 
+ 826      6500
+ 827              	.LASF20:
+ 828 01c5 6D656D5F 		.ascii	"mem_trim\000"
+ 828      7472696D 
+ 828      00
+ 829              	.LASF4:
+ 830 01ce 6C6F6E67 		.ascii	"long int\000"
+ 830      20696E74 
+ 830      00
+ 831              	.LASF23:
+ 832 01d7 6D656D5F 		.ascii	"mem_calloc\000"
+ 832      63616C6C 
+ 832      6F6300
+ 833              	.LASF11:
+ 834 01e2 6C6F6E67 		.ascii	"long double\000"
+ 834      20646F75 
+ 834      626C6500 
+ 835              	.LASF28:
+ 836 01ee 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 836      43313120 
+ 836      352E342E 
+ 836      31203230 
+ 836      31363036 
+ 837 0221 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 837      20726576 
+ 837      6973696F 
+ 837      6E203233 
+ 837      37373135 
+ 838 0254 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 838      67202D66 
+ 838      66756E63 
+ 838      74696F6E 
+ 838      2D736563 
+ 839              	.LASF0:
+ 840 0280 7369676E 		.ascii	"signed char\000"
+ 840      65642063 
+ 840      68617200 
+ 841              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

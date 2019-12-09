@@ -1,0 +1,126 @@
+# Build script for executable 'update'
+
+# == Auto-generated file.  Do not edit. ==
+
+builddir = /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/update
+
+cFlags =   -O2 -fno-omit-frame-pointer -I /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/update -I/home/shrunoti/Downloads/workspace/legato/interfaces -I/home/shrunoti/Downloads/workspace/legato/framework/include -I.
+
+cxxFlags =  -I /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/update -I/home/shrunoti/Downloads/workspace/legato/interfaces -I/home/shrunoti/Downloads/workspace/legato/framework/include -I.
+
+ldFlags = 
+
+target = localhost
+
+ifgenFlags =  --import-dir /home/shrunoti/Downloads/workspace/legato/interfaces --import-dir /home/shrunoti/Downloads/workspace/legato/framework/include --import-dir .
+
+rule CompileC
+  description = Compiling C source
+  depfile = $out.d
+  command = /usr/bin//gcc --sysroot=/ -MMD -MF $out.d -c $in -o $out -DLE_FILENAME=`basename $in` -Wall -fPIC -Werror -fvisibility=hidden -DMK_TOOLS_BUILD -g $cFlags
+
+rule CompileCxx
+  description = Compiling C++ source
+  depfile = $out.d
+  command = /usr/bin//g++ --sysroot=/ -MMD -MF $out.d -c $in -o $out -DLE_FILENAME=`basename $in` -Wall -fPIC -Werror -fvisibility=hidden  -DMK_TOOLS_BUILD -g $cxxFlags
+
+rule LinkCLib
+  description = Linking C library
+  command = /usr/bin//gcc --sysroot=/ -Wl,--build-id -g -shared -o $out $in $ldFlags $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCxxLib
+  description = Linking C++ library
+  command = /usr/bin//g++ --sysroot=/ -Wl,--build-id -g -shared -o $out $in $ldFlags $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCExe
+  description = Linking C executable
+  command = /usr/bin//gcc --sysroot=/ -Wl,--build-id -g -fPIE -pie -o $out $in $ldFlags -g $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCxxExe
+  description = Linking C++ executable
+  command = /usr/bin//g++ --sysroot=/ -Wl,--build-id -g -fPIE -pie -o $out $in $ldFlags -g $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule CompileJava
+  description = Compiling Java source
+  command = javac -cp $classPath -d `dirname $out` $in && touch $out
+
+rule MakeJar
+  description = Making JAR file
+  command = INDIR=`dirname $in`; find $$INDIR -name '*.class' -printf "-C $$INDIR\n%P\n"|xargs jar -cf $out
+
+rule MakeKernelModule
+  description = Build kernel driver module
+  depfile = $out.d
+  command = make -C $in
+
+rule BuildExternal
+  description = Running external build step
+  command = cd $builddir/$workingdir && $
+            export CFLAGS="--sysroot=/ $cFlags" $
+            CXXFLAGS="--sysroot=/ $cxxFlags" $
+            LDFLAGS="--sysroot=/ $ldFlags" $
+            PATH="/usr/bin/:$$PATH" && $
+            $externalCommand
+
+rule GenInterfaceCode
+  description = Generating IPC interface code
+  command = ifgen --output-dir $outputDir $ifgenFlags $in
+
+rule GenPyApiCExtension
+  description = Generating Python API C Extension
+  command = cextgenerator.py $in -o $workDir > /dev/null
+rule CopyFile
+  description = Copying file
+  command = cp -d -f -T $in $out
+
+rule RegenNinjaScript
+  description = Regenerating build script
+  generator = 1
+  command = mkexe --dont-run-ninja "-o" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/bin/update" "/home/shrunoti/Downloads/workspace/legato/framework/tools/target/linux/update" "-l" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib" "-w" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/update" "-t" "localhost" "-d" "/home/shrunoti/Downloads/workspace/legato/build/localhost/debug" "--cflags= -O2 -fno-omit-frame-pointer"
+
+build $builddir/obj/update/_main.c.o: CompileC /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/update/src/update/_main.c
+  cFlags = $cFlags -DLE_COMPONENT_NAME=update_exe -DLE_LOG_SESSION=update_exe_LogSession -DLE_LOG_LEVEL_FILTER_PTR=update_exe_LogLevelFilterPtr 
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/bin/update: LinkCExe $builddir/obj/update/_main.c.o | /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/libComponent_update.so /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/liblegato.so /home/shrunoti/Downloads/workspace/legato/build/$target/framework/lib/liblegato.so
+  ldFlags = -rdynamic -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib:$$LEGATO_BUILD/framework/lib" -L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib "-L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib" -lComponent_update "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -ldl -lm $ldFlags
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/libComponent_update.so: LinkCLib $builddir/component/00a8f7630b3b68b8c6b821281b5eedc3/obj/3d9937b73ae6b8c8f616b71d5229a2c5.o $builddir/api/e33d49b4c045fb41775c508ffc308324/client/le_update_client.c.o $builddir/api/c732c62c68608be5f3c41e8846a6decc/client/le_updateCtrl_client.c.o $builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client/le_appRemove_client.c.o $builddir/component/00a8f7630b3b68b8c6b821281b5eedc3/obj/_componentMain.c.o | /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/liblegato.so
+  ldFlags =  -L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib:$$LEGATO_BUILD/framework/lib" "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -lm
+
+build $builddir/component/00a8f7630b3b68b8c6b821281b5eedc3/obj/3d9937b73ae6b8c8f616b71d5229a2c5.o: CompileC /home/shrunoti/Downloads/workspace/legato/framework/tools/target/linux/update/update.c || $builddir/api/e33d49b4c045fb41775c508ffc308324/client/le_update_interface.h $builddir/api/e33d49b4c045fb41775c508ffc308324/client/le_update_messages.h $builddir/api/c732c62c68608be5f3c41e8846a6decc/client/le_updateCtrl_interface.h $builddir/api/c732c62c68608be5f3c41e8846a6decc/client/le_updateCtrl_messages.h $builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client/le_appRemove_interface.h $builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client/le_appRemove_messages.h $builddir/api/b0405ed1080555feee94a613afef58d8/client/le_limit_interface.h 
+  cFlags = $cFlags -I$builddir/component/00a8f7630b3b68b8c6b821281b5eedc3/src -I$builddir/api/e33d49b4c045fb41775c508ffc308324/client -I$builddir/api/c732c62c68608be5f3c41e8846a6decc/client -I$builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client -I$builddir/api/b0405ed1080555feee94a613afef58d8/client -DLE_COMPONENT_NAME=update -DLE_LOG_SESSION=update_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=update_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _update_COMPONENT_INIT()" -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato
+
+build $builddir/component/00a8f7630b3b68b8c6b821281b5eedc3/obj/_componentMain.c.o: CompileC $builddir/component/00a8f7630b3b68b8c6b821281b5eedc3/src/_componentMain.c
+  cFlags = $cFlags -I$builddir/component/00a8f7630b3b68b8c6b821281b5eedc3/src -I$builddir/api/e33d49b4c045fb41775c508ffc308324/client -I$builddir/api/c732c62c68608be5f3c41e8846a6decc/client -I$builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client -I$builddir/api/b0405ed1080555feee94a613afef58d8/client -DLE_COMPONENT_NAME=update -DLE_LOG_SESSION=update_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=update_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _update_COMPONENT_INIT()"
+
+build $builddir/api/b0405ed1080555feee94a613afef58d8/client/le_limit_interface.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/le_limit.api |
+  outputDir = $builddir/api/b0405ed1080555feee94a613afef58d8/client
+  ifgenFlags = --gen-interface $ifgenFlags
+
+build $builddir/api/e33d49b4c045fb41775c508ffc308324/client/le_update_client.c.o: CompileC $builddir/api/e33d49b4c045fb41775c508ffc308324/client/le_update_client.c | $builddir/api/e33d49b4c045fb41775c508ffc308324/client/le_update_messages.h $builddir/api/e33d49b4c045fb41775c508ffc308324/client/le_update_interface.h $builddir/api/b0405ed1080555feee94a613afef58d8/client/le_limit_interface.h
+  cFlags = $cFlags -I$builddir/api/b0405ed1080555feee94a613afef58d8/client
+
+build $builddir/api/e33d49b4c045fb41775c508ffc308324/client/le_update_client.c $builddir/api/e33d49b4c045fb41775c508ffc308324/client/le_update_interface.h $builddir/api/e33d49b4c045fb41775c508ffc308324/client/le_update_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/le_update.api | /home/shrunoti/Downloads/workspace/legato/interfaces/le_limit.api
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix le_update $ifgenFlags
+  outputDir = $builddir/api/e33d49b4c045fb41775c508ffc308324/client
+
+build $builddir/api/c732c62c68608be5f3c41e8846a6decc/client/le_updateCtrl_client.c.o: CompileC $builddir/api/c732c62c68608be5f3c41e8846a6decc/client/le_updateCtrl_client.c | $builddir/api/c732c62c68608be5f3c41e8846a6decc/client/le_updateCtrl_messages.h $builddir/api/c732c62c68608be5f3c41e8846a6decc/client/le_updateCtrl_interface.h
+  cFlags = $cFlags
+
+build $builddir/api/c732c62c68608be5f3c41e8846a6decc/client/le_updateCtrl_client.c $builddir/api/c732c62c68608be5f3c41e8846a6decc/client/le_updateCtrl_interface.h $builddir/api/c732c62c68608be5f3c41e8846a6decc/client/le_updateCtrl_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/le_updateCtrl.api |
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix le_updateCtrl $ifgenFlags
+  outputDir = $builddir/api/c732c62c68608be5f3c41e8846a6decc/client
+
+build $builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client/le_appRemove_client.c.o: CompileC $builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client/le_appRemove_client.c | $builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client/le_appRemove_messages.h $builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client/le_appRemove_interface.h $builddir/api/b0405ed1080555feee94a613afef58d8/client/le_limit_interface.h
+  cFlags = $cFlags -I$builddir/api/b0405ed1080555feee94a613afef58d8/client
+
+build $builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client/le_appRemove_client.c $builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client/le_appRemove_interface.h $builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client/le_appRemove_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/le_appRemove.api | /home/shrunoti/Downloads/workspace/legato/interfaces/le_limit.api
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix le_appRemove $ifgenFlags
+  outputDir = $builddir/api/9b5b38da2adf148c491d5cc27e84eac9/client
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/update/build.ninja: RegenNinjaScript | /home/shrunoti/Downloads/workspace/legato/build/tools/mk /home/shrunoti/Downloads/workspace/legato/framework/tools/target/linux/update/Component.cdef /home/shrunoti/Downloads/workspace/legato/interfaces/le_appRemove.api /home/shrunoti/Downloads/workspace/legato/interfaces/le_limit.api /home/shrunoti/Downloads/workspace/legato/interfaces/le_update.api /home/shrunoti/Downloads/workspace/legato/interfaces/le_updateCtrl.api
+

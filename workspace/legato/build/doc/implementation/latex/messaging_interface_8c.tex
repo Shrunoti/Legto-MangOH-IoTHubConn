@@ -1,0 +1,790 @@
+\hypertarget{messaging_interface_8c}{}\section{framework/liblegato/linux/messaging\+Interface.c File Reference}
+\label{messaging_interface_8c}\index{framework/liblegato/linux/messaging\+Interface.\+c@{framework/liblegato/linux/messaging\+Interface.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}unix\+Socket.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}service\+Directory/service\+Directory\+Protocol.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}messaging\+Interface.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}messaging\+Session.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_session_event_handler__t}{Session\+Event\+Handler\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{messaging_interface_8c_a5a39a614cb4dfe84c09cc4c655e6ec21}{M\+A\+X\+\_\+\+S\+E\+R\+V\+I\+C\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}~64
+\begin{DoxyCompactList}\small\item\em Maximum size of a service instance name, in bytes, including the null-\/terminator. \end{DoxyCompactList}\item 
+\#define \hyperlink{messaging_interface_8c_aa1a2e99cc54678ba91ba7c37fb056273}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+S\+E\+R\+V\+I\+C\+ES}~32
+\item 
+\#define \hyperlink{messaging_interface_8c_a93c73eec48492199c3669266a13f78f3}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+L\+I\+E\+N\+T\+\_\+\+I\+N\+T\+E\+R\+F\+A\+C\+ES}~32
+\begin{DoxyCompactList}\small\item\em Highest number of Client Interfaces that are expected to be referred to in a single process. \end{DoxyCompactList}\item 
+\#define \hyperlink{messaging_interface_8c_a0376b2ead2de10bb7ab6a4d21ec304e9}{L\+O\+CK}~\hyperlink{sbtrace_8c_a7c6c2e5e914cf8eca19d150e90f3b106}{L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+lock(\&\hyperlink{thread_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{Mutex}) == 0);
+\item 
+\#define \hyperlink{messaging_interface_8c_ac82effb31e82e32254efc8b57251d59e}{U\+N\+L\+O\+CK}~\hyperlink{sbtrace_8c_a7c6c2e5e914cf8eca19d150e90f3b106}{L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+unlock(\&\hyperlink{thread_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{Mutex}) == 0);
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static size\+\_\+t \hyperlink{messaging_interface_8c_a5d7752fcaefdb4ccdb11d76485ee9539}{Compute\+Interface\+Id\+Hash} (const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$key\+Ptr)
+\item 
+static bool \hyperlink{messaging_interface_8c_a3575cd784d5473363af47d33294ada21}{Are\+Interface\+Ids\+The\+Same} (const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$first\+Key\+Ptr, const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$second\+Key\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_acc55c3120dd192681af2eac1bf5e7b0a}{Init\+Interface} (\hyperlink{le__messaging_8h_ac05e9b3268f8fb5776adab6fe11410e5}{le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}{protocol\+Ref}, const char $\ast$interface\+Name, \hyperlink{messaging_interface_8h_a4030c9bdeebdff523f6bce9f545e0f58}{msg\+Interface\+\_\+\+Type\+\_\+t} interface\+Type, \hyperlink{structmsg_interface___interface__t}{msg\+Interface\+\_\+\+Interface\+\_\+t} $\ast$interface\+Ptr)
+\item 
+static \hyperlink{structmsg_interface___service__t}{msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$ \hyperlink{messaging_interface_8c_a23cea7374f6dd988e5260cf821d3bc9a}{Create\+Service} (\hyperlink{le__messaging_8h_ac05e9b3268f8fb5776adab6fe11410e5}{le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}{protocol\+Ref}, const char $\ast$interface\+Name)
+\item 
+static \hyperlink{structmsg_interface___client_interface__t}{msg\+Interface\+\_\+\+Client\+Interface\+\_\+t} $\ast$ \hyperlink{messaging_interface_8c_a6b2077f5fccc964cc9dc4453dfe341cb}{Create\+Client\+Interface} (\hyperlink{le__messaging_8h_ac05e9b3268f8fb5776adab6fe11410e5}{le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}{protocol\+Ref}, const char $\ast$interface\+Name)
+\item 
+static \hyperlink{structmsg_interface___service__t}{msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$ \hyperlink{messaging_interface_8c_adc3857c390fad7ffb5b737aaf9b40385}{Get\+Service} (\hyperlink{le__messaging_8h_ac05e9b3268f8fb5776adab6fe11410e5}{le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}{protocol\+Ref}, const char $\ast$interface\+Name)
+\item 
+static \hyperlink{structmsg_interface___client_interface__t}{msg\+Interface\+\_\+\+Client\+Interface\+\_\+t} $\ast$ \hyperlink{messaging_interface_8c_a8c894a71cb603750ddfef294e65ad991}{Get\+Client} (\hyperlink{le__messaging_8h_ac05e9b3268f8fb5776adab6fe11410e5}{le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}{protocol\+Ref}, const char $\ast$interface\+Name)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_aefa6c842f29333724150da5f919381c6}{Service\+Destructor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$obj\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_adf8f77742cd8f896b98dccf54c1ba2b8}{Client\+Interface\+Destructor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$obj\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a7a5fab94ed8f466c70ac05a034d22365}{Call\+Open\+Handler} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref}, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a1683d7d42972e64dbd04a3109dfebcff}{Directory\+Socket\+Writeable} (\hyperlink{structmsg_interface___service__t}{msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$service\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a70618f178d17fd8358106dd772a796fd}{Directory\+Socket\+Readable} (\hyperlink{structmsg_interface___service__t}{msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$service\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a07d3538647860fe68149e0ee31321faa}{Directory\+Socket\+Closed} (\hyperlink{structmsg_interface___service__t}{msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$service\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a40f136bb8c0226f98a2d1b7341ca6535}{Directory\+Socket\+Error} (\hyperlink{structmsg_interface___service__t}{msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$service\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_ae9821319e859689f596a22875e5a6118}{Directory\+Socket\+Event\+Handler} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, short events)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_af0cd4d47c573d2de8d7e90edc1af4846}{Start\+Monitoring\+Directory\+Socket} (\hyperlink{structmsg_interface___service__t}{msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$service\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a92fbdc3259aada320e5446d1241c08e7}{Close\+All\+Sessions} (\hyperlink{structmsg_interface___service__t}{msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$service\+Ptr)
+\item 
+\hyperlink{le__hashmap_8h_ae81c60860dbdb8c59beaf25985e5605a}{le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} $\ast$ \hyperlink{messaging_interface_8c_ad1c7713a3e3d0e9ad1794b5c402a11b5}{msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+size\+\_\+t $\ast$$\ast$ \hyperlink{messaging_interface_8c_a18e45c72aee17c28a4b8dd07513bd0ed}{msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map\+Chg\+Cnt\+Ref} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__hashmap_8h_ae81c60860dbdb8c59beaf25985e5605a}{le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} $\ast$ \hyperlink{messaging_interface_8c_ae6dd1f283a6be9daca85610fb0a1634b}{msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+size\+\_\+t $\ast$$\ast$ \hyperlink{messaging_interface_8c_a6f0a219b3d4e0ede1e73da6a717076b2}{msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map\+Chg\+Cnt\+Ref} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a5364bdf066f5b50aabd7636d8154fb63}{msg\+Interface\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__messaging_8h_abf4d6c5113e22dc8ccefb48938fba7b8}{le\+\_\+msg\+\_\+\+Client\+Interface\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_a0dbcfeea06577005de964b5775ed8b42}{msg\+Interface\+\_\+\+Get\+Client} (\hyperlink{le__messaging_8h_ac05e9b3268f8fb5776adab6fe11410e5}{le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}{protocol\+Ref}, const char $\ast$interface\+Name)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a69cd67c2830ff099ef6df0fb39e62b27}{msg\+Interface\+\_\+\+Get\+Interface\+Details} (\hyperlink{le__messaging_8h_a67826f96880f776bda0a3b9117304b45}{le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t} interface\+Ref, \hyperlink{structsvcdir___interface_details__t}{svcdir\+\_\+\+Interface\+Details\+\_\+t} $\ast$details\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_ad0253070cc1903dbb204c0a408d79786}{msg\+Interface\+\_\+\+Release} (\hyperlink{le__messaging_8h_a67826f96880f776bda0a3b9117304b45}{le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t} interface\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a0d06f24634f4c7cff75ff7b720c32623}{msg\+Interface\+\_\+\+Add\+Session} (\hyperlink{le__messaging_8h_a67826f96880f776bda0a3b9117304b45}{le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t} interface\+Ref, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_ae0bcba5de67b66562878c3b6b797a96b}{msg\+Interface\+\_\+\+Remove\+Session} (\hyperlink{le__messaging_8h_a67826f96880f776bda0a3b9117304b45}{le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t} interface\+Ref, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a873082edee4a8271fff1818fc2fa39ba}{msg\+Interface\+\_\+\+Call\+Close\+Handler} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref}, \hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a00aae4bdd0c49f47d4ee0521d8cc0e52}{msg\+Interface\+\_\+\+Process\+Message\+From\+Client} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref}, \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_adbbb2737069b636028128c74ae407742}{le\+\_\+msg\+\_\+\+Create\+Service} (\hyperlink{le__messaging_8h_ac05e9b3268f8fb5776adab6fe11410e5}{le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}{protocol\+Ref}, const char $\ast$interface\+Name)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a2efe99bdd7dcea84ea820a8cb4a8a9a4}{le\+\_\+msg\+\_\+\+Delete\+Service} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref})
+\item 
+\hyperlink{le__messaging_8h_af86eb84f7043287aafb0a130a9eacf95}{le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_a829d6450d487166e0b2994b4bf44ee5d}{le\+\_\+msg\+\_\+\+Add\+Service\+Open\+Handler} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref}, \hyperlink{le__messaging_8h_a2db32a8ef90eced02789aee366c9dda2}{le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t} handler\+Func, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{le__messaging_8h_af86eb84f7043287aafb0a130a9eacf95}{le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_a426dfbae396599d80e52902165368907}{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref}, \hyperlink{le__messaging_8h_a2db32a8ef90eced02789aee366c9dda2}{le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t} handler\+Func, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_ac1aacc5df9172804ce18b93ef266b786}{le\+\_\+msg\+\_\+\+Remove\+Service\+Handler} (\hyperlink{le__messaging_8h_af86eb84f7043287aafb0a130a9eacf95}{le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+Ref\+\_\+t} handler\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a21c2e57ad1ffbbdfedd3987c468e3130}{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref}, \hyperlink{le__messaging_8h_a9aa36465329fb00e85fb3cbdf034298a}{le\+\_\+msg\+\_\+\+Receive\+Handler\+\_\+t} handler\+Func, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a9233d283c260a1983c594b4a9061374a}{le\+\_\+msg\+\_\+\+Set\+Service\+Context\+Ptr} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$ \hyperlink{messaging_interface_8c_afdbe07163b20ad9246bc8419e7c034e3}{le\+\_\+msg\+\_\+\+Get\+Service\+Context\+Ptr} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_ad3ff11d1962840f879d9c8fe7054de0c}{le\+\_\+msg\+\_\+\+Advertise\+Service} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_interface_8c_a38cc9dec16a758c5262d8bb5c7a2e57f}{le\+\_\+msg\+\_\+\+Hide\+Service} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref})
+\item 
+const char $\ast$ \hyperlink{messaging_interface_8c_a32e952eda728d1a1b4236d879bfc05f9}{le\+\_\+msg\+\_\+\+Get\+Interface\+Name} (\hyperlink{le__messaging_8h_a67826f96880f776bda0a3b9117304b45}{le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t} interface\+Ref)
+\item 
+\hyperlink{le__messaging_8h_ac05e9b3268f8fb5776adab6fe11410e5}{le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_a7bf1bcd46c65a764dbd944db204a73b8}{le\+\_\+msg\+\_\+\+Get\+Interface\+Protocol} (\hyperlink{le__messaging_8h_a67826f96880f776bda0a3b9117304b45}{le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t} interface\+Ref)
+\item 
+\hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_a2007f56df1f818119e3188a1a2a902d6}{le\+\_\+msg\+\_\+\+Get\+Service\+Rx\+Msg} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{le__hashmap_8h_ae81c60860dbdb8c59beaf25985e5605a}{le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_a58d29ffd360d3341347584f4b98ec5ba}{Service\+Map\+Ref}
+\item 
+static \hyperlink{le__hashmap_8h_ae81c60860dbdb8c59beaf25985e5605a}{le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_ab4002e3906d2fa893418ca295f660016}{Client\+Interface\+Map\+Ref}
+\item 
+static size\+\_\+t \hyperlink{messaging_interface_8c_a3316d8b55f713027690c03ba54eff52a}{Service\+Obj\+Map\+Change\+Count} = 0
+\item 
+static size\+\_\+t $\ast$ \hyperlink{messaging_interface_8c_a1b556550cb063359b88ec8f725e6f5bb}{Service\+Obj\+Map\+Change\+Count\+Ref} = \&\hyperlink{messaging_interface_8c_a3316d8b55f713027690c03ba54eff52a}{Service\+Obj\+Map\+Change\+Count}
+\item 
+static size\+\_\+t \hyperlink{messaging_interface_8c_a4fe977f41ab530357518c1c43295bee1}{Client\+Interface\+Map\+Change\+Count} = 0
+\item 
+static size\+\_\+t $\ast$ \hyperlink{messaging_interface_8c_a5c83c01b89bf31daa226434ac01cadb1}{Client\+Interface\+Map\+Change\+Count\+Ref} = \&\hyperlink{messaging_interface_8c_a4fe977f41ab530357518c1c43295bee1}{Client\+Interface\+Map\+Change\+Count}
+\item 
+static \hyperlink{le__safe_ref_8h_aaf8fb3412fb840cb50366856affaf69b}{le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_a9002c82b5e35938805b5c2a9d0e3c4be}{Handlers\+Ref\+Map}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_a9f7833031cd49815c812e38818e823e7}{Service\+Pool\+Ref}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_a91ad6baf41d929acf06f43d6cde7414b}{Client\+Interface\+Pool\+Ref}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{messaging_interface_8c_a2e9bc247b59fe1d2b0f1c4f6f33cf293}{Handler\+Event\+Pool\+Ref}
+\item 
+static pthread\+\_\+mutex\+\_\+t \hyperlink{messaging_interface_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{Mutex} = P\+T\+H\+R\+E\+A\+D\+\_\+\+M\+U\+T\+E\+X\+\_\+\+I\+N\+I\+T\+I\+A\+L\+I\+Z\+ER
+\item 
+static pthread\+\_\+key\+\_\+t \hyperlink{messaging_interface_8c_a8ee1584c0cc44a03826500532f26f8ce}{Thread\+Local\+Rx\+Msg\+Key}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Implements the \char`\"{}\+Interface\char`\"{} objects and the \char`\"{}\+Interface List\char`\"{} in the Legato \hyperlink{c_messaging}{Low-\/level Messaging A\+PI}.
+
+See \hyperlink{messaging_8c}{messaging.\+c} for the overall subsystem design.
+
+\begin{DoxyWarning}{Warning}
+The code in this file {\bfseries must} be thread safe and re-\/entrant.
+\end{DoxyWarning}
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!L\+O\+CK@{L\+O\+CK}}
+\index{L\+O\+CK@{L\+O\+CK}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{L\+O\+CK}{LOCK}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+CK~{\bf L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+lock(\&{\bf Mutex}) == 0);}\hypertarget{messaging_interface_8c_a0376b2ead2de10bb7ab6a4d21ec304e9}{}\label{messaging_interface_8c_a0376b2ead2de10bb7ab6a4d21ec304e9}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+L\+I\+E\+N\+T\+\_\+\+I\+N\+T\+E\+R\+F\+A\+C\+ES@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+L\+I\+E\+N\+T\+\_\+\+I\+N\+T\+E\+R\+F\+A\+C\+ES}}
+\index{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+L\+I\+E\+N\+T\+\_\+\+I\+N\+T\+E\+R\+F\+A\+C\+ES@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+L\+I\+E\+N\+T\+\_\+\+I\+N\+T\+E\+R\+F\+A\+C\+ES}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+L\+I\+E\+N\+T\+\_\+\+I\+N\+T\+E\+R\+F\+A\+C\+ES}{MAX_EXPECTED_CLIENT_INTERFACES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+C\+L\+I\+E\+N\+T\+\_\+\+I\+N\+T\+E\+R\+F\+A\+C\+ES~32}\hypertarget{messaging_interface_8c_a93c73eec48492199c3669266a13f78f3}{}\label{messaging_interface_8c_a93c73eec48492199c3669266a13f78f3}
+
+
+Highest number of Client Interfaces that are expected to be referred to in a single process. 
+
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+S\+E\+R\+V\+I\+C\+ES@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+S\+E\+R\+V\+I\+C\+ES}}
+\index{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+S\+E\+R\+V\+I\+C\+ES@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+S\+E\+R\+V\+I\+C\+ES}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+S\+E\+R\+V\+I\+C\+ES}{MAX_EXPECTED_SERVICES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+S\+E\+R\+V\+I\+C\+ES~32}\hypertarget{messaging_interface_8c_aa1a2e99cc54678ba91ba7c37fb056273}{}\label{messaging_interface_8c_aa1a2e99cc54678ba91ba7c37fb056273}
+Highest number of Services that are expected to be referred to (served up or used) in a single process. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!M\+A\+X\+\_\+\+S\+E\+R\+V\+I\+C\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+S\+E\+R\+V\+I\+C\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}}
+\index{M\+A\+X\+\_\+\+S\+E\+R\+V\+I\+C\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+S\+E\+R\+V\+I\+C\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+S\+E\+R\+V\+I\+C\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}{MAX_SERVICE_NAME_BYTES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+S\+E\+R\+V\+I\+C\+E\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES~64}\hypertarget{messaging_interface_8c_a5a39a614cb4dfe84c09cc4c655e6ec21}{}\label{messaging_interface_8c_a5a39a614cb4dfe84c09cc4c655e6ec21}
+
+
+Maximum size of a service instance name, in bytes, including the null-\/terminator. 
+
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!U\+N\+L\+O\+CK@{U\+N\+L\+O\+CK}}
+\index{U\+N\+L\+O\+CK@{U\+N\+L\+O\+CK}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{U\+N\+L\+O\+CK}{UNLOCK}}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\+N\+L\+O\+CK~{\bf L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+unlock(\&{\bf Mutex}) == 0);}\hypertarget{messaging_interface_8c_ac82effb31e82e32254efc8b57251d59e}{}\label{messaging_interface_8c_ac82effb31e82e32254efc8b57251d59e}
+
+
+\subsection{Function Documentation}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Are\+Interface\+Ids\+The\+Same@{Are\+Interface\+Ids\+The\+Same}}
+\index{Are\+Interface\+Ids\+The\+Same@{Are\+Interface\+Ids\+The\+Same}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Are\+Interface\+Ids\+The\+Same(const void $\ast$first\+Key\+Ptr, const void $\ast$second\+Key\+Ptr)}{AreInterfaceIdsTheSame(const void *firstKeyPtr, const void *secondKeyPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Are\+Interface\+Ids\+The\+Same (
+\begin{DoxyParamCaption}
+\item[{const {\bf void} $\ast$}]{first\+Key\+Ptr, }
+\item[{const {\bf void} $\ast$}]{second\+Key\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a3575cd784d5473363af47d33294ada21}{}\label{messaging_interface_8c_a3575cd784d5473363af47d33294ada21}
+Key equality comparison function for the hashmaps of interface instances. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Call\+Open\+Handler@{Call\+Open\+Handler}}
+\index{Call\+Open\+Handler@{Call\+Open\+Handler}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Call\+Open\+Handler(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{CallOpenHandler(le_msg_ServiceRef_t serviceRef, le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Call\+Open\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a7a5fab94ed8f466c70ac05a034d22365}{}\label{messaging_interface_8c_a7a5fab94ed8f466c70ac05a034d22365}
+Calls a Service\textquotesingle{}s server\textquotesingle{}s \char`\"{}open\char`\"{} handler if there is one registered.
+
+\begin{DoxyNote}{Note}
+This only gets called by the server thread for the service. 
+\end{DoxyNote}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Client\+Interface\+Destructor@{Client\+Interface\+Destructor}}
+\index{Client\+Interface\+Destructor@{Client\+Interface\+Destructor}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Interface\+Destructor(void $\ast$obj\+Ptr)}{ClientInterfaceDestructor(void *objPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Interface\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{obj\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_adf8f77742cd8f896b98dccf54c1ba2b8}{}\label{messaging_interface_8c_adf8f77742cd8f896b98dccf54c1ba2b8}
+Destructor function that runs when a Client Interface object is about to be returned back to the Client Interface Pool.
+
+\begin{DoxyWarning}{Warning}
+Assumes that the Mutex is locked, therefore the Mutex must be locked during all calls to \hyperlink{le__mem_8h_a6d8e3fe430bcb81efe97b57ce30ef2de}{le\+\_\+mem\+\_\+\+Release()} for Client Interface objects. 
+\end{DoxyWarning}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Close\+All\+Sessions@{Close\+All\+Sessions}}
+\index{Close\+All\+Sessions@{Close\+All\+Sessions}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Close\+All\+Sessions(msg\+Interface\+\_\+\+Service\+\_\+t $\ast$service\+Ptr)}{CloseAllSessions(msgInterface_Service_t *servicePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Close\+All\+Sessions (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$}]{service\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a92fbdc3259aada320e5446d1241c08e7}{}\label{messaging_interface_8c_a92fbdc3259aada320e5446d1241c08e7}
+Close all sessions on a given Service object\textquotesingle{}s list of open sessions. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Compute\+Interface\+Id\+Hash@{Compute\+Interface\+Id\+Hash}}
+\index{Compute\+Interface\+Id\+Hash@{Compute\+Interface\+Id\+Hash}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Compute\+Interface\+Id\+Hash(const void $\ast$key\+Ptr)}{ComputeInterfaceIdHash(const void *keyPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Compute\+Interface\+Id\+Hash (
+\begin{DoxyParamCaption}
+\item[{const {\bf void} $\ast$}]{key\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a5d7752fcaefdb4ccdb11d76485ee9539}{}\label{messaging_interface_8c_a5d7752fcaefdb4ccdb11d76485ee9539}
+Key hash function for the hashmaps of interface instances.
+
+\begin{DoxyReturn}{Returns}
+The hash value for a unique session ID (the key). 
+\end{DoxyReturn}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Create\+Client\+Interface@{Create\+Client\+Interface}}
+\index{Create\+Client\+Interface@{Create\+Client\+Interface}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Client\+Interface(le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t protocol\+Ref, const char $\ast$interface\+Name)}{CreateClientInterface(le_msg_ProtocolRef_t protocolRef, const char *interfaceName)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf msg\+Interface\+\_\+\+Client\+Interface\+\_\+t}$\ast$ Create\+Client\+Interface (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t}}]{protocol\+Ref, }
+\item[{const char $\ast$}]{interface\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a6b2077f5fccc964cc9dc4453dfe341cb}{}\label{messaging_interface_8c_a6b2077f5fccc964cc9dc4453dfe341cb}
+Creates a new Client Interface object.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the object.
+\end{DoxyReturn}
+\begin{DoxyWarning}{Warning}
+Assumes that the Mutex is locked. 
+\end{DoxyWarning}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Create\+Service@{Create\+Service}}
+\index{Create\+Service@{Create\+Service}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Service(le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t protocol\+Ref, const char $\ast$interface\+Name)}{CreateService(le_msg_ProtocolRef_t protocolRef, const char *interfaceName)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf msg\+Interface\+\_\+\+Service\+\_\+t}$\ast$ Create\+Service (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t}}]{protocol\+Ref, }
+\item[{const char $\ast$}]{interface\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a23cea7374f6dd988e5260cf821d3bc9a}{}\label{messaging_interface_8c_a23cea7374f6dd988e5260cf821d3bc9a}
+Creates a new Service object.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the object.
+\end{DoxyReturn}
+\begin{DoxyWarning}{Warning}
+Assumes that the Mutex is locked. 
+\end{DoxyWarning}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Directory\+Socket\+Closed@{Directory\+Socket\+Closed}}
+\index{Directory\+Socket\+Closed@{Directory\+Socket\+Closed}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Directory\+Socket\+Closed(msg\+Interface\+\_\+\+Service\+\_\+t $\ast$service\+Ptr)}{DirectorySocketClosed(msgInterface_Service_t *servicePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Directory\+Socket\+Closed (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$}]{service\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a07d3538647860fe68149e0ee31321faa}{}\label{messaging_interface_8c_a07d3538647860fe68149e0ee31321faa}
+Event handler function called when a Service\textquotesingle{}s directory\+Socket\+Fd closes.
+
+This means that the Service Directory has denied us permission to advertise a service.
+
+\begin{DoxyNote}{Note}
+It could also mean that the Service Directory has crashed or been shut down, but that is much less likely to be the cause, and the effect is the same anyway. 
+\end{DoxyNote}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Directory\+Socket\+Error@{Directory\+Socket\+Error}}
+\index{Directory\+Socket\+Error@{Directory\+Socket\+Error}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Directory\+Socket\+Error(msg\+Interface\+\_\+\+Service\+\_\+t $\ast$service\+Ptr)}{DirectorySocketError(msgInterface_Service_t *servicePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Directory\+Socket\+Error (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$}]{service\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a40f136bb8c0226f98a2d1b7341ca6535}{}\label{messaging_interface_8c_a40f136bb8c0226f98a2d1b7341ca6535}
+Event handler function called when a Service\textquotesingle{}s directory\+Socket\+Fd experiences an error.
+
+This means that we have failed to communicate with the Service Directory. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Directory\+Socket\+Event\+Handler@{Directory\+Socket\+Event\+Handler}}
+\index{Directory\+Socket\+Event\+Handler@{Directory\+Socket\+Event\+Handler}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Directory\+Socket\+Event\+Handler(int fd, short events)}{DirectorySocketEventHandler(int fd, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Directory\+Socket\+Event\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_ae9821319e859689f596a22875e5a6118}{}\label{messaging_interface_8c_ae9821319e859689f596a22875e5a6118}
+Handles events detected on the file descriptor for the socket connection to the Service Directory. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Directory\+Socket\+Readable@{Directory\+Socket\+Readable}}
+\index{Directory\+Socket\+Readable@{Directory\+Socket\+Readable}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Directory\+Socket\+Readable(msg\+Interface\+\_\+\+Service\+\_\+t $\ast$service\+Ptr)}{DirectorySocketReadable(msgInterface_Service_t *servicePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Directory\+Socket\+Readable (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$}]{service\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a70618f178d17fd8358106dd772a796fd}{}\label{messaging_interface_8c_a70618f178d17fd8358106dd772a796fd}
+Event handler function called when a Service\textquotesingle{}s directory\+Socket\+Fd becomes readable.
+
+This means that the Service Directory has sent us the file descriptor of an authenticated client connection socket. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Directory\+Socket\+Writeable@{Directory\+Socket\+Writeable}}
+\index{Directory\+Socket\+Writeable@{Directory\+Socket\+Writeable}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Directory\+Socket\+Writeable(msg\+Interface\+\_\+\+Service\+\_\+t $\ast$service\+Ptr)}{DirectorySocketWriteable(msgInterface_Service_t *servicePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Directory\+Socket\+Writeable (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$}]{service\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a1683d7d42972e64dbd04a3109dfebcff}{}\label{messaging_interface_8c_a1683d7d42972e64dbd04a3109dfebcff}
+Event handler function called when a Service\textquotesingle{}s directory\+Socket\+Fd becomes writeable.
+
+This only happens when the Service is in the C\+O\+N\+N\+E\+C\+T\+I\+NG state and the connection to the Service Directory is established or fails to be established. After that, we disable writeability notification. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Get\+Client@{Get\+Client}}
+\index{Get\+Client@{Get\+Client}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Client(le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t protocol\+Ref, const char $\ast$interface\+Name)}{GetClient(le_msg_ProtocolRef_t protocolRef, const char *interfaceName)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf msg\+Interface\+\_\+\+Client\+Interface\+\_\+t}$\ast$ Get\+Client (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t}}]{protocol\+Ref, }
+\item[{const char $\ast$}]{interface\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a8c894a71cb603750ddfef294e65ad991}{}\label{messaging_interface_8c_a8c894a71cb603750ddfef294e65ad991}
+Gets a Client Interface object matching a given client interface name. Must be released using \hyperlink{messaging_interface_8c_ad0253070cc1903dbb204c0a408d79786}{msg\+Interface\+\_\+\+Release()} when you are done with it.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the Client Interface object.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Creates an object if one doesn\textquotesingle{}t already exist, so always returns a valid pointer.
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+Assumes that the Mutex is locked. 
+\end{DoxyWarning}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Get\+Service@{Get\+Service}}
+\index{Get\+Service@{Get\+Service}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Service(le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t protocol\+Ref, const char $\ast$interface\+Name)}{GetService(le_msg_ProtocolRef_t protocolRef, const char *interfaceName)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf msg\+Interface\+\_\+\+Service\+\_\+t}$\ast$ Get\+Service (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t}}]{protocol\+Ref, }
+\item[{const char $\ast$}]{interface\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_adc3857c390fad7ffb5b737aaf9b40385}{}\label{messaging_interface_8c_adc3857c390fad7ffb5b737aaf9b40385}
+Gets a Service object matching a given service identification. Must be released using \hyperlink{messaging_interface_8c_ad0253070cc1903dbb204c0a408d79786}{msg\+Interface\+\_\+\+Release()} when you are done with it.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the service object.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Creates an object if one doesn\textquotesingle{}t already exist, so always returns a valid pointer.
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+Assumes that the Mutex is locked. 
+\end{DoxyWarning}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Init\+Interface@{Init\+Interface}}
+\index{Init\+Interface@{Init\+Interface}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Interface(le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t protocol\+Ref, const char $\ast$interface\+Name, msg\+Interface\+\_\+\+Type\+\_\+t interface\+Type, msg\+Interface\+\_\+\+Interface\+\_\+t $\ast$interface\+Ptr)}{InitInterface(le_msg_ProtocolRef_t protocolRef, const char *interfaceName, msgInterface_Type_t interfaceType, msgInterface_Interface_t *interfacePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Init\+Interface (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t}}]{protocol\+Ref, }
+\item[{const char $\ast$}]{interface\+Name, }
+\item[{{\bf msg\+Interface\+\_\+\+Type\+\_\+t}}]{interface\+Type, }
+\item[{{\bf msg\+Interface\+\_\+\+Interface\+\_\+t} $\ast$}]{interface\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_acc55c3120dd192681af2eac1bf5e7b0a}{}\label{messaging_interface_8c_acc55c3120dd192681af2eac1bf5e7b0a}
+Initialize an Interface object. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em protocol\+Ref} & Protocol to initialize the interface obj. \\
+\hline
+\mbox{\tt in}  & {\em interface\+Name} & Interface name to initialize the interface obj. \\
+\hline
+\mbox{\tt in}  & {\em interface\+Type} & Interface type to init the interface obj. \\
+\hline
+\mbox{\tt out}  & {\em interface\+Ptr} & Ptr to the interface object to be initialized. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler@{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler}}
+\index{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler@{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref, le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t handler\+Func, void $\ast$context\+Ptr)}{le_msg_AddServiceCloseHandler(le_msg_ServiceRef_t serviceRef, le_msg_SessionEventHandler_t handlerFunc, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+Ref\+\_\+t} le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t}}]{handler\+Func, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a426dfbae396599d80e52902165368907}{}\label{messaging_interface_8c_a426dfbae396599d80e52902165368907}
+Registers a function to be called whenever one of this service\textquotesingle{}s sessions is closed by the client.
+
+\begin{DoxyNote}{Note}
+This is a server-\/only function. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em service\+Ref} & Reference to the service. \\
+\hline
+\mbox{\tt in}  & {\em handler\+Func} & Handler function. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Opaque pointer value to pass to handler. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Add\+Service\+Open\+Handler@{le\+\_\+msg\+\_\+\+Add\+Service\+Open\+Handler}}
+\index{le\+\_\+msg\+\_\+\+Add\+Service\+Open\+Handler@{le\+\_\+msg\+\_\+\+Add\+Service\+Open\+Handler}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Add\+Service\+Open\+Handler(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref, le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t handler\+Func, void $\ast$context\+Ptr)}{le_msg_AddServiceOpenHandler(le_msg_ServiceRef_t serviceRef, le_msg_SessionEventHandler_t handlerFunc, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+Ref\+\_\+t} le\+\_\+msg\+\_\+\+Add\+Service\+Open\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t}}]{handler\+Func, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a829d6450d487166e0b2994b4bf44ee5d}{}\label{messaging_interface_8c_a829d6450d487166e0b2994b4bf44ee5d}
+Registers a function to be called when clients open sessions with this service.
+
+\begin{DoxyNote}{Note}
+This is a server-\/only function. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em service\+Ref} & Reference to the service. \\
+\hline
+\mbox{\tt in}  & {\em handler\+Func} & Handler function. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Opaque pointer value to pass to handler. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Advertise\+Service@{le\+\_\+msg\+\_\+\+Advertise\+Service}}
+\index{le\+\_\+msg\+\_\+\+Advertise\+Service@{le\+\_\+msg\+\_\+\+Advertise\+Service}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Advertise\+Service(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref)}{le_msg_AdvertiseService(le_msg_ServiceRef_t serviceRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Advertise\+Service (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_ad3ff11d1962840f879d9c8fe7054de0c}{}\label{messaging_interface_8c_ad3ff11d1962840f879d9c8fe7054de0c}
+Makes a given service available for clients to find.
+
+\begin{DoxyNote}{Note}
+This is a server-\/only function. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em service\+Ref} & Reference to the service. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Create\+Service@{le\+\_\+msg\+\_\+\+Create\+Service}}
+\index{le\+\_\+msg\+\_\+\+Create\+Service@{le\+\_\+msg\+\_\+\+Create\+Service}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Create\+Service(le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t protocol\+Ref, const char $\ast$interface\+Name)}{le_msg_CreateService(le_msg_ProtocolRef_t protocolRef, const char *interfaceName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} le\+\_\+msg\+\_\+\+Create\+Service (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t}}]{protocol\+Ref, }
+\item[{const char $\ast$}]{interface\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_adbbb2737069b636028128c74ae407742}{}\label{messaging_interface_8c_adbbb2737069b636028128c74ae407742}
+Creates a service that is accessible using a given protocol.
+
+\begin{DoxyReturn}{Returns}
+The service reference. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em protocol\+Ref} & Reference to the protocol to be used. \\
+\hline
+\mbox{\tt in}  & {\em interface\+Name} & Server-\/side interface name. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Delete\+Service@{le\+\_\+msg\+\_\+\+Delete\+Service}}
+\index{le\+\_\+msg\+\_\+\+Delete\+Service@{le\+\_\+msg\+\_\+\+Delete\+Service}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Delete\+Service(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref)}{le_msg_DeleteService(le_msg_ServiceRef_t serviceRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Delete\+Service (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a2efe99bdd7dcea84ea820a8cb4a8a9a4}{}\label{messaging_interface_8c_a2efe99bdd7dcea84ea820a8cb4a8a9a4}
+Deletes a service. Any open sessions will be terminated.
+
+\begin{DoxyNote}{Note}
+This is a server-\/only function that can only be called by the service\textquotesingle{}s server thread. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em service\+Ref} & Reference to the service. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Get\+Interface\+Name@{le\+\_\+msg\+\_\+\+Get\+Interface\+Name}}
+\index{le\+\_\+msg\+\_\+\+Get\+Interface\+Name@{le\+\_\+msg\+\_\+\+Get\+Interface\+Name}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Get\+Interface\+Name(le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t interface\+Ref)}{le_msg_GetInterfaceName(le_msg_InterfaceRef_t interfaceRef)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ le\+\_\+msg\+\_\+\+Get\+Interface\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t}}]{interface\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a32e952eda728d1a1b4236d879bfc05f9}{}\label{messaging_interface_8c_a32e952eda728d1a1b4236d879bfc05f9}
+Fetches a pointer to the name of an interface.
+
+\begin{DoxyReturn}{Returns}
+Pointer to a null-\/terminated string.
+\end{DoxyReturn}
+\begin{DoxyWarning}{Warning}
+Pointer returned will remain valid only until the interface is deleted. 
+\end{DoxyWarning}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em interface\+Ref} & Reference to the interface. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Get\+Interface\+Protocol@{le\+\_\+msg\+\_\+\+Get\+Interface\+Protocol}}
+\index{le\+\_\+msg\+\_\+\+Get\+Interface\+Protocol@{le\+\_\+msg\+\_\+\+Get\+Interface\+Protocol}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Get\+Interface\+Protocol(le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t interface\+Ref)}{le_msg_GetInterfaceProtocol(le_msg_InterfaceRef_t interfaceRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} le\+\_\+msg\+\_\+\+Get\+Interface\+Protocol (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t}}]{interface\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a7bf1bcd46c65a764dbd944db204a73b8}{}\label{messaging_interface_8c_a7bf1bcd46c65a764dbd944db204a73b8}
+Fetches a reference to the protocol supported by a given interface.
+
+\begin{DoxyReturn}{Returns}
+The protocol reference. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em interface\+Ref} & Reference to the interface. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Get\+Service\+Context\+Ptr@{le\+\_\+msg\+\_\+\+Get\+Service\+Context\+Ptr}}
+\index{le\+\_\+msg\+\_\+\+Get\+Service\+Context\+Ptr@{le\+\_\+msg\+\_\+\+Get\+Service\+Context\+Ptr}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Get\+Service\+Context\+Ptr(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref)}{le_msg_GetServiceContextPtr(le_msg_ServiceRef_t serviceRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void}$\ast$ le\+\_\+msg\+\_\+\+Get\+Service\+Context\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_afdbe07163b20ad9246bc8419e7c034e3}{}\label{messaging_interface_8c_afdbe07163b20ad9246bc8419e7c034e3}
+Fetches the opaque context value (void pointer) that was associated with a given service using \hyperlink{messaging_interface_8c_a9233d283c260a1983c594b4a9061374a}{le\+\_\+msg\+\_\+\+Set\+Service\+Context\+Ptr()}.
+
+\begin{DoxyReturn}{Returns}
+The context pointer value, or N\+U\+LL if \hyperlink{messaging_interface_8c_a9233d283c260a1983c594b4a9061374a}{le\+\_\+msg\+\_\+\+Set\+Service\+Context\+Ptr()} was never called for this service.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+This is a server-\/only function. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em service\+Ref} & Reference to the service. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Get\+Service\+Rx\+Msg@{le\+\_\+msg\+\_\+\+Get\+Service\+Rx\+Msg}}
+\index{le\+\_\+msg\+\_\+\+Get\+Service\+Rx\+Msg@{le\+\_\+msg\+\_\+\+Get\+Service\+Rx\+Msg}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Get\+Service\+Rx\+Msg(void)}{le_msg_GetServiceRxMsg(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} le\+\_\+msg\+\_\+\+Get\+Service\+Rx\+Msg (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a2007f56df1f818119e3188a1a2a902d6}{}\label{messaging_interface_8c_a2007f56df1f818119e3188a1a2a902d6}
+Check whether or not the calling thread is currently running a Service\textquotesingle{}s message receive handler, and if so, return a reference to the message object being handled.
+
+\begin{DoxyReturn}{Returns}
+A reference to the message being handled, or N\+U\+LL if no Service message receive handler is currently running. 
+\end{DoxyReturn}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Hide\+Service@{le\+\_\+msg\+\_\+\+Hide\+Service}}
+\index{le\+\_\+msg\+\_\+\+Hide\+Service@{le\+\_\+msg\+\_\+\+Hide\+Service}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Hide\+Service(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref)}{le_msg_HideService(le_msg_ServiceRef_t serviceRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Hide\+Service (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a38cc9dec16a758c5262d8bb5c7a2e57f}{}\label{messaging_interface_8c_a38cc9dec16a758c5262d8bb5c7a2e57f}
+Makes a given service unavailable for clients to find, but without terminating any ongoing sessions.
+
+\begin{DoxyNote}{Note}
+This is a server-\/only function. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em service\+Ref} & Reference to the service. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Remove\+Service\+Handler@{le\+\_\+msg\+\_\+\+Remove\+Service\+Handler}}
+\index{le\+\_\+msg\+\_\+\+Remove\+Service\+Handler@{le\+\_\+msg\+\_\+\+Remove\+Service\+Handler}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Remove\+Service\+Handler(le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+Ref\+\_\+t handler\+Ref)}{le_msg_RemoveServiceHandler(le_msg_SessionEventHandlerRef_t handlerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Remove\+Service\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+Ref\+\_\+t}}]{handler\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_ac1aacc5df9172804ce18b93ef266b786}{}\label{messaging_interface_8c_ac1aacc5df9172804ce18b93ef266b786}
+Remove a function previously registered by le\+\_\+msg\+\_\+\+Add\+Service\+Open\+Handler or le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler.
+
+\begin{DoxyNote}{Note}
+This is a server-\/only function. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em handler\+Ref} & Reference to a previously call of \hyperlink{messaging_interface_8c_a426dfbae396599d80e52902165368907}{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler()} \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Set\+Service\+Context\+Ptr@{le\+\_\+msg\+\_\+\+Set\+Service\+Context\+Ptr}}
+\index{le\+\_\+msg\+\_\+\+Set\+Service\+Context\+Ptr@{le\+\_\+msg\+\_\+\+Set\+Service\+Context\+Ptr}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Set\+Service\+Context\+Ptr(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref, void $\ast$context\+Ptr)}{le_msg_SetServiceContextPtr(le_msg_ServiceRef_t serviceRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Set\+Service\+Context\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a9233d283c260a1983c594b4a9061374a}{}\label{messaging_interface_8c_a9233d283c260a1983c594b4a9061374a}
+Associates an opaque context value (void pointer) with a given service that can be retrieved later using \hyperlink{messaging_interface_8c_afdbe07163b20ad9246bc8419e7c034e3}{le\+\_\+msg\+\_\+\+Get\+Service\+Context\+Ptr()}.
+
+\begin{DoxyNote}{Note}
+This is a server-\/only function. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em service\+Ref} & Reference to the service. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Opaque value to be returned by \hyperlink{messaging_interface_8c_afdbe07163b20ad9246bc8419e7c034e3}{le\+\_\+msg\+\_\+\+Get\+Service\+Context\+Ptr()}. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler@{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler}}
+\index{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler@{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref, le\+\_\+msg\+\_\+\+Receive\+Handler\+\_\+t handler\+Func, void $\ast$context\+Ptr)}{le_msg_SetServiceRecvHandler(le_msg_ServiceRef_t serviceRef, le_msg_ReceiveHandler_t handlerFunc, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Receive\+Handler\+\_\+t}}]{handler\+Func, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a21c2e57ad1ffbbdfedd3987c468e3130}{}\label{messaging_interface_8c_a21c2e57ad1ffbbdfedd3987c468e3130}
+Registers a function to be called when messages are received from clients via sessions that they have open with this service.
+
+\begin{DoxyNote}{Note}
+This is a server-\/only function. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em service\+Ref} & Reference to the service. \\
+\hline
+\mbox{\tt in}  & {\em handler\+Func} & Handler function. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Opaque pointer value to pass to the handler. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Add\+Session@{msg\+Interface\+\_\+\+Add\+Session}}
+\index{msg\+Interface\+\_\+\+Add\+Session@{msg\+Interface\+\_\+\+Add\+Session}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Add\+Session(le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t interface\+Ref, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{msgInterface_AddSession(le_msg_InterfaceRef_t interfaceRef, le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} msg\+Interface\+\_\+\+Add\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t}}]{interface\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a0d06f24634f4c7cff75ff7b720c32623}{}\label{messaging_interface_8c_a0d06f24634f4c7cff75ff7b720c32623}
+Adds a Session to an Interface\textquotesingle{}s list of open sessions. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Call\+Close\+Handler@{msg\+Interface\+\_\+\+Call\+Close\+Handler}}
+\index{msg\+Interface\+\_\+\+Call\+Close\+Handler@{msg\+Interface\+\_\+\+Call\+Close\+Handler}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Call\+Close\+Handler(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{msgInterface_CallCloseHandler(le_msg_ServiceRef_t serviceRef, le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} msg\+Interface\+\_\+\+Call\+Close\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a873082edee4a8271fff1818fc2fa39ba}{}\label{messaging_interface_8c_a873082edee4a8271fff1818fc2fa39ba}
+Call a Service\textquotesingle{}s registered session close handler function, if there is one registered. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Get\+Client@{msg\+Interface\+\_\+\+Get\+Client}}
+\index{msg\+Interface\+\_\+\+Get\+Client@{msg\+Interface\+\_\+\+Get\+Client}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Get\+Client(le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t protocol\+Ref, const char $\ast$interface\+Name)}{msgInterface_GetClient(le_msg_ProtocolRef_t protocolRef, const char *interfaceName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Client\+Interface\+Ref\+\_\+t} msg\+Interface\+\_\+\+Get\+Client (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t}}]{protocol\+Ref, }
+\item[{const char $\ast$}]{interface\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a0dbcfeea06577005de964b5775ed8b42}{}\label{messaging_interface_8c_a0dbcfeea06577005de964b5775ed8b42}
+Gets a reference to a Client Interface object. Must be released using \hyperlink{messaging_interface_8c_ad0253070cc1903dbb204c0a408d79786}{msg\+Interface\+\_\+\+Release()} when you are done with it.
+
+\begin{DoxyReturn}{Returns}
+Reference to the client interface object. 
+\end{DoxyReturn}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map@{msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map}}
+\index{msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map@{msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map(void)}{msgInterface_GetClientInterfaceMap(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+hashmap\+\_\+\+Ref\+\_\+t}$\ast$ msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_ae6dd1f283a6be9daca85610fb0a1634b}{}\label{messaging_interface_8c_ae6dd1f283a6be9daca85610fb0a1634b}
+Exposing the client interface map; mainly for the Inspect tool. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map\+Chg\+Cnt\+Ref@{msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map\+Chg\+Cnt\+Ref}}
+\index{msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map\+Chg\+Cnt\+Ref@{msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map\+Chg\+Cnt\+Ref}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map\+Chg\+Cnt\+Ref(void)}{msgInterface_GetClientInterfaceMapChgCntRef(void)}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t$\ast$$\ast$ msg\+Interface\+\_\+\+Get\+Client\+Interface\+Map\+Chg\+Cnt\+Ref (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a6f0a219b3d4e0ede1e73da6a717076b2}{}\label{messaging_interface_8c_a6f0a219b3d4e0ede1e73da6a717076b2}
+Exposing the client interface map change counter; mainly for the Inspect tool. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Get\+Interface\+Details@{msg\+Interface\+\_\+\+Get\+Interface\+Details}}
+\index{msg\+Interface\+\_\+\+Get\+Interface\+Details@{msg\+Interface\+\_\+\+Get\+Interface\+Details}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Get\+Interface\+Details(le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t interface\+Ref, svcdir\+\_\+\+Interface\+Details\+\_\+t $\ast$details\+Ptr)}{msgInterface_GetInterfaceDetails(le_msg_InterfaceRef_t interfaceRef, svcdir_InterfaceDetails_t *detailsPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} msg\+Interface\+\_\+\+Get\+Interface\+Details (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t}}]{interface\+Ref, }
+\item[{{\bf svcdir\+\_\+\+Interface\+Details\+\_\+t} $\ast$}]{details\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a69cd67c2830ff099ef6df0fb39e62b27}{}\label{messaging_interface_8c_a69cd67c2830ff099ef6df0fb39e62b27}
+Get the interface details for a given interface object. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em interface\+Ref} & Pointer to the interface. \\
+\hline
+\mbox{\tt out}  & {\em details\+Ptr} & Ptr to where the details will be stored. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map@{msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map}}
+\index{msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map@{msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map(void)}{msgInterface_GetServiceObjMap(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+hashmap\+\_\+\+Ref\+\_\+t}$\ast$ msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_ad1c7713a3e3d0e9ad1794b5c402a11b5}{}\label{messaging_interface_8c_ad1c7713a3e3d0e9ad1794b5c402a11b5}
+Exposing the service object map; mainly for the Inspect tool. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map\+Chg\+Cnt\+Ref@{msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map\+Chg\+Cnt\+Ref}}
+\index{msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map\+Chg\+Cnt\+Ref@{msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map\+Chg\+Cnt\+Ref}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map\+Chg\+Cnt\+Ref(void)}{msgInterface_GetServiceObjMapChgCntRef(void)}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t$\ast$$\ast$ msg\+Interface\+\_\+\+Get\+Service\+Obj\+Map\+Chg\+Cnt\+Ref (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a18e45c72aee17c28a4b8dd07513bd0ed}{}\label{messaging_interface_8c_a18e45c72aee17c28a4b8dd07513bd0ed}
+Exposing the service object map change counter; mainly for the Inspect tool. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Init@{msg\+Interface\+\_\+\+Init}}
+\index{msg\+Interface\+\_\+\+Init@{msg\+Interface\+\_\+\+Init}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Init(void)}{msgInterface_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} msg\+Interface\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a5364bdf066f5b50aabd7636d8154fb63}{}\label{messaging_interface_8c_a5364bdf066f5b50aabd7636d8154fb63}
+Initializes the module. This must be called only once at start-\/up, before any other functions in that module are called. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Process\+Message\+From\+Client@{msg\+Interface\+\_\+\+Process\+Message\+From\+Client}}
+\index{msg\+Interface\+\_\+\+Process\+Message\+From\+Client@{msg\+Interface\+\_\+\+Process\+Message\+From\+Client}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Process\+Message\+From\+Client(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref, le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{msgInterface_ProcessMessageFromClient(le_msg_ServiceRef_t serviceRef, le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} msg\+Interface\+\_\+\+Process\+Message\+From\+Client (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_a00aae4bdd0c49f47d4ee0521d8cc0e52}{}\label{messaging_interface_8c_a00aae4bdd0c49f47d4ee0521d8cc0e52}
+Dispatches a message received from a client to a service\textquotesingle{}s server. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em service\+Ref} & Reference to the Service object. \\
+\hline
+\mbox{\tt in}  & {\em msg\+Ref} & Message reference for the received message. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Release@{msg\+Interface\+\_\+\+Release}}
+\index{msg\+Interface\+\_\+\+Release@{msg\+Interface\+\_\+\+Release}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Release(le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t interface\+Ref)}{msgInterface_Release(le_msg_InterfaceRef_t interfaceRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} msg\+Interface\+\_\+\+Release (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t}}]{interface\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_ad0253070cc1903dbb204c0a408d79786}{}\label{messaging_interface_8c_ad0253070cc1903dbb204c0a408d79786}
+Release a reference to an Interface. Note that this can also be (and is meant to be) used with specific interface references, such as Services and Client Interfaces. Remember to cast the specific interface refrences to the more generic le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!msg\+Interface\+\_\+\+Remove\+Session@{msg\+Interface\+\_\+\+Remove\+Session}}
+\index{msg\+Interface\+\_\+\+Remove\+Session@{msg\+Interface\+\_\+\+Remove\+Session}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Interface\+\_\+\+Remove\+Session(le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t interface\+Ref, le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{msgInterface_RemoveSession(le_msg_InterfaceRef_t interfaceRef, le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} msg\+Interface\+\_\+\+Remove\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t}}]{interface\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_interface_8c_ae0bcba5de67b66562878c3b6b797a96b}{}\label{messaging_interface_8c_ae0bcba5de67b66562878c3b6b797a96b}
+Remove a Session from an Interface\textquotesingle{}s list of open sessions. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Service\+Destructor@{Service\+Destructor}}
+\index{Service\+Destructor@{Service\+Destructor}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Service\+Destructor(void $\ast$obj\+Ptr)}{ServiceDestructor(void *objPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Service\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{obj\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_aefa6c842f29333724150da5f919381c6}{}\label{messaging_interface_8c_aefa6c842f29333724150da5f919381c6}
+Destructor function that runs when a Service object is about to be returned back to the Service Pool.
+
+\begin{DoxyWarning}{Warning}
+Assumes that the Mutex is locked, therefore the Mutex must be locked during all calls to \hyperlink{le__mem_8h_a6d8e3fe430bcb81efe97b57ce30ef2de}{le\+\_\+mem\+\_\+\+Release()} for Service objects. 
+\end{DoxyWarning}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Start\+Monitoring\+Directory\+Socket@{Start\+Monitoring\+Directory\+Socket}}
+\index{Start\+Monitoring\+Directory\+Socket@{Start\+Monitoring\+Directory\+Socket}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Start\+Monitoring\+Directory\+Socket(msg\+Interface\+\_\+\+Service\+\_\+t $\ast$service\+Ptr)}{StartMonitoringDirectorySocket(msgInterface_Service_t *servicePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Start\+Monitoring\+Directory\+Socket (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Interface\+\_\+\+Service\+\_\+t} $\ast$}]{service\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_af0cd4d47c573d2de8d7e90edc1af4846}{}\label{messaging_interface_8c_af0cd4d47c573d2de8d7e90edc1af4846}
+Start monitoring for readable, hang-\/up, and error events on a given Service\textquotesingle{}s \char`\"{}\+Directory Socket\char`\"{} (the socket connected to the Service Directory). 
+
+\subsection{Variable Documentation}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Client\+Interface\+Map\+Change\+Count@{Client\+Interface\+Map\+Change\+Count}}
+\index{Client\+Interface\+Map\+Change\+Count@{Client\+Interface\+Map\+Change\+Count}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Interface\+Map\+Change\+Count}{ClientInterfaceMapChangeCount}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Client\+Interface\+Map\+Change\+Count = 0\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a4fe977f41ab530357518c1c43295bee1}{}\label{messaging_interface_8c_a4fe977f41ab530357518c1c43295bee1}
+A counter that increments every time a change is made to Client\+Interface\+Map\+Ref. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Client\+Interface\+Map\+Change\+Count\+Ref@{Client\+Interface\+Map\+Change\+Count\+Ref}}
+\index{Client\+Interface\+Map\+Change\+Count\+Ref@{Client\+Interface\+Map\+Change\+Count\+Ref}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Interface\+Map\+Change\+Count\+Ref}{ClientInterfaceMapChangeCountRef}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t$\ast$ Client\+Interface\+Map\+Change\+Count\+Ref = \&{\bf Client\+Interface\+Map\+Change\+Count}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a5c83c01b89bf31daa226434ac01cadb1}{}\label{messaging_interface_8c_a5c83c01b89bf31daa226434ac01cadb1}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Client\+Interface\+Map\+Ref@{Client\+Interface\+Map\+Ref}}
+\index{Client\+Interface\+Map\+Ref@{Client\+Interface\+Map\+Ref}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Interface\+Map\+Ref}{ClientInterfaceMapRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} Client\+Interface\+Map\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_ab4002e3906d2fa893418ca295f660016}{}\label{messaging_interface_8c_ab4002e3906d2fa893418ca295f660016}
+Hashmap in which Client Interface objects are kept. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Client\+Interface\+Pool\+Ref@{Client\+Interface\+Pool\+Ref}}
+\index{Client\+Interface\+Pool\+Ref@{Client\+Interface\+Pool\+Ref}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Interface\+Pool\+Ref}{ClientInterfacePoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Client\+Interface\+Pool\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a91ad6baf41d929acf06f43d6cde7414b}{}\label{messaging_interface_8c_a91ad6baf41d929acf06f43d6cde7414b}
+Pool from which Client Interface objects are allocated. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Handler\+Event\+Pool\+Ref@{Handler\+Event\+Pool\+Ref}}
+\index{Handler\+Event\+Pool\+Ref@{Handler\+Event\+Pool\+Ref}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Handler\+Event\+Pool\+Ref}{HandlerEventPoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Handler\+Event\+Pool\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a2e9bc247b59fe1d2b0f1c4f6f33cf293}{}\label{messaging_interface_8c_a2e9bc247b59fe1d2b0f1c4f6f33cf293}
+Pool from which session event handler object are allocated. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Handlers\+Ref\+Map@{Handlers\+Ref\+Map}}
+\index{Handlers\+Ref\+Map@{Handlers\+Ref\+Map}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Handlers\+Ref\+Map}{HandlersRefMap}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} Handlers\+Ref\+Map\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a9002c82b5e35938805b5c2a9d0e3c4be}{}\label{messaging_interface_8c_a9002c82b5e35938805b5c2a9d0e3c4be}
+Safe Reference Map for the handlers reference \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Mutex@{Mutex}}
+\index{Mutex@{Mutex}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Mutex}{Mutex}}]{\setlength{\rightskip}{0pt plus 5cm}pthread\+\_\+mutex\+\_\+t Mutex = P\+T\+H\+R\+E\+A\+D\+\_\+\+M\+U\+T\+E\+X\+\_\+\+I\+N\+I\+T\+I\+A\+L\+I\+Z\+ER\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{}\label{messaging_interface_8c_abc03085ccf7c38e092cdf06bf6b98ea6}
+Mutex used to protect data structures in this module from multi-\/threaded race conditions.
+
+\begin{DoxyNote}{Note}
+This is a pthreads F\+A\+ST mutex, chosen to minimize overhead. It is non-\/recursive. 
+\end{DoxyNote}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Service\+Map\+Ref@{Service\+Map\+Ref}}
+\index{Service\+Map\+Ref@{Service\+Map\+Ref}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Service\+Map\+Ref}{ServiceMapRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} Service\+Map\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a58d29ffd360d3341347584f4b98ec5ba}{}\label{messaging_interface_8c_a58d29ffd360d3341347584f4b98ec5ba}
+Hashmap in which Service objects are kept. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Service\+Obj\+Map\+Change\+Count@{Service\+Obj\+Map\+Change\+Count}}
+\index{Service\+Obj\+Map\+Change\+Count@{Service\+Obj\+Map\+Change\+Count}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Service\+Obj\+Map\+Change\+Count}{ServiceObjMapChangeCount}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Service\+Obj\+Map\+Change\+Count = 0\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a3316d8b55f713027690c03ba54eff52a}{}\label{messaging_interface_8c_a3316d8b55f713027690c03ba54eff52a}
+A counter that increments every time a change is made to Service\+Map\+Ref. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Service\+Obj\+Map\+Change\+Count\+Ref@{Service\+Obj\+Map\+Change\+Count\+Ref}}
+\index{Service\+Obj\+Map\+Change\+Count\+Ref@{Service\+Obj\+Map\+Change\+Count\+Ref}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Service\+Obj\+Map\+Change\+Count\+Ref}{ServiceObjMapChangeCountRef}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t$\ast$ Service\+Obj\+Map\+Change\+Count\+Ref = \&{\bf Service\+Obj\+Map\+Change\+Count}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a1b556550cb063359b88ec8f725e6f5bb}{}\label{messaging_interface_8c_a1b556550cb063359b88ec8f725e6f5bb}
+\index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Service\+Pool\+Ref@{Service\+Pool\+Ref}}
+\index{Service\+Pool\+Ref@{Service\+Pool\+Ref}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Service\+Pool\+Ref}{ServicePoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Service\+Pool\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a9f7833031cd49815c812e38818e823e7}{}\label{messaging_interface_8c_a9f7833031cd49815c812e38818e823e7}
+Pool from which Service objects are allocated. \index{messaging\+Interface.\+c@{messaging\+Interface.\+c}!Thread\+Local\+Rx\+Msg\+Key@{Thread\+Local\+Rx\+Msg\+Key}}
+\index{Thread\+Local\+Rx\+Msg\+Key@{Thread\+Local\+Rx\+Msg\+Key}!messaging\+Interface.\+c@{messaging\+Interface.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Local\+Rx\+Msg\+Key}{ThreadLocalRxMsgKey}}]{\setlength{\rightskip}{0pt plus 5cm}pthread\+\_\+key\+\_\+t Thread\+Local\+Rx\+Msg\+Key\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_interface_8c_a8ee1584c0cc44a03826500532f26f8ce}{}\label{messaging_interface_8c_a8ee1584c0cc44a03826500532f26f8ce}
+Key used to identify thread-\/local data record containing the Message object reference for the message currently being processed by a Service\textquotesingle{}s message receive handler; or N\+U\+LL if the thread is not currently running a Service\textquotesingle{}s message receive handler. 

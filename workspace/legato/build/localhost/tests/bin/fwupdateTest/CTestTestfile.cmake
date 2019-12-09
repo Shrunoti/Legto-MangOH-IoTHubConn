@@ -1,0 +1,7 @@
+# CMake generated Testfile for 
+# Source directory: /home/shrunoti/Downloads/workspace/legato/platformAdaptor/fwupdate/apps/test
+# Build directory: /home/shrunoti/Downloads/workspace/legato/build/localhost/tests/bin/fwupdateTest
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+subdirs(fwupdateDualsysUnitTest)

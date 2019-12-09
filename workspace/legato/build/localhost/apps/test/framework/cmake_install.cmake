@@ -1,0 +1,76 @@
+# Install script for directory: /home/shrunoti/Downloads/workspace/legato/apps/test/framework
+
+# Set the install prefix
+if(NOT DEFINED CMAKE_INSTALL_PREFIX)
+  set(CMAKE_INSTALL_PREFIX "/usr/local")
+endif()
+string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+
+# Set the install configuration name.
+if(NOT DEFINED CMAKE_INSTALL_CONFIG_NAME)
+  if(BUILD_TYPE)
+    string(REGEX REPLACE "^[^A-Za-z0-9_]+" ""
+           CMAKE_INSTALL_CONFIG_NAME "${BUILD_TYPE}")
+  else()
+    set(CMAKE_INSTALL_CONFIG_NAME "")
+  endif()
+  message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
+endif()
+
+# Set the component getting installed.
+if(NOT CMAKE_INSTALL_COMPONENT)
+  if(COMPONENT)
+    message(STATUS "Install component: \"${COMPONENT}\"")
+    set(CMAKE_INSTALL_COMPONENT "${COMPONENT}")
+  else()
+    set(CMAKE_INSTALL_COMPONENT)
+  endif()
+endif()
+
+# Install shared libraries without execute permission?
+if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
+  set(CMAKE_INSTALL_SO_NO_EXE "1")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for each subdirectory.
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/args/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/atomFile/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/c++/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/configTree/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/eventLoop/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/hashmap/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/hex/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/messaging/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/path/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/pack/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/safeRef/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/semaphore/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/signalEvents/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/supervisor/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/threads/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/timers/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/updateDaemon/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/user/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/watchdog/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/smackAPI/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/smack/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/coreLogs/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/installStatus/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/inspect/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/appInfo/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/secStore/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/tty/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/clock/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/lists/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/log/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/memPool/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/utf8/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/signalShowStack/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/fs/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/random/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/start/cmake_install.cmake")
+  include("/home/shrunoti/Downloads/workspace/legato/build/localhost/apps/test/framework/imaSmack/cmake_install.cmake")
+
+endif()
+

@@ -1,0 +1,85 @@
+A delta patch consists of differences between two images\+: the original and the destination.
+
+Applying this delta patch to the original will produce the destination.
+
+A delta patch uses bsdiff and bspatch tools\+: \href{http://www.daemonology.net/bsdiff/}{\tt http\+://www.\+daemonology.\+net/bsdiff/}\hypertarget{Delta_Patch_mkPatch_Presentation}{}\section{mk\+Patch Presensation}\label{Delta_Patch_mkPatch_Presentation}
+The tool \hyperlink{Delta_Patch_mkPatch_tool}{mk\+Patch} is used to create a delta patch between two images. It needs an original image and a destination image to construct the delta patch between them. The images may be R\+AW binary or U\+BI volumes.
+
+The destination image is splitted into small segments, and from each segment a patch slice is build preceeded by a delta patch header (\hyperlink{struct_delta_patch_header__t}{Delta\+Patch\+Header\+\_\+t}), describing the patch number, the offset of this patch and its length.
+
+All patch slices are concatenated and the \char`\"{}whole patch\char`\"{} is preceeded by a delta patch meta header (\hyperlink{struct_delta_patch_meta_header__t}{Delta\+Patch\+Meta\+Header\+\_\+t}) containing the partition to patch, the U\+BI volume ID (if it concerns an U\+BI volume), the size of the segment, the the original image size and C\+R\+C32, the destination image size and C\+R\+C32, and a patch magic.
+
+Finally the whole patch is encapsulated by a C\+WE header.
+
+\begin{DoxyNote}{Note}
+\hyperlink{Delta_Patch_mkPatch_tool}{mk\+Patch} requires bsdiff and libbz2 to be installed.
+\end{DoxyNote}
+\hypertarget{Delta_Patch_mkPatch_tool}{}\subsection{mk\+Patch}\label{Delta_Patch_mkPatch_tool}
+This tool has the following syntax\+:
+
+\begin{DoxyVerb}usage: mkPatch -T TARGET [-o patchname] [-S 4K|2K] [-E 256K|128K] [-N] [-v]
+        {-p PART {[-U VOLID] file-orig file-dest}}
+
+   -T, --target <TARGET>
+        Specify the TARGET (mandatory - specified only one time).
+   -o, <patchname>
+        Specify the output name of the patch. Else use patch-<TARGET>.cwe as default.
+   -S, --pagesize <4K|2K>
+        Specify another page size (optional - specified only one time).
+   -E, --pebsize <256K|128K>
+        Specify another PEB size (optional - specified only one time).
+   -N, --no-spkg-header
+        Do not generate the CWE SPKG header.
+   -v, --verbose
+        Be verbose.
+   -p, --partition <PART>
+        Specify the partition where apply the patch.
+   -U, --ubi <VOLID>
+        Specify the UBI volume ID where apply the patch.
+\end{DoxyVerb}
+
+
+The --target T\+A\+R\+G\+ET is one of ar759x or ar758x respectivelly. Others targets are not supported.
+
+The output C\+WE file is specified with -\/o. If not filled, the default name is patch-\/\+T\+A\+R\+G\+E\+T.\+cwe where T\+A\+R\+G\+ET is the T\+A\+R\+G\+ET selected by --target.
+
+The --pagesize specify the flash device page size expected on target. It only supports 2K for 2048 page size and 4K for 4096 page size. If the --pagesize is not filled, a default value is taken according to ID specified.
+
+The --pebsize specify the flash device physical erase block expected on target. It only supports 128K for 131072 P\+EB size and 256K for 262144 P\+EB size. If the --pebsize is not filled, a default value is taken according to ID specified.
+
+The -\/N option requests the tool to not add a C\+WE S\+P\+KG header. This is usefull to include a delta patch C\+WE inside another C\+WE.
+
+The -\/v requests the tool to be verbose and displays more informations.
+
+The --partition P\+A\+RT specify which partition is concerned by this delta patch. It may one of the following\+:
+\begin{DoxyItemize}
+\item modem \+: The modem U\+BI image
+\item tz \+: The Trust-\/\+Zone image
+\item rpm \+: The Q\+CT R\+PM image
+\item aboot \+: The LK bootloader image
+\item boot \+: The Linux kernel image
+\item system \+: The Linux rootfs image
+\item lefwkro \+: The legato image
+\end{DoxyItemize}
+
+The --ubi N gives the availability to build a patch by specifying an U\+BI volume id for a static squashfs image. The squashfs image belongs to the U\+BI volume id N. N is a number from 0 up to 127. If the original and destination images are both U\+BI, this option does not need to be set.
+
+Finally the both original and destination need to be specified.
+
+The --partition P\+A\+RT O\+R\+IG D\+E\+ST may be specified several times, if the delta patch concerns several partitions.\hypertarget{Delta_Patch_mkPatch_Examples}{}\subsection{Examples}\label{Delta_Patch_mkPatch_Examples}
+To build a delta patch between two legato squashfs images belonging to the U\+BI volume 0, do\+:
+
+\begin{DoxyVerb}mkPatch --target ar758x -o legato-patch.cwe --partition lefwkro --ubi 0 orig/legato.squashfs dest/legato.squashfs\end{DoxyVerb}
+
+
+To build a delta patch between two Linux kernels and two rootfs in the same C\+WE update package, do\+: \begin{DoxyVerb}mkPatch --target ar759x -o yocto-patch.cwe \
+          --partition boot orig/boot-yocto-mdm9x40.img dest/boot-yocto-mdm9x40.img \
+          --partition system orig/mdm9x40-image-minimal-swi-mdm9x40.ubi dest/mdm9x40-image-minimal-swi-mdm9x40.ubi\end{DoxyVerb}
+\hypertarget{Delta_Patch_ApplyDeltaPatch}{}\section{Apply a delta patch}\label{Delta_Patch_ApplyDeltaPatch}
+The delta patch C\+WE update package is applied with the tool \hyperlink{toolsTarget_fwUpdate}{fwupdate} download or with \hyperlink{le__fwupdate__interface_8h_ab68f3a7c5d4284306468e888bf6a8796}{le\+\_\+fwupdate\+\_\+\+Download} A\+PI.
+
+
+
+
+
+Copyright (C) Sierra Wireless Inc. Use of this work is subject to license. 

@@ -1,0 +1,453 @@
+The Wi\+Fi Service plugin provides both Client and Access Point A\+P\+Is\+:
+
+\hyperlink{c_le_wifi_client}{Wi\+Fi Client Service} ~\newline
+ \hyperlink{c_le_wifi_ap}{Wi\+Fi Access Point Service} ~\newline
+
+
+You can use the \hyperlink{wifi_toolsTarget_wifi}{wifi} tool to control the client or access point from the command line.
+
+These Wi\+Fi Service sample apps are available\+: \tabulinesep=1mm
+\begin{longtabu} spread 0pt [c]{*2{|X[-1]}|}
+\hline
+\rowcolor{\tableheadbgcolor}{\bf Section }&{\bf Description  }\\\cline{1-2}
+\endfirsthead
+\hline
+\endfoot
+\hline
+\rowcolor{\tableheadbgcolor}{\bf Section }&{\bf Description  }\\\cline{1-2}
+\endhead
+\hyperlink{wifi_wificlient_testapp}{Wi\+Fi Client Sample App} &how to use Wi\+Fi Client A\+PI \\\cline{1-2}
+\hyperlink{wifi_wifiap_testapp}{Wi\+Fi Access Point Test App} &how to use Wi\+Fi Access Point A\+PI \\\cline{1-2}
+\hyperlink{wifi_wifiwebAp_sample}{Wi\+Fi Access Point Web Sample App} &setup the Access Point using a webpage \\\cline{1-2}
+\end{longtabu}
+Copyright (C) Sierra Wireless Inc. \hypertarget{c_le_wifi_client}{}\section{Wi\+Fi Client Service}\label{c_le_wifi_client}
+\hyperlink{le__wifi_client__interface_8h}{A\+PI Reference}
+
+
+
+
+
+This A\+PI provides Wi\+Fi Client setup. Please note that the Wi\+Fi Client cannot be used at the same time as the Wi\+Fi Access Points service, due to the sharing of same wifi hardware.\hypertarget{c_le_wifi_client_le_wifi_binding}{}\subsection{I\+P\+C interfaces binding}\label{c_le_wifi_client_le_wifi_binding}
+Here\textquotesingle{}s a code sample binding to Wi\+Fi service\+: \begin{DoxyVerb}bindings:
+{
+   clientExe.clientComponent.le_wifiClient -> wifiService.le_wifiClient
+}
+\end{DoxyVerb}
+\hypertarget{c_le_wifi_client_le_wifiClient_Start}{}\subsection{Starting the Wi\+Fi Client}\label{c_le_wifi_client_le_wifiClient_Start}
+First of all the function \hyperlink{le__wifi_client__interface_8h_af637c17f5b8331b598dcf6c57b9260ad}{le\+\_\+wifi\+Client\+\_\+\+Start()} must be called to start the Wi\+Fi Service.
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_client__interface_8h_af637c17f5b8331b598dcf6c57b9260ad}{le\+\_\+wifi\+Client\+\_\+\+Start()}\+: returns L\+E\+\_\+\+OK if the call went ok. If Wi\+Fi Access Point is active, this will fail.
+\end{DoxyItemize}
+
+To subscribe to wifi events \hyperlink{le__wifi_client__interface_8h_a55aaafbc0a0b4a70faafb50f6babf482}{le\+\_\+wifi\+Client\+\_\+\+Add\+New\+Event\+Handler()} is to be called.
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_client__interface_8h_a55aaafbc0a0b4a70faafb50f6babf482}{le\+\_\+wifi\+Client\+\_\+\+Add\+New\+Event\+Handler()}\+: returns the handler reference if the call went ok.
+\end{DoxyItemize}
+
+
+\begin{DoxyCode}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} EventHandler
+(
+    \hyperlink{le__wifi_client__interface_8h_a1b776321e539bab3bc6a07078545bca4}{le\_wifiClient\_Event\_t} clientEvent,
+    \textcolor{keywordtype}{void} *contextPtr
+)
+\{
+    \textcolor{keywordflow}{switch}( clientEvent )
+    \{
+         \textcolor{keywordflow}{case} \hyperlink{le__wifi_client__interface_8h_a1b776321e539bab3bc6a07078545bca4a7311dd6562fef67d5c5defbd9dcbc6d2}{LE\_WIFICLIENT\_EVENT\_CONNECTED}:
+         \{
+             \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"WiFi Client Connected."});
+         \}
+         \textcolor{keywordflow}{break};
+         \textcolor{keywordflow}{case} \hyperlink{le__wifi_client__interface_8h_a1b776321e539bab3bc6a07078545bca4a72b538a3446d73b0da95db84de318747}{LE\_WIFICLIENT\_EVENT\_DISCONNECTED}:
+         \{
+             \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"WiFi Client Disconnected."});
+         \}
+         \textcolor{keywordflow}{break};
+         \textcolor{keywordflow}{case} \hyperlink{le__wifi_client__interface_8h_a1b776321e539bab3bc6a07078545bca4a4202d7b05f16eb80f8b7adfafcef3973}{LE\_WIFICLIENT\_EVENT\_SCAN\_DONE}:
+         \{
+             \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"WiFi Client Scan is done."});
+             MyHandleScanResult();
+         \}
+         \textcolor{keywordflow}{break};
+    \}
+\}
+
+le\_wifiClient\_NewEventHandler WiFiEventHandlerRef = NULL;
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} MyInit
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result = le\_wifiClient\_start();
+
+    \textcolor{keywordflow}{if} ( LE\_OK == result )
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"WiFi Client started."});
+        WiFiEventHandlerRef = \hyperlink{le__wifi_client__interface_8h_a55aaafbc0a0b4a70faafb50f6babf482}{le\_wifiClient\_AddNewEventHandler}( 
+      EventHandler, NULL );
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY} == result )
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"ERROR: WiFi Client already started."});
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"ERROR: WiFi Client not started."});
+    \}
+
+\}
+\end{DoxyCode}
+\hypertarget{c_le_wifi_client_le_wifiClient_scan}{}\subsection{Scanning Access Points with Wi\+Fi Client}\label{c_le_wifi_client_le_wifiClient_scan}
+To start a scan for Access Points, the \hyperlink{le__wifi_client__interface_8h_af478b542f65242095c05e1ee61160e2a}{le\+\_\+wifi\+Client\+\_\+\+Scan()} should be called.
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_client__interface_8h_af478b542f65242095c05e1ee61160e2a}{le\+\_\+wifi\+Client\+\_\+\+Scan()}\+: returns the L\+E\+\_\+\+OK if the call went ok.
+\end{DoxyItemize}\hypertarget{c_le_wifi_client_le_wifiClient_scan_result}{}\subsection{Processing the Wi\+Fi scan results}\label{c_le_wifi_client_le_wifiClient_scan_result}
+Once the scan results are available, the event L\+E\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+E\+V\+E\+N\+T\+\_\+\+S\+C\+A\+N\+\_\+\+D\+O\+NE is received. The found Access Points can then be gotten with
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_client__interface_8h_a284c452c5bd4309e096b6f89a8da653e}{le\+\_\+wifi\+Client\+\_\+\+Get\+First\+Access\+Point()}\+: returns the Access Point if found. Else N\+U\+LL.
+\item \hyperlink{le__wifi_client__interface_8h_ab566a61f36b25118f9f38d62863361d2}{le\+\_\+wifi\+Client\+\_\+\+Get\+Next\+Access\+Point()}\+: returns the next Access Point if found. Else N\+U\+LL.
+\end{DoxyItemize}
+
+The Access Points S\+S\+ID, Service Set Identifier, is not a string. It does however often contain human readable A\+S\+C\+II values. It can be read with the following function\+:
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_client__interface_8h_aa726f6cb7f78e9ed962a6c6d3ae75a91}{le\+\_\+wifi\+Client\+\_\+\+Get\+Ssid()} \+: returns the L\+E\+\_\+\+OK if the S\+S\+ID was read ok.
+\end{DoxyItemize}
+
+The Access Points signal strength can be read with the following function\+:
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_client__interface_8h_ade417976a142b6e71df49bd8761e9833}{le\+\_\+wifi\+Client\+\_\+\+Get\+Signal\+Strength()} \+: returns the signal strength in d\+Bm of the Access\+Point
+\end{DoxyItemize}
+
+
+\begin{DoxyCode}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} MyHandleScanResult
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    uint8 ssid[MAX\_SSID\_BYTES];
+    \hyperlink{le__wifi_client__interface_8h_a5a5709045b59550dbb52ff13a7d24c1e}{le\_wifiClient\_AccessPointRef\_t} accessPointRef = 
+      \hyperlink{le__wifi_client__interface_8h_a284c452c5bd4309e096b6f89a8da653e}{le\_wifiClient\_GetFirstAccessPoint}();
+
+    \textcolor{keywordflow}{while}( NULL != accessPointRef )
+    \{
+         result = \hyperlink{le__wifi_client__interface_8h_aa726f6cb7f78e9ed962a6c6d3ae75a91}{le\_wifiClient\_GetSsid}( accessPointRef, ssid, MAX\_SSID\_BYTES );
+         \textcolor{keywordflow}{if} (( result == LE\_OK ) && ( memcmp( ssid, \textcolor{stringliteral}{"MySSID"}, 6) == 0 ))
+         \{
+              \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"WiFi Client found."});
+              \textcolor{keywordflow}{break};
+         \}
+         accessPointRef = \hyperlink{le__wifi_client__interface_8h_ab566a61f36b25118f9f38d62863361d2}{le\_wifiClient\_GetNextAccessPoint}();
+    \}
+\}
+\end{DoxyCode}
+\hypertarget{c_le_wifi_client_le_wifiClient_connect_to_ap}{}\subsection{Connecting to Access Point}\label{c_le_wifi_client_le_wifiClient_connect_to_ap}
+First of all, an Access Point reference should be created using the S\+S\+ID of the target Access Point. Use the following function to create a reference\+:
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_client__interface_8h_a96542be7e54ff8373aa0d8b0f5e540c7}{le\+\_\+wifi\+Client\+\_\+\+Create()}\+: returns Access Point reference
+\end{DoxyItemize}
+
+To set the pass phrase prior for the Access Point use the function\+:
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_client__interface_8h_a398b877814bde1cd3054f2f59d0f6b8b}{le\+\_\+wifi\+Client\+\_\+\+Set\+Passphrase()}\+: returns the function execution status.
+\end{DoxyItemize}
+
+W\+P\+A-\/\+Enterprise requires a username and password to authenticate. To set them use the function\+:
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_client__interface_8h_a362429a884a24cf6e33415e111f0b522}{le\+\_\+wifi\+Client\+\_\+\+Set\+User\+Credentials()}\+: returns the function execution status.
+\end{DoxyItemize}
+
+If an Access Point is hidden, it does not announce its presence and will not show up in scan. So, the S\+S\+ID of this Access Point must be known in advance. Then, use the following function to allow connections to hidden Access Points\+: \hyperlink{le__wifi_client__interface_8h_a1d150a261039641255c6fce638f91c97}{le\+\_\+wifi\+Client\+\_\+\+Set\+Hidden\+Network\+Attribute()}\+: returns the function execution status.
+
+Finally and when the Access Point parameters have been configured, use the following function to attempt a connection\+:
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_client__interface_8h_a17963642c794a003627dde66776ba225}{le\+\_\+wifi\+Client\+\_\+\+Connect()}\+: returns the function execution status.
+\end{DoxyItemize}
+
+
+\begin{DoxyCode}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} MyConnectTo
+(
+    \hyperlink{le__wifi_client__interface_8h_a5a5709045b59550dbb52ff13a7d24c1e}{le\_wifiClient\_AccessPointRef\_t} accessPointRef
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result;
+    \hyperlink{le__wifi_client__interface_8h_a398b877814bde1cd3054f2f59d0f6b8b}{le\_wifiClient\_SetPassphrase} ( accessPointRef, \textcolor{stringliteral}{"Secret1"} );
+    result = \hyperlink{le__wifi_client__interface_8h_a17963642c794a003627dde66776ba225}{le\_wifiClient\_Connect}( accessPointRef );
+    \textcolor{keywordflow}{if} (result == LE\_OK)
+    \{
+         \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Connecting to AP."});
+    \}
+\}
+\end{DoxyCode}
+
+
+
+
+
+
+Copyright (C) Sierra Wireless Inc. \hypertarget{c_le_wifi_ap}{}\section{Wi\+Fi Access Point Service}\label{c_le_wifi_ap}
+\hyperlink{le__wifi_ap__interface_8h}{A\+PI Reference}
+
+
+
+
+
+This Wi\+Fi Service A\+PI provides Wifi Access Point setup. Please note that if there is only one wifi hardware the Wi\+Fi Access Point cannot be used at the same time as the Wi\+Fi Client service.\hypertarget{c_le_wifi_client_le_wifi_binding}{}\subsection{I\+P\+C interfaces binding}\label{c_le_wifi_client_le_wifi_binding}
+Here\textquotesingle{}s a code sample binding to Wi\+Fi service\+: \begin{DoxyVerb}bindings:
+{
+   clientExe.clientComponent.le_wifiAp -> wifiService.le_wifiAp
+}
+\end{DoxyVerb}
+\hypertarget{c_le_wifi_ap_le_wifiAp_connect_to_ap}{}\subsection{Setting parameters for the Access Point}\label{c_le_wifi_ap_le_wifiAp_connect_to_ap}
+Note that these parameters must be set before the access point is started. See each function for its default value.
+
+To set the S\+S\+ID for the Access Point use the following function\+:
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_ap__interface_8h_a0f29690f2a2d01157cc2d9e58d1d5536}{le\+\_\+wifi\+Ap\+\_\+\+Set\+Ssid()}
+\end{DoxyItemize}
+
+To set the pass phrase prior for the Access Point use the function\+: Also see \hyperlink{le__wifi_ap__interface_8h_a9d126d5511dae79d2229c48bbcc4dddc}{le\+\_\+wifi\+Ap\+\_\+\+Set\+Pre\+Shared\+Key()}.
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_ap__interface_8h_a8be6c0c7aad3e14f492898df6f131c5b}{le\+\_\+wifi\+Ap\+\_\+\+Set\+Pass\+Phrase()}
+\end{DoxyItemize}
+
+Instead of setting the pass phrase, the Pre Shared Key (P\+SK), can be set explicitly. To set the Pre Shared Key prior for the Access Point start use the function\+:
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_ap__interface_8h_a9d126d5511dae79d2229c48bbcc4dddc}{le\+\_\+wifi\+Ap\+\_\+\+Set\+Pre\+Shared\+Key()}
+\end{DoxyItemize}
+
+Sets the security protocol to use.
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_ap__interface_8h_a0985bb7661b81c6882a170855c7c8298}{le\+\_\+wifi\+Ap\+\_\+\+Set\+Security\+Protocol()}
+\end{DoxyItemize}
+
+Sets is the Access Point should show up in network scans or not.
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_ap__interface_8h_a53d220d33f1c7d7560605b5bffc13c80}{le\+\_\+wifi\+Ap\+\_\+\+Set\+Discoverable()}
+\end{DoxyItemize}
+
+Sets which channel to use.
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_ap__interface_8h_a686036419f15a4253c28a41c6d2dc759}{le\+\_\+wifi\+Ap\+\_\+\+Set\+Channel()}
+\end{DoxyItemize}
+
+
+\begin{DoxyCodeInclude}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Sets the credentials}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} Testle\_setCredentials
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__wifi_ap__interface_8h_a8be6c0c7aad3e14f492898df6f131c5b}{le\_wifiAp\_SetPassPhrase}(TEST\_PASSPHRASE));
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__wifi_ap__interface_8h_a0985bb7661b81c6882a170855c7c8298}{le\_wifiAp\_SetSecurityProtocol}(TEST\_SECU\_PROTO)
+      );
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__wifi_ap__interface_8h_a53d220d33f1c7d7560605b5bffc13c80}{le\_wifiAp\_SetDiscoverable}(\textcolor{keyword}{true}));
+\}
+\end{DoxyCodeInclude}
+ \hypertarget{c_le_wifi_ap_le_wifiAp_Start}{}\subsection{Starting the Wi\+Fi Access Point}\label{c_le_wifi_ap_le_wifiAp_Start}
+The Wi\+Fi Access Point is started with the function \hyperlink{le__wifi_ap__interface_8h_ad21bdeabf6a8c923d246ef3c28ac42a0}{le\+\_\+wifi\+Ap\+\_\+\+Start()}. Unless values have been changed, default values will be used\+:
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_ap__interface_8h_ad21bdeabf6a8c923d246ef3c28ac42a0}{le\+\_\+wifi\+Ap\+\_\+\+Start()}\+:
+\end{DoxyItemize}
+
+To subscribe to wifi events \hyperlink{le__wifi_ap__interface_8h_a1ab6c2c710b61aa9b1abd30535702e38}{le\+\_\+wifi\+Ap\+\_\+\+Add\+New\+Event\+Handler()} is to be called.
+\begin{DoxyItemize}
+\item \hyperlink{le__wifi_ap__interface_8h_a1ab6c2c710b61aa9b1abd30535702e38}{le\+\_\+wifi\+Ap\+\_\+\+Add\+New\+Event\+Handler()}
+\end{DoxyItemize}
+
+
+\begin{DoxyCodeInclude}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Handler for WiFi client changes}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} myMsgHandler
+(
+    \hyperlink{le__wifi_ap__interface_8h_aeac8ad63bcfc5ee984cdd86ec9f116d5}{le\_wifiAp\_Event\_t} event,\textcolor{comment}{}
+\textcolor{comment}{        ///< [IN]}
+\textcolor{comment}{        ///< WiFi event to process}
+\textcolor{comment}{}    \textcolor{keywordtype}{void} *contextPtr\textcolor{comment}{}
+\textcolor{comment}{        ///< [IN]}
+\textcolor{comment}{        ///< Associated event context}
+\textcolor{comment}{})
+\{
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"WiFi access point event received"});
+    \textcolor{keywordflow}{switch}(event)
+    \{
+        \textcolor{keywordflow}{case} \hyperlink{le__wifi_ap__interface_8h_aeac8ad63bcfc5ee984cdd86ec9f116d5a77e1636cb334d7bdde04761d333ff284}{LE\_WIFIAP\_EVENT\_CLIENT\_CONNECTED}:
+        \{
+            \textcolor{comment}{// Client connected to AP}
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"LE\_WIFIAP\_EVENT\_CLIENT\_CONNECTED"});
+        \}
+        \textcolor{keywordflow}{break};
+
+        \textcolor{keywordflow}{case} \hyperlink{le__wifi_ap__interface_8h_aeac8ad63bcfc5ee984cdd86ec9f116d5a6d0e05c5fb1ec89d873b96dae320ca6e}{LE\_WIFIAP\_EVENT\_CLIENT\_DISCONNECTED}:
+        \{
+            \textcolor{comment}{// Client disconnected from AP}
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"LE\_WIFICLIENT\_EVENT\_DISCONNECTED"});
+        \}
+        \textcolor{keywordflow}{break};
+
+
+        \textcolor{keywordflow}{default}:
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"ERROR Unknown event %d"}, event);
+        \textcolor{keywordflow}{break};
+    \}
+\}
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Tests the WiFi access point.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keywordtype}{void} Testle\_wifiApStart
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start Test WiFi access point"});
+
+    \textcolor{comment}{// Add an handler function to handle message reception}
+    HdlrRef=\hyperlink{le__wifi_ap__interface_8h_a1ab6c2c710b61aa9b1abd30535702e38}{le\_wifiAp\_AddNewEventHandler}(myMsgHandler, NULL);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(HdlrRef != NULL);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__wifi_ap__interface_8h_a0f29690f2a2d01157cc2d9e58d1d5536}{le\_wifiAp\_SetSsid}(TEST\_SSID, TEST\_SSID\_NBR\_BYTES));
+
+    Testle\_setCredentials();
+
+    \textcolor{keywordflow}{if} (LE\_OK == \hyperlink{le__wifi_ap__interface_8h_ad21bdeabf6a8c923d246ef3c28ac42a0}{le\_wifiAp\_Start}())
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start OK"});
+
+        Testle\_startDhcpServerAndbridgeConnection();
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Start ERROR"});
+    \}
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__wifi_ap__interface_8h_ae2d9ae8853b403f7778dcf74fb2002e6}{le\_wifiAp\_SetIpRange}(HOST\_IP, IP\_RANGE\_START, 
+      IP\_RANGE\_END));
+\}
+\end{DoxyCodeInclude}
+ 
+
+
+
+Copyright (C) Sierra Wireless Inc. \hypertarget{wifi_wificlient_testapp}{}\section{Wi\+Fi Client Sample App}\label{wifi_wificlient_testapp}
+The sample shows how to use the \hyperlink{c_le_wifi_client}{Wi\+Fi Client Service}.
+
+To use this application, you should have basic understanding of the Legato interface and how a Wi\+Fi client works.
+
+This sample app may be included in the default legato build on your target but it is not started by default; it needs to be started manually.
+
+View the \href{https://github.com/legatoproject/legato-WiFi/tree/master/apps/sample/wifiClientTest}{\tt app code}
+
+Run this to install the sample app\+: \begin{DoxyVerb}$ bin/legs
+$ cd $LEGATO_ROOT/modules/WiFi/apps/sample/wifiClientTest
+$ make wp85
+$ update wifiClientTest.wp85.update <ip address>
+\end{DoxyVerb}
+\hypertarget{wifi_wificlient_testapp_wifi_sample_Apps_wificlient_testapp_usage}{}\subsection{Usage}\label{wifi_wificlient_testapp_wifi_sample_Apps_wificlient_testapp_usage}
+When started the Wi\+Fi client first performs a few scan loops and recovers the result.~\newline
+ The results are visible in the log. ~\newline
+ It then tries to connect to a Wi\+Fi access point named {\itshape \char`\"{}\+Example\+S\+S\+I\+D\char`\"{}}, ~\newline
+ with W\+P\+A2 passphrase\+: {\itshape \char`\"{}passphrase\char`\"{}}. ~\newline
+
+
+\begin{DoxyNote}{Note}
+It will also provide IP addresses. This is not a part of the Wi\+Fi Service, but is provided as one of the sample applications.
+\end{DoxyNote}
+This sample application is not started by default, it needs to be started manually.
+
+Copyright (C) Sierra Wireless Inc. \hypertarget{wifi_wifiap_testapp}{}\section{Wi\+Fi Access Point Test App}\label{wifi_wifiap_testapp}
+The sample shows how to use the \hyperlink{c_le_wifi_ap}{Wi\+Fi Access Point Service}.
+
+This sample app may be included in the default legato build on your target but it is not started by default; it needs to be started manually.
+
+View the \href{https://github.com/legatoproject/legato-WiFi/tree/master/apps/sample/wifiApTest}{\tt app code}
+
+Run this to install the sample app\+: \begin{DoxyVerb}$ bin/legs
+$ cd $LEGATO_ROOT/modules/WiFi/apps/sample/wifiApTest
+$ make wp85
+$ update wifiApTest.wp85.update <ip address>
+\end{DoxyVerb}
+\hypertarget{wifi_wifiap_testapp_wifi_wifiap_testapp_usage}{}\subsection{Usage}\label{wifi_wifiap_testapp_wifi_wifiap_testapp_usage}
+Starts a Wi\+Fi access point named {\itshape \char`\"{}wifi\+Ap\+S\+S\+I\+D\char`\"{}}, ~\newline
+ with W\+P\+A2 pass-\/phrase\+: {\itshape \char`\"{}passphrase\char`\"{}}.
+
+\begin{DoxyNote}{Note}
+It will also provide IP addresses. This is not a part of the Wi\+Fi service, but is provided as one of the sample applications.
+\end{DoxyNote}
+\hypertarget{wifi_wifiap_testapp_wifi_wifiap_testapp_StepByStep}{}\subsection{Use Access Point}\label{wifi_wifiap_testapp_wifi_wifiap_testapp_StepByStep}
+This is how to use a one way Wi\+Fi Access Point\+:
+
+
+\begin{DoxyEnumerate}
+\item Connect your Ethernet to your target. The sample will bridge the Ethernet and the Wi\+Fi A\+Ps IP.
+\item Start the application wifi\+Ap\+Test
+\item With your Wi\+Fi client (smart phone/\+PC) do a scan.
+\item You should now see a S\+S\+ID with the name \char`\"{}wifi\+Ap\+S\+S\+I\+D\char`\"{}.
+\item Connect to with the pass-\/phrase \char`\"{}passphrase\char`\"{}.
+\item You should now have gotten an IP.
+\end{DoxyEnumerate}
+
+Look at the sample code for an example of how to bridge the modem and the IP.
+
+Copyright (C) Sierra Wireless Inc. \hypertarget{wifi_wifiwebAp_sample}{}\section{Wi\+Fi Access Point Web Sample App}\label{wifi_wifiwebAp_sample}
+This sample provides a webpage to configure the Wi\+Fi Access Point.
+
+This sample app may be included in the default legato build on your target but it is not started by default; it needs to be started manually.
+
+Starting the application will start the webserver on port 8080. ~\newline
+ Go to the IP of your module N\+N\+N.\+N\+N\+N.\+N\+N\+N.\+N\+NN\+:8080. ~\newline
+ The default address of your module should be 192.\+168.\+2.\+2\+:8080. ~\newline
+ The port number of the webserver is set in the application. ~\newline
+
+
+\begin{DoxyWarning}{Warning}
+Only use a S\+IM card without P\+IN code.
+\end{DoxyWarning}
+View the \href{https://github.com/legatoproject/legato-WiFi/tree/master/apps/sample/wifiWebAp}{\tt app code}
+
+Run this to install the sample app\+: \begin{DoxyVerb}$ bin/legs
+$ cd $LEGATO_ROOT/modules/WiFi/apps/sample/wifiWebAp
+$ make wp85
+$ update wifiWebAp.wp85.update <ip address>
+\end{DoxyVerb}
+\hypertarget{wifi_wifiwebAp_sample_wifi_wifiwebAp_sample_StepByStep}{}\subsection{Use Web App}\label{wifi_wifiwebAp_sample_wifi_wifiwebAp_sample_StepByStep}
+This is one way to enable the sample web interface\+:
+
+
+\begin{DoxyEnumerate}
+\item Connect your target via U\+SB.
+\item Check your targets IP on the U\+SB interface with {\itshape ifconfig}.
+\item Run {\ttfamily cm data connect} to check that the right interface is configured for your target.
+\item Start the application wifi\+Web\+Ap
+\item Open a web browser with the IP of your module \href{http://NNN.NNN.NNN.NNN:8080}{\tt http\+://\+N\+N\+N.\+N\+N\+N.\+N\+N\+N.\+N\+N\+N\+:8080}
+\item Set the desired parameters on the webpage and click the \char`\"{}\+Start Wi\+Fi A\+P\char`\"{} button.
+\item Wait while result page is generated (this will take 15-\/20 seconds).
+\item You can monitor the progression of the connection by looking at the logs.
+\item Once the message \char`\"{}\+Waiting for connections...\char`\"{} is displayed, you can try to connect to your Wi\+Fi AP.
+\item Connections/\+Disconnections are visible in the logs as well.
+\end{DoxyEnumerate}
+
+\begin{DoxyNote}{Note}
+Check with your module vendor to verify interface names before starting the app. (e.\+g.; wp85 interface is rmnet0 and wp76 interface is rmnet\+\_\+data0)
+\end{DoxyNote}
+Copyright (C) Sierra Wireless Inc. 

@@ -1,0 +1,624 @@
+\hypertarget{cgroups_8c}{}\section{framework/liblegato/linux/cgroups.c File Reference}
+\label{cgroups_8c}\index{framework/liblegato/linux/cgroups.\+c@{framework/liblegato/linux/cgroups.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}cgroups.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+System.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kill\+Proc.\+h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{cgroups_8c_ad001da02ced4ad61e2f7e152fd33a5b8}{R\+O\+O\+T\+\_\+\+P\+A\+TH}~\char`\"{}/sys/fs/cgroup\char`\"{}
+\item 
+\#define \hyperlink{cgroups_8c_a830026324fed9d99511c1c6996d74884}{R\+O\+O\+T\+\_\+\+N\+A\+ME}~\char`\"{}cgroups\+Root\char`\"{}
+\item 
+\#define \hyperlink{cgroups_8c_a13bb8393ce02e77f60a7d8f1d7fac618}{T\+A\+S\+K\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}~\char`\"{}tasks\char`\"{}
+\item 
+\#define \hyperlink{cgroups_8c_ad83930b489d080c8396246a408c4c17f}{P\+R\+O\+C\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}~\char`\"{}cgroup.\+procs\char`\"{}
+\item 
+\#define \hyperlink{cgroups_8c_a59d608d499db9c120392911459ad24df}{C\+P\+U\+\_\+\+S\+H\+A\+R\+E\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}~\char`\"{}cpu.\+shares\char`\"{}
+\item 
+\#define \hyperlink{cgroups_8c_a6bc8792bc8ce16e4ebed16b576fba424}{M\+E\+M\+\_\+\+L\+I\+M\+I\+T\+\_\+\+F\+I\+L\+E\+N\+A\+ME}~\char`\"{}memory.\+limit\+\_\+in\+\_\+bytes\char`\"{}
+\item 
+\#define \hyperlink{cgroups_8c_a760e9d29e28a0dc85f24b6ade2f58524}{F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+F\+I\+L\+E\+N\+A\+ME}~\char`\"{}freezer.\+state\char`\"{}
+\item 
+\#define \hyperlink{cgroups_8c_a001791a21d538b8b9176287ae60d9b61}{M\+A\+X\+\_\+\+D\+I\+G\+I\+TS}~100
+\item 
+\#define \hyperlink{cgroups_8c_a393acc95fbe5b458b011a48ad26540d1}{M\+A\+X\+\_\+\+F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+B\+Y\+T\+ES}~20
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static bool \hyperlink{cgroups_8c_af5a48874a70112741efa767867f8e9de}{Is\+All\+Sub\+Sys\+Mounted} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{cgroups_8c_aa215e00966c2e553e6481a23dc69bdea}{Mount\+Sub\+Sys} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{cgroups_8c_a8735d2e07614a24397d740f30243bdff}{cgrp\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static int \hyperlink{cgroups_8c_adb0b8e258b0cb5ae4c4daac4f865bd2b}{Open\+Cgrp\+File} (\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77c}{cgrp\+\_\+\+Sub\+Sys\+\_\+t} subsystem, const char $\ast$cgroup\+Name\+Ptr, const char $\ast$file\+Name\+Ptr, int access\+Mode)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{cgroups_8c_a67fff0d7b4fb809f6321354357ee9ef4}{Write\+To\+File} (\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77c}{cgrp\+\_\+\+Sub\+Sys\+\_\+t} subsystem, const char $\ast$cgroup\+Name\+Ptr, const char $\ast$file\+Name\+Ptr, const char $\ast$string)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{cgroups_8c_a6b30d126ac0d291cdcbaefac48fbebe7}{Get\+Value} (\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77c}{cgrp\+\_\+\+Sub\+Sys\+\_\+t} subsystem, const char $\ast$cgroup\+Name\+Ptr, const char $\ast$file\+Name\+Ptr, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)
+\item 
+static pid\+\_\+t \hyperlink{cgroups_8c_ae5c4dff3f203a59b27bcaa58cdf89816}{Get\+Tasks\+Id} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{cgroups_8c_a1cd71496eca8d92a23be566c35d0d19d}{Remove\+Trailing\+White\+Space} (char $\ast$str\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{cgroups_8c_a160b66801eaad9d32c2e8ae11befc304}{cgrp\+\_\+\+Create} (\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77c}{cgrp\+\_\+\+Sub\+Sys\+\_\+t} subsystem, const char $\ast$cgroup\+Name\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{cgroups_8c_ab16293818696bec9ee17c741e70153f0}{cgrp\+\_\+\+Add\+Proc} (\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77c}{cgrp\+\_\+\+Sub\+Sys\+\_\+t} subsystem, const char $\ast$cgroup\+Name\+Ptr, pid\+\_\+t pid\+To\+Add)
+\item 
+static ssize\+\_\+t \hyperlink{cgroups_8c_a17470f7d8ccd0a5d4905b5296520cd11}{Build\+Tid\+List} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, pid\+\_\+t $\ast$id\+List\+Ptr, size\+\_\+t max\+Ids)
+\item 
+ssize\+\_\+t \hyperlink{cgroups_8c_a1b0c1fa94dbb1626bb47f85f822ef58d}{cgrp\+\_\+\+Get\+Thread\+List} (\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77c}{cgrp\+\_\+\+Sub\+Sys\+\_\+t} subsystem, const char $\ast$cgroup\+Name\+Ptr, pid\+\_\+t $\ast$tid\+List\+Ptr, size\+\_\+t max\+Tids)
+\item 
+ssize\+\_\+t \hyperlink{cgroups_8c_aa7731c42c3d42654c271d6584cc0356d}{cgrp\+\_\+\+Get\+Processes\+List} (\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77c}{cgrp\+\_\+\+Sub\+Sys\+\_\+t} subsystem, const char $\ast$cgroup\+Name\+Ptr, pid\+\_\+t $\ast$pid\+List\+Ptr, size\+\_\+t max\+Pids)
+\item 
+ssize\+\_\+t \hyperlink{cgroups_8c_a49aeee12bf5f7b8adeff02764103d9df}{cgrp\+\_\+\+Send\+Sig} (\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77c}{cgrp\+\_\+\+Sub\+Sys\+\_\+t} subsystem, const char $\ast$cgroup\+Name\+Ptr, int sig)
+\item 
+bool \hyperlink{cgroups_8c_af5b46d738fa7ccc3b917b5b29368892d}{cgrp\+\_\+\+Is\+Empty} (\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77c}{cgrp\+\_\+\+Sub\+Sys\+\_\+t} subsystem, const char $\ast$cgroup\+Name\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{cgroups_8c_af811323b51196a31f2417b54e02e79d3}{cgrp\+\_\+\+Delete} (\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77c}{cgrp\+\_\+\+Sub\+Sys\+\_\+t} subsystem, const char $\ast$cgroup\+Name\+Ptr)
+\item 
+const char $\ast$ \hyperlink{cgroups_8c_a133106fb988771994e749b8d27bf7f12}{cgrp\+\_\+\+Sub\+Sys\+Name} (\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77c}{cgrp\+\_\+\+Sub\+Sys\+\_\+t} subsystem)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{cgroups_8c_ad83dc21bd1c3901bbce4315ab37ee7e6}{cgrp\+\_\+cpu\+\_\+\+Set\+Share} (const char $\ast$cgroup\+Name\+Ptr, size\+\_\+t share)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{cgroups_8c_a3c04562acf22ce2cdef0738b509c1dbd}{cgrp\+\_\+mem\+\_\+\+Set\+Limit} (const char $\ast$cgroup\+Name\+Ptr, size\+\_\+t limit)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{cgroups_8c_a2607ffaf6eb2e2588d6b91d631c6f66d}{cgrp\+\_\+frz\+\_\+\+Freeze} (const char $\ast$cgroup\+Name\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{cgroups_8c_a3c491bdd4e05c125397fe66b655eb12d}{cgrp\+\_\+frz\+\_\+\+Thaw} (const char $\ast$cgroup\+Name\+Ptr)
+\item 
+\hyperlink{cgroups_8h_a4195cb6b70449bb93493a6226f97d7ce}{cgrp\+\_\+\+Freeze\+State\+\_\+t} \hyperlink{cgroups_8c_ad53ddc667632d27dc19d1efc0b617d03}{cgrp\+\_\+frz\+\_\+\+Get\+State} (const char $\ast$cgroup\+Name\+Ptr)
+\item 
+ssize\+\_\+t \hyperlink{cgroups_8c_a183413112024ffa9813f1f87d268f6a4}{cgrp\+\_\+\+Get\+Mem\+Used} (const char $\ast$cgroup\+Name\+Ptr)
+\item 
+ssize\+\_\+t \hyperlink{cgroups_8c_ae9dc8c45c6be255a140bb1f5838eccff}{cgrp\+\_\+\+Get\+Max\+Mem\+Used} (const char $\ast$cgroup\+Name\+Ptr)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const char $\ast$ \hyperlink{cgroups_8c_a38a7c74608a1f41e01122b5ed5a15dc1}{Sub\+Sys\+Name} \mbox{[}\hyperlink{cgroups_8h_ad2eee571b4d42dc6b59514081d9de77cad0de2d0cb1e87e79de36cbdbbc3503d3}{C\+G\+R\+P\+\_\+\+N\+U\+M\+\_\+\+S\+U\+B\+S\+Y\+S\+T\+E\+MS}\mbox{]} = \{\char`\"{}cpu,cpuacct\char`\"{}, \char`\"{}memory\char`\"{}, \char`\"{}freezer\char`\"{}\}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+A\+PI for creating and managing cgroups.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{cgroups.\+c@{cgroups.\+c}!C\+P\+U\+\_\+\+S\+H\+A\+R\+E\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME@{C\+P\+U\+\_\+\+S\+H\+A\+R\+E\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}}
+\index{C\+P\+U\+\_\+\+S\+H\+A\+R\+E\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME@{C\+P\+U\+\_\+\+S\+H\+A\+R\+E\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{C\+P\+U\+\_\+\+S\+H\+A\+R\+E\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}{CPU_SHARES_FILENAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+P\+U\+\_\+\+S\+H\+A\+R\+E\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME~\char`\"{}cpu.\+shares\char`\"{}}\hypertarget{cgroups_8c_a59d608d499db9c120392911459ad24df}{}\label{cgroups_8c_a59d608d499db9c120392911459ad24df}
+Cpu shares file. \index{cgroups.\+c@{cgroups.\+c}!F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+F\+I\+L\+E\+N\+A\+ME@{F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+F\+I\+L\+E\+N\+A\+ME}}
+\index{F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+F\+I\+L\+E\+N\+A\+ME@{F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+F\+I\+L\+E\+N\+A\+ME}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+F\+I\+L\+E\+N\+A\+ME}{FREEZE_STATE_FILENAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+F\+I\+L\+E\+N\+A\+ME~\char`\"{}freezer.\+state\char`\"{}}\hypertarget{cgroups_8c_a760e9d29e28a0dc85f24b6ade2f58524}{}\label{cgroups_8c_a760e9d29e28a0dc85f24b6ade2f58524}
+Freeze state file. \index{cgroups.\+c@{cgroups.\+c}!M\+A\+X\+\_\+\+D\+I\+G\+I\+TS@{M\+A\+X\+\_\+\+D\+I\+G\+I\+TS}}
+\index{M\+A\+X\+\_\+\+D\+I\+G\+I\+TS@{M\+A\+X\+\_\+\+D\+I\+G\+I\+TS}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+D\+I\+G\+I\+TS}{MAX_DIGITS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+D\+I\+G\+I\+TS~100}\hypertarget{cgroups_8c_a001791a21d538b8b9176287ae60d9b61}{}\label{cgroups_8c_a001791a21d538b8b9176287ae60d9b61}
+Maximum digits in a cgroup integer value. \index{cgroups.\+c@{cgroups.\+c}!M\+A\+X\+\_\+\+F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+B\+Y\+T\+ES}}
+\index{M\+A\+X\+\_\+\+F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+B\+Y\+T\+ES}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+B\+Y\+T\+ES}{MAX_FREEZE_STATE_BYTES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+F\+R\+E\+E\+Z\+E\+\_\+\+S\+T\+A\+T\+E\+\_\+\+B\+Y\+T\+ES~20}\hypertarget{cgroups_8c_a393acc95fbe5b458b011a48ad26540d1}{}\label{cgroups_8c_a393acc95fbe5b458b011a48ad26540d1}
+Maximum number of bytes in a freezing state string. \index{cgroups.\+c@{cgroups.\+c}!M\+E\+M\+\_\+\+L\+I\+M\+I\+T\+\_\+\+F\+I\+L\+E\+N\+A\+ME@{M\+E\+M\+\_\+\+L\+I\+M\+I\+T\+\_\+\+F\+I\+L\+E\+N\+A\+ME}}
+\index{M\+E\+M\+\_\+\+L\+I\+M\+I\+T\+\_\+\+F\+I\+L\+E\+N\+A\+ME@{M\+E\+M\+\_\+\+L\+I\+M\+I\+T\+\_\+\+F\+I\+L\+E\+N\+A\+ME}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{M\+E\+M\+\_\+\+L\+I\+M\+I\+T\+\_\+\+F\+I\+L\+E\+N\+A\+ME}{MEM_LIMIT_FILENAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+E\+M\+\_\+\+L\+I\+M\+I\+T\+\_\+\+F\+I\+L\+E\+N\+A\+ME~\char`\"{}memory.\+limit\+\_\+in\+\_\+bytes\char`\"{}}\hypertarget{cgroups_8c_a6bc8792bc8ce16e4ebed16b576fba424}{}\label{cgroups_8c_a6bc8792bc8ce16e4ebed16b576fba424}
+Memory limit file. \index{cgroups.\+c@{cgroups.\+c}!P\+R\+O\+C\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME@{P\+R\+O\+C\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}}
+\index{P\+R\+O\+C\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME@{P\+R\+O\+C\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{P\+R\+O\+C\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}{PROCS_FILENAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\+R\+O\+C\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME~\char`\"{}cgroup.\+procs\char`\"{}}\hypertarget{cgroups_8c_ad83930b489d080c8396246a408c4c17f}{}\label{cgroups_8c_ad83930b489d080c8396246a408c4c17f}
+Cgroup procs file. The procs file list the P\+I\+Ds of all processes in a cgroup. \index{cgroups.\+c@{cgroups.\+c}!R\+O\+O\+T\+\_\+\+N\+A\+ME@{R\+O\+O\+T\+\_\+\+N\+A\+ME}}
+\index{R\+O\+O\+T\+\_\+\+N\+A\+ME@{R\+O\+O\+T\+\_\+\+N\+A\+ME}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{R\+O\+O\+T\+\_\+\+N\+A\+ME}{ROOT_NAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\+O\+O\+T\+\_\+\+N\+A\+ME~\char`\"{}cgroups\+Root\char`\"{}}\hypertarget{cgroups_8c_a830026324fed9d99511c1c6996d74884}{}\label{cgroups_8c_a830026324fed9d99511c1c6996d74884}
+\index{cgroups.\+c@{cgroups.\+c}!R\+O\+O\+T\+\_\+\+P\+A\+TH@{R\+O\+O\+T\+\_\+\+P\+A\+TH}}
+\index{R\+O\+O\+T\+\_\+\+P\+A\+TH@{R\+O\+O\+T\+\_\+\+P\+A\+TH}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{R\+O\+O\+T\+\_\+\+P\+A\+TH}{ROOT_PATH}}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\+O\+O\+T\+\_\+\+P\+A\+TH~\char`\"{}/sys/fs/cgroup\char`\"{}}\hypertarget{cgroups_8c_ad001da02ced4ad61e2f7e152fd33a5b8}{}\label{cgroups_8c_ad001da02ced4ad61e2f7e152fd33a5b8}
+Root path for all cgroups. \index{cgroups.\+c@{cgroups.\+c}!T\+A\+S\+K\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME@{T\+A\+S\+K\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}}
+\index{T\+A\+S\+K\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME@{T\+A\+S\+K\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{T\+A\+S\+K\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME}{TASKS_FILENAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define T\+A\+S\+K\+S\+\_\+\+F\+I\+L\+E\+N\+A\+ME~\char`\"{}tasks\char`\"{}}\hypertarget{cgroups_8c_a13bb8393ce02e77f60a7d8f1d7fac618}{}\label{cgroups_8c_a13bb8393ce02e77f60a7d8f1d7fac618}
+Cgroup tasks file. The tasks file list the P\+I\+Ds of all threads in a cgroup. 
+
+\subsection{Function Documentation}
+\index{cgroups.\+c@{cgroups.\+c}!Build\+Tid\+List@{Build\+Tid\+List}}
+\index{Build\+Tid\+List@{Build\+Tid\+List}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{Build\+Tid\+List(int fd, pid\+\_\+t $\ast$id\+List\+Ptr, size\+\_\+t max\+Ids)}{BuildTidList(int fd, pid_t *idListPtr, size_t maxIds)}}]{\setlength{\rightskip}{0pt plus 5cm}static ssize\+\_\+t Build\+Tid\+List (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{pid\+\_\+t $\ast$}]{id\+List\+Ptr, }
+\item[{size\+\_\+t}]{max\+Ids}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{cgroups_8c_a17470f7d8ccd0a5d4905b5296520cd11}{}\label{cgroups_8c_a17470f7d8ccd0a5d4905b5296520cd11}
+Reads a list of tids/pids from an open file descriptor. The number of pids in the file may be larger than max\+Ids, in which case id\+List\+Ptr will be filled with the first max\+Ids P\+I\+Ds. We can re-\/use this code for tids or pids because, in linux, all tids are pids and vice versa.
+
+\begin{DoxyReturn}{Returns}
+The number of ids that are read if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em id\+List\+Ptr} & Buffer that will contain the list of P\+I\+Ds. \\
+\hline
+\mbox{\tt in}  & {\em max\+Ids} & The maximum number of pids pid\+List\+Ptr can hold. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+\+Add\+Proc@{cgrp\+\_\+\+Add\+Proc}}
+\index{cgrp\+\_\+\+Add\+Proc@{cgrp\+\_\+\+Add\+Proc}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Add\+Proc(cgrp\+\_\+\+Sub\+Sys\+\_\+t subsystem, const char $\ast$cgroup\+Name\+Ptr, pid\+\_\+t pid\+To\+Add)}{cgrp_AddProc(cgrp_SubSys_t subsystem, const char *cgroupNamePtr, pid_t pidToAdd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} cgrp\+\_\+\+Add\+Proc (
+\begin{DoxyParamCaption}
+\item[{{\bf cgrp\+\_\+\+Sub\+Sys\+\_\+t}}]{subsystem, }
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr, }
+\item[{pid\+\_\+t}]{pid\+To\+Add}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_ab16293818696bec9ee17c741e70153f0}{}\label{cgroups_8c_ab16293818696bec9ee17c741e70153f0}
+Adds a process to a cgroup.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+U\+T\+\_\+\+O\+F\+\_\+\+R\+A\+N\+GE if the process doesn\textquotesingle{}t exist. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em subsystem} & Sub-\/system of the cgroup. \\
+\hline
+{\em cgroup\+Name\+Ptr} & Name of the cgroup to add the process to. \\
+\hline
+{\em pid\+To\+Add} & P\+ID of the process to add. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+cpu\+\_\+\+Set\+Share@{cgrp\+\_\+cpu\+\_\+\+Set\+Share}}
+\index{cgrp\+\_\+cpu\+\_\+\+Set\+Share@{cgrp\+\_\+cpu\+\_\+\+Set\+Share}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+cpu\+\_\+\+Set\+Share(const char $\ast$cgroup\+Name\+Ptr, size\+\_\+t share)}{cgrp_cpu_SetShare(const char *cgroupNamePtr, size_t share)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} cgrp\+\_\+cpu\+\_\+\+Set\+Share (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr, }
+\item[{size\+\_\+t}]{share}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_ad83dc21bd1c3901bbce4315ab37ee7e6}{}\label{cgroups_8c_ad83dc21bd1c3901bbce4315ab37ee7e6}
+Sets the cpu share of a cgroup.
+
+Cpu share is used to calculate the cpu percentage for a process relative to all other processes in the system. Newly created cgroups and processes not belonging to a cgroup are given a default value of 1024. The actual percentage of the cpu given to a process is calculated as\+:
+
+(share value of process) / (sum of shares from all processes contending for the cpu)
+
+All processes within a cgroup share the available cpu share for that cgroup.
+
+For example\+:
+
+cgroupA is configured with the default share value, 1024. cgroupB is configured with 512 as its share value. cgroupC is configured with 2048 as its share value.
+
+cgroupA has one process running. cgroupB has two processes running. cgroupC has one process running.
+
+Assuming that all processes in cgroupA, cgroupB and cgroupC are running and not blocked waiting for some I/O or timer event and that another system process is also running.
+
+Sum of all shares (including the one system process) is 1024 + 512 + 2048 + 1024 = 4608
+
+The process in cgroupA will get 1024/4608 = 22\% of the cpu. The two processes in cgroupB will share 512/4608 = 11\% of the cpu, each process getting 5.\+5\%. The process in cgroupC will get 2048/4608 = 44\% of the cpu. The system process will get 1024/4608 = 22\% of the cpu.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em cgroup\+Name\+Ptr} & Name of the cgroup to set the share for. \\
+\hline
+{\em share} & Share value to set. See the function header for more details. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+\+Create@{cgrp\+\_\+\+Create}}
+\index{cgrp\+\_\+\+Create@{cgrp\+\_\+\+Create}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Create(cgrp\+\_\+\+Sub\+Sys\+\_\+t subsystem, const char $\ast$cgroup\+Name\+Ptr)}{cgrp_Create(cgrp_SubSys_t subsystem, const char *cgroupNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} cgrp\+\_\+\+Create (
+\begin{DoxyParamCaption}
+\item[{{\bf cgrp\+\_\+\+Sub\+Sys\+\_\+t}}]{subsystem, }
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_a160b66801eaad9d32c2e8ae11befc304}{}\label{cgroups_8c_a160b66801eaad9d32c2e8ae11befc304}
+Creates a cgroup with the specified name in the specified sub-\/system. If the cgroup already exists this function has no effect.
+
+Sub-\/groups can be created by providing a path as the name. For example, cgrp\+\_\+\+Create(C\+G\+R\+P\+\_\+\+S\+U\+B\+S\+Y\+S\+\_\+\+C\+PU, \char`\"{}\+Students/\+Undergrads\char`\"{}); will create a cgroup called \char`\"{}\+Undergrads\char`\"{} that is a sub-\/group of \char`\"{}\+Students\char`\"{}. Note that all parent groups must first exist before a sub-\/group can be created.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE if the cgroup already exists. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em subsystem} & Sub-\/system the cgroup belongs to. \\
+\hline
+{\em cgroup\+Name\+Ptr} & Name of the cgroup to create. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+\+Delete@{cgrp\+\_\+\+Delete}}
+\index{cgrp\+\_\+\+Delete@{cgrp\+\_\+\+Delete}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Delete(cgrp\+\_\+\+Sub\+Sys\+\_\+t subsystem, const char $\ast$cgroup\+Name\+Ptr)}{cgrp_Delete(cgrp_SubSys_t subsystem, const char *cgroupNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} cgrp\+\_\+\+Delete (
+\begin{DoxyParamCaption}
+\item[{{\bf cgrp\+\_\+\+Sub\+Sys\+\_\+t}}]{subsystem, }
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_af811323b51196a31f2417b54e02e79d3}{}\label{cgroups_8c_af811323b51196a31f2417b54e02e79d3}
+Deletes a cgroup.
+
+\begin{DoxyNote}{Note}
+A cgroup can only be removed when there are no processes in the group. Ensure there are no processes in a cgroup (by killing the processes) before attempting to delete it.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the cgroup was successfully deleted. L\+E\+\_\+\+B\+U\+SY if the cgroup could not be deleted because there are still processes in the cgroup. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em subsystem} & Sub-\/system of the cgroup. \\
+\hline
+{\em cgroup\+Name\+Ptr} & Name of the cgroup to delete. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+frz\+\_\+\+Freeze@{cgrp\+\_\+frz\+\_\+\+Freeze}}
+\index{cgrp\+\_\+frz\+\_\+\+Freeze@{cgrp\+\_\+frz\+\_\+\+Freeze}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+frz\+\_\+\+Freeze(const char $\ast$cgroup\+Name\+Ptr)}{cgrp_frz_Freeze(const char *cgroupNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} cgrp\+\_\+frz\+\_\+\+Freeze (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_a2607ffaf6eb2e2588d6b91d631c6f66d}{}\label{cgroups_8c_a2607ffaf6eb2e2588d6b91d631c6f66d}
+Freezes all the tasks in a cgroup. This is an asynchronous function call that returns immediately at which point the freeze state of the cgroup may not be updated yet. Check the current state of the cgroup using \hyperlink{cgroups_8c_ad53ddc667632d27dc19d1efc0b617d03}{cgrp\+\_\+frz\+\_\+\+Get\+State()}. Once a cgroup is frozen all tasks in the cgroup are prevented from being scheduled by the kernel.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+frz\+\_\+\+Get\+State@{cgrp\+\_\+frz\+\_\+\+Get\+State}}
+\index{cgrp\+\_\+frz\+\_\+\+Get\+State@{cgrp\+\_\+frz\+\_\+\+Get\+State}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+frz\+\_\+\+Get\+State(const char $\ast$cgroup\+Name\+Ptr)}{cgrp_frz_GetState(const char *cgroupNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf cgrp\+\_\+\+Freeze\+State\+\_\+t} cgrp\+\_\+frz\+\_\+\+Get\+State (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_ad53ddc667632d27dc19d1efc0b617d03}{}\label{cgroups_8c_ad53ddc667632d27dc19d1efc0b617d03}
+Gets the freeze state of the cgroup.
+
+\begin{DoxyReturn}{Returns}
+Freeze state of the cgroup if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+frz\+\_\+\+Thaw@{cgrp\+\_\+frz\+\_\+\+Thaw}}
+\index{cgrp\+\_\+frz\+\_\+\+Thaw@{cgrp\+\_\+frz\+\_\+\+Thaw}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+frz\+\_\+\+Thaw(const char $\ast$cgroup\+Name\+Ptr)}{cgrp_frz_Thaw(const char *cgroupNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} cgrp\+\_\+frz\+\_\+\+Thaw (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_a3c491bdd4e05c125397fe66b655eb12d}{}\label{cgroups_8c_a3c491bdd4e05c125397fe66b655eb12d}
+Thaws all the tasks in a cgroup. This is an asynchronous function call that returns immediately at which point the freeze state of the cgroup may not be updated yet. Check the current state of the cgroup using \hyperlink{cgroups_8c_ad53ddc667632d27dc19d1efc0b617d03}{cgrp\+\_\+frz\+\_\+\+Get\+State()}. Once a cgroup is thawed all tasks in the cgroup are permitted to be scheduled by the kernel.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+\+Get\+Max\+Mem\+Used@{cgrp\+\_\+\+Get\+Max\+Mem\+Used}}
+\index{cgrp\+\_\+\+Get\+Max\+Mem\+Used@{cgrp\+\_\+\+Get\+Max\+Mem\+Used}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Get\+Max\+Mem\+Used(const char $\ast$cgroup\+Name\+Ptr)}{cgrp_GetMaxMemUsed(const char *cgroupNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}ssize\+\_\+t cgrp\+\_\+\+Get\+Max\+Mem\+Used (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_ae9dc8c45c6be255a140bb1f5838eccff}{}\label{cgroups_8c_ae9dc8c45c6be255a140bb1f5838eccff}
+Gets the maximum amount of memory used in bytes by a cgroup. \begin{DoxyReturn}{Returns}
+Maximum number of bytes used at any time up to now by this cgroup. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+\+Get\+Mem\+Used@{cgrp\+\_\+\+Get\+Mem\+Used}}
+\index{cgrp\+\_\+\+Get\+Mem\+Used@{cgrp\+\_\+\+Get\+Mem\+Used}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Get\+Mem\+Used(const char $\ast$cgroup\+Name\+Ptr)}{cgrp_GetMemUsed(const char *cgroupNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}ssize\+\_\+t cgrp\+\_\+\+Get\+Mem\+Used (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_a183413112024ffa9813f1f87d268f6a4}{}\label{cgroups_8c_a183413112024ffa9813f1f87d268f6a4}
+Gets the amount of memory used in bytes by a cgroup
+
+\begin{DoxyReturn}{Returns}
+Number of bytes in use by the cgroup. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+\+Get\+Processes\+List@{cgrp\+\_\+\+Get\+Processes\+List}}
+\index{cgrp\+\_\+\+Get\+Processes\+List@{cgrp\+\_\+\+Get\+Processes\+List}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Get\+Processes\+List(cgrp\+\_\+\+Sub\+Sys\+\_\+t subsystem, const char $\ast$cgroup\+Name\+Ptr, pid\+\_\+t $\ast$pid\+List\+Ptr, size\+\_\+t max\+Pids)}{cgrp_GetProcessesList(cgrp_SubSys_t subsystem, const char *cgroupNamePtr, pid_t *pidListPtr, size_t maxPids)}}]{\setlength{\rightskip}{0pt plus 5cm}ssize\+\_\+t cgrp\+\_\+\+Get\+Processes\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf cgrp\+\_\+\+Sub\+Sys\+\_\+t}}]{subsystem, }
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr, }
+\item[{pid\+\_\+t $\ast$}]{pid\+List\+Ptr, }
+\item[{size\+\_\+t}]{max\+Pids}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_aa7731c42c3d42654c271d6584cc0356d}{}\label{cgroups_8c_aa7731c42c3d42654c271d6584cc0356d}
+Gets a list of processes that are in a cgroup. The number of processes in the cgroup may be larger than max\+Pids, in which case pid\+List\+Ptr will be filled with the first max\+Pids P\+I\+Ds.
+
+\begin{DoxyReturn}{Returns}
+The number of threads that are in the cgroup if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em subsystem} & Sub-\/system of the cgroup. \\
+\hline
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\mbox{\tt out}  & {\em pid\+List\+Ptr} & Buffer that will contain the list of P\+I\+Ds. \\
+\hline
+\mbox{\tt in}  & {\em max\+Pids} & The maximum number of pids pid\+List\+Ptr can hold. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+\+Get\+Thread\+List@{cgrp\+\_\+\+Get\+Thread\+List}}
+\index{cgrp\+\_\+\+Get\+Thread\+List@{cgrp\+\_\+\+Get\+Thread\+List}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Get\+Thread\+List(cgrp\+\_\+\+Sub\+Sys\+\_\+t subsystem, const char $\ast$cgroup\+Name\+Ptr, pid\+\_\+t $\ast$tid\+List\+Ptr, size\+\_\+t max\+Tids)}{cgrp_GetThreadList(cgrp_SubSys_t subsystem, const char *cgroupNamePtr, pid_t *tidListPtr, size_t maxTids)}}]{\setlength{\rightskip}{0pt plus 5cm}ssize\+\_\+t cgrp\+\_\+\+Get\+Thread\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf cgrp\+\_\+\+Sub\+Sys\+\_\+t}}]{subsystem, }
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr, }
+\item[{pid\+\_\+t $\ast$}]{tid\+List\+Ptr, }
+\item[{size\+\_\+t}]{max\+Tids}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_a1b0c1fa94dbb1626bb47f85f822ef58d}{}\label{cgroups_8c_a1b0c1fa94dbb1626bb47f85f822ef58d}
+Gets a list of threads that are in a cgroup. The number of threads in the cgroup may be larger than max\+Tids, in which case tid\+List\+Ptr will be filled with the first max\+Tids T\+I\+Ds.
+
+\begin{DoxyReturn}{Returns}
+The number of threads that are in the cgroup if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em subsystem} & Sub-\/system of the cgroup. \\
+\hline
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\mbox{\tt out}  & {\em tid\+List\+Ptr} & Buffer that will contain the list of T\+I\+Ds. \\
+\hline
+\mbox{\tt in}  & {\em max\+Tids} & The maximum number of tids tid\+List\+Ptr can hold. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+\+Init@{cgrp\+\_\+\+Init}}
+\index{cgrp\+\_\+\+Init@{cgrp\+\_\+\+Init}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Init(void)}{cgrp_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} cgrp\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_a8735d2e07614a24397d740f30243bdff}{}\label{cgroups_8c_a8735d2e07614a24397d740f30243bdff}
+Initializes cgroups for the system. Sets up a hierarchy for each supported subsystem.
+
+\begin{DoxyNote}{Note}
+Should be called once for the entire system, subsequent calls to this function will have no effect. Must be called before any of the other functions in this A\+PI is called.
+
+Failures will cause the calling process to exit. 
+\end{DoxyNote}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+\+Is\+Empty@{cgrp\+\_\+\+Is\+Empty}}
+\index{cgrp\+\_\+\+Is\+Empty@{cgrp\+\_\+\+Is\+Empty}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Is\+Empty(cgrp\+\_\+\+Sub\+Sys\+\_\+t subsystem, const char $\ast$cgroup\+Name\+Ptr)}{cgrp_IsEmpty(cgrp_SubSys_t subsystem, const char *cgroupNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}bool cgrp\+\_\+\+Is\+Empty (
+\begin{DoxyParamCaption}
+\item[{{\bf cgrp\+\_\+\+Sub\+Sys\+\_\+t}}]{subsystem, }
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_af5b46d738fa7ccc3b917b5b29368892d}{}\label{cgroups_8c_af5b46d738fa7ccc3b917b5b29368892d}
+Checks if the specified cgroup is empty of all processes.
+
+\begin{DoxyReturn}{Returns}
+true if the specified cgroup has no processes in it. false if there are processes in the specified cgroup. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em subsystem} & Sub-\/system of the cgroup. \\
+\hline
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+mem\+\_\+\+Set\+Limit@{cgrp\+\_\+mem\+\_\+\+Set\+Limit}}
+\index{cgrp\+\_\+mem\+\_\+\+Set\+Limit@{cgrp\+\_\+mem\+\_\+\+Set\+Limit}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+mem\+\_\+\+Set\+Limit(const char $\ast$cgroup\+Name\+Ptr, size\+\_\+t limit)}{cgrp_mem_SetLimit(const char *cgroupNamePtr, size_t limit)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} cgrp\+\_\+mem\+\_\+\+Set\+Limit (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr, }
+\item[{size\+\_\+t}]{limit}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_a3c04562acf22ce2cdef0738b509c1dbd}{}\label{cgroups_8c_a3c04562acf22ce2cdef0738b509c1dbd}
+Sets the memory limit for a cgroup.
+
+\begin{DoxyNote}{Note}
+All processes in a cgroup share the available memory for that cgroup.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em cgroup\+Name\+Ptr} & Name of the cgroup to set the limit for. \\
+\hline
+{\em limit} & Memory limit in kilobytes. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+\+Send\+Sig@{cgrp\+\_\+\+Send\+Sig}}
+\index{cgrp\+\_\+\+Send\+Sig@{cgrp\+\_\+\+Send\+Sig}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Send\+Sig(cgrp\+\_\+\+Sub\+Sys\+\_\+t subsystem, const char $\ast$cgroup\+Name\+Ptr, int sig)}{cgrp_SendSig(cgrp_SubSys_t subsystem, const char *cgroupNamePtr, int sig)}}]{\setlength{\rightskip}{0pt plus 5cm}ssize\+\_\+t cgrp\+\_\+\+Send\+Sig (
+\begin{DoxyParamCaption}
+\item[{{\bf cgrp\+\_\+\+Sub\+Sys\+\_\+t}}]{subsystem, }
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr, }
+\item[{int}]{sig}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_a49aeee12bf5f7b8adeff02764103d9df}{}\label{cgroups_8c_a49aeee12bf5f7b8adeff02764103d9df}
+Sends the specified signal to all the processes in the specified cgroup.
+
+\begin{DoxyReturn}{Returns}
+The number of P\+I\+Ds that are in the cgroup. L\+E\+\_\+\+F\+A\+U\+LT if there an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em subsystem} & Sub-\/system of the cgroup. \\
+\hline
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\mbox{\tt in}  & {\em sig} & The signal to send. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!cgrp\+\_\+\+Sub\+Sys\+Name@{cgrp\+\_\+\+Sub\+Sys\+Name}}
+\index{cgrp\+\_\+\+Sub\+Sys\+Name@{cgrp\+\_\+\+Sub\+Sys\+Name}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Sub\+Sys\+Name(cgrp\+\_\+\+Sub\+Sys\+\_\+t subsystem)}{cgrp_SubSysName(cgrp_SubSys_t subsystem)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ cgrp\+\_\+\+Sub\+Sys\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf cgrp\+\_\+\+Sub\+Sys\+\_\+t}}]{subsystem}
+\end{DoxyParamCaption}
+)}\hypertarget{cgroups_8c_a133106fb988771994e749b8d27bf7f12}{}\label{cgroups_8c_a133106fb988771994e749b8d27bf7f12}
+Gets the name of sub-\/system.
+
+\begin{DoxyNote}{Note}
+Do not attempt to modify the returned name in place. If you need to make modifications copy the name into your own buffer.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+The name of the sub-\/system. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em subsystem} & Sub-\/system. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!Get\+Tasks\+Id@{Get\+Tasks\+Id}}
+\index{Get\+Tasks\+Id@{Get\+Tasks\+Id}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Tasks\+Id(int fd)}{GetTasksId(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static pid\+\_\+t Get\+Tasks\+Id (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{cgroups_8c_ae5c4dff3f203a59b27bcaa58cdf89816}{}\label{cgroups_8c_ae5c4dff3f203a59b27bcaa58cdf89816}
+Reads a P\+ID from the opened procs or tasks file specified by fd. Updates the file offset of fd.
+
+\begin{DoxyReturn}{Returns}
+The current P\+ID read from the file if successful. L\+E\+\_\+\+O\+U\+T\+\_\+\+O\+F\+\_\+\+R\+A\+N\+GE if there is nothing left to read. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor to an opened procs or tasks file. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!Get\+Value@{Get\+Value}}
+\index{Get\+Value@{Get\+Value}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Value(cgrp\+\_\+\+Sub\+Sys\+\_\+t subsystem, const char $\ast$cgroup\+Name\+Ptr, const char $\ast$file\+Name\+Ptr, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)}{GetValue(cgrp_SubSys_t subsystem, const char *cgroupNamePtr, const char *fileNamePtr, char *bufPtr, size_t bufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Value (
+\begin{DoxyParamCaption}
+\item[{{\bf cgrp\+\_\+\+Sub\+Sys\+\_\+t}}]{subsystem, }
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr, }
+\item[{const char $\ast$}]{file\+Name\+Ptr, }
+\item[{char $\ast$}]{buf\+Ptr, }
+\item[{size\+\_\+t}]{buf\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{cgroups_8c_a6b30d126ac0d291cdcbaefac48fbebe7}{}\label{cgroups_8c_a6b30d126ac0d291cdcbaefac48fbebe7}
+Gets a value from a cgroup file. The value is read as a string and so a N\+U\+L\+L-\/terminator is always appended to the end of the read value in buf\+Ptr.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the provided buffer is too small. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em subsystem} & Sub-\/system of the cgroup. \\
+\hline
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\mbox{\tt in}  & {\em file\+Name\+Ptr} & File name to read from. \\
+\hline
+\mbox{\tt out}  & {\em buf\+Ptr} & Buffer to store the value in. \\
+\hline
+\mbox{\tt in}  & {\em buf\+Size} & Size of the buffer. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!Is\+All\+Sub\+Sys\+Mounted@{Is\+All\+Sub\+Sys\+Mounted}}
+\index{Is\+All\+Sub\+Sys\+Mounted@{Is\+All\+Sub\+Sys\+Mounted}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{Is\+All\+Sub\+Sys\+Mounted(void)}{IsAllSubSysMounted(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+All\+Sub\+Sys\+Mounted (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{cgroups_8c_af5a48874a70112741efa767867f8e9de}{}\label{cgroups_8c_af5a48874a70112741efa767867f8e9de}
+Checks if all cgroup subsystems are mounted.
+
+\begin{DoxyReturn}{Returns}
+true if all subsystems are mounted. false otherwise. 
+\end{DoxyReturn}
+\index{cgroups.\+c@{cgroups.\+c}!Mount\+Sub\+Sys@{Mount\+Sub\+Sys}}
+\index{Mount\+Sub\+Sys@{Mount\+Sub\+Sys}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{Mount\+Sub\+Sys(void)}{MountSubSys(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Mount\+Sub\+Sys (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{cgroups_8c_aa215e00966c2e553e6481a23dc69bdea}{}\label{cgroups_8c_aa215e00966c2e553e6481a23dc69bdea}
+Setup a separate cgroup hierarchy for each supported subsystem. \index{cgroups.\+c@{cgroups.\+c}!Open\+Cgrp\+File@{Open\+Cgrp\+File}}
+\index{Open\+Cgrp\+File@{Open\+Cgrp\+File}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{Open\+Cgrp\+File(cgrp\+\_\+\+Sub\+Sys\+\_\+t subsystem, const char $\ast$cgroup\+Name\+Ptr, const char $\ast$file\+Name\+Ptr, int access\+Mode)}{OpenCgrpFile(cgrp_SubSys_t subsystem, const char *cgroupNamePtr, const char *fileNamePtr, int accessMode)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Open\+Cgrp\+File (
+\begin{DoxyParamCaption}
+\item[{{\bf cgrp\+\_\+\+Sub\+Sys\+\_\+t}}]{subsystem, }
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr, }
+\item[{const char $\ast$}]{file\+Name\+Ptr, }
+\item[{int}]{access\+Mode}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{cgroups_8c_adb0b8e258b0cb5ae4c4daac4f865bd2b}{}\label{cgroups_8c_adb0b8e258b0cb5ae4c4daac4f865bd2b}
+Opens a cgroup file.
+
+\begin{DoxyReturn}{Returns}
+The file descriptor of the cgroup\textquotesingle{}s tasks file if successful. A negative value if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em subsystem} & Sub-\/system of the cgroup. \\
+\hline
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\mbox{\tt in}  & {\em file\+Name\+Ptr} & Name of the file. \\
+\hline
+\mbox{\tt in}  & {\em access\+Mode} & Either O\+\_\+\+R\+D\+O\+N\+LY, O\+\_\+\+W\+R\+O\+N\+LY, or O\+\_\+\+R\+D\+WR. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!Remove\+Trailing\+White\+Space@{Remove\+Trailing\+White\+Space}}
+\index{Remove\+Trailing\+White\+Space@{Remove\+Trailing\+White\+Space}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{Remove\+Trailing\+White\+Space(char $\ast$str\+Ptr)}{RemoveTrailingWhiteSpace(char *strPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Remove\+Trailing\+White\+Space (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{str\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{cgroups_8c_a1cd71496eca8d92a23be566c35d0d19d}{}\label{cgroups_8c_a1cd71496eca8d92a23be566c35d0d19d}
+Modifies the string by removing all trailing white space from the string. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em str\+Ptr} & String to modify. \\
+\hline
+\end{DoxyParams}
+\index{cgroups.\+c@{cgroups.\+c}!Write\+To\+File@{Write\+To\+File}}
+\index{Write\+To\+File@{Write\+To\+File}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{Write\+To\+File(cgrp\+\_\+\+Sub\+Sys\+\_\+t subsystem, const char $\ast$cgroup\+Name\+Ptr, const char $\ast$file\+Name\+Ptr, const char $\ast$string)}{WriteToFile(cgrp_SubSys_t subsystem, const char *cgroupNamePtr, const char *fileNamePtr, const char *string)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Write\+To\+File (
+\begin{DoxyParamCaption}
+\item[{{\bf cgrp\+\_\+\+Sub\+Sys\+\_\+t}}]{subsystem, }
+\item[{const char $\ast$}]{cgroup\+Name\+Ptr, }
+\item[{const char $\ast$}]{file\+Name\+Ptr, }
+\item[{const char $\ast$}]{string}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{cgroups_8c_a67fff0d7b4fb809f6321354357ee9ef4}{}\label{cgroups_8c_a67fff0d7b4fb809f6321354357ee9ef4}
+Writes a string to a cgroup file. Overwrites what is currently in the file.
+
+\begin{DoxyNote}{Note}
+Certain file types cannot accept certain types of data, and the write may fail with a specific errno value. If the write fails with errno E\+S\+R\+CH this function will return L\+E\+\_\+\+O\+U\+T\+\_\+\+O\+F\+\_\+\+R\+A\+N\+GE.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+U\+T\+\_\+\+O\+F\+\_\+\+R\+A\+N\+GE if an attempt was made to write a value that the file cannot accept. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em subsystem} & Sub-\/system of the cgroup. \\
+\hline
+\mbox{\tt in}  & {\em cgroup\+Name\+Ptr} & Name of the cgroup. \\
+\hline
+\mbox{\tt in}  & {\em file\+Name\+Ptr} & File to write to. \\
+\hline
+\mbox{\tt in}  & {\em string} & String to write into the file. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Variable Documentation}
+\index{cgroups.\+c@{cgroups.\+c}!Sub\+Sys\+Name@{Sub\+Sys\+Name}}
+\index{Sub\+Sys\+Name@{Sub\+Sys\+Name}!cgroups.\+c@{cgroups.\+c}}
+\subsubsection[{\texorpdfstring{Sub\+Sys\+Name}{SubSysName}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ Sub\+Sys\+Name\mbox{[}{\bf C\+G\+R\+P\+\_\+\+N\+U\+M\+\_\+\+S\+U\+B\+S\+Y\+S\+T\+E\+MS}\mbox{]} = \{\char`\"{}cpu,cpuacct\char`\"{}, \char`\"{}memory\char`\"{}, \char`\"{}freezer\char`\"{}\}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{cgroups_8c_a38a7c74608a1f41e01122b5ed5a15dc1}{}\label{cgroups_8c_a38a7c74608a1f41e01122b5ed5a15dc1}
+Cgroup sub-\/system names. 

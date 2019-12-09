@@ -1,0 +1,223 @@
+\hypertarget{mkToolsDesign_mkToolsDesign_Decomposition}{}\section{Design Decomposition}\label{mkToolsDesign_mkToolsDesign_Decomposition}
+The mk tools are broken into the following main parts\+:
+
+
+\begin{DoxyItemize}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_parser}{Parser}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_parseTrees}{Parse Trees}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_modellers}{Modellers}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_conceptualModel}{Conceptual Model}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_buildScriptGenerator}{Build Script Generator}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_appConfigGenerator}{App Configuration Generator}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_codeGenerator}{Code Generator}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_commandLineInterpreter}{Command-\/\+Line Interpreter}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_ninjaBuildTool}{Ninja Build Tool}
+\end{DoxyItemize}\hypertarget{mkToolsDesign_mkToolsDesign_parser}{}\subsection{Parser}\label{mkToolsDesign_mkToolsDesign_parser}
+\begin{DoxyVerb}Parse .cdef, .adef, and .sdef files and builds in-memory Parse Trees.  Different parsing
+algorithms parse different types and versions of .Xdef files and generate the
+associated Parse Trees.
+\end{DoxyVerb}
+\hypertarget{mkToolsDesign_mkToolsDesign_parseTrees}{}\subsection{Parse Trees}\label{mkToolsDesign_mkToolsDesign_parseTrees}
+\begin{DoxyVerb}A model of a parsed .Xdef file.  Keeps track of the structure of the definition file
+and exactly what file and line number a given part of the definition comes from.
+Parse trees are versioned according to the .Xdef file format version.
+\end{DoxyVerb}
+\hypertarget{mkToolsDesign_mkToolsDesign_modellers}{}\subsection{Modellers}\label{mkToolsDesign_mkToolsDesign_modellers}
+\begin{DoxyVerb}Converts a Parse Tree into a Conceptual Model.
+Different versions of modellers know how to generate the Conceptual Model from different
+versions of the Parse Tree.
+\end{DoxyVerb}
+\hypertarget{mkToolsDesign_mkToolsDesign_conceptualModel}{}\subsection{Conceptual Model}\label{mkToolsDesign_mkToolsDesign_conceptualModel}
+\begin{DoxyVerb}Conceptual model of component/app/system/executable being built.
+There is only one version of the Conceptual Model in any given release of the mk tools.
+\end{DoxyVerb}
+\hypertarget{mkToolsDesign_mkToolsDesign_buildScriptGenerator}{}\subsection{Build Script Generator}\label{mkToolsDesign_mkToolsDesign_buildScriptGenerator}
+\begin{DoxyVerb}Generates a build script for the "project" being built, based on the Conceptual Model.
+\end{DoxyVerb}
+\hypertarget{mkToolsDesign_mkToolsDesign_appConfigGenerator}{}\subsection{App Configuration Generator}\label{mkToolsDesign_mkToolsDesign_appConfigGenerator}
+\begin{DoxyVerb}Generates the configuration data files needed by the installer on-target.
+\end{DoxyVerb}
+\hypertarget{mkToolsDesign_mkToolsDesign_codeGenerator}{}\subsection{Code Generator}\label{mkToolsDesign_mkToolsDesign_codeGenerator}
+\begin{DoxyVerb}Generates C code files, such _main.c for executables and interfaces.h for components.
+\end{DoxyVerb}
+\hypertarget{mkToolsDesign_mkToolsDesign_commandLineInterpreter}{}\subsection{Command-\/\+Line Interpreter}\label{mkToolsDesign_mkToolsDesign_commandLineInterpreter}
+\begin{DoxyVerb}Interprets the command-line to determine what to build.
+Drives the Parsers, Modellers, App Configuration Generator, Build Script Generator and
+the ninja build tool.
+
+The Command Line Interpreter will look for the @ref build.ninja file for the project.
+If it exists, the Command Line Interpreter will just exec() ninja.  A rule in the
+build.ninja file tells ninja how to detect whether the build.ninja file needs to be
+regenerated, and if so, how to run the mk tools again to regenerate the build.ninja file.
+
+Steps executed by the mk tools when build.ninja doesn't exist are:
+
+ - create the working directory (if it doesn't already exist)
+ - save the command-line arguments and environment variables used to run the tool.
+ - generate _main.c files for executables declared in .adef files
+ - generate _componentMain.c and interface.h files for components.
+ - generate .c and .h files for .api files used by components
+ - generate configuration files
+ - generate build.ninja
+
+The command-line arguments and environment variables are remembered so that they can
+be checked when the same tool is run again later, because command-line arguments and
+environment variable settings can affect the def file parsing and code generation, so
+if any have changed, the def files must be re-parsed and the code must be re-generated.
+\end{DoxyVerb}
+\hypertarget{mkToolsDesign_mkToolsDesign_ninjaBuildTool}{}\subsection{Ninja Build Tool}\label{mkToolsDesign_mkToolsDesign_ninjaBuildTool}
+\begin{DoxyVerb}The Ninja build tool is documented at http://martine.github.io/ninja/.
+
+The build.ninja script will drive
+ - generating IPC API code
+ - compiling
+ - linking
+ - copying bundled files into the staging area
+ - generating application hash
+ - update-packing
+\end{DoxyVerb}
+\hypertarget{mkToolsDesign_mkToolsDesign_workingDirs}{}\section{Working Directory Structures}\label{mkToolsDesign_mkToolsDesign_workingDirs}
+The mk tools are designed to put any intermediate build artifacts in a \char`\"{}working\char`\"{} directory, separate from the source directory.
+
+The location of the working directory can be specified on the command-\/line using the \textquotesingle{}-\/w\textquotesingle{} option. If not specified, a default directory path, beginning with \char`\"{}./\+\_\+build\char`\"{} will be generated.\hypertarget{mkToolsDesign_mkToolsDesign_workingDirs_systems}{}\subsection{Systems\textquotesingle{} Working Directories}\label{mkToolsDesign_mkToolsDesign_workingDirs_systems}
+The working directory structure for mksys contains these directories\+:
+
+
+\begin{DoxyItemize}
+\item app/ -\/ working directories for the apps, one per app, named with the app name.
+\item api/ -\/ working directories for generated api files.
+\item component/ -\/ working directories for the components.
+\item staging/ -\/ directory where the system is \char`\"{}staged\char`\"{} in preparation for packing into an update pack.
+\end{DoxyItemize}
+
+See\+:
+\begin{DoxyItemize}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_workingDirs_app}{app Directory}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_workingDirs_component}{component Directory}
+\item \hyperlink{mkToolsDesign_mkToolsDesign_workingDirs_api}{api Directory}
+\end{DoxyItemize}\hypertarget{mkToolsDesign_mkToolsDesign_workingDirs_app}{}\subsection{app Directory}\label{mkToolsDesign_mkToolsDesign_workingDirs_app}
+Applications\textquotesingle{} working directories contain these subdirectories\+:
+
+
+\begin{DoxyItemize}
+\item obj/ -\/ generated object files specific to this application
+\item src/ -\/ generated source code specific to this application
+\item staging/ -\/ directories and files to be installed on target
+\end{DoxyItemize}\hypertarget{mkToolsDesign_mkToolsDesign_workingDirs_app_obj}{}\subsubsection{obj Directory}\label{mkToolsDesign_mkToolsDesign_workingDirs_app_obj}
+The application\textquotesingle{}s \char`\"{}obj\char`\"{} directory contains .o files for each generated .c file in the \char`\"{}src\char`\"{} directory. The directory structure under the \char`\"{}obj\char`\"{} directory mirrors that of the \char`\"{}src\char`\"{} directory.
+
+
+\begin{DoxyItemize}
+\item obj/exe\+Name/\+\_\+main.\+c.\+o
+\end{DoxyItemize}\hypertarget{mkToolsDesign_mkToolsDesign_workingDirs_app_src}{}\subsubsection{src Directory}\label{mkToolsDesign_mkToolsDesign_workingDirs_app_src}
+The application\textquotesingle{}s \char`\"{}src\char`\"{} directory contains generated .c files for executables\textquotesingle{} \hyperlink{start_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main()} functions and component instance libraries. These are kept in a subdirectory named after the executable.
+
+
+\begin{DoxyItemize}
+\item src/exe\+Name/\+\_\+main.\+c
+\end{DoxyItemize}\hypertarget{mkToolsDesign_mkToolsDesign_workingDirs_app_staging}{}\subsubsection{staging Directory}\label{mkToolsDesign_mkToolsDesign_workingDirs_app_staging}
+The final application bundle is simply an archive file containing the contents of the application\textquotesingle{}s staging directory. The \char`\"{}update-\/pack\char`\"{} tool can be used to prepare this for delivery to a target device operating in the field.
+
+The application\textquotesingle{}s \char`\"{}staging\char`\"{} directory will contain the following files and directories\+:
+
+
+\begin{DoxyItemize}
+\item staging/read-\/only/ -\/ read-\/only files.
+\item staging/read-\/only/bin/ -\/ executable files.
+\item staging/read-\/only/lib/ -\/ library files.
+\item staging/writeable/ -\/ writeable files listed in \char`\"{}bundles\char`\"{} sections of .cdef files and the .adef.
+\item staging/root.\+cfg -\/ Configuration settings for the \char`\"{}system\char`\"{} configuration tree.
+\end{DoxyItemize}
+
+Finally, a file called \char`\"{}info.\+properties\char`\"{} is placed in the root of the staging directory. This file contains information about the application, such as the version of the Legato application framework that used to build the app and the application\textquotesingle{}s \hyperlink{class_m_d5}{M\+D5} checksum. The file conforms to a strict subset of the standard Java .properties file format. The name and value on each line is always separated using an equals sign (=).
+
+
+\begin{DoxyItemize}
+\item staging/info.\+properties
+\end{DoxyItemize}
+
+Note that the info.\+properties file is not included in the app\textquotesingle{}s md5 checksum calculation (it can\textquotesingle{}t because it contains the md5 checksum). This file is for use by development and deployment tools to display information to humans and to check whether an app file contains the same app that is installed on a device.\hypertarget{mkToolsDesign_mkToolsDesign_workingDirs_api}{}\subsection{api Directory}\label{mkToolsDesign_mkToolsDesign_workingDirs_api}
+For each .api file used, a directory will be created under the \char`\"{}api\char`\"{} directory. In that directory will be generated any source code files that could be shared between different components and interface instances.
+
+To support the case where there are multiple .api files that share the same file name (but are kept in different directories), the generated api files are kept in a directory named with the \hyperlink{class_m_d5}{M\+D5} hash of the canonical path to the .api file.
+
+For example, if the file foo.\+api is required and/or provided with the local instance name \char`\"{}prefix\char`\"{} (i.\+e., if \char`\"{}prefix = foo.\+api\char`\"{} appears in a Component.\+cdef), and the \hyperlink{class_m_d5}{M\+D5} hash of the canonical path of the foo.\+api file is b426b059840d56bd3ca8691607ce8c8c, then the following files will be created under the working directory, as needed\+:
+
+
+\begin{DoxyItemize}
+\item api/b426b059840d56bd3ca8691607ce8c8c/client/prefix\+\_\+interface.\+h
+\item api/b426b059840d56bd3ca8691607ce8c8c/client/prefix\+\_\+messages.\+h
+\item api/b426b059840d56bd3ca8691607ce8c8c/client/prefix\+\_\+client.\+c
+\item api/b426b059840d56bd3ca8691607ce8c8c/client/prefix\+\_\+client.\+c.\+o
+\item api/b426b059840d56bd3ca8691607ce8c8c/client/prefix\+\_\+client.\+c.\+o.\+d
+\item api/b426b059840d56bd3ca8691607ce8c8c/server/prefix\+\_\+server.\+h
+\item api/b426b059840d56bd3ca8691607ce8c8c/server/prefix\+\_\+messages.\+h
+\item api/b426b059840d56bd3ca8691607ce8c8c/server/prefix\+\_\+server.\+c
+\item api/b426b059840d56bd3ca8691607ce8c8c/server/prefix\+\_\+server.\+c.\+o
+\item api/b426b059840d56bd3ca8691607ce8c8c/server/prefix\+\_\+server.\+c.\+o.\+d
+\item api/b426b059840d56bd3ca8691607ce8c8c/async\+\_\+server/prefix\+\_\+server.\+h
+\item api/b426b059840d56bd3ca8691607ce8c8c/async\+\_\+server/prefix\+\_\+messages.\+h
+\item api/b426b059840d56bd3ca8691607ce8c8c/async\+\_\+server/prefix\+\_\+server.\+c
+\item api/b426b059840d56bd3ca8691607ce8c8c/async\+\_\+server/prefix\+\_\+server.\+c.\+o
+\item api/b426b059840d56bd3ca8691607ce8c8c/async\+\_\+server/prefix\+\_\+server.\+c.\+o.\+d
+\end{DoxyItemize}\hypertarget{mkToolsDesign_mkToolsDesign_workingDirs_component}{}\subsection{component Directory}\label{mkToolsDesign_mkToolsDesign_workingDirs_component}
+For each component used, a directory will be created under the \char`\"{}component\char`\"{} directory.
+
+Different apps can share components with each other, so the components are built once, outside of the app directories. But, an app can also have a component that has the same name as a different component used by another app. For example, apps A and B can each have a different \char`\"{}foo\char`\"{} component. To prevent this from causing a conflict, while still supporting sharing of the same component, each component is built in a directory that is named using the md5 hash of the canonical path to the component\textquotesingle{}s Component.\+cdef file.
+
+
+\begin{DoxyItemize}
+\item component/5b62d5ac3eab1b61af70dd41c2a17ad8/...
+\end{DoxyItemize}
+
+Each component working directory contains these subdirectories\+:
+
+
+\begin{DoxyItemize}
+\item obj -\/ generated object files specific to this component
+\item src -\/ generated source code files specific to this component
+\end{DoxyItemize}
+
+For any C or C++ source file listed in the \char`\"{}sources\char`\"{} section of the Component.\+cdef, a .o file will be created under the \char`\"{}obj\char`\"{} directory. To prevent conflicts when there are multiple .c files with the same name, the .o file is named with the \hyperlink{class_m_d5}{M\+D5} sum of the path to the source code file. For example\+:
+
+
+\begin{DoxyItemize}
+\item component/5b62d5ac3eab1b61af70dd41c2a17ad8/obj/a97795c626103bc8b140854afdd27948.\+o
+\end{DoxyItemize}\hypertarget{mkToolsDesign_mkToolsDesign_workingDirs_app_exe_comp}{}\subsection{Working Directories for mkapp, mkexe and mkcomp}\label{mkToolsDesign_mkToolsDesign_workingDirs_app_exe_comp}
+The mkapp tool\textquotesingle{}s working directory structure is essentially the same as mksys\textquotesingle{}s, except that there is no system staging directory and the \textquotesingle{}app/$<$app-\/name$>$\textquotesingle{} directory contents are moved to the top level.
+
+
+\begin{DoxyItemize}
+\item src/ -\/ generated source code specific to this application
+\item obj/ -\/ generated object files specific to this application
+\item staging/ -\/ directories and files to be installed on target
+\item component/ -\/ working directories for the components.
+\item api/ -\/ working directories for generated api files.
+\end{DoxyItemize}
+
+The mkexe and mkcomp tools have similar working directory structures to mkapp\textquotesingle{}s working directory structure, but without the \char`\"{}staging\char`\"{} directory. The \char`\"{}staging\char`\"{} directory isn\textquotesingle{}t needed because these tools don\textquotesingle{}t bundle all their output together into a single file like mkapp and mksys do. Instead, the command line is used to provide file paths for the locations where generated library files and/or executables should be put.
+
+\begin{DoxyNote}{Note}
+In the future, the component\textquotesingle{}s \char`\"{}staging\char`\"{} directory may be used by mkcomp when building distributable component bundles.
+\end{DoxyNote}
+\hypertarget{mkToolsDesign_mkToolsDesign_MemoryManagement}{}\section{Memory Management}\label{mkToolsDesign_mkToolsDesign_MemoryManagement}
+Objects in the parse tree and the conceptual model are created using \textquotesingle{}new\textquotesingle{} and plain pointers are used to refer to them.
+
+Essentially, nothing in the parse tree or the conceptual model is deleted, so destructors and smart pointers are unnecessary.
+
+Because pointers are used as references and everything of significance is allocated from the heap, there\textquotesingle{}s no need for copy or move constructors or operators.
+
+Also, the program is short-\/lived, so memory leaks are not a concern.\hypertarget{mkToolsDesign_mkToolsDesign_FutureEnhancements}{}\section{Future Enhancements}\label{mkToolsDesign_mkToolsDesign_FutureEnhancements}
+To offer an automatic definition file upgrade feature, Translators can be created to generate the latest version of definition files from the various versions of Parse Trees that are supported. E.\+g., parse using old version, then modify the parse tree to the new version and regenerate the file.
+
+Digital signing of system and application update files can be added to the update-\/pack stage of the build.
+
+We could allow the \char`\"{}bundles\char`\"{} section to be used in the .sdef. This would allow applications to share files by using their \char`\"{}requires\char`\"{} section to bind-\/mount those files into their sandboxes.
+
+The mksys tool could analyze all the apps and identify any identical files that appear in more than one app with read-\/only permissions. These files could be moved to a \char`\"{}staging/share\char`\"{} directory under the system\textquotesingle{}s working directory and a \char`\"{}requires\char`\"{} bind-\/mount could be added to the applications\textquotesingle{} root.\+cfg files to make them available to the applications.
+
+
+
+
+
+Copyright (C) Sierra Wireless Inc. 

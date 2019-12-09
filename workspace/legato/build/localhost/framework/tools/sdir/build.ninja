@@ -1,0 +1,108 @@
+# Build script for executable 'sdir'
+
+# == Auto-generated file.  Do not edit. ==
+
+builddir = /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/sdir
+
+cFlags =   -O2 -fno-omit-frame-pointer -I /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/sdir -I/home/shrunoti/Downloads/workspace/legato/interfaces -I/home/shrunoti/Downloads/workspace/legato/framework/include -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux -I/home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/serviceDirectory -I.
+
+cxxFlags =  -I /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/sdir -I/home/shrunoti/Downloads/workspace/legato/interfaces -I/home/shrunoti/Downloads/workspace/legato/framework/include -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux -I/home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/serviceDirectory -I.
+
+ldFlags = 
+
+target = localhost
+
+ifgenFlags =  --import-dir /home/shrunoti/Downloads/workspace/legato/interfaces --import-dir /home/shrunoti/Downloads/workspace/legato/framework/include --import-dir /home/shrunoti/Downloads/workspace/legato/framework/liblegato --import-dir /home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux --import-dir /home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/serviceDirectory --import-dir .
+
+rule CompileC
+  description = Compiling C source
+  depfile = $out.d
+  command = /usr/bin//gcc --sysroot=/ -MMD -MF $out.d -c $in -o $out -DLE_FILENAME=`basename $in` -Wall -fPIC -Werror -fvisibility=hidden -DMK_TOOLS_BUILD -g $cFlags
+
+rule CompileCxx
+  description = Compiling C++ source
+  depfile = $out.d
+  command = /usr/bin//g++ --sysroot=/ -MMD -MF $out.d -c $in -o $out -DLE_FILENAME=`basename $in` -Wall -fPIC -Werror -fvisibility=hidden  -DMK_TOOLS_BUILD -g $cxxFlags
+
+rule LinkCLib
+  description = Linking C library
+  command = /usr/bin//gcc --sysroot=/ -Wl,--build-id -g -shared -o $out $in $ldFlags $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCxxLib
+  description = Linking C++ library
+  command = /usr/bin//g++ --sysroot=/ -Wl,--build-id -g -shared -o $out $in $ldFlags $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCExe
+  description = Linking C executable
+  command = /usr/bin//gcc --sysroot=/ -Wl,--build-id -g -fPIE -pie -o $out $in $ldFlags -g $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCxxExe
+  description = Linking C++ executable
+  command = /usr/bin//g++ --sysroot=/ -Wl,--build-id -g -fPIE -pie -o $out $in $ldFlags -g $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule CompileJava
+  description = Compiling Java source
+  command = javac -cp $classPath -d `dirname $out` $in && touch $out
+
+rule MakeJar
+  description = Making JAR file
+  command = INDIR=`dirname $in`; find $$INDIR -name '*.class' -printf "-C $$INDIR\n%P\n"|xargs jar -cf $out
+
+rule MakeKernelModule
+  description = Build kernel driver module
+  depfile = $out.d
+  command = make -C $in
+
+rule BuildExternal
+  description = Running external build step
+  command = cd $builddir/$workingdir && $
+            export CFLAGS="--sysroot=/ $cFlags" $
+            CXXFLAGS="--sysroot=/ $cxxFlags" $
+            LDFLAGS="--sysroot=/ $ldFlags" $
+            PATH="/usr/bin/:$$PATH" && $
+            $externalCommand
+
+rule GenInterfaceCode
+  description = Generating IPC interface code
+  command = ifgen --output-dir $outputDir $ifgenFlags $in
+
+rule GenPyApiCExtension
+  description = Generating Python API C Extension
+  command = cextgenerator.py $in -o $workDir > /dev/null
+rule CopyFile
+  description = Copying file
+  command = cp -d -f -T $in $out
+
+rule RegenNinjaScript
+  description = Regenerating build script
+  generator = 1
+  command = mkexe --dont-run-ninja "-o" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/bin/sdir" "/home/shrunoti/Downloads/workspace/legato/framework/tools/target/linux/sdirTool" "-i" "/home/shrunoti/Downloads/workspace/legato/framework/liblegato" "-i" "/home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux" "-i" "/home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/serviceDirectory" "-l" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib" "-w" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/sdir" "-t" "localhost" "-d" "/home/shrunoti/Downloads/workspace/legato/build/localhost/debug" "--cflags= -O2 -fno-omit-frame-pointer"
+
+build $builddir/obj/sdir/_main.c.o: CompileC /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/sdir/src/sdir/_main.c
+  cFlags = $cFlags -DLE_COMPONENT_NAME=sdir_exe -DLE_LOG_SESSION=sdir_exe_LogSession -DLE_LOG_LEVEL_FILTER_PTR=sdir_exe_LogLevelFilterPtr 
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/bin/sdir: LinkCExe $builddir/obj/sdir/_main.c.o | /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/libComponent_sdirTool.so /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/liblegato.so /home/shrunoti/Downloads/workspace/legato/build/$target/framework/lib/liblegato.so
+  ldFlags = -rdynamic -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib:$$LEGATO_BUILD/framework/lib" -L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib "-L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib" -lComponent_sdirTool "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -ldl -lm $ldFlags
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/libComponent_sdirTool.so: LinkCLib $builddir/component/bf4c27b275729ecf751574fb4f86188c/obj/cc042e5580368863a292a2585f0d94b0.o $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_client.c.o $builddir/component/bf4c27b275729ecf751574fb4f86188c/obj/_componentMain.c.o | /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/liblegato.so
+  ldFlags =  -L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib:$$LEGATO_BUILD/framework/lib" "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -lm
+
+build $builddir/component/bf4c27b275729ecf751574fb4f86188c/obj/cc042e5580368863a292a2585f0d94b0.o: CompileC /home/shrunoti/Downloads/workspace/legato/framework/tools/target/linux/sdirTool/sdirTool.c || $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_interface.h $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_messages.h 
+  cFlags = $cFlags -I$builddir/component/bf4c27b275729ecf751574fb4f86188c/src -I$builddir/api/4f33761436c6dc37adc956530e707788/client -DLE_COMPONENT_NAME=sdirTool -DLE_LOG_SESSION=sdirTool_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=sdirTool_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _sdirTool_COMPONENT_INIT()"
+
+build $builddir/component/bf4c27b275729ecf751574fb4f86188c/obj/_componentMain.c.o: CompileC $builddir/component/bf4c27b275729ecf751574fb4f86188c/src/_componentMain.c
+  cFlags = $cFlags -I$builddir/component/bf4c27b275729ecf751574fb4f86188c/src -I$builddir/api/4f33761436c6dc37adc956530e707788/client -DLE_COMPONENT_NAME=sdirTool -DLE_LOG_SESSION=sdirTool_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=sdirTool_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _sdirTool_COMPONENT_INIT()"
+
+build $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_client.c.o: CompileC $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_client.c | $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_messages.h $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_interface.h
+  cFlags = $cFlags
+
+build $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_client.c $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_interface.h $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/le_cfg.api |
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix le_cfg $ifgenFlags
+  outputDir = $builddir/api/4f33761436c6dc37adc956530e707788/client
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/tools/sdir/build.ninja: RegenNinjaScript | /home/shrunoti/Downloads/workspace/legato/build/tools/mk /home/shrunoti/Downloads/workspace/legato/framework/tools/target/linux/sdirTool/Component.cdef /home/shrunoti/Downloads/workspace/legato/interfaces/le_cfg.api
+

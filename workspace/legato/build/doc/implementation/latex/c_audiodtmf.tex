@@ -1,0 +1,878 @@
+
+\begin{DoxyCodeInclude}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * This module is for testing of the DTMF Audio service.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ * On the target, you must issue the following commands:}
+\textcolor{comment}{ * $ app runProc dtmfTest --exe=dtmfTest -- <loc/rem>}
+\textcolor{comment}{ *    <MIC/I2S/PCM/USB/USBTXI2SRX/USBTXPCMRX/USBRXI2STX/USBRXPCMTX> <dtmfs>}
+\textcolor{comment}{ *    <duration in ms> <pause in ms> [<tel number> <inband/outband>]}
+\textcolor{comment}{ *}
+\textcolor{comment}{ * Copyright (C) Sierra Wireless Inc.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+
+\textcolor{preprocessor}{#include "\hyperlink{legato_8h}{legato.h}"}
+\textcolor{preprocessor}{#include <stdio.h>}
+\textcolor{preprocessor}{#include <pthread.h>}
+
+
+\textcolor{preprocessor}{#include "interfaces.h"}
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{bool} isIncoming=\textcolor{keyword}{false};
+\textcolor{keyword}{static} \hyperlink{le__mcc__interface_8h_a8ae6dac3ca12854884d63e17d5388a7a}{le\_mcc\_CallRef\_t} TestCallRef;
+
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} MdmRxAudioRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} MdmTxAudioRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} FeInRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} FeOutRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} PlayerAudioRef = NULL;
+
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_ab819480f4ce3f36e62b6a4e327668304}{le\_audio\_ConnectorRef\_t} AudioInputConnectorRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_ab819480f4ce3f36e62b6a4e327668304}{le\_audio\_ConnectorRef\_t} AudioOutputConnectorRef = NULL;
+
+\textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{char}*  DestinationNumber;
+\textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{char}*  DtmfSendingCase;
+\textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{char}*  DtmfString;
+\textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{char}*  InterfaceString;
+\textcolor{keyword}{static} uint32\_t     Duration;
+\textcolor{keyword}{static} uint32\_t     Pause;
+
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a2db60899cdaa84759075a7955ed24511}{le\_audio\_DtmfDetectorHandlerRef\_t} DtmfHandlerRef1 = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a2db60899cdaa84759075a7955ed24511}{le\_audio\_DtmfDetectorHandlerRef\_t} DtmfHandlerRef2 = NULL;
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Help.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintUsage
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordtype}{int} idx;
+    \textcolor{keywordtype}{bool} sandboxed = (getuid() != 0);
+    \textcolor{keyword}{const} \textcolor{keywordtype}{char} * usagePtr[] = \{
+       \textcolor{stringliteral}{"Usage of the 'dtmfTest' app is:"},
+       \textcolor{stringliteral}{"  app runProc dtmfTest --exe=dtmfTest -- <loc/rem>"}
+       \textcolor{stringliteral}{"<MIC/I2S/PCM/USB/USBTXI2SRX/USBTXPCMRX/USBRXI2STX/USBRXPCMTX>"}
+       \textcolor{stringliteral}{"<dtmfs> <duration in ms> <pause in ms> [<tel number> <inband/outband>]"},
+       \textcolor{stringliteral}{""},
+    \};
+
+    \textcolor{keywordflow}{for}(idx = 0; idx < \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{NUM\_ARRAY\_MEMBERS}(usagePtr); idx++)
+    \{
+        \textcolor{keywordflow}{if}(sandboxed)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"%s"}, usagePtr[idx]);
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            fprintf(stderr, \textcolor{stringliteral}{"%s\(\backslash\)n"}, usagePtr[idx]);
+        \}
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Handler functions for DTMF Notifications.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} MyDtmfDetectorHandler1
+(
+    \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} streamRef,
+    \textcolor{keywordtype}{char}  dtmf,
+    \textcolor{keywordtype}{void}* contextPtr
+)
+\{
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"MyDtmfDetectorHandler1 detects %c"}, dtmf);
+\}
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} MyDtmfDetectorHandler2
+(
+    \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} streamRef,
+    \textcolor{keywordtype}{char}  dtmf,
+    \textcolor{keywordtype}{void}* contextPtr
+)
+\{
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"MyDtmfDetectorHandler2 detects %c"}, dtmf);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect audio to PCM.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToPcm
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    MdmRxAudioRef = \hyperlink{le__audio__interface_8h_ae3ed568ba4d2763ea77e17e77b20ff02}{le\_audio\_OpenModemVoiceRx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmRxAudioRef==NULL), \textcolor{stringliteral}{"GetRxAudioStream returns NULL!"});
+    MdmTxAudioRef = \hyperlink{le__audio__interface_8h_ad745f008bb04873c817da7af3daf783d}{le\_audio\_OpenModemVoiceTx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmTxAudioRef==NULL), \textcolor{stringliteral}{"GetTxAudioStream returns NULL!"});
+
+    \textcolor{comment}{// Redirect audio to the PCM interface.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_a5e112543e8525775aa670dc71b320766}{le\_audio\_OpenPcmTx}(0);
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef==NULL), \textcolor{stringliteral}{"OpenPcmTx returns NULL!"});
+    FeInRef = \hyperlink{le__audio__interface_8h_aa0f0b5fcab8844c67a936d88fa050cf5}{le\_audio\_OpenPcmRx}(0);
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeInRef==NULL), \textcolor{stringliteral}{"OpenPcmRx returns NULL!"});
+
+    AudioInputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioInputConnectorRef==NULL), \textcolor{stringliteral}{"AudioInputConnectorRef is NULL!"});
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef==NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+
+    \textcolor{keywordflow}{if} (MdmRxAudioRef && MdmTxAudioRef && FeOutRef && FeInRef &&
+        AudioInputConnectorRef && AudioOutputConnectorRef)
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FeInRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect PCM RX on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, MdmTxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmTx on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect PCM TX on Output connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, MdmRxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmRx on Output connector!"});
+    \}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Audio connected to PCM interface"});
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect audio to I2S.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToI2S
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    MdmRxAudioRef = \hyperlink{le__audio__interface_8h_ae3ed568ba4d2763ea77e17e77b20ff02}{le\_audio\_OpenModemVoiceRx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmRxAudioRef==NULL), \textcolor{stringliteral}{"GetRxAudioStream returns NULL!"});
+    MdmTxAudioRef = \hyperlink{le__audio__interface_8h_ad745f008bb04873c817da7af3daf783d}{le\_audio\_OpenModemVoiceTx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmTxAudioRef==NULL), \textcolor{stringliteral}{"GetTxAudioStream returns NULL!"});
+
+    \textcolor{comment}{// Redirect audio to the I2S interface.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_a2633c1368adf60e342d7cadbbfa6278b}{le\_audio\_OpenI2sTx}(\hyperlink{le__audio__interface_8h_a94794180ed71a84bd26a1f525858f252a6ce77f5f956b203e15f662900a5103dd}{LE\_AUDIO\_I2S\_STEREO});
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef==NULL), \textcolor{stringliteral}{"OpenI2sTx returns NULL!"});
+    FeInRef = \hyperlink{le__audio__interface_8h_a9e7d0042c4f422554eb10d64535608e5}{le\_audio\_OpenI2sRx}(\hyperlink{le__audio__interface_8h_a94794180ed71a84bd26a1f525858f252a6ce77f5f956b203e15f662900a5103dd}{LE\_AUDIO\_I2S\_STEREO});
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeInRef==NULL), \textcolor{stringliteral}{"OpenI2sRx returns NULL!"});
+
+    AudioInputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioInputConnectorRef==NULL), \textcolor{stringliteral}{"AudioInputConnectorRef is NULL!"});
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef==NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+
+    \textcolor{keywordflow}{if} (MdmRxAudioRef && MdmTxAudioRef && FeOutRef && FeInRef &&
+        AudioInputConnectorRef && AudioOutputConnectorRef)
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FeInRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect PCM RX on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, MdmTxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmTx on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect PCM TX on Output connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, MdmRxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmRx on Output connector!"});
+    \}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Audio connected to I2S interface"});
+\}
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect audio to analog input/output.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToCodec
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    MdmRxAudioRef = \hyperlink{le__audio__interface_8h_ae3ed568ba4d2763ea77e17e77b20ff02}{le\_audio\_OpenModemVoiceRx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmRxAudioRef==NULL), \textcolor{stringliteral}{"GetRxAudioStream returns NULL!"});
+    MdmTxAudioRef = \hyperlink{le__audio__interface_8h_ad745f008bb04873c817da7af3daf783d}{le\_audio\_OpenModemVoiceTx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmTxAudioRef==NULL), \textcolor{stringliteral}{"GetTxAudioStream returns NULL!"});
+
+    \textcolor{comment}{// Redirect audio to the in-built Microphone and Speaker.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_a5c19afce44021c4abf6193707317f8de}{le\_audio\_OpenSpeaker}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef==NULL), \textcolor{stringliteral}{"OpenSpeaker returns NULL!"});
+    FeInRef = \hyperlink{le__audio__interface_8h_a74f1ef979329f6c2bd56ea622f4d05b2}{le\_audio\_OpenMic}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeInRef==NULL), \textcolor{stringliteral}{"OpenMic returns NULL!"});
+
+    AudioInputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioInputConnectorRef==NULL), \textcolor{stringliteral}{"AudioInputConnectorRef is NULL!"});
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef==NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+
+    \textcolor{keywordflow}{if} (MdmRxAudioRef && MdmTxAudioRef && FeOutRef && FeInRef &&
+        AudioInputConnectorRef && AudioOutputConnectorRef)
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FeInRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect Mic on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, MdmTxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmTx on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect Speaker on Output connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, MdmRxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmRx on Output connector!"});
+    \}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Audio connected to Codec interface"});
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect audio to USB-TX & I2S-RX.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToUsbTxI2sRx
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    MdmRxAudioRef = \hyperlink{le__audio__interface_8h_ae3ed568ba4d2763ea77e17e77b20ff02}{le\_audio\_OpenModemVoiceRx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmRxAudioRef == NULL), \textcolor{stringliteral}{"GetRxAudioStream returns NULL!"});
+    MdmTxAudioRef = \hyperlink{le__audio__interface_8h_ad745f008bb04873c817da7af3daf783d}{le\_audio\_OpenModemVoiceTx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmTxAudioRef == NULL), \textcolor{stringliteral}{"GetTxAudioStream returns NULL!"});
+
+    \textcolor{comment}{// Redirect audio to the USB.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_adb38f11ac78cf99160c19f69b4db0eb8}{le\_audio\_OpenUsbTx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef == NULL), \textcolor{stringliteral}{"OpenUsbTx returns NULL!"});
+    \textcolor{comment}{// Redirect audio to the I2S.}
+    FeInRef = \hyperlink{le__audio__interface_8h_a9e7d0042c4f422554eb10d64535608e5}{le\_audio\_OpenI2sRx}(\hyperlink{le__audio__interface_8h_a94794180ed71a84bd26a1f525858f252a6ce77f5f956b203e15f662900a5103dd}{LE\_AUDIO\_I2S\_STEREO});
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeInRef == NULL), \textcolor{stringliteral}{"OpenI2sRx returns NULL!"});
+
+    AudioInputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioInputConnectorRef == NULL), \textcolor{stringliteral}{"AudioInputConnectorRef is NULL!"});
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef == NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+
+    \textcolor{keywordflow}{if} (MdmRxAudioRef && MdmTxAudioRef && FeOutRef && FeInRef &&
+        AudioInputConnectorRef && AudioOutputConnectorRef)
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FeInRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect I2S Rx on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, MdmTxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmTx on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect USB Tx on Output connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, MdmRxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmRx on Output connector!"});
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect audio to USB-TX & PCM-RX.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToUsbTxPcmRx
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    MdmRxAudioRef = \hyperlink{le__audio__interface_8h_ae3ed568ba4d2763ea77e17e77b20ff02}{le\_audio\_OpenModemVoiceRx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmRxAudioRef == NULL), \textcolor{stringliteral}{"GetRxAudioStream returns NULL!"});
+    MdmTxAudioRef = \hyperlink{le__audio__interface_8h_ad745f008bb04873c817da7af3daf783d}{le\_audio\_OpenModemVoiceTx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmTxAudioRef == NULL), \textcolor{stringliteral}{"GetTxAudioStream returns NULL!"});
+
+    \textcolor{comment}{// Redirect audio to the USB.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_adb38f11ac78cf99160c19f69b4db0eb8}{le\_audio\_OpenUsbTx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef == NULL), \textcolor{stringliteral}{"OpenUsbTx returns NULL!"});
+    \textcolor{comment}{// Redirect audio to the PCM.}
+    FeInRef = \hyperlink{le__audio__interface_8h_aa0f0b5fcab8844c67a936d88fa050cf5}{le\_audio\_OpenPcmRx}(0);
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeInRef == NULL), \textcolor{stringliteral}{"OpenPcmRx returns NULL!"});
+
+    AudioInputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioInputConnectorRef == NULL), \textcolor{stringliteral}{"AudioInputConnectorRef is NULL!"});
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef == NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+
+    \textcolor{keywordflow}{if} (MdmRxAudioRef && MdmTxAudioRef && FeOutRef && FeInRef &&
+        AudioInputConnectorRef && AudioOutputConnectorRef)
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FeInRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect PCM Rx on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, MdmTxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmTx on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect USB Tx on Output connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, MdmRxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmRx on Output connector!"});
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect audio to USB-RX & I2S-TX.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToUsbRxI2sTx
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    MdmRxAudioRef = \hyperlink{le__audio__interface_8h_ae3ed568ba4d2763ea77e17e77b20ff02}{le\_audio\_OpenModemVoiceRx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmRxAudioRef == NULL), \textcolor{stringliteral}{"GetRxAudioStream returns NULL!"});
+    MdmTxAudioRef = \hyperlink{le__audio__interface_8h_ad745f008bb04873c817da7af3daf783d}{le\_audio\_OpenModemVoiceTx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmTxAudioRef == NULL), \textcolor{stringliteral}{"GetTxAudioStream returns NULL!"});
+
+    \textcolor{comment}{// Redirect audio to the I2S.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_a2633c1368adf60e342d7cadbbfa6278b}{le\_audio\_OpenI2sTx}(\hyperlink{le__audio__interface_8h_a94794180ed71a84bd26a1f525858f252a6ce77f5f956b203e15f662900a5103dd}{LE\_AUDIO\_I2S\_STEREO});
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef == NULL), \textcolor{stringliteral}{"OpenI2sTx returns NULL!"});
+    \textcolor{comment}{// Redirect audio to the USB.}
+    FeInRef = \hyperlink{le__audio__interface_8h_acd8be89289067cef9441a8ed1d891146}{le\_audio\_OpenUsbRx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeInRef == NULL), \textcolor{stringliteral}{"OpenUsbRx returns NULL!"});
+
+    AudioInputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioInputConnectorRef == NULL), \textcolor{stringliteral}{"AudioInputConnectorRef is NULL!"});
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef == NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+
+    \textcolor{keywordflow}{if} (MdmRxAudioRef && MdmTxAudioRef && FeOutRef && FeInRef &&
+        AudioInputConnectorRef && AudioOutputConnectorRef)
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FeInRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect USB Rx on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, MdmTxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmTx on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect I2S Tx on Output connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, MdmRxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmRx on Output connector!"});
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect audio to USB-RX & PCM-TX.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToUsbRxPcmTx
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    MdmRxAudioRef = \hyperlink{le__audio__interface_8h_ae3ed568ba4d2763ea77e17e77b20ff02}{le\_audio\_OpenModemVoiceRx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmRxAudioRef == NULL), \textcolor{stringliteral}{"GetRxAudioStream returns NULL!"});
+    MdmTxAudioRef = \hyperlink{le__audio__interface_8h_ad745f008bb04873c817da7af3daf783d}{le\_audio\_OpenModemVoiceTx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((MdmTxAudioRef == NULL), \textcolor{stringliteral}{"GetTxAudioStream returns NULL!"});
+
+    \textcolor{comment}{// Redirect audio to the PCM.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_a5e112543e8525775aa670dc71b320766}{le\_audio\_OpenPcmTx}(0);
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef == NULL), \textcolor{stringliteral}{"OpenPcmTx returns NULL!"});
+    \textcolor{comment}{// Redirect audio to the USB.}
+    FeInRef = \hyperlink{le__audio__interface_8h_acd8be89289067cef9441a8ed1d891146}{le\_audio\_OpenUsbRx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeInRef == NULL), \textcolor{stringliteral}{"OpenUsbRx returns NULL!"});
+
+    AudioInputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioInputConnectorRef == NULL), \textcolor{stringliteral}{"AudioInputConnectorRef is NULL!"});
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef == NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+
+    \textcolor{keywordflow}{if} (MdmRxAudioRef && MdmTxAudioRef && FeOutRef && FeInRef &&
+        AudioInputConnectorRef && AudioOutputConnectorRef)
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FeInRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect USB Rx on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, MdmTxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmTx on Input connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect PCM Tx on Output connector!"});
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, MdmRxAudioRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect mdmRx on Output connector!"});
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Disconnect audio.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} DisconnectAllAudio
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordflow}{if} (DtmfHandlerRef1)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"delete DTMF handler 1\(\backslash\)n"});
+        \hyperlink{le__audio__interface_8h_aeb1d43fbf2a741fbd91172a90666247d}{le\_audio\_RemoveDtmfDetectorHandler}(DtmfHandlerRef1);
+        DtmfHandlerRef1 = NULL;
+        sleep(1);
+    \}
+    \textcolor{keywordflow}{if} (DtmfHandlerRef2)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"delete DTMF handler 2\(\backslash\)n"});
+        \hyperlink{le__audio__interface_8h_aeb1d43fbf2a741fbd91172a90666247d}{le\_audio\_RemoveDtmfDetectorHandler}(DtmfHandlerRef2);
+        DtmfHandlerRef2 = NULL;
+    \}
+
+    \textcolor{keywordflow}{if} (AudioInputConnectorRef)
+    \{
+        \textcolor{keywordflow}{if} (FeInRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, FeInRef, AudioInputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioInputConnectorRef, FeInRef);
+        \}
+        \textcolor{keywordflow}{if}(MdmTxAudioRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, MdmTxAudioRef, AudioInputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioInputConnectorRef, MdmTxAudioRef);
+        \}
+        \textcolor{keywordflow}{if}(PlayerAudioRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, PlayerAudioRef, AudioInputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioInputConnectorRef, PlayerAudioRef);
+        \}
+    \}
+    \textcolor{keywordflow}{if}(AudioOutputConnectorRef)
+    \{
+        \textcolor{keywordflow}{if}(FeOutRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, FeOutRef, AudioOutputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioOutputConnectorRef, FeOutRef);
+        \}
+        \textcolor{keywordflow}{if}(MdmRxAudioRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, MdmRxAudioRef, AudioOutputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioOutputConnectorRef, MdmRxAudioRef);
+        \}
+        \textcolor{keywordflow}{if}(PlayerAudioRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, PlayerAudioRef, AudioOutputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioOutputConnectorRef, PlayerAudioRef);
+        \}
+    \}
+
+    \textcolor{keywordflow}{if}(AudioInputConnectorRef)
+    \{
+        \hyperlink{le__audio__interface_8h_a3f40b13ff980040503927f59bb3e86a9}{le\_audio\_DeleteConnector}(AudioInputConnectorRef);
+        AudioInputConnectorRef = NULL;
+    \}
+    \textcolor{keywordflow}{if}(AudioOutputConnectorRef)
+    \{
+        \hyperlink{le__audio__interface_8h_a3f40b13ff980040503927f59bb3e86a9}{le\_audio\_DeleteConnector}(AudioOutputConnectorRef);
+        AudioOutputConnectorRef = NULL;
+    \}
+
+    \textcolor{keywordflow}{if}(FeInRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(FeInRef);
+        FeInRef = NULL;
+    \}
+    \textcolor{keywordflow}{if}(FeOutRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(FeOutRef);
+        FeOutRef = NULL;
+    \}
+    \textcolor{keywordflow}{if}(MdmRxAudioRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(MdmRxAudioRef);
+        FeOutRef = NULL;
+    \}
+    \textcolor{keywordflow}{if}(MdmTxAudioRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(MdmTxAudioRef);
+        FeOutRef = NULL;
+    \}
+    \textcolor{keywordflow}{if}(PlayerAudioRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(PlayerAudioRef);
+        PlayerAudioRef = NULL;
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Handler function for Call Event Notifications.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} MyCallEventHandler
+(
+    \hyperlink{le__mcc__interface_8h_a8ae6dac3ca12854884d63e17d5388a7a}{le\_mcc\_CallRef\_t}   callRef,
+    \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cf}{le\_mcc\_Event\_t}     callEvent,
+    \textcolor{keywordtype}{void}*              contextPtr
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t}         res;
+
+    \textcolor{keywordflow}{if} (callEvent == \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cfa05261a9fdb7ee59a0dae1cc27bb30e07}{LE\_MCC\_EVENT\_ALERTING})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Call event is LE\_MCC\_EVENT\_ALERTING."});
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (callEvent == \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cfa86702531207c50314b10ae3278c7ca0d}{LE\_MCC\_EVENT\_CONNECTED})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Call event is LE\_MCC\_EVENT\_CONNECTED."});
+
+        \textcolor{keywordflow}{if} (strcmp(DtmfSendingCase,\textcolor{stringliteral}{"inband"})==0)
+        \{
+            PlayerAudioRef = \hyperlink{le__audio__interface_8h_a92eb1b6377f50ff07b97c5b8546f01ec}{le\_audio\_OpenPlayer}();
+            \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((PlayerAudioRef==NULL), \textcolor{stringliteral}{"OpenPlayer returns NULL!"});
+
+            \textcolor{keywordflow}{if} (PlayerAudioRef && AudioInputConnectorRef)
+            \{
+                res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, PlayerAudioRef);
+                \textcolor{keywordflow}{if}(res != LE\_OK)
+                \{
+                    \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to connect Player on input connector!"});
+                    \textcolor{keywordflow}{return};
+                \}
+                res = \hyperlink{le__audio__interface_8h_ab9d062cda7010c3c97e0dfdc52f7470e}{le\_audio\_PlayDtmf}(PlayerAudioRef, DtmfString, Duration, Pause);
+                \textcolor{keywordflow}{if}(res != LE\_OK)
+                \{
+                    \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to play DTMF!"});
+                    \textcolor{keywordflow}{return};
+                \}
+            \}
+            \textcolor{keywordflow}{else}
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"PlayerAudioRef or AudioInputConnectorRef is NULL"});
+            \}
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (strcmp(DtmfSendingCase,\textcolor{stringliteral}{"outband"})==0)
+        \{
+            res = \hyperlink{le__audio__interface_8h_af3b056db8153ce71fb3ca1124edecd13}{le\_audio\_PlaySignallingDtmf}(DtmfString, Duration, Pause);
+            \textcolor{keywordflow}{if}(res != LE\_OK)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to play signalling DTMF!"});
+                \textcolor{keywordflow}{return};
+            \}
+        \}
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (callEvent == \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cfa38b7c4ab21fa9828be8169372e41ae98}{LE\_MCC\_EVENT\_TERMINATED})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Call event is LE\_MCC\_EVENT\_TERMINATED."});
+        \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960d}{le\_mcc\_TerminationReason\_t} term = 
+      \hyperlink{le__mcc__interface_8h_ab16921abc02e0569b129f4a7d92bf3c9}{le\_mcc\_GetTerminationReason}(callRef);
+        \textcolor{keywordflow}{switch}(term)
+        \{
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960da2ef2a4a77e51faec38a2c131ff5d6f24}{LE\_MCC\_TERM\_NETWORK\_FAIL}:
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_NETWORK\_FAIL"});
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960da2efa341f50cb8abef243d8ea2b9fac7d}{LE\_MCC\_TERM\_UNASSIGNED\_NUMBER}:
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_UNASSIGNED\_NUMBER"});
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960dad7664d1f5a0c6517861637d0a083020c}{LE\_MCC\_TERM\_USER\_BUSY}:
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_USER\_BUSY"});
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960daf4262288191582892e6f84e51e3082c1}{LE\_MCC\_TERM\_LOCAL\_ENDED}:
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_LOCAL\_ENDED"});
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960dad33c3e71bdfd7513392f28bf2a7e9c9b}{LE\_MCC\_TERM\_REMOTE\_ENDED}:
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_REMOTE\_ENDED"});
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960da3dbb90bf0628971a6afbd4773fc97c1a}{LE\_MCC\_TERM\_UNDEFINED}:
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_UNDEFINED"});
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{default}:
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination reason is %d"}, term);
+                \textcolor{keywordflow}{break};
+        \}
+        DisconnectAllAudio();
+        \hyperlink{le__mcc__interface_8h_a1a016e6443df2d3ee99113649f4f34ae}{le\_mcc\_Delete}(callRef);
+        \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(0);
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (callEvent == \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cfab37936f33d31259ea0c16169ba852bd0}{LE\_MCC\_EVENT\_INCOMING})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Call event is LE\_MCC\_EVENT\_INCOMING."});
+        isIncoming=\textcolor{keyword}{true};
+        res = \hyperlink{le__mcc__interface_8h_a598349c6ccfa151dbd1d2f2a9c293ca4}{le\_mcc\_Answer}(callRef);
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Failed to answer the call."});
+        \}
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Unknowm Call event."});
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Play DTMF function.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} PlayLocalDtmf
+(
+    \textcolor{keyword}{const} \textcolor{keywordtype}{char} * argString
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    \textcolor{keywordflow}{if} (strncmp(argString, \textcolor{stringliteral}{"PCM"}, strlen(\textcolor{stringliteral}{"PCM"})) == 0)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Play DTMF on PCM output interface"});
+        \textcolor{comment}{// Redirect audio to the PCM Tx.}
+        FeOutRef = \hyperlink{le__audio__interface_8h_a5e112543e8525775aa670dc71b320766}{le\_audio\_OpenPcmTx}(0);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef==NULL), \textcolor{stringliteral}{"OpenPcmTx returns NULL!"});
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (strncmp(argString, \textcolor{stringliteral}{"I2S"}, strlen(\textcolor{stringliteral}{"I2S"})) == 0)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Play DTMF on I2S output interface"});
+        \textcolor{comment}{// Redirect audio to the I2S Tx.}
+        FeOutRef = \hyperlink{le__audio__interface_8h_a2633c1368adf60e342d7cadbbfa6278b}{le\_audio\_OpenI2sTx}(\hyperlink{le__audio__interface_8h_a94794180ed71a84bd26a1f525858f252a6ce77f5f956b203e15f662900a5103dd}{LE\_AUDIO\_I2S\_STEREO});
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef==NULL), \textcolor{stringliteral}{"OpenI2STx returns NULL!"});
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if}(strncmp(argString, \textcolor{stringliteral}{"MIC"}, strlen(\textcolor{stringliteral}{"MIC"})) == 0)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Play DTMF on Speaker"});
+        \textcolor{comment}{// Redirect audio to the in-built Microphone and Speaker.}
+        FeOutRef = \hyperlink{le__audio__interface_8h_a5c19afce44021c4abf6193707317f8de}{le\_audio\_OpenSpeaker}();
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef==NULL), \textcolor{stringliteral}{"OpenSpeaker returns NULL!"});
+     \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if}(strncmp(argString, \textcolor{stringliteral}{"USB"}, strlen(\textcolor{stringliteral}{"USB"})) == 0)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Play DTMF on USB"});
+        \textcolor{comment}{// Redirect audio to the USB output interface.}
+        FeOutRef = \hyperlink{le__audio__interface_8h_adb38f11ac78cf99160c19f69b4db0eb8}{le\_audio\_OpenUsbTx}();
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef==NULL), \textcolor{stringliteral}{"OpenUsbTx returns NULL!"});
+    \}
+
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef==NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect Speaker on Output connector!"});
+    \}
+
+    \textcolor{comment}{// Play DTMF on output connector.}
+    PlayerAudioRef = \hyperlink{le__audio__interface_8h_a92eb1b6377f50ff07b97c5b8546f01ec}{le\_audio\_OpenPlayer}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((PlayerAudioRef==NULL), \textcolor{stringliteral}{"OpenPlayer returns NULL!"});
+
+    \textcolor{keywordflow}{if} (PlayerAudioRef && AudioOutputConnectorRef)
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, PlayerAudioRef);
+        \textcolor{keywordflow}{if}(res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to connect Player on output connector!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Play DTMF on PlayerAudioRef.%p"}, PlayerAudioRef);
+        res = \hyperlink{le__audio__interface_8h_ab9d062cda7010c3c97e0dfdc52f7470e}{le\_audio\_PlayDtmf}(PlayerAudioRef, DtmfString, Duration, Pause);
+        \textcolor{keywordflow}{if}(res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to play DTMF!"});
+            \textcolor{keywordflow}{return};
+        \}
+    \}
+\}
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * The signal event handler function for SIGINT/SIGTERM when process dies.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} SigHandler
+(
+    \textcolor{keywordtype}{int} sigNum
+)
+\{
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"End DTMF test"});
+    DisconnectAllAudio();
+    \textcolor{keywordflow}{if}(TestCallRef)
+    \{
+        \hyperlink{le__mcc__interface_8h_a7b9567715a3cd30c83a3b6886eeb2044}{le\_mcc\_HangUp}(TestCallRef);
+        \hyperlink{le__mcc__interface_8h_a1a016e6443df2d3ee99113649f4f34ae}{le\_mcc\_Delete}(TestCallRef);
+    \}
+
+    \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_SUCCESS);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test init.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\hyperlink{le__event_loop_8h_abdb9187a56836a93d19cc793cbd4b7ec}{COMPONENT\_INIT}
+\{
+    \textcolor{keywordtype}{bool} isLocalTest = \textcolor{keyword}{false};
+
+    \textcolor{comment}{// Register a signal event handler for SIGINT when user interrupts/terminates process}
+    \hyperlink{wifi_ap_test_8c_a8db34e235c60f54c3df89f2b6b8ca3ed}{signal}(SIGINT, SigHandler);
+
+    \textcolor{keywordflow}{if} (\hyperlink{le__args_8h_a6fbbeb423104e6eb92fe47ef42b7310a}{le\_arg\_NumArgs}() == 7)
+    \{
+        InterfaceString = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(1);
+        \textcolor{keywordflow}{if} (NULL == InterfaceString)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"InterfaceString is NULL"});
+            \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+        \}
+        DtmfString = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(2);
+        \textcolor{keyword}{const} \textcolor{keywordtype}{char}* durationPtr = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(3);
+        \textcolor{keywordflow}{if} (NULL == durationPtr)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"durationPtr is NULL"});
+            \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+        \}
+        \textcolor{keyword}{const} \textcolor{keywordtype}{char}* pausePtr = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(4);
+        \textcolor{keywordflow}{if} (NULL == pausePtr)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"pausePtr is NULL"});
+            \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+        \}
+        Duration = atoi(durationPtr);
+        Pause = atoi(pausePtr);
+        DestinationNumber = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(5);
+        \textcolor{keywordflow}{if} (NULL == DestinationNumber)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"DestinationNumber is NULL"});
+            \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+        \}
+        DtmfSendingCase = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(6);
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Play DTMF on remote"});
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   DTMF to play.\(\backslash\)"%s\(\backslash\)""}, DtmfString);
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Duration.%dms"}, Duration);
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Pause.%dms"}, Pause);
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Phone number.%s"}, DestinationNumber);
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   DTMF Sending case.%s"}, DtmfSendingCase);
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Interface.%s"}, InterfaceString);
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (\hyperlink{le__args_8h_a6fbbeb423104e6eb92fe47ef42b7310a}{le\_arg\_NumArgs}() == 5)
+    \{
+        \textcolor{keyword}{const} \textcolor{keywordtype}{char}* locPtr = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(0);
+        \textcolor{keywordflow}{if} (NULL == locPtr)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"locPtr is NULL"});
+            \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+        \}
+        \textcolor{keywordflow}{if}(strncmp(locPtr, \textcolor{stringliteral}{"loc"}, strlen(\textcolor{stringliteral}{"loc"}))==0)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Play DTMF on local interface"});
+            InterfaceString = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(1);
+            \textcolor{keywordflow}{if} (NULL == InterfaceString)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"InterfaceString is NULL"});
+                \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+            \}
+            DtmfString = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(2);
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* durationPtr = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(3);
+            \textcolor{keywordflow}{if} (NULL == durationPtr)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"durationPtr is NULL"});
+                \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+            \}
+            Duration = atoi(durationPtr);
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* pausePtr = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(4);
+            \textcolor{keywordflow}{if} (NULL == pausePtr)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"pausePtr is NULL"});
+                \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+            \}
+            Pause = atoi(pausePtr);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   DTMF to play.\(\backslash\)"%s\(\backslash\)""}, DtmfString);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Duration.%dms"}, Duration);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Pause.%dms"}, Pause);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Interface.%s"}, InterfaceString);
+            isLocalTest = \textcolor{keyword}{true};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            PrintUsage();
+            \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+        \}
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        PrintUsage();
+    \}
+
+    \textcolor{keywordflow}{if} (!isLocalTest)
+    \{
+        \textcolor{keywordflow}{if}(strncmp(InterfaceString, \textcolor{stringliteral}{"I2S"}, strlen(\textcolor{stringliteral}{"I2S"}))==0)
+        \{
+            ConnectAudioToI2S();
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if}(strncmp(InterfaceString, \textcolor{stringliteral}{"PCM"}, strlen(\textcolor{stringliteral}{"PCM"}))==0)
+        \{
+            ConnectAudioToPcm();
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if}(strncmp(InterfaceString, \textcolor{stringliteral}{"MIC"}, strlen(\textcolor{stringliteral}{"MIC"}))==0)
+        \{
+            ConnectAudioToCodec();
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if}(strncmp(InterfaceString,\textcolor{stringliteral}{"USBTXI2SRX"}, strlen(\textcolor{stringliteral}{"USBTXI2SRX"}))==0)
+        \{
+            ConnectAudioToUsbTxI2sRx();
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (strncmp(InterfaceString,\textcolor{stringliteral}{"USBTXPCMRX"}, strlen(\textcolor{stringliteral}{"USBTXPCMRX"}))==0)
+        \{
+            ConnectAudioToUsbTxPcmRx();
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (strncmp(InterfaceString,\textcolor{stringliteral}{"USBRXI2STX"}, strlen(\textcolor{stringliteral}{"USBRXI2STX"}))==0)
+        \{
+            ConnectAudioToUsbRxI2sTx();
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (strncmp(InterfaceString,\textcolor{stringliteral}{"USBRXPCMTX"}, strlen(\textcolor{stringliteral}{"USBRXPCMTX"}))==0)
+        \{
+            ConnectAudioToUsbRxPcmTx();
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Bad test case"});
+        \}
+
+        DtmfHandlerRef1 = \hyperlink{le__audio__interface_8h_a6e65275798c0db287fc1b540cdc0db8b}{le\_audio\_AddDtmfDetectorHandler}(MdmRxAudioRef,
+                                                          MyDtmfDetectorHandler1,
+                                                          NULL);
+        DtmfHandlerRef2 = \hyperlink{le__audio__interface_8h_a6e65275798c0db287fc1b540cdc0db8b}{le\_audio\_AddDtmfDetectorHandler}(MdmRxAudioRef,
+                                                          MyDtmfDetectorHandler2,
+                                                          NULL);
+
+        \hyperlink{le__mcc__interface_8h_ab826cf4b9e3911e659a90d483081e7fe}{le\_mcc\_AddCallEventHandler}(MyCallEventHandler, NULL);
+        TestCallRef=\hyperlink{le__mcc__interface_8h_a42130fc6b1d69413a387e3292117b3d3}{le\_mcc\_Create}(DestinationNumber);
+        \hyperlink{le__mcc__interface_8h_a72a32869bb23864b3e86c606368bed70}{le\_mcc\_Start}(TestCallRef);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \textcolor{keywordflow}{if} (NULL == InterfaceString)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"InterfaceString is NULL"});
+            \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+        \}
+        PlayLocalDtmf(InterfaceString);
+    \}
+\}
+
+\end{DoxyCodeInclude}
+ 

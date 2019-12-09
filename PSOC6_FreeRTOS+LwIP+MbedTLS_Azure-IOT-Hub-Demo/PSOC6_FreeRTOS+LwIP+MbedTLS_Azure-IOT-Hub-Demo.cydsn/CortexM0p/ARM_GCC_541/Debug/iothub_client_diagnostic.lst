@@ -1,0 +1,3739 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"iothub_client_diagnostic.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.get_base36_char,"ax",%progbits
+  20              		.align	2
+  21              		.code	16
+  22              		.thumb_func
+  23              		.type	get_base36_char, %function
+  24              	get_base36_char:
+  25              	.LFB2:
+  26              		.file 1 "Source\\azure_iot_sdk\\iothub_client\\src\\iothub_client_diagnostic.c"
+   1:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** // Copyright (c) Microsoft. All rights reserved.
+   2:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** // Licensed under the MIT license. See LICENSE file in the project root for full license informatio
+   3:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+   4:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** #include <stdlib.h>
+   5:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** #include <inttypes.h>
+   6:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** #include <math.h>
+   7:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** #include "azure_c_shared_utility/optimize_size.h"
+   8:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** #include "azure_c_shared_utility/gballoc.h"
+   9:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** #include "azure_c_shared_utility/xlogging.h"
+  10:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** #include "azure_c_shared_utility/agenttime.h"
+  11:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** #include "azure_c_shared_utility/buffer_.h"
+  12:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  13:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** #include "internal/iothub_client_diagnostic.h"
+  14:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  15:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** #define TIME_STRING_BUFFER_LEN 30
+  16:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  17:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** static const int BASE_36 = 36;
+  18:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  19:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** #define INDEFINITE_TIME ((time_t)-1)
+  20:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  21:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** static char* get_epoch_time(char* timeBuffer)
+  22:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** {
+  23:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     char* result;
+  24:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     time_t epochTime;
+  25:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     int timeLen = sizeof(time_t);
+  26:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  27:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     if ((epochTime = get_time(NULL)) == INDEFINITE_TIME)
+  28:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+  29:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         LogError("Failed getting current time");
+  30:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         result = NULL;
+  31:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 2
+
+
+  32:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     else if (timeLen == sizeof(int64_t))
+  33:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+  34:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         if (sprintf(timeBuffer, "%"PRIu64, (int64_t)epochTime) < 0)
+  35:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         {
+  36:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             LogError("Failed sprintf to timeBuffer with 8 bytes of time_t");
+  37:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             result = NULL;
+  38:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+  39:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         else
+  40:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         {
+  41:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             result = timeBuffer;
+  42:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+  43:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+  44:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     else if (timeLen == sizeof(int32_t))
+  45:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+  46:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         if (sprintf(timeBuffer, "%"PRIu32, (int32_t)epochTime) < 0)
+  47:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         {
+  48:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             LogError("Failed sprintf to timeBuffer with 4 bytes of time_t");
+  49:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             result = NULL;
+  50:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+  51:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         else
+  52:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         {
+  53:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             result = timeBuffer;
+  54:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+  55:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+  56:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     else
+  57:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+  58:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         LogError("Unknown size of time_t");
+  59:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         result = NULL;
+  60:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+  61:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  62:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     return result;
+  63:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** }
+  64:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  65:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** static char get_base36_char(unsigned char value)
+  66:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** {
+  27              		.loc 1 66 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+  67:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     return value <= 9 ? '0' + value : 'a' + value - 10;
+  33              		.loc 1 67 0
+  34 0000 0928     		cmp	r0, #9
+  35 0002 02D8     		bhi	.L2
+  36              		.loc 1 67 0 is_stmt 0 discriminator 1
+  37 0004 3030     		adds	r0, r0, #48
+  38              	.LVL1:
+  39 0006 C0B2     		uxtb	r0, r0
+  40 0008 01E0     		b	.L3
+  41              	.LVL2:
+  42              	.L2:
+  43              		.loc 1 67 0 discriminator 2
+  44 000a 5730     		adds	r0, r0, #87
+  45              	.LVL3:
+  46 000c C0B2     		uxtb	r0, r0
+  47              	.L3:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 3
+
+
+  68:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** }
+  48              		.loc 1 68 0 is_stmt 1 discriminator 4
+  49              		@ sp needed
+  50 000e 7047     		bx	lr
+  51              		.cfi_endproc
+  52              	.LFE2:
+  53              		.size	get_base36_char, .-get_base36_char
+  54              		.global	__aeabi_uidivmod
+  55              		.global	__aeabi_ui2d
+  56              		.global	__aeabi_dsub
+  57              		.global	__aeabi_dmul
+  58              		.global	__aeabi_ddiv
+  59              		.global	__aeabi_dcmplt
+  60              		.section	.text.should_add_diagnostic_info,"ax",%progbits
+  61              		.align	2
+  62              		.code	16
+  63              		.thumb_func
+  64              		.type	should_add_diagnostic_info, %function
+  65              	should_add_diagnostic_info:
+  66              	.LFB4:
+  69:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  70:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** static char* generate_eight_random_characters(char *randomString)
+  71:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** {
+  72:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     int i;
+  73:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     char* randomStringPos = randomString;
+  74:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     for (i = 0; i < 4; ++i)
+  75:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+  76:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         int rawRandom = rand();
+  77:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         int first = rawRandom % BASE_36;
+  78:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         int second = rawRandom / BASE_36 % BASE_36;
+  79:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         *randomStringPos++ = get_base36_char((unsigned char)first);
+  80:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         *randomStringPos++ = get_base36_char((unsigned char)second);
+  81:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+  82:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     *randomStringPos = 0;
+  83:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  84:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     return randomString;
+  85:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** }
+  86:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  87:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** static bool should_add_diagnostic_info(IOTHUB_DIAGNOSTIC_SETTING_DATA* diagSetting)
+  88:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** {
+  67              		.loc 1 88 0
+  68              		.cfi_startproc
+  69              		@ args = 0, pretend = 0, frame = 8
+  70              		@ frame_needed = 0, uses_anonymous_args = 0
+  71              	.LVL4:
+  72 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+  73              		.cfi_def_cfa_offset 20
+  74              		.cfi_offset 4, -20
+  75              		.cfi_offset 5, -16
+  76              		.cfi_offset 6, -12
+  77              		.cfi_offset 7, -8
+  78              		.cfi_offset 14, -4
+  79 0002 83B0     		sub	sp, sp, #12
+  80              		.cfi_def_cfa_offset 32
+  81 0004 0400     		movs	r4, r0
+  82              	.LVL5:
+  89:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     bool result = false;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 4
+
+
+  90:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     if (diagSetting->diagSamplingPercentage > 0)
+  83              		.loc 1 90 0
+  84 0006 0668     		ldr	r6, [r0]
+  85 0008 002E     		cmp	r6, #0
+  86 000a 46D0     		beq	.L8
+  87              	.LBB2:
+  91:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+  92:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         double number;
+  93:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         double percentage;
+  94:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+  95:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         if (diagSetting->currentMessageNumber == UINT32_MAX)
+  88              		.loc 1 95 0
+  89 000c 4068     		ldr	r0, [r0, #4]
+  90              	.LVL6:
+  91 000e 431C     		adds	r3, r0, #1
+  92 0010 04D1     		bne	.L6
+  96:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         {
+  97:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             diagSetting->currentMessageNumber %= diagSetting->diagSamplingPercentage * 100;
+  93              		.loc 1 97 0
+  94 0012 6421     		movs	r1, #100
+  95 0014 7143     		muls	r1, r6
+  96 0016 FFF7FEFF 		bl	__aeabi_uidivmod
+  97              	.LVL7:
+  98 001a 6160     		str	r1, [r4, #4]
+  99              	.L6:
+  98:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+  99:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         ++diagSetting->currentMessageNumber;
+ 100              		.loc 1 99 0
+ 101 001c 6368     		ldr	r3, [r4, #4]
+ 102 001e 581C     		adds	r0, r3, #1
+ 103 0020 6060     		str	r0, [r4, #4]
+ 100:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+ 101:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         number = diagSetting->currentMessageNumber;
+ 104              		.loc 1 101 0
+ 105 0022 FFF7FEFF 		bl	__aeabi_ui2d
+ 106              	.LVL8:
+ 107 0026 0400     		movs	r4, r0
+ 108              	.LVL9:
+ 109 0028 0D00     		movs	r5, r1
+ 110              	.LVL10:
+ 102:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         percentage = diagSetting->diagSamplingPercentage;
+ 111              		.loc 1 102 0
+ 112 002a 3000     		movs	r0, r6
+ 113 002c FFF7FEFF 		bl	__aeabi_ui2d
+ 114              	.LVL11:
+ 115 0030 0600     		movs	r6, r0
+ 116 0032 0F00     		movs	r7, r1
+ 117              	.LVL12:
+ 103:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         result = (floor((number - 2) * percentage / 100.0) < floor((number - 1) * percentage / 100.
+ 118              		.loc 1 103 0
+ 119 0034 0022     		movs	r2, #0
+ 120 0036 8023     		movs	r3, #128
+ 121 0038 DB05     		lsls	r3, r3, #23
+ 122 003a 2000     		movs	r0, r4
+ 123 003c 2900     		movs	r1, r5
+ 124 003e FFF7FEFF 		bl	__aeabi_dsub
+ 125              	.LVL13:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 5
+
+
+ 126 0042 0200     		movs	r2, r0
+ 127 0044 0B00     		movs	r3, r1
+ 128 0046 3000     		movs	r0, r6
+ 129 0048 3900     		movs	r1, r7
+ 130 004a FFF7FEFF 		bl	__aeabi_dmul
+ 131              	.LVL14:
+ 132 004e 0022     		movs	r2, #0
+ 133 0050 134B     		ldr	r3, .L9
+ 134 0052 FFF7FEFF 		bl	__aeabi_ddiv
+ 135              	.LVL15:
+ 136 0056 FFF7FEFF 		bl	floor
+ 137              	.LVL16:
+ 138 005a 0090     		str	r0, [sp]
+ 139 005c 0191     		str	r1, [sp, #4]
+ 140 005e 0022     		movs	r2, #0
+ 141 0060 104B     		ldr	r3, .L9+4
+ 142 0062 2000     		movs	r0, r4
+ 143 0064 2900     		movs	r1, r5
+ 144 0066 FFF7FEFF 		bl	__aeabi_dsub
+ 145              	.LVL17:
+ 146 006a 0200     		movs	r2, r0
+ 147 006c 0B00     		movs	r3, r1
+ 148 006e 3000     		movs	r0, r6
+ 149 0070 3900     		movs	r1, r7
+ 150 0072 FFF7FEFF 		bl	__aeabi_dmul
+ 151              	.LVL18:
+ 152 0076 0022     		movs	r2, #0
+ 153 0078 094B     		ldr	r3, .L9
+ 154 007a FFF7FEFF 		bl	__aeabi_ddiv
+ 155              	.LVL19:
+ 156 007e FFF7FEFF 		bl	floor
+ 157              	.LVL20:
+ 158 0082 0200     		movs	r2, r0
+ 159 0084 0B00     		movs	r3, r1
+ 160 0086 0124     		movs	r4, #1
+ 161              	.LVL21:
+ 162 0088 0098     		ldr	r0, [sp]
+ 163 008a 0199     		ldr	r1, [sp, #4]
+ 164 008c FFF7FEFF 		bl	__aeabi_dcmplt
+ 165              	.LVL22:
+ 166 0090 0028     		cmp	r0, #0
+ 167 0092 00D1     		bne	.L7
+ 168 0094 0024     		movs	r4, #0
+ 169              	.L7:
+ 170 0096 E0B2     		uxtb	r0, r4
+ 171              	.LVL23:
+ 172 0098 00E0     		b	.L5
+ 173              	.LVL24:
+ 174              	.L8:
+ 175              	.LBE2:
+  89:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     if (diagSetting->diagSamplingPercentage > 0)
+ 176              		.loc 1 89 0
+ 177 009a 0020     		movs	r0, #0
+ 178              	.LVL25:
+ 179              	.L5:
+ 104:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ 105:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     return result;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 6
+
+
+ 106:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** }
+ 180              		.loc 1 106 0
+ 181 009c 03B0     		add	sp, sp, #12
+ 182              		@ sp needed
+ 183 009e F0BD     		pop	{r4, r5, r6, r7, pc}
+ 184              	.L10:
+ 185              		.align	2
+ 186              	.L9:
+ 187 00a0 00005940 		.word	1079574528
+ 188 00a4 0000F03F 		.word	1072693248
+ 189              		.cfi_endproc
+ 190              	.LFE4:
+ 191              		.size	should_add_diagnostic_info, .-should_add_diagnostic_info
+ 192              		.global	__aeabi_idivmod
+ 193              		.global	__aeabi_idiv
+ 194              		.section	.text.generate_eight_random_characters,"ax",%progbits
+ 195              		.align	2
+ 196              		.code	16
+ 197              		.thumb_func
+ 198              		.type	generate_eight_random_characters, %function
+ 199              	generate_eight_random_characters:
+ 200              	.LFB3:
+  71:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     int i;
+ 201              		.loc 1 71 0
+ 202              		.cfi_startproc
+ 203              		@ args = 0, pretend = 0, frame = 8
+ 204              		@ frame_needed = 0, uses_anonymous_args = 0
+ 205              	.LVL26:
+ 206 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 207              		.cfi_def_cfa_offset 20
+ 208              		.cfi_offset 4, -20
+ 209              		.cfi_offset 5, -16
+ 210              		.cfi_offset 6, -12
+ 211              		.cfi_offset 7, -8
+ 212              		.cfi_offset 14, -4
+ 213 0002 83B0     		sub	sp, sp, #12
+ 214              		.cfi_def_cfa_offset 32
+ 215 0004 0190     		str	r0, [sp, #4]
+ 216              	.LVL27:
+  73:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     for (i = 0; i < 4; ++i)
+ 217              		.loc 1 73 0
+ 218 0006 0400     		movs	r4, r0
+  74:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+ 219              		.loc 1 74 0
+ 220 0008 0026     		movs	r6, #0
+ 221 000a 19E0     		b	.L12
+ 222              	.LVL28:
+ 223              	.L13:
+ 224              	.LBB3:
+  76:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         int first = rawRandom % BASE_36;
+ 225              		.loc 1 76 0 discriminator 3
+ 226 000c FFF7FEFF 		bl	rand
+ 227              	.LVL29:
+ 228 0010 0500     		movs	r5, r0
+ 229              	.LVL30:
+  77:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         int second = rawRandom / BASE_36 % BASE_36;
+ 230              		.loc 1 77 0 discriminator 3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 7
+
+
+ 231 0012 2421     		movs	r1, #36
+ 232 0014 FFF7FEFF 		bl	__aeabi_idivmod
+ 233              	.LVL31:
+ 234 0018 0F00     		movs	r7, r1
+ 235              	.LVL32:
+  78:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         *randomStringPos++ = get_base36_char((unsigned char)first);
+ 236              		.loc 1 78 0 discriminator 3
+ 237 001a 2421     		movs	r1, #36
+ 238              	.LVL33:
+ 239 001c 2800     		movs	r0, r5
+ 240 001e FFF7FEFF 		bl	__aeabi_idiv
+ 241              	.LVL34:
+ 242 0022 2421     		movs	r1, #36
+ 243 0024 FFF7FEFF 		bl	__aeabi_idivmod
+ 244              	.LVL35:
+ 245 0028 0D00     		movs	r5, r1
+ 246              	.LVL36:
+  79:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         *randomStringPos++ = get_base36_char((unsigned char)second);
+ 247              		.loc 1 79 0 discriminator 3
+ 248 002a F8B2     		uxtb	r0, r7
+ 249 002c FFF7FEFF 		bl	get_base36_char
+ 250              	.LVL37:
+ 251 0030 2070     		strb	r0, [r4]
+  80:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ 252              		.loc 1 80 0 discriminator 3
+ 253 0032 A71C     		adds	r7, r4, #2
+ 254              	.LVL38:
+ 255 0034 E8B2     		uxtb	r0, r5
+ 256 0036 FFF7FEFF 		bl	get_base36_char
+ 257              	.LVL39:
+ 258 003a 6070     		strb	r0, [r4, #1]
+ 259              	.LBE3:
+  74:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+ 260              		.loc 1 74 0 discriminator 3
+ 261 003c 0136     		adds	r6, r6, #1
+ 262              	.LVL40:
+ 263              	.LBB4:
+  80:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ 264              		.loc 1 80 0 discriminator 3
+ 265 003e 3C00     		movs	r4, r7
+ 266              	.LVL41:
+ 267              	.L12:
+ 268              	.LBE4:
+  74:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+ 269              		.loc 1 74 0 discriminator 1
+ 270 0040 032E     		cmp	r6, #3
+ 271 0042 E3DD     		ble	.L13
+  82:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+ 272              		.loc 1 82 0
+ 273 0044 0023     		movs	r3, #0
+ 274 0046 2370     		strb	r3, [r4]
+  85:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+ 275              		.loc 1 85 0
+ 276 0048 0198     		ldr	r0, [sp, #4]
+ 277 004a 03B0     		add	sp, sp, #12
+ 278              		@ sp needed
+ 279              	.LVL42:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 8
+
+
+ 280              	.LVL43:
+ 281 004c F0BD     		pop	{r4, r5, r6, r7, pc}
+ 282              		.cfi_endproc
+ 283              	.LFE3:
+ 284              		.size	generate_eight_random_characters, .-generate_eight_random_characters
+ 285 004e C046     		.section	.text.get_epoch_time,"ax",%progbits
+ 286              		.align	2
+ 287              		.code	16
+ 288              		.thumb_func
+ 289              		.type	get_epoch_time, %function
+ 290              	get_epoch_time:
+ 291              	.LFB1:
+  22:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     char* result;
+ 292              		.loc 1 22 0
+ 293              		.cfi_startproc
+ 294              		@ args = 0, pretend = 0, frame = 0
+ 295              		@ frame_needed = 0, uses_anonymous_args = 0
+ 296              	.LVL44:
+ 297 0000 10B5     		push	{r4, lr}
+ 298              		.cfi_def_cfa_offset 8
+ 299              		.cfi_offset 4, -8
+ 300              		.cfi_offset 14, -4
+ 301 0002 82B0     		sub	sp, sp, #8
+ 302              		.cfi_def_cfa_offset 16
+ 303 0004 0400     		movs	r4, r0
+ 304              	.LVL45:
+  27:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+ 305              		.loc 1 27 0
+ 306 0006 0020     		movs	r0, #0
+ 307              	.LVL46:
+ 308 0008 FFF7FEFF 		bl	get_time
+ 309              	.LVL47:
+ 310 000c 431C     		adds	r3, r0, #1
+ 311 000e 0ED1     		bne	.L15
+ 312              	.LBB5:
+  29:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         result = NULL;
+ 313              		.loc 1 29 0 discriminator 3
+ 314 0010 FFF7FEFF 		bl	xlogging_get_log_function
+ 315              	.LVL48:
+ 316 0014 041E     		subs	r4, r0, #0
+ 317              	.LVL49:
+ 318 0016 20D0     		beq	.L17
+  29:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         result = NULL;
+ 319              		.loc 1 29 0 is_stmt 0 discriminator 4
+ 320 0018 134B     		ldr	r3, .L19
+ 321 001a 0193     		str	r3, [sp, #4]
+ 322 001c 0123     		movs	r3, #1
+ 323 001e 0093     		str	r3, [sp]
+ 324 0020 1C33     		adds	r3, r3, #28
+ 325 0022 124A     		ldr	r2, .L19+4
+ 326 0024 1249     		ldr	r1, .L19+8
+ 327 0026 0020     		movs	r0, #0
+ 328              	.LVL50:
+ 329 0028 A047     		blx	r4
+ 330              	.LVL51:
+ 331              	.LBE5:
+  30:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 9
+
+
+ 332              		.loc 1 30 0 is_stmt 1 discriminator 4
+ 333 002a 0024     		movs	r4, #0
+ 334              	.LVL52:
+ 335 002c 18E0     		b	.L16
+ 336              	.LVL53:
+ 337              	.L15:
+  46:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         {
+ 338              		.loc 1 46 0
+ 339 002e 0200     		movs	r2, r0
+ 340 0030 1049     		ldr	r1, .L19+12
+ 341 0032 2000     		movs	r0, r4
+ 342              	.LVL54:
+ 343 0034 FFF7FEFF 		bl	sprintf
+ 344              	.LVL55:
+ 345 0038 0028     		cmp	r0, #0
+ 346 003a 11DA     		bge	.L16
+ 347              	.LBB6:
+  48:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             result = NULL;
+ 348              		.loc 1 48 0 discriminator 3
+ 349 003c FFF7FEFF 		bl	xlogging_get_log_function
+ 350              	.LVL56:
+ 351 0040 041E     		subs	r4, r0, #0
+ 352              	.LVL57:
+ 353 0042 0CD0     		beq	.L18
+  48:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             result = NULL;
+ 354              		.loc 1 48 0 is_stmt 0 discriminator 4
+ 355 0044 0C4B     		ldr	r3, .L19+16
+ 356 0046 0193     		str	r3, [sp, #4]
+ 357 0048 0123     		movs	r3, #1
+ 358 004a 0093     		str	r3, [sp]
+ 359 004c 2F33     		adds	r3, r3, #47
+ 360 004e 074A     		ldr	r2, .L19+4
+ 361 0050 0749     		ldr	r1, .L19+8
+ 362 0052 0020     		movs	r0, #0
+ 363              	.LVL58:
+ 364 0054 A047     		blx	r4
+ 365              	.LVL59:
+ 366              	.LBE6:
+  49:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+ 367              		.loc 1 49 0 is_stmt 1 discriminator 4
+ 368 0056 0024     		movs	r4, #0
+ 369              	.LVL60:
+ 370 0058 02E0     		b	.L16
+ 371              	.LVL61:
+ 372              	.L17:
+  30:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ 373              		.loc 1 30 0
+ 374 005a 0024     		movs	r4, #0
+ 375 005c 00E0     		b	.L16
+ 376              	.LVL62:
+ 377              	.L18:
+  49:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+ 378              		.loc 1 49 0
+ 379 005e 0024     		movs	r4, #0
+ 380              	.LVL63:
+ 381              	.L16:
+  63:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 10
+
+
+ 382              		.loc 1 63 0
+ 383 0060 2000     		movs	r0, r4
+ 384 0062 02B0     		add	sp, sp, #8
+ 385              		@ sp needed
+ 386              	.LVL64:
+ 387 0064 10BD     		pop	{r4, pc}
+ 388              	.L20:
+ 389 0066 C046     		.align	2
+ 390              	.L19:
+ 391 0068 44000000 		.word	.LC3
+ 392 006c 00000000 		.word	.LANCHOR0
+ 393 0070 00000000 		.word	.LC1
+ 394 0074 60000000 		.word	.LC5
+ 395 0078 64000000 		.word	.LC7
+ 396              		.cfi_endproc
+ 397              	.LFE1:
+ 398              		.size	get_epoch_time, .-get_epoch_time
+ 399              		.section	.text.prepare_message_diagnostic_data,"ax",%progbits
+ 400              		.align	2
+ 401              		.code	16
+ 402              		.thumb_func
+ 403              		.type	prepare_message_diagnostic_data, %function
+ 404              	prepare_message_diagnostic_data:
+ 405              	.LFB5:
+ 107:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+ 108:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** static IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA* prepare_message_diagnostic_data()
+ 109:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** {
+ 406              		.loc 1 109 0
+ 407              		.cfi_startproc
+ 408              		@ args = 0, pretend = 0, frame = 0
+ 409              		@ frame_needed = 0, uses_anonymous_args = 0
+ 410 0000 70B5     		push	{r4, r5, r6, lr}
+ 411              		.cfi_def_cfa_offset 16
+ 412              		.cfi_offset 4, -16
+ 413              		.cfi_offset 5, -12
+ 414              		.cfi_offset 6, -8
+ 415              		.cfi_offset 14, -4
+ 416 0002 82B0     		sub	sp, sp, #8
+ 417              		.cfi_def_cfa_offset 24
+ 110:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA* result = (IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA*)mal
+ 418              		.loc 1 110 0
+ 419 0004 0820     		movs	r0, #8
+ 420 0006 FFF7FEFF 		bl	malloc
+ 421              	.LVL65:
+ 422 000a 041E     		subs	r4, r0, #0
+ 423              	.LVL66:
+ 111:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     if (result == NULL)
+ 424              		.loc 1 111 0
+ 425 000c 0ED1     		bne	.L22
+ 426              	.LBB7:
+ 112:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+ 113:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         LogError("malloc for DiagnosticData failed");
+ 427              		.loc 1 113 0 discriminator 3
+ 428 000e FFF7FEFF 		bl	xlogging_get_log_function
+ 429              	.LVL67:
+ 430 0012 051E     		subs	r5, r0, #0
+ 431              	.LVL68:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 11
+
+
+ 432 0014 5ED0     		beq	.L23
+ 433              		.loc 1 113 0 is_stmt 0 discriminator 4
+ 434 0016 314B     		ldr	r3, .L30
+ 435 0018 0193     		str	r3, [sp, #4]
+ 436 001a 0123     		movs	r3, #1
+ 437 001c 0093     		str	r3, [sp]
+ 438 001e 7033     		adds	r3, r3, #112
+ 439 0020 2F4A     		ldr	r2, .L30+4
+ 440 0022 1032     		adds	r2, r2, #16
+ 441 0024 2F49     		ldr	r1, .L30+8
+ 442 0026 0020     		movs	r0, #0
+ 443              	.LVL69:
+ 444 0028 A847     		blx	r5
+ 445              	.LVL70:
+ 446 002a 53E0     		b	.L23
+ 447              	.LVL71:
+ 448              	.L22:
+ 449              	.LBE7:
+ 450              	.LBB8:
+ 114:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ 115:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     else
+ 116:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+ 117:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         char* diagId = (char*)malloc(9);
+ 451              		.loc 1 117 0 is_stmt 1
+ 452 002c 0920     		movs	r0, #9
+ 453              	.LVL72:
+ 454 002e FFF7FEFF 		bl	malloc
+ 455              	.LVL73:
+ 456 0032 051E     		subs	r5, r0, #0
+ 457              	.LVL74:
+ 118:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         if (diagId == NULL)
+ 458              		.loc 1 118 0
+ 459 0034 12D1     		bne	.L24
+ 460              	.LBB9:
+ 119:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         {
+ 120:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             LogError("malloc for diagId failed");
+ 461              		.loc 1 120 0 discriminator 3
+ 462 0036 FFF7FEFF 		bl	xlogging_get_log_function
+ 463              	.LVL75:
+ 464 003a 051E     		subs	r5, r0, #0
+ 465              	.LVL76:
+ 466 003c 09D0     		beq	.L25
+ 467              		.loc 1 120 0 is_stmt 0 discriminator 4
+ 468 003e 2A4B     		ldr	r3, .L30+12
+ 469 0040 0193     		str	r3, [sp, #4]
+ 470 0042 0123     		movs	r3, #1
+ 471 0044 0093     		str	r3, [sp]
+ 472 0046 7733     		adds	r3, r3, #119
+ 473 0048 254A     		ldr	r2, .L30+4
+ 474 004a 1032     		adds	r2, r2, #16
+ 475 004c 2549     		ldr	r1, .L30+8
+ 476 004e 0020     		movs	r0, #0
+ 477              	.LVL77:
+ 478 0050 A847     		blx	r5
+ 479              	.LVL78:
+ 480              	.L25:
+ 481              	.LBE9:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 12
+
+
+ 121:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             free(result);
+ 482              		.loc 1 121 0 is_stmt 1
+ 483 0052 2000     		movs	r0, r4
+ 484 0054 FFF7FEFF 		bl	free
+ 485              	.LVL79:
+ 122:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             result = NULL;
+ 486              		.loc 1 122 0
+ 487 0058 0024     		movs	r4, #0
+ 488 005a 3BE0     		b	.L23
+ 489              	.LVL80:
+ 490              	.L24:
+ 491              	.LBB10:
+ 123:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+ 124:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         else
+ 125:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         {
+ 126:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             char* timeBuffer;
+ 127:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+ 128:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             (void)generate_eight_random_characters(diagId);
+ 492              		.loc 1 128 0
+ 493 005c FFF7FEFF 		bl	generate_eight_random_characters
+ 494              	.LVL81:
+ 129:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             result->diagnosticId = diagId;
+ 495              		.loc 1 129 0
+ 496 0060 2560     		str	r5, [r4]
+ 130:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+ 131:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             timeBuffer = (char*)malloc(TIME_STRING_BUFFER_LEN);
+ 497              		.loc 1 131 0
+ 498 0062 1E20     		movs	r0, #30
+ 499 0064 FFF7FEFF 		bl	malloc
+ 500              	.LVL82:
+ 501 0068 051E     		subs	r5, r0, #0
+ 502              	.LVL83:
+ 132:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             if (timeBuffer == NULL)
+ 503              		.loc 1 132 0
+ 504 006a 15D1     		bne	.L26
+ 505              	.LBB11:
+ 133:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             {
+ 134:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 LogError("malloc for timeBuffer failed");
+ 506              		.loc 1 134 0 discriminator 3
+ 507 006c FFF7FEFF 		bl	xlogging_get_log_function
+ 508              	.LVL84:
+ 509 0070 051E     		subs	r5, r0, #0
+ 510              	.LVL85:
+ 511 0072 09D0     		beq	.L27
+ 512              		.loc 1 134 0 is_stmt 0 discriminator 4
+ 513 0074 1D4B     		ldr	r3, .L30+16
+ 514 0076 0193     		str	r3, [sp, #4]
+ 515 0078 0123     		movs	r3, #1
+ 516 007a 0093     		str	r3, [sp]
+ 517 007c 8533     		adds	r3, r3, #133
+ 518 007e 184A     		ldr	r2, .L30+4
+ 519 0080 1032     		adds	r2, r2, #16
+ 520 0082 1849     		ldr	r1, .L30+8
+ 521 0084 0020     		movs	r0, #0
+ 522              	.LVL86:
+ 523 0086 A847     		blx	r5
+ 524              	.LVL87:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 13
+
+
+ 525              	.L27:
+ 526              	.LBE11:
+ 135:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 free(result->diagnosticId);
+ 527              		.loc 1 135 0 is_stmt 1
+ 528 0088 2068     		ldr	r0, [r4]
+ 529 008a FFF7FEFF 		bl	free
+ 530              	.LVL88:
+ 136:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 free(result);
+ 531              		.loc 1 136 0
+ 532 008e 2000     		movs	r0, r4
+ 533 0090 FFF7FEFF 		bl	free
+ 534              	.LVL89:
+ 137:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 result = NULL;
+ 535              		.loc 1 137 0
+ 536 0094 0024     		movs	r4, #0
+ 537 0096 1DE0     		b	.L23
+ 538              	.LVL90:
+ 539              	.L26:
+ 138:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             }
+ 139:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             else if (get_epoch_time(timeBuffer) == NULL)
+ 540              		.loc 1 139 0
+ 541 0098 FFF7FEFF 		bl	get_epoch_time
+ 542              	.LVL91:
+ 543 009c 0028     		cmp	r0, #0
+ 544 009e 18D1     		bne	.L28
+ 545              	.LBB12:
+ 140:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             {
+ 141:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 LogError("Failed getting current time");
+ 546              		.loc 1 141 0 discriminator 3
+ 547 00a0 FFF7FEFF 		bl	xlogging_get_log_function
+ 548              	.LVL92:
+ 549 00a4 061E     		subs	r6, r0, #0
+ 550              	.LVL93:
+ 551 00a6 09D0     		beq	.L29
+ 552              		.loc 1 141 0 is_stmt 0 discriminator 4
+ 553 00a8 114B     		ldr	r3, .L30+20
+ 554 00aa 0193     		str	r3, [sp, #4]
+ 555 00ac 0123     		movs	r3, #1
+ 556 00ae 0093     		str	r3, [sp]
+ 557 00b0 8C33     		adds	r3, r3, #140
+ 558 00b2 0B4A     		ldr	r2, .L30+4
+ 559 00b4 1032     		adds	r2, r2, #16
+ 560 00b6 0B49     		ldr	r1, .L30+8
+ 561 00b8 0020     		movs	r0, #0
+ 562              	.LVL94:
+ 563 00ba B047     		blx	r6
+ 564              	.LVL95:
+ 565              	.L29:
+ 566              	.LBE12:
+ 142:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 free(result->diagnosticId);
+ 567              		.loc 1 142 0 is_stmt 1
+ 568 00bc 2068     		ldr	r0, [r4]
+ 569 00be FFF7FEFF 		bl	free
+ 570              	.LVL96:
+ 143:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 free(result);
+ 571              		.loc 1 143 0
+ 572 00c2 2000     		movs	r0, r4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 14
+
+
+ 573 00c4 FFF7FEFF 		bl	free
+ 574              	.LVL97:
+ 144:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 free(timeBuffer);
+ 575              		.loc 1 144 0
+ 576 00c8 2800     		movs	r0, r5
+ 577 00ca FFF7FEFF 		bl	free
+ 578              	.LVL98:
+ 145:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 result = NULL;
+ 579              		.loc 1 145 0
+ 580 00ce 0024     		movs	r4, #0
+ 581 00d0 00E0     		b	.L23
+ 582              	.LVL99:
+ 583              	.L28:
+ 146:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             }
+ 147:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             else
+ 148:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             {
+ 149:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 result->diagnosticCreationTimeUtc = timeBuffer;
+ 584              		.loc 1 149 0
+ 585 00d2 6560     		str	r5, [r4, #4]
+ 586              	.LVL100:
+ 587              	.L23:
+ 588              	.LBE10:
+ 589              	.LBE8:
+ 150:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             }
+ 151:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+ 152:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ 153:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     return result;
+ 154:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** }
+ 590              		.loc 1 154 0
+ 591 00d4 2000     		movs	r0, r4
+ 592 00d6 02B0     		add	sp, sp, #8
+ 593              		@ sp needed
+ 594              	.LVL101:
+ 595 00d8 70BD     		pop	{r4, r5, r6, pc}
+ 596              	.L31:
+ 597 00da C046     		.align	2
+ 598              	.L30:
+ 599 00dc 98000000 		.word	.LC11
+ 600 00e0 00000000 		.word	.LANCHOR0
+ 601 00e4 00000000 		.word	.LC1
+ 602 00e8 BC000000 		.word	.LC13
+ 603 00ec D8000000 		.word	.LC15
+ 604 00f0 44000000 		.word	.LC3
+ 605              		.cfi_endproc
+ 606              	.LFE5:
+ 607              		.size	prepare_message_diagnostic_data, .-prepare_message_diagnostic_data
+ 608              		.section	.text.IoTHubClient_Diagnostic_AddIfNecessary,"ax",%progbits
+ 609              		.align	2
+ 610              		.global	IoTHubClient_Diagnostic_AddIfNecessary
+ 611              		.code	16
+ 612              		.thumb_func
+ 613              		.type	IoTHubClient_Diagnostic_AddIfNecessary, %function
+ 614              	IoTHubClient_Diagnostic_AddIfNecessary:
+ 615              	.LFB6:
+ 155:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+ 156:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** int IoTHubClient_Diagnostic_AddIfNecessary(IOTHUB_DIAGNOSTIC_SETTING_DATA* diagSetting, IOTHUB_MESS
+ 157:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** {
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 15
+
+
+ 616              		.loc 1 157 0
+ 617              		.cfi_startproc
+ 618              		@ args = 0, pretend = 0, frame = 0
+ 619              		@ frame_needed = 0, uses_anonymous_args = 0
+ 620              	.LVL102:
+ 621 0000 70B5     		push	{r4, r5, r6, lr}
+ 622              		.cfi_def_cfa_offset 16
+ 623              		.cfi_offset 4, -16
+ 624              		.cfi_offset 5, -12
+ 625              		.cfi_offset 6, -8
+ 626              		.cfi_offset 14, -4
+ 627 0002 0C00     		movs	r4, r1
+ 158:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     int result;
+ 159:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     /* Codes_SRS_IOTHUB_DIAGNOSTIC_13_001: [ IoTHubClient_Diagnostic_AddIfNecessary should return n
+ 160:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     if (diagSetting == NULL || messageHandle == NULL)
+ 628              		.loc 1 160 0
+ 629 0004 0028     		cmp	r0, #0
+ 630 0006 1CD0     		beq	.L35
+ 631              		.loc 1 160 0 is_stmt 0 discriminator 1
+ 632 0008 0029     		cmp	r1, #0
+ 633 000a 1CD0     		beq	.L36
+ 161:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+ 162:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         result = __FAILURE__;
+ 163:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ 164:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     /* Codes_SRS_IOTHUB_DIAGNOSTIC_13_003: [ If diagSamplingPercentage is equal to 0, message numbe
+ 165:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     else if (should_add_diagnostic_info(diagSetting))
+ 634              		.loc 1 165 0 is_stmt 1
+ 635 000c FFF7FEFF 		bl	should_add_diagnostic_info
+ 636              	.LVL103:
+ 637 0010 0028     		cmp	r0, #0
+ 638 0012 1AD0     		beq	.L37
+ 639              	.LBB13:
+ 166:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+ 167:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         /* Codes_SRS_IOTHUB_DIAGNOSTIC_13_004: [ If diagSamplingPercentage is equal to 100, diagnos
+ 168:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         /* Codes_SRS_IOTHUB_DIAGNOSTIC_13_005: [ If diagSamplingPercentage is between(0, 100), diag
+ 169:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+ 170:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA* diagnosticData;
+ 171:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         if ((diagnosticData = prepare_message_diagnostic_data()) == NULL)
+ 640              		.loc 1 171 0
+ 641 0014 FFF7FEFF 		bl	prepare_message_diagnostic_data
+ 642              	.LVL104:
+ 643 0018 051E     		subs	r5, r0, #0
+ 644              	.LVL105:
+ 645 001a 18D0     		beq	.L38
+ 172:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         {
+ 173:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             result = __FAILURE__;
+ 174:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+ 175:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         else
+ 176:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         {
+ 177:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             if (IoTHubMessage_SetDiagnosticPropertyData(messageHandle, diagnosticData) != IOTHUB_ME
+ 646              		.loc 1 177 0
+ 647 001c 0100     		movs	r1, r0
+ 648 001e 2000     		movs	r0, r4
+ 649              	.LVL106:
+ 650 0020 FFF7FEFF 		bl	IoTHubMessage_SetDiagnosticPropertyData
+ 651              	.LVL107:
+ 652 0024 0028     		cmp	r0, #0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 16
+
+
+ 653 0026 01D0     		beq	.L39
+ 178:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             {
+ 179:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 /* Codes_SRS_IOTHUB_DIAGNOSTIC_13_002: [ IoTHubClient_Diagnostic_AddIfNecessary sho
+ 180:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 result = __FAILURE__;
+ 654              		.loc 1 180 0
+ 655 0028 B424     		movs	r4, #180
+ 656              	.LVL108:
+ 657 002a 00E0     		b	.L34
+ 658              	.LVL109:
+ 659              	.L39:
+ 181:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             }
+ 182:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             else
+ 183:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             {
+ 184:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****                 result = 0;
+ 660              		.loc 1 184 0
+ 661 002c 0024     		movs	r4, #0
+ 662              	.LVL110:
+ 663              	.L34:
+ 185:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             }
+ 186:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+ 187:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             free(diagnosticData->diagnosticCreationTimeUtc);
+ 664              		.loc 1 187 0
+ 665 002e 6868     		ldr	r0, [r5, #4]
+ 666 0030 FFF7FEFF 		bl	free
+ 667              	.LVL111:
+ 188:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             free(diagnosticData->diagnosticId);
+ 668              		.loc 1 188 0
+ 669 0034 2868     		ldr	r0, [r5]
+ 670 0036 FFF7FEFF 		bl	free
+ 671              	.LVL112:
+ 189:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             free(diagnosticData);
+ 672              		.loc 1 189 0
+ 673 003a 2800     		movs	r0, r5
+ 674 003c FFF7FEFF 		bl	free
+ 675              	.LVL113:
+ 676 0040 06E0     		b	.L33
+ 677              	.LVL114:
+ 678              	.L35:
+ 679              	.LBE13:
+ 162:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ 680              		.loc 1 162 0
+ 681 0042 A224     		movs	r4, #162
+ 682 0044 04E0     		b	.L33
+ 683              	.L36:
+ 684 0046 A224     		movs	r4, #162
+ 685 0048 02E0     		b	.L33
+ 686              	.LVL115:
+ 687              	.L37:
+ 190:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****             diagnosticData = NULL;
+ 191:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+ 192:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ 193:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     else
+ 194:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     {
+ 195:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         result = 0;
+ 688              		.loc 1 195 0
+ 689 004a 0024     		movs	r4, #0
+ 690              	.LVL116:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 17
+
+
+ 691 004c 00E0     		b	.L33
+ 692              	.LVL117:
+ 693              	.L38:
+ 694              	.LBB14:
+ 173:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****         }
+ 695              		.loc 1 173 0
+ 696 004e AD24     		movs	r4, #173
+ 697              	.LVL118:
+ 698              	.L33:
+ 699              	.LBE14:
+ 196:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     }
+ 197:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** 
+ 198:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c ****     return result;
+ 199:Source\azure_iot_sdk\iothub_client\src/iothub_client_diagnostic.c **** }
+ 700              		.loc 1 199 0
+ 701 0050 2000     		movs	r0, r4
+ 702              		@ sp needed
+ 703              	.LVL119:
+ 704 0052 70BD     		pop	{r4, r5, r6, pc}
+ 705              		.cfi_endproc
+ 706              	.LFE6:
+ 707              		.size	IoTHubClient_Diagnostic_AddIfNecessary, .-IoTHubClient_Diagnostic_AddIfNecessary
+ 708              		.section	.rodata
+ 709              		.align	2
+ 710              		.set	.LANCHOR0,. + 0
+ 711              		.type	__func__.6707, %object
+ 712              		.size	__func__.6707, 15
+ 713              	__func__.6707:
+ 714 0000 6765745F 		.ascii	"get_epoch_time\000"
+ 714      65706F63 
+ 714      685F7469 
+ 714      6D6500
+ 715 000f 00       		.space	1
+ 716              		.type	__func__.6743, %object
+ 717              		.size	__func__.6743, 32
+ 718              	__func__.6743:
+ 719 0010 70726570 		.ascii	"prepare_message_diagnostic_data\000"
+ 719      6172655F 
+ 719      6D657373 
+ 719      6167655F 
+ 719      64696167 
+ 720              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 721              		.align	2
+ 722              	.LC1:
+ 723 0000 536F7572 		.ascii	"Source\\azure_iot_sdk\\iothub_client\\src\\iothub_c"
+ 723      63655C61 
+ 723      7A757265 
+ 723      5F696F74 
+ 723      5F73646B 
+ 724 002f 6C69656E 		.ascii	"lient_diagnostic.c\000"
+ 724      745F6469 
+ 724      61676E6F 
+ 724      73746963 
+ 724      2E6300
+ 725 0042 0000     		.space	2
+ 726              	.LC3:
+ 727 0044 4661696C 		.ascii	"Failed getting current time\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 18
+
+
+ 727      65642067 
+ 727      65747469 
+ 727      6E672063 
+ 727      75727265 
+ 728              	.LC5:
+ 729 0060 256C7500 		.ascii	"%lu\000"
+ 730              	.LC7:
+ 731 0064 4661696C 		.ascii	"Failed sprintf to timeBuffer with 4 bytes of time_t"
+ 731      65642073 
+ 731      7072696E 
+ 731      74662074 
+ 731      6F207469 
+ 732 0097 00       		.ascii	"\000"
+ 733              	.LC11:
+ 734 0098 6D616C6C 		.ascii	"malloc for DiagnosticData failed\000"
+ 734      6F632066 
+ 734      6F722044 
+ 734      6961676E 
+ 734      6F737469 
+ 735 00b9 000000   		.space	3
+ 736              	.LC13:
+ 737 00bc 6D616C6C 		.ascii	"malloc for diagId failed\000"
+ 737      6F632066 
+ 737      6F722064 
+ 737      69616749 
+ 737      64206661 
+ 738 00d5 000000   		.space	3
+ 739              	.LC15:
+ 740 00d8 6D616C6C 		.ascii	"malloc for timeBuffer failed\000"
+ 740      6F632066 
+ 740      6F722074 
+ 740      696D6542 
+ 740      75666665 
+ 741              		.text
+ 742              	.Letext0:
+ 743              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 744              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 745              		.file 4 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 746              		.file 5 ".\\Source\\azure_iot_sdk\\c-utility\\inc/azure_c_shared_utility/xlogging.h"
+ 747              		.file 6 ".\\Source\\azure_iot_sdk\\iothub_client\\inc/iothub_message.h"
+ 748              		.file 7 ".\\Source\\azure_iot_sdk\\iothub_client\\inc/internal/iothub_client_diagnostic.h"
+ 749              		.file 8 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 750              		.file 9 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 751              		.file 10 ".\\Source\\azure_iot_sdk\\c-utility\\inc/azure_c_shared_utility/agenttime.h"
+ 752              		.file 11 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4
+ 753              		.section	.debug_info,"",%progbits
+ 754              	.Ldebug_info0:
+ 755 0000 65080000 		.4byte	0x865
+ 756 0004 0400     		.2byte	0x4
+ 757 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 758 000a 04       		.byte	0x4
+ 759 000b 01       		.uleb128 0x1
+ 760 000c 21010000 		.4byte	.LASF73
+ 761 0010 0C       		.byte	0xc
+ 762 0011 B2000000 		.4byte	.LASF74
+ 763 0015 9D030000 		.4byte	.LASF75
+ 764 0019 30000000 		.4byte	.Ldebug_ranges0+0x30
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 19
+
+
+ 765 001d 00000000 		.4byte	0
+ 766 0021 00000000 		.4byte	.Ldebug_line0
+ 767 0025 02       		.uleb128 0x2
+ 768 0026 04       		.byte	0x4
+ 769 0027 07       		.byte	0x7
+ 770 0028 75040000 		.4byte	.LASF0
+ 771 002c 03       		.uleb128 0x3
+ 772 002d 04       		.byte	0x4
+ 773 002e 05       		.byte	0x5
+ 774 002f 696E7400 		.ascii	"int\000"
+ 775 0033 02       		.uleb128 0x2
+ 776 0034 08       		.byte	0x8
+ 777 0035 05       		.byte	0x5
+ 778 0036 D1020000 		.4byte	.LASF1
+ 779 003a 02       		.uleb128 0x2
+ 780 003b 08       		.byte	0x8
+ 781 003c 04       		.byte	0x4
+ 782 003d 69030000 		.4byte	.LASF2
+ 783 0041 02       		.uleb128 0x2
+ 784 0042 01       		.byte	0x1
+ 785 0043 06       		.byte	0x6
+ 786 0044 42040000 		.4byte	.LASF3
+ 787 0048 02       		.uleb128 0x2
+ 788 0049 01       		.byte	0x1
+ 789 004a 08       		.byte	0x8
+ 790 004b 5B030000 		.4byte	.LASF4
+ 791 004f 02       		.uleb128 0x2
+ 792 0050 02       		.byte	0x2
+ 793 0051 05       		.byte	0x5
+ 794 0052 94000000 		.4byte	.LASF5
+ 795 0056 02       		.uleb128 0x2
+ 796 0057 02       		.byte	0x2
+ 797 0058 07       		.byte	0x7
+ 798 0059 BE040000 		.4byte	.LASF6
+ 799 005d 04       		.uleb128 0x4
+ 800 005e 71050000 		.4byte	.LASF8
+ 801 0062 02       		.byte	0x2
+ 802 0063 3F       		.byte	0x3f
+ 803 0064 68000000 		.4byte	0x68
+ 804 0068 02       		.uleb128 0x2
+ 805 0069 04       		.byte	0x4
+ 806 006a 05       		.byte	0x5
+ 807 006b EA020000 		.4byte	.LASF7
+ 808 006f 04       		.uleb128 0x4
+ 809 0070 C0010000 		.4byte	.LASF9
+ 810 0074 02       		.byte	0x2
+ 811 0075 41       		.byte	0x41
+ 812 0076 7A000000 		.4byte	0x7a
+ 813 007a 02       		.uleb128 0x2
+ 814 007b 04       		.byte	0x4
+ 815 007c 07       		.byte	0x7
+ 816 007d 89040000 		.4byte	.LASF10
+ 817 0081 04       		.uleb128 0x4
+ 818 0082 F3020000 		.4byte	.LASF11
+ 819 0086 02       		.byte	0x2
+ 820 0087 59       		.byte	0x59
+ 821 0088 33000000 		.4byte	0x33
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 20
+
+
+ 822 008c 02       		.uleb128 0x2
+ 823 008d 08       		.byte	0x8
+ 824 008e 07       		.byte	0x7
+ 825 008f 55040000 		.4byte	.LASF12
+ 826 0093 02       		.uleb128 0x2
+ 827 0094 04       		.byte	0x4
+ 828 0095 07       		.byte	0x7
+ 829 0096 22030000 		.4byte	.LASF13
+ 830 009a 05       		.uleb128 0x5
+ 831 009b 04       		.byte	0x4
+ 832 009c A0000000 		.4byte	0xa0
+ 833 00a0 02       		.uleb128 0x2
+ 834 00a1 01       		.byte	0x1
+ 835 00a2 08       		.byte	0x8
+ 836 00a3 B1040000 		.4byte	.LASF14
+ 837 00a7 05       		.uleb128 0x5
+ 838 00a8 04       		.byte	0x4
+ 839 00a9 AD000000 		.4byte	0xad
+ 840 00ad 06       		.uleb128 0x6
+ 841 00ae A0000000 		.4byte	0xa0
+ 842 00b2 04       		.uleb128 0x4
+ 843 00b3 B6040000 		.4byte	.LASF15
+ 844 00b7 03       		.byte	0x3
+ 845 00b8 2C       		.byte	0x2c
+ 846 00b9 5D000000 		.4byte	0x5d
+ 847 00bd 04       		.uleb128 0x4
+ 848 00be 6C040000 		.4byte	.LASF16
+ 849 00c2 03       		.byte	0x3
+ 850 00c3 30       		.byte	0x30
+ 851 00c4 6F000000 		.4byte	0x6f
+ 852 00c8 04       		.uleb128 0x4
+ 853 00c9 FC010000 		.4byte	.LASF17
+ 854 00cd 03       		.byte	0x3
+ 855 00ce 38       		.byte	0x38
+ 856 00cf 81000000 		.4byte	0x81
+ 857 00d3 02       		.uleb128 0x2
+ 858 00d4 08       		.byte	0x8
+ 859 00d5 04       		.byte	0x4
+ 860 00d6 3F050000 		.4byte	.LASF18
+ 861 00da 02       		.uleb128 0x2
+ 862 00db 04       		.byte	0x4
+ 863 00dc 04       		.byte	0x4
+ 864 00dd CB020000 		.4byte	.LASF19
+ 865 00e1 04       		.uleb128 0x4
+ 866 00e2 0A020000 		.4byte	.LASF20
+ 867 00e6 04       		.byte	0x4
+ 868 00e7 28       		.byte	0x28
+ 869 00e8 68000000 		.4byte	0x68
+ 870 00ec 07       		.uleb128 0x7
+ 871 00ed DF040000 		.4byte	.LASF26
+ 872 00f1 01       		.byte	0x1
+ 873 00f2 48000000 		.4byte	0x48
+ 874 00f6 05       		.byte	0x5
+ 875 00f7 22       		.byte	0x22
+ 876 00f8 0F010000 		.4byte	0x10f
+ 877 00fc 08       		.uleb128 0x8
+ 878 00fd A5000000 		.4byte	.LASF21
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 21
+
+
+ 879 0101 00       		.byte	0
+ 880 0102 08       		.uleb128 0x8
+ 881 0103 17050000 		.4byte	.LASF22
+ 882 0107 01       		.byte	0x1
+ 883 0108 08       		.uleb128 0x8
+ 884 0109 66000000 		.4byte	.LASF23
+ 885 010d 02       		.byte	0x2
+ 886 010e 00       		.byte	0
+ 887 010f 04       		.uleb128 0x4
+ 888 0110 A4040000 		.4byte	.LASF24
+ 889 0114 05       		.byte	0x5
+ 890 0115 27       		.byte	0x27
+ 891 0116 EC000000 		.4byte	0xec
+ 892 011a 04       		.uleb128 0x4
+ 893 011b 25060000 		.4byte	.LASF25
+ 894 011f 05       		.byte	0x5
+ 895 0120 2F       		.byte	0x2f
+ 896 0121 25010000 		.4byte	0x125
+ 897 0125 05       		.uleb128 0x5
+ 898 0126 04       		.byte	0x4
+ 899 0127 2B010000 		.4byte	0x12b
+ 900 012b 09       		.uleb128 0x9
+ 901 012c 50010000 		.4byte	0x150
+ 902 0130 0A       		.uleb128 0xa
+ 903 0131 0F010000 		.4byte	0x10f
+ 904 0135 0A       		.uleb128 0xa
+ 905 0136 A7000000 		.4byte	0xa7
+ 906 013a 0A       		.uleb128 0xa
+ 907 013b A7000000 		.4byte	0xa7
+ 908 013f 0A       		.uleb128 0xa
+ 909 0140 2C000000 		.4byte	0x2c
+ 910 0144 0A       		.uleb128 0xa
+ 911 0145 25000000 		.4byte	0x25
+ 912 0149 0A       		.uleb128 0xa
+ 913 014a A7000000 		.4byte	0xa7
+ 914 014e 0B       		.uleb128 0xb
+ 915 014f 00       		.byte	0
+ 916 0150 07       		.uleb128 0x7
+ 917 0151 00000000 		.4byte	.LASF27
+ 918 0155 01       		.byte	0x1
+ 919 0156 48000000 		.4byte	0x48
+ 920 015a 06       		.byte	0x6
+ 921 015b 21       		.byte	0x21
+ 922 015c 79010000 		.4byte	0x179
+ 923 0160 08       		.uleb128 0x8
+ 924 0161 91050000 		.4byte	.LASF28
+ 925 0165 00       		.byte	0
+ 926 0166 08       		.uleb128 0x8
+ 927 0167 2B030000 		.4byte	.LASF29
+ 928 016b 01       		.byte	0x1
+ 929 016c 08       		.uleb128 0x8
+ 930 016d 23050000 		.4byte	.LASF30
+ 931 0171 02       		.byte	0x2
+ 932 0172 08       		.uleb128 0x8
+ 933 0173 53050000 		.4byte	.LASF31
+ 934 0177 03       		.byte	0x3
+ 935 0178 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 22
+
+
+ 936 0179 04       		.uleb128 0x4
+ 937 017a 7B050000 		.4byte	.LASF32
+ 938 017e 06       		.byte	0x6
+ 939 017f 2D       		.byte	0x2d
+ 940 0180 84010000 		.4byte	0x184
+ 941 0184 05       		.uleb128 0x5
+ 942 0185 04       		.byte	0x4
+ 943 0186 8A010000 		.4byte	0x18a
+ 944 018a 0C       		.uleb128 0xc
+ 945 018b D9050000 		.4byte	.LASF76
+ 946 018f 0D       		.uleb128 0xd
+ 947 0190 A3050000 		.4byte	.LASF36
+ 948 0194 08       		.byte	0x8
+ 949 0195 06       		.byte	0x6
+ 950 0196 30       		.byte	0x30
+ 951 0197 B4010000 		.4byte	0x1b4
+ 952 019b 0E       		.uleb128 0xe
+ 953 019c 46050000 		.4byte	.LASF33
+ 954 01a0 06       		.byte	0x6
+ 955 01a1 32       		.byte	0x32
+ 956 01a2 9A000000 		.4byte	0x9a
+ 957 01a6 00       		.byte	0
+ 958 01a7 0E       		.uleb128 0xe
+ 959 01a8 CB010000 		.4byte	.LASF34
+ 960 01ac 06       		.byte	0x6
+ 961 01ad 33       		.byte	0x33
+ 962 01ae 9A000000 		.4byte	0x9a
+ 963 01b2 04       		.byte	0x4
+ 964 01b3 00       		.byte	0
+ 965 01b4 04       		.uleb128 0x4
+ 966 01b5 A3020000 		.4byte	.LASF35
+ 967 01b9 06       		.byte	0x6
+ 968 01ba 34       		.byte	0x34
+ 969 01bb 8F010000 		.4byte	0x18f
+ 970 01bf 0D       		.uleb128 0xd
+ 971 01c0 49020000 		.4byte	.LASF37
+ 972 01c4 08       		.byte	0x8
+ 973 01c5 07       		.byte	0x7
+ 974 01c6 19       		.byte	0x19
+ 975 01c7 E4010000 		.4byte	0x1e4
+ 976 01cb 0E       		.uleb128 0xe
+ 977 01cc E5010000 		.4byte	.LASF38
+ 978 01d0 07       		.byte	0x7
+ 979 01d1 1B       		.byte	0x1b
+ 980 01d2 BD000000 		.4byte	0xbd
+ 981 01d6 00       		.byte	0
+ 982 01d7 0E       		.uleb128 0xe
+ 983 01d8 46030000 		.4byte	.LASF39
+ 984 01dc 07       		.byte	0x7
+ 985 01dd 1C       		.byte	0x1c
+ 986 01de BD000000 		.4byte	0xbd
+ 987 01e2 04       		.byte	0x4
+ 988 01e3 00       		.byte	0
+ 989 01e4 04       		.uleb128 0x4
+ 990 01e5 F8040000 		.4byte	.LASF40
+ 991 01e9 07       		.byte	0x7
+ 992 01ea 1D       		.byte	0x1d
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 23
+
+
+ 993 01eb BF010000 		.4byte	0x1bf
+ 994 01ef 0F       		.uleb128 0xf
+ 995 01f0 04060000 		.4byte	.LASF41
+ 996 01f4 01       		.byte	0x1
+ 997 01f5 41       		.byte	0x41
+ 998 01f6 A0000000 		.4byte	0xa0
+ 999 01fa 00000000 		.4byte	.LFB2
+ 1000 01fe 10000000 		.4byte	.LFE2-.LFB2
+ 1001 0202 01       		.uleb128 0x1
+ 1002 0203 9C       		.byte	0x9c
+ 1003 0204 18020000 		.4byte	0x218
+ 1004 0208 10       		.uleb128 0x10
+ 1005 0209 04020000 		.4byte	.LASF43
+ 1006 020d 01       		.byte	0x1
+ 1007 020e 41       		.byte	0x41
+ 1008 020f 48000000 		.4byte	0x48
+ 1009 0213 00000000 		.4byte	.LLST0
+ 1010 0217 00       		.byte	0
+ 1011 0218 11       		.uleb128 0x11
+ 1012 0219 3B000000 		.4byte	.LASF42
+ 1013 021d 01       		.byte	0x1
+ 1014 021e 57       		.byte	0x57
+ 1015 021f 8A020000 		.4byte	0x28a
+ 1016 0223 00000000 		.4byte	.LFB4
+ 1017 0227 A8000000 		.4byte	.LFE4-.LFB4
+ 1018 022b 01       		.uleb128 0x1
+ 1019 022c 9C       		.byte	0x9c
+ 1020 022d 8A020000 		.4byte	0x28a
+ 1021 0231 10       		.uleb128 0x10
+ 1022 0232 11020000 		.4byte	.LASF44
+ 1023 0236 01       		.byte	0x1
+ 1024 0237 57       		.byte	0x57
+ 1025 0238 91020000 		.4byte	0x291
+ 1026 023c 3A000000 		.4byte	.LLST1
+ 1027 0240 12       		.uleb128 0x12
+ 1028 0241 34000000 		.4byte	.LASF45
+ 1029 0245 01       		.byte	0x1
+ 1030 0246 59       		.byte	0x59
+ 1031 0247 8A020000 		.4byte	0x28a
+ 1032 024b 7F000000 		.4byte	.LLST2
+ 1033 024f 13       		.uleb128 0x13
+ 1034 0250 0C000000 		.4byte	.LBB2
+ 1035 0254 8E000000 		.4byte	.LBE2-.LBB2
+ 1036 0258 12       		.uleb128 0x12
+ 1037 0259 F8050000 		.4byte	.LASF46
+ 1038 025d 01       		.byte	0x1
+ 1039 025e 5C       		.byte	0x5c
+ 1040 025f D3000000 		.4byte	0xd3
+ 1041 0263 B5000000 		.4byte	.LLST3
+ 1042 0267 12       		.uleb128 0x12
+ 1043 0268 DF020000 		.4byte	.LASF47
+ 1044 026c 01       		.byte	0x1
+ 1045 026d 5D       		.byte	0x5d
+ 1046 026e D3000000 		.4byte	0xd3
+ 1047 0272 CD000000 		.4byte	.LLST4
+ 1048 0276 14       		.uleb128 0x14
+ 1049 0277 5A000000 		.4byte	.LVL16
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 24
+
+
+ 1050 027b 0F080000 		.4byte	0x80f
+ 1051 027f 14       		.uleb128 0x14
+ 1052 0280 82000000 		.4byte	.LVL20
+ 1053 0284 0F080000 		.4byte	0x80f
+ 1054 0288 00       		.byte	0
+ 1055 0289 00       		.byte	0
+ 1056 028a 02       		.uleb128 0x2
+ 1057 028b 01       		.byte	0x1
+ 1058 028c 02       		.byte	0x2
+ 1059 028d D1040000 		.4byte	.LASF48
+ 1060 0291 05       		.uleb128 0x5
+ 1061 0292 04       		.byte	0x4
+ 1062 0293 E4010000 		.4byte	0x1e4
+ 1063 0297 11       		.uleb128 0x11
+ 1064 0298 73000000 		.4byte	.LASF49
+ 1065 029c 01       		.byte	0x1
+ 1066 029d 46       		.byte	0x46
+ 1067 029e 9A000000 		.4byte	0x9a
+ 1068 02a2 00000000 		.4byte	.LFB3
+ 1069 02a6 4E000000 		.4byte	.LFE3-.LFB3
+ 1070 02aa 01       		.uleb128 0x1
+ 1071 02ab 9C       		.byte	0x9c
+ 1072 02ac 3C030000 		.4byte	0x33c
+ 1073 02b0 10       		.uleb128 0x10
+ 1074 02b1 B3010000 		.4byte	.LASF50
+ 1075 02b5 01       		.byte	0x1
+ 1076 02b6 46       		.byte	0x46
+ 1077 02b7 9A000000 		.4byte	0x9a
+ 1078 02bb E5000000 		.4byte	.LLST5
+ 1079 02bf 15       		.uleb128 0x15
+ 1080 02c0 6900     		.ascii	"i\000"
+ 1081 02c2 01       		.byte	0x1
+ 1082 02c3 48       		.byte	0x48
+ 1083 02c4 2C000000 		.4byte	0x2c
+ 1084 02c8 04010000 		.4byte	.LLST6
+ 1085 02cc 12       		.uleb128 0x12
+ 1086 02cd F4000000 		.4byte	.LASF51
+ 1087 02d1 01       		.byte	0x1
+ 1088 02d2 49       		.byte	0x49
+ 1089 02d3 9A000000 		.4byte	0x9a
+ 1090 02d7 23010000 		.4byte	.LLST7
+ 1091 02db 16       		.uleb128 0x16
+ 1092 02dc 00000000 		.4byte	.Ldebug_ranges0+0
+ 1093 02e0 12       		.uleb128 0x12
+ 1094 02e1 5C000000 		.4byte	.LASF52
+ 1095 02e5 01       		.byte	0x1
+ 1096 02e6 4C       		.byte	0x4c
+ 1097 02e7 2C000000 		.4byte	0x2c
+ 1098 02eb 64010000 		.4byte	.LLST8
+ 1099 02ef 12       		.uleb128 0x12
+ 1100 02f0 1F060000 		.4byte	.LASF53
+ 1101 02f4 01       		.byte	0x1
+ 1102 02f5 4D       		.byte	0x4d
+ 1103 02f6 2C000000 		.4byte	0x2c
+ 1104 02fa 82010000 		.4byte	.LLST9
+ 1105 02fe 12       		.uleb128 0x12
+ 1106 02ff 4E040000 		.4byte	.LASF54
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 25
+
+
+ 1107 0303 01       		.byte	0x1
+ 1108 0304 4E       		.byte	0x4e
+ 1109 0305 2C000000 		.4byte	0x2c
+ 1110 0309 A0010000 		.4byte	.LLST10
+ 1111 030d 14       		.uleb128 0x14
+ 1112 030e 10000000 		.4byte	.LVL29
+ 1113 0312 1A080000 		.4byte	0x81a
+ 1114 0316 17       		.uleb128 0x17
+ 1115 0317 30000000 		.4byte	.LVL37
+ 1116 031b EF010000 		.4byte	0x1ef
+ 1117 031f 2A030000 		.4byte	0x32a
+ 1118 0323 18       		.uleb128 0x18
+ 1119 0324 01       		.uleb128 0x1
+ 1120 0325 50       		.byte	0x50
+ 1121 0326 02       		.uleb128 0x2
+ 1122 0327 77       		.byte	0x77
+ 1123 0328 00       		.sleb128 0
+ 1124 0329 00       		.byte	0
+ 1125 032a 19       		.uleb128 0x19
+ 1126 032b 3A000000 		.4byte	.LVL39
+ 1127 032f EF010000 		.4byte	0x1ef
+ 1128 0333 18       		.uleb128 0x18
+ 1129 0334 01       		.uleb128 0x1
+ 1130 0335 50       		.byte	0x50
+ 1131 0336 02       		.uleb128 0x2
+ 1132 0337 75       		.byte	0x75
+ 1133 0338 00       		.sleb128 0
+ 1134 0339 00       		.byte	0
+ 1135 033a 00       		.byte	0
+ 1136 033b 00       		.byte	0
+ 1137 033c 0F       		.uleb128 0xf
+ 1138 033d 12010000 		.4byte	.LASF55
+ 1139 0341 01       		.byte	0x1
+ 1140 0342 15       		.byte	0x15
+ 1141 0343 9A000000 		.4byte	0x9a
+ 1142 0347 00000000 		.4byte	.LFB1
+ 1143 034b 7C000000 		.4byte	.LFE1-.LFB1
+ 1144 034f 01       		.uleb128 0x1
+ 1145 0350 9C       		.byte	0x9c
+ 1146 0351 7D040000 		.4byte	0x47d
+ 1147 0355 10       		.uleb128 0x10
+ 1148 0356 14060000 		.4byte	.LASF56
+ 1149 035a 01       		.byte	0x1
+ 1150 035b 15       		.byte	0x15
+ 1151 035c 9A000000 		.4byte	0x9a
+ 1152 0360 BE010000 		.4byte	.LLST11
+ 1153 0364 12       		.uleb128 0x12
+ 1154 0365 34000000 		.4byte	.LASF45
+ 1155 0369 01       		.byte	0x1
+ 1156 036a 17       		.byte	0x17
+ 1157 036b 9A000000 		.4byte	0x9a
+ 1158 036f 03020000 		.4byte	.LLST12
+ 1159 0373 12       		.uleb128 0x12
+ 1160 0374 CF050000 		.4byte	.LASF57
+ 1161 0378 01       		.byte	0x1
+ 1162 0379 18       		.byte	0x18
+ 1163 037a E1000000 		.4byte	0xe1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 26
+
+
+ 1164 037e 21020000 		.4byte	.LLST13
+ 1165 0382 1A       		.uleb128 0x1a
+ 1166 0383 F0040000 		.4byte	.LASF58
+ 1167 0387 01       		.byte	0x1
+ 1168 0388 19       		.byte	0x19
+ 1169 0389 2C000000 		.4byte	0x2c
+ 1170 038d 04       		.byte	0x4
+ 1171 038e 1B       		.uleb128 0x1b
+ 1172 038f 9B040000 		.4byte	.LASF59
+ 1173 0393 8D040000 		.4byte	0x48d
+ 1174 0397 05       		.uleb128 0x5
+ 1175 0398 03       		.byte	0x3
+ 1176 0399 00000000 		.4byte	__func__.6707
+ 1177 039d 1C       		.uleb128 0x1c
+ 1178 039e 10000000 		.4byte	.LBB5
+ 1179 03a2 1A000000 		.4byte	.LBE5-.LBB5
+ 1180 03a6 F6030000 		.4byte	0x3f6
+ 1181 03aa 15       		.uleb128 0x15
+ 1182 03ab 6C00     		.ascii	"l\000"
+ 1183 03ad 01       		.byte	0x1
+ 1184 03ae 1D       		.byte	0x1d
+ 1185 03af 1A010000 		.4byte	0x11a
+ 1186 03b3 4A020000 		.4byte	.LLST14
+ 1187 03b7 14       		.uleb128 0x14
+ 1188 03b8 14000000 		.4byte	.LVL48
+ 1189 03bc 25080000 		.4byte	0x825
+ 1190 03c0 1D       		.uleb128 0x1d
+ 1191 03c1 2A000000 		.4byte	.LVL51
+ 1192 03c5 02       		.uleb128 0x2
+ 1193 03c6 74       		.byte	0x74
+ 1194 03c7 00       		.sleb128 0
+ 1195 03c8 18       		.uleb128 0x18
+ 1196 03c9 01       		.uleb128 0x1
+ 1197 03ca 50       		.byte	0x50
+ 1198 03cb 01       		.uleb128 0x1
+ 1199 03cc 30       		.byte	0x30
+ 1200 03cd 18       		.uleb128 0x18
+ 1201 03ce 01       		.uleb128 0x1
+ 1202 03cf 51       		.byte	0x51
+ 1203 03d0 05       		.uleb128 0x5
+ 1204 03d1 03       		.byte	0x3
+ 1205 03d2 00000000 		.4byte	.LC1
+ 1206 03d6 18       		.uleb128 0x18
+ 1207 03d7 01       		.uleb128 0x1
+ 1208 03d8 52       		.byte	0x52
+ 1209 03d9 05       		.uleb128 0x5
+ 1210 03da 03       		.byte	0x3
+ 1211 03db 00000000 		.4byte	.LANCHOR0
+ 1212 03df 18       		.uleb128 0x18
+ 1213 03e0 01       		.uleb128 0x1
+ 1214 03e1 53       		.byte	0x53
+ 1215 03e2 01       		.uleb128 0x1
+ 1216 03e3 4D       		.byte	0x4d
+ 1217 03e4 18       		.uleb128 0x18
+ 1218 03e5 02       		.uleb128 0x2
+ 1219 03e6 7D       		.byte	0x7d
+ 1220 03e7 00       		.sleb128 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 27
+
+
+ 1221 03e8 01       		.uleb128 0x1
+ 1222 03e9 31       		.byte	0x31
+ 1223 03ea 18       		.uleb128 0x18
+ 1224 03eb 02       		.uleb128 0x2
+ 1225 03ec 7D       		.byte	0x7d
+ 1226 03ed 04       		.sleb128 4
+ 1227 03ee 05       		.uleb128 0x5
+ 1228 03ef 03       		.byte	0x3
+ 1229 03f0 44000000 		.4byte	.LC3
+ 1230 03f4 00       		.byte	0
+ 1231 03f5 00       		.byte	0
+ 1232 03f6 1C       		.uleb128 0x1c
+ 1233 03f7 3C000000 		.4byte	.LBB6
+ 1234 03fb 1A000000 		.4byte	.LBE6-.LBB6
+ 1235 03ff 50040000 		.4byte	0x450
+ 1236 0403 15       		.uleb128 0x15
+ 1237 0404 6C00     		.ascii	"l\000"
+ 1238 0406 01       		.byte	0x1
+ 1239 0407 30       		.byte	0x30
+ 1240 0408 1A010000 		.4byte	0x11a
+ 1241 040c 73020000 		.4byte	.LLST15
+ 1242 0410 14       		.uleb128 0x14
+ 1243 0411 40000000 		.4byte	.LVL56
+ 1244 0415 25080000 		.4byte	0x825
+ 1245 0419 1D       		.uleb128 0x1d
+ 1246 041a 56000000 		.4byte	.LVL59
+ 1247 041e 02       		.uleb128 0x2
+ 1248 041f 74       		.byte	0x74
+ 1249 0420 00       		.sleb128 0
+ 1250 0421 18       		.uleb128 0x18
+ 1251 0422 01       		.uleb128 0x1
+ 1252 0423 50       		.byte	0x50
+ 1253 0424 01       		.uleb128 0x1
+ 1254 0425 30       		.byte	0x30
+ 1255 0426 18       		.uleb128 0x18
+ 1256 0427 01       		.uleb128 0x1
+ 1257 0428 51       		.byte	0x51
+ 1258 0429 05       		.uleb128 0x5
+ 1259 042a 03       		.byte	0x3
+ 1260 042b 00000000 		.4byte	.LC1
+ 1261 042f 18       		.uleb128 0x18
+ 1262 0430 01       		.uleb128 0x1
+ 1263 0431 52       		.byte	0x52
+ 1264 0432 05       		.uleb128 0x5
+ 1265 0433 03       		.byte	0x3
+ 1266 0434 00000000 		.4byte	.LANCHOR0
+ 1267 0438 18       		.uleb128 0x18
+ 1268 0439 01       		.uleb128 0x1
+ 1269 043a 53       		.byte	0x53
+ 1270 043b 02       		.uleb128 0x2
+ 1271 043c 08       		.byte	0x8
+ 1272 043d 30       		.byte	0x30
+ 1273 043e 18       		.uleb128 0x18
+ 1274 043f 02       		.uleb128 0x2
+ 1275 0440 7D       		.byte	0x7d
+ 1276 0441 00       		.sleb128 0
+ 1277 0442 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 28
+
+
+ 1278 0443 31       		.byte	0x31
+ 1279 0444 18       		.uleb128 0x18
+ 1280 0445 02       		.uleb128 0x2
+ 1281 0446 7D       		.byte	0x7d
+ 1282 0447 04       		.sleb128 4
+ 1283 0448 05       		.uleb128 0x5
+ 1284 0449 03       		.byte	0x3
+ 1285 044a 64000000 		.4byte	.LC7
+ 1286 044e 00       		.byte	0
+ 1287 044f 00       		.byte	0
+ 1288 0450 17       		.uleb128 0x17
+ 1289 0451 0C000000 		.4byte	.LVL47
+ 1290 0455 30080000 		.4byte	0x830
+ 1291 0459 63040000 		.4byte	0x463
+ 1292 045d 18       		.uleb128 0x18
+ 1293 045e 01       		.uleb128 0x1
+ 1294 045f 50       		.byte	0x50
+ 1295 0460 01       		.uleb128 0x1
+ 1296 0461 30       		.byte	0x30
+ 1297 0462 00       		.byte	0
+ 1298 0463 19       		.uleb128 0x19
+ 1299 0464 38000000 		.4byte	.LVL55
+ 1300 0468 3B080000 		.4byte	0x83b
+ 1301 046c 18       		.uleb128 0x18
+ 1302 046d 01       		.uleb128 0x1
+ 1303 046e 50       		.byte	0x50
+ 1304 046f 02       		.uleb128 0x2
+ 1305 0470 74       		.byte	0x74
+ 1306 0471 00       		.sleb128 0
+ 1307 0472 18       		.uleb128 0x18
+ 1308 0473 01       		.uleb128 0x1
+ 1309 0474 51       		.byte	0x51
+ 1310 0475 05       		.uleb128 0x5
+ 1311 0476 03       		.byte	0x3
+ 1312 0477 60000000 		.4byte	.LC5
+ 1313 047b 00       		.byte	0
+ 1314 047c 00       		.byte	0
+ 1315 047d 1E       		.uleb128 0x1e
+ 1316 047e AD000000 		.4byte	0xad
+ 1317 0482 8D040000 		.4byte	0x48d
+ 1318 0486 1F       		.uleb128 0x1f
+ 1319 0487 93000000 		.4byte	0x93
+ 1320 048b 0E       		.byte	0xe
+ 1321 048c 00       		.byte	0
+ 1322 048d 06       		.uleb128 0x6
+ 1323 048e 7D040000 		.4byte	0x47d
+ 1324 0492 20       		.uleb128 0x20
+ 1325 0493 75030000 		.4byte	.LASF77
+ 1326 0497 01       		.byte	0x1
+ 1327 0498 6C       		.byte	0x6c
+ 1328 0499 0D070000 		.4byte	0x70d
+ 1329 049d 00000000 		.4byte	.LFB5
+ 1330 04a1 F4000000 		.4byte	.LFE5-.LFB5
+ 1331 04a5 01       		.uleb128 0x1
+ 1332 04a6 9C       		.byte	0x9c
+ 1333 04a7 0D070000 		.4byte	0x70d
+ 1334 04ab 12       		.uleb128 0x12
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 29
+
+
+ 1335 04ac 34000000 		.4byte	.LASF45
+ 1336 04b0 01       		.byte	0x1
+ 1337 04b1 6E       		.byte	0x6e
+ 1338 04b2 0D070000 		.4byte	0x70d
+ 1339 04b6 9C020000 		.4byte	.LLST16
+ 1340 04ba 1B       		.uleb128 0x1b
+ 1341 04bb 9B040000 		.4byte	.LASF59
+ 1342 04bf 23070000 		.4byte	0x723
+ 1343 04c3 05       		.uleb128 0x5
+ 1344 04c4 03       		.byte	0x3
+ 1345 04c5 10000000 		.4byte	__func__.6743
+ 1346 04c9 1C       		.uleb128 0x1c
+ 1347 04ca 0E000000 		.4byte	.LBB7
+ 1348 04ce 1E000000 		.4byte	.LBE7-.LBB7
+ 1349 04d2 23050000 		.4byte	0x523
+ 1350 04d6 15       		.uleb128 0x15
+ 1351 04d7 6C00     		.ascii	"l\000"
+ 1352 04d9 01       		.byte	0x1
+ 1353 04da 71       		.byte	0x71
+ 1354 04db 1A010000 		.4byte	0x11a
+ 1355 04df 20030000 		.4byte	.LLST17
+ 1356 04e3 14       		.uleb128 0x14
+ 1357 04e4 12000000 		.4byte	.LVL67
+ 1358 04e8 25080000 		.4byte	0x825
+ 1359 04ec 1D       		.uleb128 0x1d
+ 1360 04ed 2A000000 		.4byte	.LVL70
+ 1361 04f1 02       		.uleb128 0x2
+ 1362 04f2 75       		.byte	0x75
+ 1363 04f3 00       		.sleb128 0
+ 1364 04f4 18       		.uleb128 0x18
+ 1365 04f5 01       		.uleb128 0x1
+ 1366 04f6 50       		.byte	0x50
+ 1367 04f7 01       		.uleb128 0x1
+ 1368 04f8 30       		.byte	0x30
+ 1369 04f9 18       		.uleb128 0x18
+ 1370 04fa 01       		.uleb128 0x1
+ 1371 04fb 51       		.byte	0x51
+ 1372 04fc 05       		.uleb128 0x5
+ 1373 04fd 03       		.byte	0x3
+ 1374 04fe 00000000 		.4byte	.LC1
+ 1375 0502 18       		.uleb128 0x18
+ 1376 0503 01       		.uleb128 0x1
+ 1377 0504 52       		.byte	0x52
+ 1378 0505 05       		.uleb128 0x5
+ 1379 0506 03       		.byte	0x3
+ 1380 0507 10000000 		.4byte	.LANCHOR0+16
+ 1381 050b 18       		.uleb128 0x18
+ 1382 050c 01       		.uleb128 0x1
+ 1383 050d 53       		.byte	0x53
+ 1384 050e 02       		.uleb128 0x2
+ 1385 050f 08       		.byte	0x8
+ 1386 0510 71       		.byte	0x71
+ 1387 0511 18       		.uleb128 0x18
+ 1388 0512 02       		.uleb128 0x2
+ 1389 0513 7D       		.byte	0x7d
+ 1390 0514 00       		.sleb128 0
+ 1391 0515 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 30
+
+
+ 1392 0516 31       		.byte	0x31
+ 1393 0517 18       		.uleb128 0x18
+ 1394 0518 02       		.uleb128 0x2
+ 1395 0519 7D       		.byte	0x7d
+ 1396 051a 04       		.sleb128 4
+ 1397 051b 05       		.uleb128 0x5
+ 1398 051c 03       		.byte	0x3
+ 1399 051d 98000000 		.4byte	.LC11
+ 1400 0521 00       		.byte	0
+ 1401 0522 00       		.byte	0
+ 1402 0523 1C       		.uleb128 0x1c
+ 1403 0524 2C000000 		.4byte	.LBB8
+ 1404 0528 A8000000 		.4byte	.LBE8-.LBB8
+ 1405 052c FD060000 		.4byte	0x6fd
+ 1406 0530 12       		.uleb128 0x12
+ 1407 0531 82040000 		.4byte	.LASF60
+ 1408 0535 01       		.byte	0x1
+ 1409 0536 75       		.byte	0x75
+ 1410 0537 9A000000 		.4byte	0x9a
+ 1411 053b 3E030000 		.4byte	.LLST18
+ 1412 053f 1C       		.uleb128 0x1c
+ 1413 0540 36000000 		.4byte	.LBB9
+ 1414 0544 1C000000 		.4byte	.LBE9-.LBB9
+ 1415 0548 99050000 		.4byte	0x599
+ 1416 054c 15       		.uleb128 0x15
+ 1417 054d 6C00     		.ascii	"l\000"
+ 1418 054f 01       		.byte	0x1
+ 1419 0550 78       		.byte	0x78
+ 1420 0551 1A010000 		.4byte	0x11a
+ 1421 0555 72030000 		.4byte	.LLST19
+ 1422 0559 14       		.uleb128 0x14
+ 1423 055a 3A000000 		.4byte	.LVL75
+ 1424 055e 25080000 		.4byte	0x825
+ 1425 0562 1D       		.uleb128 0x1d
+ 1426 0563 52000000 		.4byte	.LVL78
+ 1427 0567 02       		.uleb128 0x2
+ 1428 0568 75       		.byte	0x75
+ 1429 0569 00       		.sleb128 0
+ 1430 056a 18       		.uleb128 0x18
+ 1431 056b 01       		.uleb128 0x1
+ 1432 056c 50       		.byte	0x50
+ 1433 056d 01       		.uleb128 0x1
+ 1434 056e 30       		.byte	0x30
+ 1435 056f 18       		.uleb128 0x18
+ 1436 0570 01       		.uleb128 0x1
+ 1437 0571 51       		.byte	0x51
+ 1438 0572 05       		.uleb128 0x5
+ 1439 0573 03       		.byte	0x3
+ 1440 0574 00000000 		.4byte	.LC1
+ 1441 0578 18       		.uleb128 0x18
+ 1442 0579 01       		.uleb128 0x1
+ 1443 057a 52       		.byte	0x52
+ 1444 057b 05       		.uleb128 0x5
+ 1445 057c 03       		.byte	0x3
+ 1446 057d 10000000 		.4byte	.LANCHOR0+16
+ 1447 0581 18       		.uleb128 0x18
+ 1448 0582 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 31
+
+
+ 1449 0583 53       		.byte	0x53
+ 1450 0584 02       		.uleb128 0x2
+ 1451 0585 08       		.byte	0x8
+ 1452 0586 78       		.byte	0x78
+ 1453 0587 18       		.uleb128 0x18
+ 1454 0588 02       		.uleb128 0x2
+ 1455 0589 7D       		.byte	0x7d
+ 1456 058a 00       		.sleb128 0
+ 1457 058b 01       		.uleb128 0x1
+ 1458 058c 31       		.byte	0x31
+ 1459 058d 18       		.uleb128 0x18
+ 1460 058e 02       		.uleb128 0x2
+ 1461 058f 7D       		.byte	0x7d
+ 1462 0590 04       		.sleb128 4
+ 1463 0591 05       		.uleb128 0x5
+ 1464 0592 03       		.byte	0x3
+ 1465 0593 BC000000 		.4byte	.LC13
+ 1466 0597 00       		.byte	0
+ 1467 0598 00       		.byte	0
+ 1468 0599 1C       		.uleb128 0x1c
+ 1469 059a 5C000000 		.4byte	.LBB10
+ 1470 059e 78000000 		.4byte	.LBE10-.LBB10
+ 1471 05a2 D9060000 		.4byte	0x6d9
+ 1472 05a6 12       		.uleb128 0x12
+ 1473 05a7 14060000 		.4byte	.LASF56
+ 1474 05ab 01       		.byte	0x1
+ 1475 05ac 7E       		.byte	0x7e
+ 1476 05ad 9A000000 		.4byte	0x9a
+ 1477 05b1 90030000 		.4byte	.LLST20
+ 1478 05b5 1C       		.uleb128 0x1c
+ 1479 05b6 6C000000 		.4byte	.LBB11
+ 1480 05ba 1C000000 		.4byte	.LBE11-.LBB11
+ 1481 05be 0F060000 		.4byte	0x60f
+ 1482 05c2 15       		.uleb128 0x15
+ 1483 05c3 6C00     		.ascii	"l\000"
+ 1484 05c5 01       		.byte	0x1
+ 1485 05c6 86       		.byte	0x86
+ 1486 05c7 1A010000 		.4byte	0x11a
+ 1487 05cb C4030000 		.4byte	.LLST21
+ 1488 05cf 14       		.uleb128 0x14
+ 1489 05d0 70000000 		.4byte	.LVL84
+ 1490 05d4 25080000 		.4byte	0x825
+ 1491 05d8 1D       		.uleb128 0x1d
+ 1492 05d9 88000000 		.4byte	.LVL87
+ 1493 05dd 02       		.uleb128 0x2
+ 1494 05de 75       		.byte	0x75
+ 1495 05df 00       		.sleb128 0
+ 1496 05e0 18       		.uleb128 0x18
+ 1497 05e1 01       		.uleb128 0x1
+ 1498 05e2 50       		.byte	0x50
+ 1499 05e3 01       		.uleb128 0x1
+ 1500 05e4 30       		.byte	0x30
+ 1501 05e5 18       		.uleb128 0x18
+ 1502 05e6 01       		.uleb128 0x1
+ 1503 05e7 51       		.byte	0x51
+ 1504 05e8 05       		.uleb128 0x5
+ 1505 05e9 03       		.byte	0x3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 32
+
+
+ 1506 05ea 00000000 		.4byte	.LC1
+ 1507 05ee 18       		.uleb128 0x18
+ 1508 05ef 01       		.uleb128 0x1
+ 1509 05f0 52       		.byte	0x52
+ 1510 05f1 05       		.uleb128 0x5
+ 1511 05f2 03       		.byte	0x3
+ 1512 05f3 10000000 		.4byte	.LANCHOR0+16
+ 1513 05f7 18       		.uleb128 0x18
+ 1514 05f8 01       		.uleb128 0x1
+ 1515 05f9 53       		.byte	0x53
+ 1516 05fa 02       		.uleb128 0x2
+ 1517 05fb 08       		.byte	0x8
+ 1518 05fc 86       		.byte	0x86
+ 1519 05fd 18       		.uleb128 0x18
+ 1520 05fe 02       		.uleb128 0x2
+ 1521 05ff 7D       		.byte	0x7d
+ 1522 0600 00       		.sleb128 0
+ 1523 0601 01       		.uleb128 0x1
+ 1524 0602 31       		.byte	0x31
+ 1525 0603 18       		.uleb128 0x18
+ 1526 0604 02       		.uleb128 0x2
+ 1527 0605 7D       		.byte	0x7d
+ 1528 0606 04       		.sleb128 4
+ 1529 0607 05       		.uleb128 0x5
+ 1530 0608 03       		.byte	0x3
+ 1531 0609 D8000000 		.4byte	.LC15
+ 1532 060d 00       		.byte	0
+ 1533 060e 00       		.byte	0
+ 1534 060f 1C       		.uleb128 0x1c
+ 1535 0610 A0000000 		.4byte	.LBB12
+ 1536 0614 1C000000 		.4byte	.LBE12-.LBB12
+ 1537 0618 69060000 		.4byte	0x669
+ 1538 061c 15       		.uleb128 0x15
+ 1539 061d 6C00     		.ascii	"l\000"
+ 1540 061f 01       		.byte	0x1
+ 1541 0620 8D       		.byte	0x8d
+ 1542 0621 1A010000 		.4byte	0x11a
+ 1543 0625 E2030000 		.4byte	.LLST22
+ 1544 0629 14       		.uleb128 0x14
+ 1545 062a A4000000 		.4byte	.LVL92
+ 1546 062e 25080000 		.4byte	0x825
+ 1547 0632 1D       		.uleb128 0x1d
+ 1548 0633 BC000000 		.4byte	.LVL95
+ 1549 0637 02       		.uleb128 0x2
+ 1550 0638 76       		.byte	0x76
+ 1551 0639 00       		.sleb128 0
+ 1552 063a 18       		.uleb128 0x18
+ 1553 063b 01       		.uleb128 0x1
+ 1554 063c 50       		.byte	0x50
+ 1555 063d 01       		.uleb128 0x1
+ 1556 063e 30       		.byte	0x30
+ 1557 063f 18       		.uleb128 0x18
+ 1558 0640 01       		.uleb128 0x1
+ 1559 0641 51       		.byte	0x51
+ 1560 0642 05       		.uleb128 0x5
+ 1561 0643 03       		.byte	0x3
+ 1562 0644 00000000 		.4byte	.LC1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 33
+
+
+ 1563 0648 18       		.uleb128 0x18
+ 1564 0649 01       		.uleb128 0x1
+ 1565 064a 52       		.byte	0x52
+ 1566 064b 05       		.uleb128 0x5
+ 1567 064c 03       		.byte	0x3
+ 1568 064d 10000000 		.4byte	.LANCHOR0+16
+ 1569 0651 18       		.uleb128 0x18
+ 1570 0652 01       		.uleb128 0x1
+ 1571 0653 53       		.byte	0x53
+ 1572 0654 02       		.uleb128 0x2
+ 1573 0655 08       		.byte	0x8
+ 1574 0656 8D       		.byte	0x8d
+ 1575 0657 18       		.uleb128 0x18
+ 1576 0658 02       		.uleb128 0x2
+ 1577 0659 7D       		.byte	0x7d
+ 1578 065a 00       		.sleb128 0
+ 1579 065b 01       		.uleb128 0x1
+ 1580 065c 31       		.byte	0x31
+ 1581 065d 18       		.uleb128 0x18
+ 1582 065e 02       		.uleb128 0x2
+ 1583 065f 7D       		.byte	0x7d
+ 1584 0660 04       		.sleb128 4
+ 1585 0661 05       		.uleb128 0x5
+ 1586 0662 03       		.byte	0x3
+ 1587 0663 44000000 		.4byte	.LC3
+ 1588 0667 00       		.byte	0
+ 1589 0668 00       		.byte	0
+ 1590 0669 14       		.uleb128 0x14
+ 1591 066a 60000000 		.4byte	.LVL81
+ 1592 066e 97020000 		.4byte	0x297
+ 1593 0672 17       		.uleb128 0x17
+ 1594 0673 68000000 		.4byte	.LVL82
+ 1595 0677 46080000 		.4byte	0x846
+ 1596 067b 85060000 		.4byte	0x685
+ 1597 067f 18       		.uleb128 0x18
+ 1598 0680 01       		.uleb128 0x1
+ 1599 0681 50       		.byte	0x50
+ 1600 0682 01       		.uleb128 0x1
+ 1601 0683 4E       		.byte	0x4e
+ 1602 0684 00       		.byte	0
+ 1603 0685 14       		.uleb128 0x14
+ 1604 0686 8E000000 		.4byte	.LVL88
+ 1605 068a 51080000 		.4byte	0x851
+ 1606 068e 17       		.uleb128 0x17
+ 1607 068f 94000000 		.4byte	.LVL89
+ 1608 0693 51080000 		.4byte	0x851
+ 1609 0697 A2060000 		.4byte	0x6a2
+ 1610 069b 18       		.uleb128 0x18
+ 1611 069c 01       		.uleb128 0x1
+ 1612 069d 50       		.byte	0x50
+ 1613 069e 02       		.uleb128 0x2
+ 1614 069f 74       		.byte	0x74
+ 1615 06a0 00       		.sleb128 0
+ 1616 06a1 00       		.byte	0
+ 1617 06a2 14       		.uleb128 0x14
+ 1618 06a3 9C000000 		.4byte	.LVL91
+ 1619 06a7 3C030000 		.4byte	0x33c
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 34
+
+
+ 1620 06ab 14       		.uleb128 0x14
+ 1621 06ac C2000000 		.4byte	.LVL96
+ 1622 06b0 51080000 		.4byte	0x851
+ 1623 06b4 17       		.uleb128 0x17
+ 1624 06b5 C8000000 		.4byte	.LVL97
+ 1625 06b9 51080000 		.4byte	0x851
+ 1626 06bd C8060000 		.4byte	0x6c8
+ 1627 06c1 18       		.uleb128 0x18
+ 1628 06c2 01       		.uleb128 0x1
+ 1629 06c3 50       		.byte	0x50
+ 1630 06c4 02       		.uleb128 0x2
+ 1631 06c5 74       		.byte	0x74
+ 1632 06c6 00       		.sleb128 0
+ 1633 06c7 00       		.byte	0
+ 1634 06c8 19       		.uleb128 0x19
+ 1635 06c9 CE000000 		.4byte	.LVL98
+ 1636 06cd 51080000 		.4byte	0x851
+ 1637 06d1 18       		.uleb128 0x18
+ 1638 06d2 01       		.uleb128 0x1
+ 1639 06d3 50       		.byte	0x50
+ 1640 06d4 02       		.uleb128 0x2
+ 1641 06d5 75       		.byte	0x75
+ 1642 06d6 00       		.sleb128 0
+ 1643 06d7 00       		.byte	0
+ 1644 06d8 00       		.byte	0
+ 1645 06d9 17       		.uleb128 0x17
+ 1646 06da 32000000 		.4byte	.LVL73
+ 1647 06de 46080000 		.4byte	0x846
+ 1648 06e2 EC060000 		.4byte	0x6ec
+ 1649 06e6 18       		.uleb128 0x18
+ 1650 06e7 01       		.uleb128 0x1
+ 1651 06e8 50       		.byte	0x50
+ 1652 06e9 01       		.uleb128 0x1
+ 1653 06ea 39       		.byte	0x39
+ 1654 06eb 00       		.byte	0
+ 1655 06ec 19       		.uleb128 0x19
+ 1656 06ed 58000000 		.4byte	.LVL79
+ 1657 06f1 51080000 		.4byte	0x851
+ 1658 06f5 18       		.uleb128 0x18
+ 1659 06f6 01       		.uleb128 0x1
+ 1660 06f7 50       		.byte	0x50
+ 1661 06f8 02       		.uleb128 0x2
+ 1662 06f9 74       		.byte	0x74
+ 1663 06fa 00       		.sleb128 0
+ 1664 06fb 00       		.byte	0
+ 1665 06fc 00       		.byte	0
+ 1666 06fd 19       		.uleb128 0x19
+ 1667 06fe 0A000000 		.4byte	.LVL65
+ 1668 0702 46080000 		.4byte	0x846
+ 1669 0706 18       		.uleb128 0x18
+ 1670 0707 01       		.uleb128 0x1
+ 1671 0708 50       		.byte	0x50
+ 1672 0709 01       		.uleb128 0x1
+ 1673 070a 38       		.byte	0x38
+ 1674 070b 00       		.byte	0
+ 1675 070c 00       		.byte	0
+ 1676 070d 05       		.uleb128 0x5
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 35
+
+
+ 1677 070e 04       		.byte	0x4
+ 1678 070f B4010000 		.4byte	0x1b4
+ 1679 0713 1E       		.uleb128 0x1e
+ 1680 0714 AD000000 		.4byte	0xad
+ 1681 0718 23070000 		.4byte	0x723
+ 1682 071c 1F       		.uleb128 0x1f
+ 1683 071d 93000000 		.4byte	0x93
+ 1684 0721 1F       		.byte	0x1f
+ 1685 0722 00       		.byte	0
+ 1686 0723 06       		.uleb128 0x6
+ 1687 0724 13070000 		.4byte	0x713
+ 1688 0728 21       		.uleb128 0x21
+ 1689 0729 22020000 		.4byte	.LASF78
+ 1690 072d 01       		.byte	0x1
+ 1691 072e 9C       		.byte	0x9c
+ 1692 072f 2C000000 		.4byte	0x2c
+ 1693 0733 00000000 		.4byte	.LFB6
+ 1694 0737 54000000 		.4byte	.LFE6-.LFB6
+ 1695 073b 01       		.uleb128 0x1
+ 1696 073c 9C       		.byte	0x9c
+ 1697 073d DE070000 		.4byte	0x7de
+ 1698 0741 10       		.uleb128 0x10
+ 1699 0742 11020000 		.4byte	.LASF44
+ 1700 0746 01       		.byte	0x1
+ 1701 0747 9C       		.byte	0x9c
+ 1702 0748 91020000 		.4byte	0x291
+ 1703 074c 00040000 		.4byte	.LLST23
+ 1704 0750 10       		.uleb128 0x10
+ 1705 0751 04010000 		.4byte	.LASF61
+ 1706 0755 01       		.byte	0x1
+ 1707 0756 9C       		.byte	0x9c
+ 1708 0757 79010000 		.4byte	0x179
+ 1709 075b 3A040000 		.4byte	.LLST24
+ 1710 075f 12       		.uleb128 0x12
+ 1711 0760 34000000 		.4byte	.LASF45
+ 1712 0764 01       		.byte	0x1
+ 1713 0765 9E       		.byte	0x9e
+ 1714 0766 2C000000 		.4byte	0x2c
+ 1715 076a BC040000 		.4byte	.LLST25
+ 1716 076e 22       		.uleb128 0x22
+ 1717 076f 18000000 		.4byte	.Ldebug_ranges0+0x18
+ 1718 0773 CC070000 		.4byte	0x7cc
+ 1719 0777 12       		.uleb128 0x12
+ 1720 0778 94020000 		.4byte	.LASF62
+ 1721 077c 01       		.byte	0x1
+ 1722 077d AA       		.byte	0xaa
+ 1723 077e 0D070000 		.4byte	0x70d
+ 1724 0782 E5040000 		.4byte	.LLST26
+ 1725 0786 14       		.uleb128 0x14
+ 1726 0787 18000000 		.4byte	.LVL104
+ 1727 078b 92040000 		.4byte	0x492
+ 1728 078f 17       		.uleb128 0x17
+ 1729 0790 24000000 		.4byte	.LVL107
+ 1730 0794 5C080000 		.4byte	0x85c
+ 1731 0798 A9070000 		.4byte	0x7a9
+ 1732 079c 18       		.uleb128 0x18
+ 1733 079d 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 36
+
+
+ 1734 079e 50       		.byte	0x50
+ 1735 079f 02       		.uleb128 0x2
+ 1736 07a0 74       		.byte	0x74
+ 1737 07a1 00       		.sleb128 0
+ 1738 07a2 18       		.uleb128 0x18
+ 1739 07a3 01       		.uleb128 0x1
+ 1740 07a4 51       		.byte	0x51
+ 1741 07a5 02       		.uleb128 0x2
+ 1742 07a6 75       		.byte	0x75
+ 1743 07a7 00       		.sleb128 0
+ 1744 07a8 00       		.byte	0
+ 1745 07a9 14       		.uleb128 0x14
+ 1746 07aa 34000000 		.4byte	.LVL111
+ 1747 07ae 51080000 		.4byte	0x851
+ 1748 07b2 14       		.uleb128 0x14
+ 1749 07b3 3A000000 		.4byte	.LVL112
+ 1750 07b7 51080000 		.4byte	0x851
+ 1751 07bb 19       		.uleb128 0x19
+ 1752 07bc 40000000 		.4byte	.LVL113
+ 1753 07c0 51080000 		.4byte	0x851
+ 1754 07c4 18       		.uleb128 0x18
+ 1755 07c5 01       		.uleb128 0x1
+ 1756 07c6 50       		.byte	0x50
+ 1757 07c7 02       		.uleb128 0x2
+ 1758 07c8 75       		.byte	0x75
+ 1759 07c9 00       		.sleb128 0
+ 1760 07ca 00       		.byte	0
+ 1761 07cb 00       		.byte	0
+ 1762 07cc 19       		.uleb128 0x19
+ 1763 07cd 10000000 		.4byte	.LVL103
+ 1764 07d1 18020000 		.4byte	0x218
+ 1765 07d5 18       		.uleb128 0x18
+ 1766 07d6 01       		.uleb128 0x1
+ 1767 07d7 50       		.byte	0x50
+ 1768 07d8 03       		.uleb128 0x3
+ 1769 07d9 F3       		.byte	0xf3
+ 1770 07da 01       		.uleb128 0x1
+ 1771 07db 50       		.byte	0x50
+ 1772 07dc 00       		.byte	0
+ 1773 07dd 00       		.byte	0
+ 1774 07de 1E       		.uleb128 0x1e
+ 1775 07df AD000000 		.4byte	0xad
+ 1776 07e3 EE070000 		.4byte	0x7ee
+ 1777 07e7 1F       		.uleb128 0x1f
+ 1778 07e8 93000000 		.4byte	0x93
+ 1779 07ec 16       		.byte	0x16
+ 1780 07ed 00       		.byte	0
+ 1781 07ee 23       		.uleb128 0x23
+ 1782 07ef FD020000 		.4byte	.LASF63
+ 1783 07f3 06       		.byte	0x6
+ 1784 07f4 36       		.byte	0x36
+ 1785 07f5 F9070000 		.4byte	0x7f9
+ 1786 07f9 06       		.uleb128 0x6
+ 1787 07fa DE070000 		.4byte	0x7de
+ 1788 07fe 1A       		.uleb128 0x1a
+ 1789 07ff D7040000 		.4byte	.LASF64
+ 1790 0803 01       		.byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 37
+
+
+ 1791 0804 11       		.byte	0x11
+ 1792 0805 0A080000 		.4byte	0x80a
+ 1793 0809 24       		.byte	0x24
+ 1794 080a 06       		.uleb128 0x6
+ 1795 080b 2C000000 		.4byte	0x2c
+ 1796 080f 24       		.uleb128 0x24
+ 1797 0810 56000000 		.4byte	.LASF65
+ 1798 0814 56000000 		.4byte	.LASF65
+ 1799 0818 08       		.byte	0x8
+ 1800 0819 76       		.byte	0x76
+ 1801 081a 24       		.uleb128 0x24
+ 1802 081b 1D020000 		.4byte	.LASF66
+ 1803 081f 1D020000 		.4byte	.LASF66
+ 1804 0823 09       		.byte	0x9
+ 1805 0824 88       		.byte	0x88
+ 1806 0825 24       		.uleb128 0x24
+ 1807 0826 1A000000 		.4byte	.LASF67
+ 1808 082a 1A000000 		.4byte	.LASF67
+ 1809 082e 05       		.byte	0x5
+ 1810 082f 9D       		.byte	0x9d
+ 1811 0830 24       		.uleb128 0x24
+ 1812 0831 68050000 		.4byte	.LASF68
+ 1813 0835 68050000 		.4byte	.LASF68
+ 1814 0839 0A       		.byte	0xa
+ 1815 083a 1C       		.byte	0x1c
+ 1816 083b 24       		.uleb128 0x24
+ 1817 083c 95030000 		.4byte	.LASF69
+ 1818 0840 95030000 		.4byte	.LASF69
+ 1819 0844 0B       		.byte	0xb
+ 1820 0845 E7       		.byte	0xe7
+ 1821 0846 24       		.uleb128 0x24
+ 1822 0847 9E000000 		.4byte	.LASF70
+ 1823 084b 9E000000 		.4byte	.LASF70
+ 1824 084f 09       		.byte	0x9
+ 1825 0850 64       		.byte	0x64
+ 1826 0851 24       		.uleb128 0x24
+ 1827 0852 FF050000 		.4byte	.LASF71
+ 1828 0856 FF050000 		.4byte	.LASF71
+ 1829 085a 09       		.byte	0x9
+ 1830 085b 59       		.byte	0x59
+ 1831 085c 25       		.uleb128 0x25
+ 1832 085d 6C020000 		.4byte	.LASF72
+ 1833 0861 6C020000 		.4byte	.LASF72
+ 1834 0865 06       		.byte	0x6
+ 1835 0866 0901     		.2byte	0x109
+ 1836 0868 00       		.byte	0
+ 1837              		.section	.debug_abbrev,"",%progbits
+ 1838              	.Ldebug_abbrev0:
+ 1839 0000 01       		.uleb128 0x1
+ 1840 0001 11       		.uleb128 0x11
+ 1841 0002 01       		.byte	0x1
+ 1842 0003 25       		.uleb128 0x25
+ 1843 0004 0E       		.uleb128 0xe
+ 1844 0005 13       		.uleb128 0x13
+ 1845 0006 0B       		.uleb128 0xb
+ 1846 0007 03       		.uleb128 0x3
+ 1847 0008 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 38
+
+
+ 1848 0009 1B       		.uleb128 0x1b
+ 1849 000a 0E       		.uleb128 0xe
+ 1850 000b 55       		.uleb128 0x55
+ 1851 000c 17       		.uleb128 0x17
+ 1852 000d 11       		.uleb128 0x11
+ 1853 000e 01       		.uleb128 0x1
+ 1854 000f 10       		.uleb128 0x10
+ 1855 0010 17       		.uleb128 0x17
+ 1856 0011 00       		.byte	0
+ 1857 0012 00       		.byte	0
+ 1858 0013 02       		.uleb128 0x2
+ 1859 0014 24       		.uleb128 0x24
+ 1860 0015 00       		.byte	0
+ 1861 0016 0B       		.uleb128 0xb
+ 1862 0017 0B       		.uleb128 0xb
+ 1863 0018 3E       		.uleb128 0x3e
+ 1864 0019 0B       		.uleb128 0xb
+ 1865 001a 03       		.uleb128 0x3
+ 1866 001b 0E       		.uleb128 0xe
+ 1867 001c 00       		.byte	0
+ 1868 001d 00       		.byte	0
+ 1869 001e 03       		.uleb128 0x3
+ 1870 001f 24       		.uleb128 0x24
+ 1871 0020 00       		.byte	0
+ 1872 0021 0B       		.uleb128 0xb
+ 1873 0022 0B       		.uleb128 0xb
+ 1874 0023 3E       		.uleb128 0x3e
+ 1875 0024 0B       		.uleb128 0xb
+ 1876 0025 03       		.uleb128 0x3
+ 1877 0026 08       		.uleb128 0x8
+ 1878 0027 00       		.byte	0
+ 1879 0028 00       		.byte	0
+ 1880 0029 04       		.uleb128 0x4
+ 1881 002a 16       		.uleb128 0x16
+ 1882 002b 00       		.byte	0
+ 1883 002c 03       		.uleb128 0x3
+ 1884 002d 0E       		.uleb128 0xe
+ 1885 002e 3A       		.uleb128 0x3a
+ 1886 002f 0B       		.uleb128 0xb
+ 1887 0030 3B       		.uleb128 0x3b
+ 1888 0031 0B       		.uleb128 0xb
+ 1889 0032 49       		.uleb128 0x49
+ 1890 0033 13       		.uleb128 0x13
+ 1891 0034 00       		.byte	0
+ 1892 0035 00       		.byte	0
+ 1893 0036 05       		.uleb128 0x5
+ 1894 0037 0F       		.uleb128 0xf
+ 1895 0038 00       		.byte	0
+ 1896 0039 0B       		.uleb128 0xb
+ 1897 003a 0B       		.uleb128 0xb
+ 1898 003b 49       		.uleb128 0x49
+ 1899 003c 13       		.uleb128 0x13
+ 1900 003d 00       		.byte	0
+ 1901 003e 00       		.byte	0
+ 1902 003f 06       		.uleb128 0x6
+ 1903 0040 26       		.uleb128 0x26
+ 1904 0041 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 39
+
+
+ 1905 0042 49       		.uleb128 0x49
+ 1906 0043 13       		.uleb128 0x13
+ 1907 0044 00       		.byte	0
+ 1908 0045 00       		.byte	0
+ 1909 0046 07       		.uleb128 0x7
+ 1910 0047 04       		.uleb128 0x4
+ 1911 0048 01       		.byte	0x1
+ 1912 0049 03       		.uleb128 0x3
+ 1913 004a 0E       		.uleb128 0xe
+ 1914 004b 0B       		.uleb128 0xb
+ 1915 004c 0B       		.uleb128 0xb
+ 1916 004d 49       		.uleb128 0x49
+ 1917 004e 13       		.uleb128 0x13
+ 1918 004f 3A       		.uleb128 0x3a
+ 1919 0050 0B       		.uleb128 0xb
+ 1920 0051 3B       		.uleb128 0x3b
+ 1921 0052 0B       		.uleb128 0xb
+ 1922 0053 01       		.uleb128 0x1
+ 1923 0054 13       		.uleb128 0x13
+ 1924 0055 00       		.byte	0
+ 1925 0056 00       		.byte	0
+ 1926 0057 08       		.uleb128 0x8
+ 1927 0058 28       		.uleb128 0x28
+ 1928 0059 00       		.byte	0
+ 1929 005a 03       		.uleb128 0x3
+ 1930 005b 0E       		.uleb128 0xe
+ 1931 005c 1C       		.uleb128 0x1c
+ 1932 005d 0B       		.uleb128 0xb
+ 1933 005e 00       		.byte	0
+ 1934 005f 00       		.byte	0
+ 1935 0060 09       		.uleb128 0x9
+ 1936 0061 15       		.uleb128 0x15
+ 1937 0062 01       		.byte	0x1
+ 1938 0063 27       		.uleb128 0x27
+ 1939 0064 19       		.uleb128 0x19
+ 1940 0065 01       		.uleb128 0x1
+ 1941 0066 13       		.uleb128 0x13
+ 1942 0067 00       		.byte	0
+ 1943 0068 00       		.byte	0
+ 1944 0069 0A       		.uleb128 0xa
+ 1945 006a 05       		.uleb128 0x5
+ 1946 006b 00       		.byte	0
+ 1947 006c 49       		.uleb128 0x49
+ 1948 006d 13       		.uleb128 0x13
+ 1949 006e 00       		.byte	0
+ 1950 006f 00       		.byte	0
+ 1951 0070 0B       		.uleb128 0xb
+ 1952 0071 18       		.uleb128 0x18
+ 1953 0072 00       		.byte	0
+ 1954 0073 00       		.byte	0
+ 1955 0074 00       		.byte	0
+ 1956 0075 0C       		.uleb128 0xc
+ 1957 0076 13       		.uleb128 0x13
+ 1958 0077 00       		.byte	0
+ 1959 0078 03       		.uleb128 0x3
+ 1960 0079 0E       		.uleb128 0xe
+ 1961 007a 3C       		.uleb128 0x3c
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 40
+
+
+ 1962 007b 19       		.uleb128 0x19
+ 1963 007c 00       		.byte	0
+ 1964 007d 00       		.byte	0
+ 1965 007e 0D       		.uleb128 0xd
+ 1966 007f 13       		.uleb128 0x13
+ 1967 0080 01       		.byte	0x1
+ 1968 0081 03       		.uleb128 0x3
+ 1969 0082 0E       		.uleb128 0xe
+ 1970 0083 0B       		.uleb128 0xb
+ 1971 0084 0B       		.uleb128 0xb
+ 1972 0085 3A       		.uleb128 0x3a
+ 1973 0086 0B       		.uleb128 0xb
+ 1974 0087 3B       		.uleb128 0x3b
+ 1975 0088 0B       		.uleb128 0xb
+ 1976 0089 01       		.uleb128 0x1
+ 1977 008a 13       		.uleb128 0x13
+ 1978 008b 00       		.byte	0
+ 1979 008c 00       		.byte	0
+ 1980 008d 0E       		.uleb128 0xe
+ 1981 008e 0D       		.uleb128 0xd
+ 1982 008f 00       		.byte	0
+ 1983 0090 03       		.uleb128 0x3
+ 1984 0091 0E       		.uleb128 0xe
+ 1985 0092 3A       		.uleb128 0x3a
+ 1986 0093 0B       		.uleb128 0xb
+ 1987 0094 3B       		.uleb128 0x3b
+ 1988 0095 0B       		.uleb128 0xb
+ 1989 0096 49       		.uleb128 0x49
+ 1990 0097 13       		.uleb128 0x13
+ 1991 0098 38       		.uleb128 0x38
+ 1992 0099 0B       		.uleb128 0xb
+ 1993 009a 00       		.byte	0
+ 1994 009b 00       		.byte	0
+ 1995 009c 0F       		.uleb128 0xf
+ 1996 009d 2E       		.uleb128 0x2e
+ 1997 009e 01       		.byte	0x1
+ 1998 009f 03       		.uleb128 0x3
+ 1999 00a0 0E       		.uleb128 0xe
+ 2000 00a1 3A       		.uleb128 0x3a
+ 2001 00a2 0B       		.uleb128 0xb
+ 2002 00a3 3B       		.uleb128 0x3b
+ 2003 00a4 0B       		.uleb128 0xb
+ 2004 00a5 27       		.uleb128 0x27
+ 2005 00a6 19       		.uleb128 0x19
+ 2006 00a7 49       		.uleb128 0x49
+ 2007 00a8 13       		.uleb128 0x13
+ 2008 00a9 11       		.uleb128 0x11
+ 2009 00aa 01       		.uleb128 0x1
+ 2010 00ab 12       		.uleb128 0x12
+ 2011 00ac 06       		.uleb128 0x6
+ 2012 00ad 40       		.uleb128 0x40
+ 2013 00ae 18       		.uleb128 0x18
+ 2014 00af 9742     		.uleb128 0x2117
+ 2015 00b1 19       		.uleb128 0x19
+ 2016 00b2 01       		.uleb128 0x1
+ 2017 00b3 13       		.uleb128 0x13
+ 2018 00b4 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 41
+
+
+ 2019 00b5 00       		.byte	0
+ 2020 00b6 10       		.uleb128 0x10
+ 2021 00b7 05       		.uleb128 0x5
+ 2022 00b8 00       		.byte	0
+ 2023 00b9 03       		.uleb128 0x3
+ 2024 00ba 0E       		.uleb128 0xe
+ 2025 00bb 3A       		.uleb128 0x3a
+ 2026 00bc 0B       		.uleb128 0xb
+ 2027 00bd 3B       		.uleb128 0x3b
+ 2028 00be 0B       		.uleb128 0xb
+ 2029 00bf 49       		.uleb128 0x49
+ 2030 00c0 13       		.uleb128 0x13
+ 2031 00c1 02       		.uleb128 0x2
+ 2032 00c2 17       		.uleb128 0x17
+ 2033 00c3 00       		.byte	0
+ 2034 00c4 00       		.byte	0
+ 2035 00c5 11       		.uleb128 0x11
+ 2036 00c6 2E       		.uleb128 0x2e
+ 2037 00c7 01       		.byte	0x1
+ 2038 00c8 03       		.uleb128 0x3
+ 2039 00c9 0E       		.uleb128 0xe
+ 2040 00ca 3A       		.uleb128 0x3a
+ 2041 00cb 0B       		.uleb128 0xb
+ 2042 00cc 3B       		.uleb128 0x3b
+ 2043 00cd 0B       		.uleb128 0xb
+ 2044 00ce 27       		.uleb128 0x27
+ 2045 00cf 19       		.uleb128 0x19
+ 2046 00d0 49       		.uleb128 0x49
+ 2047 00d1 13       		.uleb128 0x13
+ 2048 00d2 11       		.uleb128 0x11
+ 2049 00d3 01       		.uleb128 0x1
+ 2050 00d4 12       		.uleb128 0x12
+ 2051 00d5 06       		.uleb128 0x6
+ 2052 00d6 40       		.uleb128 0x40
+ 2053 00d7 18       		.uleb128 0x18
+ 2054 00d8 9642     		.uleb128 0x2116
+ 2055 00da 19       		.uleb128 0x19
+ 2056 00db 01       		.uleb128 0x1
+ 2057 00dc 13       		.uleb128 0x13
+ 2058 00dd 00       		.byte	0
+ 2059 00de 00       		.byte	0
+ 2060 00df 12       		.uleb128 0x12
+ 2061 00e0 34       		.uleb128 0x34
+ 2062 00e1 00       		.byte	0
+ 2063 00e2 03       		.uleb128 0x3
+ 2064 00e3 0E       		.uleb128 0xe
+ 2065 00e4 3A       		.uleb128 0x3a
+ 2066 00e5 0B       		.uleb128 0xb
+ 2067 00e6 3B       		.uleb128 0x3b
+ 2068 00e7 0B       		.uleb128 0xb
+ 2069 00e8 49       		.uleb128 0x49
+ 2070 00e9 13       		.uleb128 0x13
+ 2071 00ea 02       		.uleb128 0x2
+ 2072 00eb 17       		.uleb128 0x17
+ 2073 00ec 00       		.byte	0
+ 2074 00ed 00       		.byte	0
+ 2075 00ee 13       		.uleb128 0x13
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 42
+
+
+ 2076 00ef 0B       		.uleb128 0xb
+ 2077 00f0 01       		.byte	0x1
+ 2078 00f1 11       		.uleb128 0x11
+ 2079 00f2 01       		.uleb128 0x1
+ 2080 00f3 12       		.uleb128 0x12
+ 2081 00f4 06       		.uleb128 0x6
+ 2082 00f5 00       		.byte	0
+ 2083 00f6 00       		.byte	0
+ 2084 00f7 14       		.uleb128 0x14
+ 2085 00f8 898201   		.uleb128 0x4109
+ 2086 00fb 00       		.byte	0
+ 2087 00fc 11       		.uleb128 0x11
+ 2088 00fd 01       		.uleb128 0x1
+ 2089 00fe 31       		.uleb128 0x31
+ 2090 00ff 13       		.uleb128 0x13
+ 2091 0100 00       		.byte	0
+ 2092 0101 00       		.byte	0
+ 2093 0102 15       		.uleb128 0x15
+ 2094 0103 34       		.uleb128 0x34
+ 2095 0104 00       		.byte	0
+ 2096 0105 03       		.uleb128 0x3
+ 2097 0106 08       		.uleb128 0x8
+ 2098 0107 3A       		.uleb128 0x3a
+ 2099 0108 0B       		.uleb128 0xb
+ 2100 0109 3B       		.uleb128 0x3b
+ 2101 010a 0B       		.uleb128 0xb
+ 2102 010b 49       		.uleb128 0x49
+ 2103 010c 13       		.uleb128 0x13
+ 2104 010d 02       		.uleb128 0x2
+ 2105 010e 17       		.uleb128 0x17
+ 2106 010f 00       		.byte	0
+ 2107 0110 00       		.byte	0
+ 2108 0111 16       		.uleb128 0x16
+ 2109 0112 0B       		.uleb128 0xb
+ 2110 0113 01       		.byte	0x1
+ 2111 0114 55       		.uleb128 0x55
+ 2112 0115 17       		.uleb128 0x17
+ 2113 0116 00       		.byte	0
+ 2114 0117 00       		.byte	0
+ 2115 0118 17       		.uleb128 0x17
+ 2116 0119 898201   		.uleb128 0x4109
+ 2117 011c 01       		.byte	0x1
+ 2118 011d 11       		.uleb128 0x11
+ 2119 011e 01       		.uleb128 0x1
+ 2120 011f 31       		.uleb128 0x31
+ 2121 0120 13       		.uleb128 0x13
+ 2122 0121 01       		.uleb128 0x1
+ 2123 0122 13       		.uleb128 0x13
+ 2124 0123 00       		.byte	0
+ 2125 0124 00       		.byte	0
+ 2126 0125 18       		.uleb128 0x18
+ 2127 0126 8A8201   		.uleb128 0x410a
+ 2128 0129 00       		.byte	0
+ 2129 012a 02       		.uleb128 0x2
+ 2130 012b 18       		.uleb128 0x18
+ 2131 012c 9142     		.uleb128 0x2111
+ 2132 012e 18       		.uleb128 0x18
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 43
+
+
+ 2133 012f 00       		.byte	0
+ 2134 0130 00       		.byte	0
+ 2135 0131 19       		.uleb128 0x19
+ 2136 0132 898201   		.uleb128 0x4109
+ 2137 0135 01       		.byte	0x1
+ 2138 0136 11       		.uleb128 0x11
+ 2139 0137 01       		.uleb128 0x1
+ 2140 0138 31       		.uleb128 0x31
+ 2141 0139 13       		.uleb128 0x13
+ 2142 013a 00       		.byte	0
+ 2143 013b 00       		.byte	0
+ 2144 013c 1A       		.uleb128 0x1a
+ 2145 013d 34       		.uleb128 0x34
+ 2146 013e 00       		.byte	0
+ 2147 013f 03       		.uleb128 0x3
+ 2148 0140 0E       		.uleb128 0xe
+ 2149 0141 3A       		.uleb128 0x3a
+ 2150 0142 0B       		.uleb128 0xb
+ 2151 0143 3B       		.uleb128 0x3b
+ 2152 0144 0B       		.uleb128 0xb
+ 2153 0145 49       		.uleb128 0x49
+ 2154 0146 13       		.uleb128 0x13
+ 2155 0147 1C       		.uleb128 0x1c
+ 2156 0148 0B       		.uleb128 0xb
+ 2157 0149 00       		.byte	0
+ 2158 014a 00       		.byte	0
+ 2159 014b 1B       		.uleb128 0x1b
+ 2160 014c 34       		.uleb128 0x34
+ 2161 014d 00       		.byte	0
+ 2162 014e 03       		.uleb128 0x3
+ 2163 014f 0E       		.uleb128 0xe
+ 2164 0150 49       		.uleb128 0x49
+ 2165 0151 13       		.uleb128 0x13
+ 2166 0152 34       		.uleb128 0x34
+ 2167 0153 19       		.uleb128 0x19
+ 2168 0154 02       		.uleb128 0x2
+ 2169 0155 18       		.uleb128 0x18
+ 2170 0156 00       		.byte	0
+ 2171 0157 00       		.byte	0
+ 2172 0158 1C       		.uleb128 0x1c
+ 2173 0159 0B       		.uleb128 0xb
+ 2174 015a 01       		.byte	0x1
+ 2175 015b 11       		.uleb128 0x11
+ 2176 015c 01       		.uleb128 0x1
+ 2177 015d 12       		.uleb128 0x12
+ 2178 015e 06       		.uleb128 0x6
+ 2179 015f 01       		.uleb128 0x1
+ 2180 0160 13       		.uleb128 0x13
+ 2181 0161 00       		.byte	0
+ 2182 0162 00       		.byte	0
+ 2183 0163 1D       		.uleb128 0x1d
+ 2184 0164 898201   		.uleb128 0x4109
+ 2185 0167 01       		.byte	0x1
+ 2186 0168 11       		.uleb128 0x11
+ 2187 0169 01       		.uleb128 0x1
+ 2188 016a 9342     		.uleb128 0x2113
+ 2189 016c 18       		.uleb128 0x18
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 44
+
+
+ 2190 016d 00       		.byte	0
+ 2191 016e 00       		.byte	0
+ 2192 016f 1E       		.uleb128 0x1e
+ 2193 0170 01       		.uleb128 0x1
+ 2194 0171 01       		.byte	0x1
+ 2195 0172 49       		.uleb128 0x49
+ 2196 0173 13       		.uleb128 0x13
+ 2197 0174 01       		.uleb128 0x1
+ 2198 0175 13       		.uleb128 0x13
+ 2199 0176 00       		.byte	0
+ 2200 0177 00       		.byte	0
+ 2201 0178 1F       		.uleb128 0x1f
+ 2202 0179 21       		.uleb128 0x21
+ 2203 017a 00       		.byte	0
+ 2204 017b 49       		.uleb128 0x49
+ 2205 017c 13       		.uleb128 0x13
+ 2206 017d 2F       		.uleb128 0x2f
+ 2207 017e 0B       		.uleb128 0xb
+ 2208 017f 00       		.byte	0
+ 2209 0180 00       		.byte	0
+ 2210 0181 20       		.uleb128 0x20
+ 2211 0182 2E       		.uleb128 0x2e
+ 2212 0183 01       		.byte	0x1
+ 2213 0184 03       		.uleb128 0x3
+ 2214 0185 0E       		.uleb128 0xe
+ 2215 0186 3A       		.uleb128 0x3a
+ 2216 0187 0B       		.uleb128 0xb
+ 2217 0188 3B       		.uleb128 0x3b
+ 2218 0189 0B       		.uleb128 0xb
+ 2219 018a 49       		.uleb128 0x49
+ 2220 018b 13       		.uleb128 0x13
+ 2221 018c 11       		.uleb128 0x11
+ 2222 018d 01       		.uleb128 0x1
+ 2223 018e 12       		.uleb128 0x12
+ 2224 018f 06       		.uleb128 0x6
+ 2225 0190 40       		.uleb128 0x40
+ 2226 0191 18       		.uleb128 0x18
+ 2227 0192 9742     		.uleb128 0x2117
+ 2228 0194 19       		.uleb128 0x19
+ 2229 0195 01       		.uleb128 0x1
+ 2230 0196 13       		.uleb128 0x13
+ 2231 0197 00       		.byte	0
+ 2232 0198 00       		.byte	0
+ 2233 0199 21       		.uleb128 0x21
+ 2234 019a 2E       		.uleb128 0x2e
+ 2235 019b 01       		.byte	0x1
+ 2236 019c 3F       		.uleb128 0x3f
+ 2237 019d 19       		.uleb128 0x19
+ 2238 019e 03       		.uleb128 0x3
+ 2239 019f 0E       		.uleb128 0xe
+ 2240 01a0 3A       		.uleb128 0x3a
+ 2241 01a1 0B       		.uleb128 0xb
+ 2242 01a2 3B       		.uleb128 0x3b
+ 2243 01a3 0B       		.uleb128 0xb
+ 2244 01a4 27       		.uleb128 0x27
+ 2245 01a5 19       		.uleb128 0x19
+ 2246 01a6 49       		.uleb128 0x49
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 45
+
+
+ 2247 01a7 13       		.uleb128 0x13
+ 2248 01a8 11       		.uleb128 0x11
+ 2249 01a9 01       		.uleb128 0x1
+ 2250 01aa 12       		.uleb128 0x12
+ 2251 01ab 06       		.uleb128 0x6
+ 2252 01ac 40       		.uleb128 0x40
+ 2253 01ad 18       		.uleb128 0x18
+ 2254 01ae 9742     		.uleb128 0x2117
+ 2255 01b0 19       		.uleb128 0x19
+ 2256 01b1 01       		.uleb128 0x1
+ 2257 01b2 13       		.uleb128 0x13
+ 2258 01b3 00       		.byte	0
+ 2259 01b4 00       		.byte	0
+ 2260 01b5 22       		.uleb128 0x22
+ 2261 01b6 0B       		.uleb128 0xb
+ 2262 01b7 01       		.byte	0x1
+ 2263 01b8 55       		.uleb128 0x55
+ 2264 01b9 17       		.uleb128 0x17
+ 2265 01ba 01       		.uleb128 0x1
+ 2266 01bb 13       		.uleb128 0x13
+ 2267 01bc 00       		.byte	0
+ 2268 01bd 00       		.byte	0
+ 2269 01be 23       		.uleb128 0x23
+ 2270 01bf 34       		.uleb128 0x34
+ 2271 01c0 00       		.byte	0
+ 2272 01c1 03       		.uleb128 0x3
+ 2273 01c2 0E       		.uleb128 0xe
+ 2274 01c3 3A       		.uleb128 0x3a
+ 2275 01c4 0B       		.uleb128 0xb
+ 2276 01c5 3B       		.uleb128 0x3b
+ 2277 01c6 0B       		.uleb128 0xb
+ 2278 01c7 49       		.uleb128 0x49
+ 2279 01c8 13       		.uleb128 0x13
+ 2280 01c9 00       		.byte	0
+ 2281 01ca 00       		.byte	0
+ 2282 01cb 24       		.uleb128 0x24
+ 2283 01cc 2E       		.uleb128 0x2e
+ 2284 01cd 00       		.byte	0
+ 2285 01ce 3F       		.uleb128 0x3f
+ 2286 01cf 19       		.uleb128 0x19
+ 2287 01d0 3C       		.uleb128 0x3c
+ 2288 01d1 19       		.uleb128 0x19
+ 2289 01d2 6E       		.uleb128 0x6e
+ 2290 01d3 0E       		.uleb128 0xe
+ 2291 01d4 03       		.uleb128 0x3
+ 2292 01d5 0E       		.uleb128 0xe
+ 2293 01d6 3A       		.uleb128 0x3a
+ 2294 01d7 0B       		.uleb128 0xb
+ 2295 01d8 3B       		.uleb128 0x3b
+ 2296 01d9 0B       		.uleb128 0xb
+ 2297 01da 00       		.byte	0
+ 2298 01db 00       		.byte	0
+ 2299 01dc 25       		.uleb128 0x25
+ 2300 01dd 2E       		.uleb128 0x2e
+ 2301 01de 00       		.byte	0
+ 2302 01df 3F       		.uleb128 0x3f
+ 2303 01e0 19       		.uleb128 0x19
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 46
+
+
+ 2304 01e1 3C       		.uleb128 0x3c
+ 2305 01e2 19       		.uleb128 0x19
+ 2306 01e3 6E       		.uleb128 0x6e
+ 2307 01e4 0E       		.uleb128 0xe
+ 2308 01e5 03       		.uleb128 0x3
+ 2309 01e6 0E       		.uleb128 0xe
+ 2310 01e7 3A       		.uleb128 0x3a
+ 2311 01e8 0B       		.uleb128 0xb
+ 2312 01e9 3B       		.uleb128 0x3b
+ 2313 01ea 05       		.uleb128 0x5
+ 2314 01eb 00       		.byte	0
+ 2315 01ec 00       		.byte	0
+ 2316 01ed 00       		.byte	0
+ 2317              		.section	.debug_loc,"",%progbits
+ 2318              	.Ldebug_loc0:
+ 2319              	.LLST0:
+ 2320 0000 00000000 		.4byte	.LVL0
+ 2321 0004 06000000 		.4byte	.LVL1
+ 2322 0008 0100     		.2byte	0x1
+ 2323 000a 50       		.byte	0x50
+ 2324 000b 06000000 		.4byte	.LVL1
+ 2325 000f 0A000000 		.4byte	.LVL2
+ 2326 0013 0400     		.2byte	0x4
+ 2327 0015 F3       		.byte	0xf3
+ 2328 0016 01       		.uleb128 0x1
+ 2329 0017 50       		.byte	0x50
+ 2330 0018 9F       		.byte	0x9f
+ 2331 0019 0A000000 		.4byte	.LVL2
+ 2332 001d 0C000000 		.4byte	.LVL3
+ 2333 0021 0100     		.2byte	0x1
+ 2334 0023 50       		.byte	0x50
+ 2335 0024 0C000000 		.4byte	.LVL3
+ 2336 0028 10000000 		.4byte	.LFE2
+ 2337 002c 0400     		.2byte	0x4
+ 2338 002e F3       		.byte	0xf3
+ 2339 002f 01       		.uleb128 0x1
+ 2340 0030 50       		.byte	0x50
+ 2341 0031 9F       		.byte	0x9f
+ 2342 0032 00000000 		.4byte	0
+ 2343 0036 00000000 		.4byte	0
+ 2344              	.LLST1:
+ 2345 003a 00000000 		.4byte	.LVL4
+ 2346 003e 0E000000 		.4byte	.LVL6
+ 2347 0042 0100     		.2byte	0x1
+ 2348 0044 50       		.byte	0x50
+ 2349 0045 0E000000 		.4byte	.LVL6
+ 2350 0049 28000000 		.4byte	.LVL9
+ 2351 004d 0100     		.2byte	0x1
+ 2352 004f 54       		.byte	0x54
+ 2353 0050 28000000 		.4byte	.LVL9
+ 2354 0054 9A000000 		.4byte	.LVL24
+ 2355 0058 0400     		.2byte	0x4
+ 2356 005a F3       		.byte	0xf3
+ 2357 005b 01       		.uleb128 0x1
+ 2358 005c 50       		.byte	0x50
+ 2359 005d 9F       		.byte	0x9f
+ 2360 005e 9A000000 		.4byte	.LVL24
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 47
+
+
+ 2361 0062 9C000000 		.4byte	.LVL25
+ 2362 0066 0100     		.2byte	0x1
+ 2363 0068 50       		.byte	0x50
+ 2364 0069 9C000000 		.4byte	.LVL25
+ 2365 006d A8000000 		.4byte	.LFE4
+ 2366 0071 0400     		.2byte	0x4
+ 2367 0073 F3       		.byte	0xf3
+ 2368 0074 01       		.uleb128 0x1
+ 2369 0075 50       		.byte	0x50
+ 2370 0076 9F       		.byte	0x9f
+ 2371 0077 00000000 		.4byte	0
+ 2372 007b 00000000 		.4byte	0
+ 2373              	.LLST2:
+ 2374 007f 06000000 		.4byte	.LVL5
+ 2375 0083 98000000 		.4byte	.LVL23
+ 2376 0087 0200     		.2byte	0x2
+ 2377 0089 30       		.byte	0x30
+ 2378 008a 9F       		.byte	0x9f
+ 2379 008b 98000000 		.4byte	.LVL23
+ 2380 008f 9A000000 		.4byte	.LVL24
+ 2381 0093 0100     		.2byte	0x1
+ 2382 0095 54       		.byte	0x54
+ 2383 0096 9A000000 		.4byte	.LVL24
+ 2384 009a 9C000000 		.4byte	.LVL25
+ 2385 009e 0200     		.2byte	0x2
+ 2386 00a0 30       		.byte	0x30
+ 2387 00a1 9F       		.byte	0x9f
+ 2388 00a2 9C000000 		.4byte	.LVL25
+ 2389 00a6 A8000000 		.4byte	.LFE4
+ 2390 00aa 0100     		.2byte	0x1
+ 2391 00ac 50       		.byte	0x50
+ 2392 00ad 00000000 		.4byte	0
+ 2393 00b1 00000000 		.4byte	0
+ 2394              	.LLST3:
+ 2395 00b5 2A000000 		.4byte	.LVL10
+ 2396 00b9 88000000 		.4byte	.LVL21
+ 2397 00bd 0600     		.2byte	0x6
+ 2398 00bf 54       		.byte	0x54
+ 2399 00c0 93       		.byte	0x93
+ 2400 00c1 04       		.uleb128 0x4
+ 2401 00c2 55       		.byte	0x55
+ 2402 00c3 93       		.byte	0x93
+ 2403 00c4 04       		.uleb128 0x4
+ 2404 00c5 00000000 		.4byte	0
+ 2405 00c9 00000000 		.4byte	0
+ 2406              	.LLST4:
+ 2407 00cd 34000000 		.4byte	.LVL12
+ 2408 00d1 9A000000 		.4byte	.LVL24
+ 2409 00d5 0600     		.2byte	0x6
+ 2410 00d7 56       		.byte	0x56
+ 2411 00d8 93       		.byte	0x93
+ 2412 00d9 04       		.uleb128 0x4
+ 2413 00da 57       		.byte	0x57
+ 2414 00db 93       		.byte	0x93
+ 2415 00dc 04       		.uleb128 0x4
+ 2416 00dd 00000000 		.4byte	0
+ 2417 00e1 00000000 		.4byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 48
+
+
+ 2418              	.LLST5:
+ 2419 00e5 00000000 		.4byte	.LVL26
+ 2420 00e9 0C000000 		.4byte	.LVL28
+ 2421 00ed 0100     		.2byte	0x1
+ 2422 00ef 50       		.byte	0x50
+ 2423 00f0 0C000000 		.4byte	.LVL28
+ 2424 00f4 4E000000 		.4byte	.LFE3
+ 2425 00f8 0200     		.2byte	0x2
+ 2426 00fa 91       		.byte	0x91
+ 2427 00fb 64       		.sleb128 -28
+ 2428 00fc 00000000 		.4byte	0
+ 2429 0100 00000000 		.4byte	0
+ 2430              	.LLST6:
+ 2431 0104 06000000 		.4byte	.LVL27
+ 2432 0108 0C000000 		.4byte	.LVL28
+ 2433 010c 0200     		.2byte	0x2
+ 2434 010e 30       		.byte	0x30
+ 2435 010f 9F       		.byte	0x9f
+ 2436 0110 0C000000 		.4byte	.LVL28
+ 2437 0114 4C000000 		.4byte	.LVL43
+ 2438 0118 0100     		.2byte	0x1
+ 2439 011a 56       		.byte	0x56
+ 2440 011b 00000000 		.4byte	0
+ 2441 011f 00000000 		.4byte	0
+ 2442              	.LLST7:
+ 2443 0123 06000000 		.4byte	.LVL27
+ 2444 0127 0C000000 		.4byte	.LVL28
+ 2445 012b 0100     		.2byte	0x1
+ 2446 012d 50       		.byte	0x50
+ 2447 012e 0C000000 		.4byte	.LVL28
+ 2448 0132 2A000000 		.4byte	.LVL36
+ 2449 0136 0100     		.2byte	0x1
+ 2450 0138 54       		.byte	0x54
+ 2451 0139 2A000000 		.4byte	.LVL36
+ 2452 013d 34000000 		.4byte	.LVL38
+ 2453 0141 0300     		.2byte	0x3
+ 2454 0143 74       		.byte	0x74
+ 2455 0144 01       		.sleb128 1
+ 2456 0145 9F       		.byte	0x9f
+ 2457 0146 34000000 		.4byte	.LVL38
+ 2458 014a 40000000 		.4byte	.LVL41
+ 2459 014e 0100     		.2byte	0x1
+ 2460 0150 57       		.byte	0x57
+ 2461 0151 40000000 		.4byte	.LVL41
+ 2462 0155 4C000000 		.4byte	.LVL42
+ 2463 0159 0100     		.2byte	0x1
+ 2464 015b 54       		.byte	0x54
+ 2465 015c 00000000 		.4byte	0
+ 2466 0160 00000000 		.4byte	0
+ 2467              	.LLST8:
+ 2468 0164 12000000 		.4byte	.LVL30
+ 2469 0168 17000000 		.4byte	.LVL31-1
+ 2470 016c 0100     		.2byte	0x1
+ 2471 016e 50       		.byte	0x50
+ 2472 016f 17000000 		.4byte	.LVL31-1
+ 2473 0173 2A000000 		.4byte	.LVL36
+ 2474 0177 0100     		.2byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 49
+
+
+ 2475 0179 55       		.byte	0x55
+ 2476 017a 00000000 		.4byte	0
+ 2477 017e 00000000 		.4byte	0
+ 2478              	.LLST9:
+ 2479 0182 1A000000 		.4byte	.LVL32
+ 2480 0186 1C000000 		.4byte	.LVL33
+ 2481 018a 0100     		.2byte	0x1
+ 2482 018c 51       		.byte	0x51
+ 2483 018d 1C000000 		.4byte	.LVL33
+ 2484 0191 34000000 		.4byte	.LVL38
+ 2485 0195 0100     		.2byte	0x1
+ 2486 0197 57       		.byte	0x57
+ 2487 0198 00000000 		.4byte	0
+ 2488 019c 00000000 		.4byte	0
+ 2489              	.LLST10:
+ 2490 01a0 2A000000 		.4byte	.LVL36
+ 2491 01a4 2F000000 		.4byte	.LVL37-1
+ 2492 01a8 0100     		.2byte	0x1
+ 2493 01aa 51       		.byte	0x51
+ 2494 01ab 2F000000 		.4byte	.LVL37-1
+ 2495 01af 40000000 		.4byte	.LVL41
+ 2496 01b3 0100     		.2byte	0x1
+ 2497 01b5 55       		.byte	0x55
+ 2498 01b6 00000000 		.4byte	0
+ 2499 01ba 00000000 		.4byte	0
+ 2500              	.LLST11:
+ 2501 01be 00000000 		.4byte	.LVL44
+ 2502 01c2 08000000 		.4byte	.LVL46
+ 2503 01c6 0100     		.2byte	0x1
+ 2504 01c8 50       		.byte	0x50
+ 2505 01c9 08000000 		.4byte	.LVL46
+ 2506 01cd 16000000 		.4byte	.LVL49
+ 2507 01d1 0100     		.2byte	0x1
+ 2508 01d3 54       		.byte	0x54
+ 2509 01d4 16000000 		.4byte	.LVL49
+ 2510 01d8 2E000000 		.4byte	.LVL53
+ 2511 01dc 0400     		.2byte	0x4
+ 2512 01de F3       		.byte	0xf3
+ 2513 01df 01       		.uleb128 0x1
+ 2514 01e0 50       		.byte	0x50
+ 2515 01e1 9F       		.byte	0x9f
+ 2516 01e2 2E000000 		.4byte	.LVL53
+ 2517 01e6 42000000 		.4byte	.LVL57
+ 2518 01ea 0100     		.2byte	0x1
+ 2519 01ec 54       		.byte	0x54
+ 2520 01ed 42000000 		.4byte	.LVL57
+ 2521 01f1 7C000000 		.4byte	.LFE1
+ 2522 01f5 0400     		.2byte	0x4
+ 2523 01f7 F3       		.byte	0xf3
+ 2524 01f8 01       		.uleb128 0x1
+ 2525 01f9 50       		.byte	0x50
+ 2526 01fa 9F       		.byte	0x9f
+ 2527 01fb 00000000 		.4byte	0
+ 2528 01ff 00000000 		.4byte	0
+ 2529              	.LLST12:
+ 2530 0203 60000000 		.4byte	.LVL63
+ 2531 0207 64000000 		.4byte	.LVL64
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 50
+
+
+ 2532 020b 0100     		.2byte	0x1
+ 2533 020d 54       		.byte	0x54
+ 2534 020e 64000000 		.4byte	.LVL64
+ 2535 0212 7C000000 		.4byte	.LFE1
+ 2536 0216 0100     		.2byte	0x1
+ 2537 0218 50       		.byte	0x50
+ 2538 0219 00000000 		.4byte	0
+ 2539 021d 00000000 		.4byte	0
+ 2540              	.LLST13:
+ 2541 0221 0C000000 		.4byte	.LVL47
+ 2542 0225 13000000 		.4byte	.LVL48-1
+ 2543 0229 0100     		.2byte	0x1
+ 2544 022b 50       		.byte	0x50
+ 2545 022c 2E000000 		.4byte	.LVL53
+ 2546 0230 34000000 		.4byte	.LVL54
+ 2547 0234 0100     		.2byte	0x1
+ 2548 0236 50       		.byte	0x50
+ 2549 0237 34000000 		.4byte	.LVL54
+ 2550 023b 37000000 		.4byte	.LVL55-1
+ 2551 023f 0100     		.2byte	0x1
+ 2552 0241 52       		.byte	0x52
+ 2553 0242 00000000 		.4byte	0
+ 2554 0246 00000000 		.4byte	0
+ 2555              	.LLST14:
+ 2556 024a 16000000 		.4byte	.LVL49
+ 2557 024e 28000000 		.4byte	.LVL50
+ 2558 0252 0100     		.2byte	0x1
+ 2559 0254 50       		.byte	0x50
+ 2560 0255 28000000 		.4byte	.LVL50
+ 2561 0259 2C000000 		.4byte	.LVL52
+ 2562 025d 0100     		.2byte	0x1
+ 2563 025f 54       		.byte	0x54
+ 2564 0260 5A000000 		.4byte	.LVL61
+ 2565 0264 5E000000 		.4byte	.LVL62
+ 2566 0268 0100     		.2byte	0x1
+ 2567 026a 50       		.byte	0x50
+ 2568 026b 00000000 		.4byte	0
+ 2569 026f 00000000 		.4byte	0
+ 2570              	.LLST15:
+ 2571 0273 42000000 		.4byte	.LVL57
+ 2572 0277 54000000 		.4byte	.LVL58
+ 2573 027b 0100     		.2byte	0x1
+ 2574 027d 50       		.byte	0x50
+ 2575 027e 54000000 		.4byte	.LVL58
+ 2576 0282 58000000 		.4byte	.LVL60
+ 2577 0286 0100     		.2byte	0x1
+ 2578 0288 54       		.byte	0x54
+ 2579 0289 5E000000 		.4byte	.LVL62
+ 2580 028d 60000000 		.4byte	.LVL63
+ 2581 0291 0100     		.2byte	0x1
+ 2582 0293 50       		.byte	0x50
+ 2583 0294 00000000 		.4byte	0
+ 2584 0298 00000000 		.4byte	0
+ 2585              	.LLST16:
+ 2586 029c 0C000000 		.4byte	.LVL66
+ 2587 02a0 11000000 		.4byte	.LVL67-1
+ 2588 02a4 0100     		.2byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 51
+
+
+ 2589 02a6 50       		.byte	0x50
+ 2590 02a7 11000000 		.4byte	.LVL67-1
+ 2591 02ab 2C000000 		.4byte	.LVL71
+ 2592 02af 0100     		.2byte	0x1
+ 2593 02b1 54       		.byte	0x54
+ 2594 02b2 2C000000 		.4byte	.LVL71
+ 2595 02b6 2E000000 		.4byte	.LVL72
+ 2596 02ba 0100     		.2byte	0x1
+ 2597 02bc 50       		.byte	0x50
+ 2598 02bd 2E000000 		.4byte	.LVL72
+ 2599 02c1 58000000 		.4byte	.LVL79
+ 2600 02c5 0100     		.2byte	0x1
+ 2601 02c7 54       		.byte	0x54
+ 2602 02c8 58000000 		.4byte	.LVL79
+ 2603 02cc 5C000000 		.4byte	.LVL80
+ 2604 02d0 0200     		.2byte	0x2
+ 2605 02d2 30       		.byte	0x30
+ 2606 02d3 9F       		.byte	0x9f
+ 2607 02d4 5C000000 		.4byte	.LVL80
+ 2608 02d8 94000000 		.4byte	.LVL89
+ 2609 02dc 0100     		.2byte	0x1
+ 2610 02de 54       		.byte	0x54
+ 2611 02df 94000000 		.4byte	.LVL89
+ 2612 02e3 98000000 		.4byte	.LVL90
+ 2613 02e7 0200     		.2byte	0x2
+ 2614 02e9 30       		.byte	0x30
+ 2615 02ea 9F       		.byte	0x9f
+ 2616 02eb 98000000 		.4byte	.LVL90
+ 2617 02ef CE000000 		.4byte	.LVL98
+ 2618 02f3 0100     		.2byte	0x1
+ 2619 02f5 54       		.byte	0x54
+ 2620 02f6 CE000000 		.4byte	.LVL98
+ 2621 02fa D2000000 		.4byte	.LVL99
+ 2622 02fe 0200     		.2byte	0x2
+ 2623 0300 30       		.byte	0x30
+ 2624 0301 9F       		.byte	0x9f
+ 2625 0302 D2000000 		.4byte	.LVL99
+ 2626 0306 D8000000 		.4byte	.LVL101
+ 2627 030a 0100     		.2byte	0x1
+ 2628 030c 54       		.byte	0x54
+ 2629 030d D8000000 		.4byte	.LVL101
+ 2630 0311 F4000000 		.4byte	.LFE5
+ 2631 0315 0100     		.2byte	0x1
+ 2632 0317 50       		.byte	0x50
+ 2633 0318 00000000 		.4byte	0
+ 2634 031c 00000000 		.4byte	0
+ 2635              	.LLST17:
+ 2636 0320 14000000 		.4byte	.LVL68
+ 2637 0324 28000000 		.4byte	.LVL69
+ 2638 0328 0100     		.2byte	0x1
+ 2639 032a 50       		.byte	0x50
+ 2640 032b 28000000 		.4byte	.LVL69
+ 2641 032f 2C000000 		.4byte	.LVL71
+ 2642 0333 0100     		.2byte	0x1
+ 2643 0335 55       		.byte	0x55
+ 2644 0336 00000000 		.4byte	0
+ 2645 033a 00000000 		.4byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 52
+
+
+ 2646              	.LLST18:
+ 2647 033e 34000000 		.4byte	.LVL74
+ 2648 0342 39000000 		.4byte	.LVL75-1
+ 2649 0346 0100     		.2byte	0x1
+ 2650 0348 50       		.byte	0x50
+ 2651 0349 39000000 		.4byte	.LVL75-1
+ 2652 034d 3C000000 		.4byte	.LVL76
+ 2653 0351 0100     		.2byte	0x1
+ 2654 0353 55       		.byte	0x55
+ 2655 0354 5C000000 		.4byte	.LVL80
+ 2656 0358 5F000000 		.4byte	.LVL81-1
+ 2657 035c 0100     		.2byte	0x1
+ 2658 035e 50       		.byte	0x50
+ 2659 035f 5F000000 		.4byte	.LVL81-1
+ 2660 0363 6A000000 		.4byte	.LVL83
+ 2661 0367 0100     		.2byte	0x1
+ 2662 0369 55       		.byte	0x55
+ 2663 036a 00000000 		.4byte	0
+ 2664 036e 00000000 		.4byte	0
+ 2665              	.LLST19:
+ 2666 0372 3C000000 		.4byte	.LVL76
+ 2667 0376 50000000 		.4byte	.LVL77
+ 2668 037a 0100     		.2byte	0x1
+ 2669 037c 50       		.byte	0x50
+ 2670 037d 50000000 		.4byte	.LVL77
+ 2671 0381 5C000000 		.4byte	.LVL80
+ 2672 0385 0100     		.2byte	0x1
+ 2673 0387 55       		.byte	0x55
+ 2674 0388 00000000 		.4byte	0
+ 2675 038c 00000000 		.4byte	0
+ 2676              	.LLST20:
+ 2677 0390 6A000000 		.4byte	.LVL83
+ 2678 0394 6F000000 		.4byte	.LVL84-1
+ 2679 0398 0100     		.2byte	0x1
+ 2680 039a 50       		.byte	0x50
+ 2681 039b 6F000000 		.4byte	.LVL84-1
+ 2682 039f 72000000 		.4byte	.LVL85
+ 2683 03a3 0100     		.2byte	0x1
+ 2684 03a5 55       		.byte	0x55
+ 2685 03a6 98000000 		.4byte	.LVL90
+ 2686 03aa 9B000000 		.4byte	.LVL91-1
+ 2687 03ae 0100     		.2byte	0x1
+ 2688 03b0 50       		.byte	0x50
+ 2689 03b1 9B000000 		.4byte	.LVL91-1
+ 2690 03b5 D4000000 		.4byte	.LVL100
+ 2691 03b9 0100     		.2byte	0x1
+ 2692 03bb 55       		.byte	0x55
+ 2693 03bc 00000000 		.4byte	0
+ 2694 03c0 00000000 		.4byte	0
+ 2695              	.LLST21:
+ 2696 03c4 72000000 		.4byte	.LVL85
+ 2697 03c8 86000000 		.4byte	.LVL86
+ 2698 03cc 0100     		.2byte	0x1
+ 2699 03ce 50       		.byte	0x50
+ 2700 03cf 86000000 		.4byte	.LVL86
+ 2701 03d3 98000000 		.4byte	.LVL90
+ 2702 03d7 0100     		.2byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 53
+
+
+ 2703 03d9 55       		.byte	0x55
+ 2704 03da 00000000 		.4byte	0
+ 2705 03de 00000000 		.4byte	0
+ 2706              	.LLST22:
+ 2707 03e2 A6000000 		.4byte	.LVL93
+ 2708 03e6 BA000000 		.4byte	.LVL94
+ 2709 03ea 0100     		.2byte	0x1
+ 2710 03ec 50       		.byte	0x50
+ 2711 03ed BA000000 		.4byte	.LVL94
+ 2712 03f1 D2000000 		.4byte	.LVL99
+ 2713 03f5 0100     		.2byte	0x1
+ 2714 03f7 56       		.byte	0x56
+ 2715 03f8 00000000 		.4byte	0
+ 2716 03fc 00000000 		.4byte	0
+ 2717              	.LLST23:
+ 2718 0400 00000000 		.4byte	.LVL102
+ 2719 0404 0F000000 		.4byte	.LVL103-1
+ 2720 0408 0100     		.2byte	0x1
+ 2721 040a 50       		.byte	0x50
+ 2722 040b 0F000000 		.4byte	.LVL103-1
+ 2723 040f 42000000 		.4byte	.LVL114
+ 2724 0413 0400     		.2byte	0x4
+ 2725 0415 F3       		.byte	0xf3
+ 2726 0416 01       		.uleb128 0x1
+ 2727 0417 50       		.byte	0x50
+ 2728 0418 9F       		.byte	0x9f
+ 2729 0419 42000000 		.4byte	.LVL114
+ 2730 041d 4A000000 		.4byte	.LVL115
+ 2731 0421 0100     		.2byte	0x1
+ 2732 0423 50       		.byte	0x50
+ 2733 0424 4A000000 		.4byte	.LVL115
+ 2734 0428 54000000 		.4byte	.LFE6
+ 2735 042c 0400     		.2byte	0x4
+ 2736 042e F3       		.byte	0xf3
+ 2737 042f 01       		.uleb128 0x1
+ 2738 0430 50       		.byte	0x50
+ 2739 0431 9F       		.byte	0x9f
+ 2740 0432 00000000 		.4byte	0
+ 2741 0436 00000000 		.4byte	0
+ 2742              	.LLST24:
+ 2743 043a 00000000 		.4byte	.LVL102
+ 2744 043e 0F000000 		.4byte	.LVL103-1
+ 2745 0442 0100     		.2byte	0x1
+ 2746 0444 51       		.byte	0x51
+ 2747 0445 0F000000 		.4byte	.LVL103-1
+ 2748 0449 2A000000 		.4byte	.LVL108
+ 2749 044d 0100     		.2byte	0x1
+ 2750 044f 54       		.byte	0x54
+ 2751 0450 2A000000 		.4byte	.LVL108
+ 2752 0454 2C000000 		.4byte	.LVL109
+ 2753 0458 0400     		.2byte	0x4
+ 2754 045a F3       		.byte	0xf3
+ 2755 045b 01       		.uleb128 0x1
+ 2756 045c 51       		.byte	0x51
+ 2757 045d 9F       		.byte	0x9f
+ 2758 045e 2C000000 		.4byte	.LVL109
+ 2759 0462 2E000000 		.4byte	.LVL110
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 54
+
+
+ 2760 0466 0100     		.2byte	0x1
+ 2761 0468 54       		.byte	0x54
+ 2762 0469 2E000000 		.4byte	.LVL110
+ 2763 046d 42000000 		.4byte	.LVL114
+ 2764 0471 0400     		.2byte	0x4
+ 2765 0473 F3       		.byte	0xf3
+ 2766 0474 01       		.uleb128 0x1
+ 2767 0475 51       		.byte	0x51
+ 2768 0476 9F       		.byte	0x9f
+ 2769 0477 42000000 		.4byte	.LVL114
+ 2770 047b 4A000000 		.4byte	.LVL115
+ 2771 047f 0100     		.2byte	0x1
+ 2772 0481 51       		.byte	0x51
+ 2773 0482 4A000000 		.4byte	.LVL115
+ 2774 0486 4C000000 		.4byte	.LVL116
+ 2775 048a 0100     		.2byte	0x1
+ 2776 048c 54       		.byte	0x54
+ 2777 048d 4C000000 		.4byte	.LVL116
+ 2778 0491 4E000000 		.4byte	.LVL117
+ 2779 0495 0400     		.2byte	0x4
+ 2780 0497 F3       		.byte	0xf3
+ 2781 0498 01       		.uleb128 0x1
+ 2782 0499 51       		.byte	0x51
+ 2783 049a 9F       		.byte	0x9f
+ 2784 049b 4E000000 		.4byte	.LVL117
+ 2785 049f 50000000 		.4byte	.LVL118
+ 2786 04a3 0100     		.2byte	0x1
+ 2787 04a5 54       		.byte	0x54
+ 2788 04a6 50000000 		.4byte	.LVL118
+ 2789 04aa 54000000 		.4byte	.LFE6
+ 2790 04ae 0400     		.2byte	0x4
+ 2791 04b0 F3       		.byte	0xf3
+ 2792 04b1 01       		.uleb128 0x1
+ 2793 04b2 51       		.byte	0x51
+ 2794 04b3 9F       		.byte	0x9f
+ 2795 04b4 00000000 		.4byte	0
+ 2796 04b8 00000000 		.4byte	0
+ 2797              	.LLST25:
+ 2798 04bc 2E000000 		.4byte	.LVL110
+ 2799 04c0 42000000 		.4byte	.LVL114
+ 2800 04c4 0100     		.2byte	0x1
+ 2801 04c6 54       		.byte	0x54
+ 2802 04c7 50000000 		.4byte	.LVL118
+ 2803 04cb 52000000 		.4byte	.LVL119
+ 2804 04cf 0100     		.2byte	0x1
+ 2805 04d1 54       		.byte	0x54
+ 2806 04d2 52000000 		.4byte	.LVL119
+ 2807 04d6 54000000 		.4byte	.LFE6
+ 2808 04da 0100     		.2byte	0x1
+ 2809 04dc 50       		.byte	0x50
+ 2810 04dd 00000000 		.4byte	0
+ 2811 04e1 00000000 		.4byte	0
+ 2812              	.LLST26:
+ 2813 04e5 1A000000 		.4byte	.LVL105
+ 2814 04e9 20000000 		.4byte	.LVL106
+ 2815 04ed 0100     		.2byte	0x1
+ 2816 04ef 50       		.byte	0x50
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 55
+
+
+ 2817 04f0 20000000 		.4byte	.LVL106
+ 2818 04f4 23000000 		.4byte	.LVL107-1
+ 2819 04f8 0100     		.2byte	0x1
+ 2820 04fa 51       		.byte	0x51
+ 2821 04fb 23000000 		.4byte	.LVL107-1
+ 2822 04ff 40000000 		.4byte	.LVL113
+ 2823 0503 0100     		.2byte	0x1
+ 2824 0505 55       		.byte	0x55
+ 2825 0506 40000000 		.4byte	.LVL113
+ 2826 050a 42000000 		.4byte	.LVL114
+ 2827 050e 0200     		.2byte	0x2
+ 2828 0510 30       		.byte	0x30
+ 2829 0511 9F       		.byte	0x9f
+ 2830 0512 4E000000 		.4byte	.LVL117
+ 2831 0516 50000000 		.4byte	.LVL118
+ 2832 051a 0100     		.2byte	0x1
+ 2833 051c 50       		.byte	0x50
+ 2834 051d 00000000 		.4byte	0
+ 2835 0521 00000000 		.4byte	0
+ 2836              		.section	.debug_aranges,"",%progbits
+ 2837 0000 44000000 		.4byte	0x44
+ 2838 0004 0200     		.2byte	0x2
+ 2839 0006 00000000 		.4byte	.Ldebug_info0
+ 2840 000a 04       		.byte	0x4
+ 2841 000b 00       		.byte	0
+ 2842 000c 0000     		.2byte	0
+ 2843 000e 0000     		.2byte	0
+ 2844 0010 00000000 		.4byte	.LFB2
+ 2845 0014 10000000 		.4byte	.LFE2-.LFB2
+ 2846 0018 00000000 		.4byte	.LFB4
+ 2847 001c A8000000 		.4byte	.LFE4-.LFB4
+ 2848 0020 00000000 		.4byte	.LFB3
+ 2849 0024 4E000000 		.4byte	.LFE3-.LFB3
+ 2850 0028 00000000 		.4byte	.LFB1
+ 2851 002c 7C000000 		.4byte	.LFE1-.LFB1
+ 2852 0030 00000000 		.4byte	.LFB5
+ 2853 0034 F4000000 		.4byte	.LFE5-.LFB5
+ 2854 0038 00000000 		.4byte	.LFB6
+ 2855 003c 54000000 		.4byte	.LFE6-.LFB6
+ 2856 0040 00000000 		.4byte	0
+ 2857 0044 00000000 		.4byte	0
+ 2858              		.section	.debug_ranges,"",%progbits
+ 2859              	.Ldebug_ranges0:
+ 2860 0000 0C000000 		.4byte	.LBB3
+ 2861 0004 3C000000 		.4byte	.LBE3
+ 2862 0008 3E000000 		.4byte	.LBB4
+ 2863 000c 40000000 		.4byte	.LBE4
+ 2864 0010 00000000 		.4byte	0
+ 2865 0014 00000000 		.4byte	0
+ 2866 0018 14000000 		.4byte	.LBB13
+ 2867 001c 42000000 		.4byte	.LBE13
+ 2868 0020 4E000000 		.4byte	.LBB14
+ 2869 0024 50000000 		.4byte	.LBE14
+ 2870 0028 00000000 		.4byte	0
+ 2871 002c 00000000 		.4byte	0
+ 2872 0030 00000000 		.4byte	.LFB2
+ 2873 0034 10000000 		.4byte	.LFE2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 56
+
+
+ 2874 0038 00000000 		.4byte	.LFB4
+ 2875 003c A8000000 		.4byte	.LFE4
+ 2876 0040 00000000 		.4byte	.LFB3
+ 2877 0044 4E000000 		.4byte	.LFE3
+ 2878 0048 00000000 		.4byte	.LFB1
+ 2879 004c 7C000000 		.4byte	.LFE1
+ 2880 0050 00000000 		.4byte	.LFB5
+ 2881 0054 F4000000 		.4byte	.LFE5
+ 2882 0058 00000000 		.4byte	.LFB6
+ 2883 005c 54000000 		.4byte	.LFE6
+ 2884 0060 00000000 		.4byte	0
+ 2885 0064 00000000 		.4byte	0
+ 2886              		.section	.debug_line,"",%progbits
+ 2887              	.Ldebug_line0:
+ 2888 0000 17040000 		.section	.debug_str,"MS",%progbits,1
+ 2888      0200D202 
+ 2888      00000201 
+ 2888      FB0E0D00 
+ 2888      01010101 
+ 2889              	.LASF27:
+ 2890 0000 494F5448 		.ascii	"IOTHUB_MESSAGE_RESULT_TAG\000"
+ 2890      55425F4D 
+ 2890      45535341 
+ 2890      47455F52 
+ 2890      4553554C 
+ 2891              	.LASF67:
+ 2892 001a 786C6F67 		.ascii	"xlogging_get_log_function\000"
+ 2892      67696E67 
+ 2892      5F676574 
+ 2892      5F6C6F67 
+ 2892      5F66756E 
+ 2893              	.LASF45:
+ 2894 0034 72657375 		.ascii	"result\000"
+ 2894      6C7400
+ 2895              	.LASF42:
+ 2896 003b 73686F75 		.ascii	"should_add_diagnostic_info\000"
+ 2896      6C645F61 
+ 2896      64645F64 
+ 2896      6961676E 
+ 2896      6F737469 
+ 2897              	.LASF65:
+ 2898 0056 666C6F6F 		.ascii	"floor\000"
+ 2898      7200
+ 2899              	.LASF52:
+ 2900 005c 72617752 		.ascii	"rawRandom\000"
+ 2900      616E646F 
+ 2900      6D00
+ 2901              	.LASF23:
+ 2902 0066 415A5F4C 		.ascii	"AZ_LOG_TRACE\000"
+ 2902      4F475F54 
+ 2902      52414345 
+ 2902      00
+ 2903              	.LASF49:
+ 2904 0073 67656E65 		.ascii	"generate_eight_random_characters\000"
+ 2904      72617465 
+ 2904      5F656967 
+ 2904      68745F72 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 57
+
+
+ 2904      616E646F 
+ 2905              	.LASF5:
+ 2906 0094 73686F72 		.ascii	"short int\000"
+ 2906      7420696E 
+ 2906      7400
+ 2907              	.LASF70:
+ 2908 009e 6D616C6C 		.ascii	"malloc\000"
+ 2908      6F6300
+ 2909              	.LASF21:
+ 2910 00a5 415A5F4C 		.ascii	"AZ_LOG_ERROR\000"
+ 2910      4F475F45 
+ 2910      52524F52 
+ 2910      00
+ 2911              	.LASF74:
+ 2912 00b2 536F7572 		.ascii	"Source\\azure_iot_sdk\\iothub_client\\src\\iothub_c"
+ 2912      63655C61 
+ 2912      7A757265 
+ 2912      5F696F74 
+ 2912      5F73646B 
+ 2913 00e1 6C69656E 		.ascii	"lient_diagnostic.c\000"
+ 2913      745F6469 
+ 2913      61676E6F 
+ 2913      73746963 
+ 2913      2E6300
+ 2914              	.LASF51:
+ 2915 00f4 72616E64 		.ascii	"randomStringPos\000"
+ 2915      6F6D5374 
+ 2915      72696E67 
+ 2915      506F7300 
+ 2916              	.LASF61:
+ 2917 0104 6D657373 		.ascii	"messageHandle\000"
+ 2917      61676548 
+ 2917      616E646C 
+ 2917      6500
+ 2918              	.LASF55:
+ 2919 0112 6765745F 		.ascii	"get_epoch_time\000"
+ 2919      65706F63 
+ 2919      685F7469 
+ 2919      6D6500
+ 2920              	.LASF73:
+ 2921 0121 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 2921      43313120 
+ 2921      352E342E 
+ 2921      31203230 
+ 2921      31363036 
+ 2922 0154 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 2922      20726576 
+ 2922      6973696F 
+ 2922      6E203233 
+ 2922      37373135 
+ 2923 0187 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 2923      67202D66 
+ 2923      66756E63 
+ 2923      74696F6E 
+ 2923      2D736563 
+ 2924              	.LASF50:
+ 2925 01b3 72616E64 		.ascii	"randomString\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 58
+
+
+ 2925      6F6D5374 
+ 2925      72696E67 
+ 2925      00
+ 2926              	.LASF9:
+ 2927 01c0 5F5F7569 		.ascii	"__uint32_t\000"
+ 2927      6E743332 
+ 2927      5F7400
+ 2928              	.LASF34:
+ 2929 01cb 64696167 		.ascii	"diagnosticCreationTimeUtc\000"
+ 2929      6E6F7374 
+ 2929      69634372 
+ 2929      65617469 
+ 2929      6F6E5469 
+ 2930              	.LASF38:
+ 2931 01e5 64696167 		.ascii	"diagSamplingPercentage\000"
+ 2931      53616D70 
+ 2931      6C696E67 
+ 2931      50657263 
+ 2931      656E7461 
+ 2932              	.LASF17:
+ 2933 01fc 696E7436 		.ascii	"int64_t\000"
+ 2933      345F7400 
+ 2934              	.LASF43:
+ 2935 0204 76616C75 		.ascii	"value\000"
+ 2935      6500
+ 2936              	.LASF20:
+ 2937 020a 74696D65 		.ascii	"time_t\000"
+ 2937      5F7400
+ 2938              	.LASF44:
+ 2939 0211 64696167 		.ascii	"diagSetting\000"
+ 2939      53657474 
+ 2939      696E6700 
+ 2940              	.LASF66:
+ 2941 021d 72616E64 		.ascii	"rand\000"
+ 2941      00
+ 2942              	.LASF78:
+ 2943 0222 496F5448 		.ascii	"IoTHubClient_Diagnostic_AddIfNecessary\000"
+ 2943      7562436C 
+ 2943      69656E74 
+ 2943      5F446961 
+ 2943      676E6F73 
+ 2944              	.LASF37:
+ 2945 0249 494F5448 		.ascii	"IOTHUB_DIAGNOSTIC_SETTING_DATA_TAG\000"
+ 2945      55425F44 
+ 2945      4941474E 
+ 2945      4F535449 
+ 2945      435F5345 
+ 2946              	.LASF72:
+ 2947 026c 496F5448 		.ascii	"IoTHubMessage_SetDiagnosticPropertyData\000"
+ 2947      75624D65 
+ 2947      73736167 
+ 2947      655F5365 
+ 2947      74446961 
+ 2948              	.LASF62:
+ 2949 0294 64696167 		.ascii	"diagnosticData\000"
+ 2949      6E6F7374 
+ 2949      69634461 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 59
+
+
+ 2949      746100
+ 2950              	.LASF35:
+ 2951 02a3 494F5448 		.ascii	"IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA\000"
+ 2951      55425F4D 
+ 2951      45535341 
+ 2951      47455F44 
+ 2951      4941474E 
+ 2952              	.LASF19:
+ 2953 02cb 666C6F61 		.ascii	"float\000"
+ 2953      7400
+ 2954              	.LASF1:
+ 2955 02d1 6C6F6E67 		.ascii	"long long int\000"
+ 2955      206C6F6E 
+ 2955      6720696E 
+ 2955      7400
+ 2956              	.LASF47:
+ 2957 02df 70657263 		.ascii	"percentage\000"
+ 2957      656E7461 
+ 2957      676500
+ 2958              	.LASF7:
+ 2959 02ea 6C6F6E67 		.ascii	"long int\000"
+ 2959      20696E74 
+ 2959      00
+ 2960              	.LASF11:
+ 2961 02f3 5F5F696E 		.ascii	"__int64_t\000"
+ 2961      7436345F 
+ 2961      7400
+ 2962              	.LASF63:
+ 2963 02fd 44494147 		.ascii	"DIAG_CREATION_TIME_UTC_PROPERTY_NAME\000"
+ 2963      5F435245 
+ 2963      4154494F 
+ 2963      4E5F5449 
+ 2963      4D455F55 
+ 2964              	.LASF13:
+ 2965 0322 73697A65 		.ascii	"sizetype\000"
+ 2965      74797065 
+ 2965      00
+ 2966              	.LASF29:
+ 2967 032b 494F5448 		.ascii	"IOTHUB_MESSAGE_INVALID_ARG\000"
+ 2967      55425F4D 
+ 2967      45535341 
+ 2967      47455F49 
+ 2967      4E56414C 
+ 2968              	.LASF39:
+ 2969 0346 63757272 		.ascii	"currentMessageNumber\000"
+ 2969      656E744D 
+ 2969      65737361 
+ 2969      67654E75 
+ 2969      6D626572 
+ 2970              	.LASF4:
+ 2971 035b 756E7369 		.ascii	"unsigned char\000"
+ 2971      676E6564 
+ 2971      20636861 
+ 2971      7200
+ 2972              	.LASF2:
+ 2973 0369 6C6F6E67 		.ascii	"long double\000"
+ 2973      20646F75 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 60
+
+
+ 2973      626C6500 
+ 2974              	.LASF77:
+ 2975 0375 70726570 		.ascii	"prepare_message_diagnostic_data\000"
+ 2975      6172655F 
+ 2975      6D657373 
+ 2975      6167655F 
+ 2975      64696167 
+ 2976              	.LASF69:
+ 2977 0395 73707269 		.ascii	"sprintf\000"
+ 2977      6E746600 
+ 2978              	.LASF75:
+ 2979 039d 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 2979      73657273 
+ 2979      5C506875 
+ 2979      6F6E675C 
+ 2979      446F6375 
+ 2980 03cb 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 2980      6F742D73 
+ 2980      646B2D69 
+ 2980      6F742D64 
+ 2980      65765C50 
+ 2981 03fc 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 2981      494F542D 
+ 2981      4875622D 
+ 2981      44656D6F 
+ 2981      5C50534F 
+ 2982 042e 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 2982      2D487562 
+ 2982      2D44656D 
+ 2982      6F2E6379 
+ 2982      64736E00 
+ 2983              	.LASF3:
+ 2984 0442 7369676E 		.ascii	"signed char\000"
+ 2984      65642063 
+ 2984      68617200 
+ 2985              	.LASF54:
+ 2986 044e 7365636F 		.ascii	"second\000"
+ 2986      6E6400
+ 2987              	.LASF12:
+ 2988 0455 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 2988      206C6F6E 
+ 2988      6720756E 
+ 2988      7369676E 
+ 2988      65642069 
+ 2989              	.LASF16:
+ 2990 046c 75696E74 		.ascii	"uint32_t\000"
+ 2990      33325F74 
+ 2990      00
+ 2991              	.LASF0:
+ 2992 0475 756E7369 		.ascii	"unsigned int\000"
+ 2992      676E6564 
+ 2992      20696E74 
+ 2992      00
+ 2993              	.LASF60:
+ 2994 0482 64696167 		.ascii	"diagId\000"
+ 2994      496400
+ 2995              	.LASF10:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 61
+
+
+ 2996 0489 6C6F6E67 		.ascii	"long unsigned int\000"
+ 2996      20756E73 
+ 2996      69676E65 
+ 2996      6420696E 
+ 2996      7400
+ 2997              	.LASF59:
+ 2998 049b 5F5F6675 		.ascii	"__func__\000"
+ 2998      6E635F5F 
+ 2998      00
+ 2999              	.LASF24:
+ 3000 04a4 4C4F475F 		.ascii	"LOG_CATEGORY\000"
+ 3000      43415445 
+ 3000      474F5259 
+ 3000      00
+ 3001              	.LASF14:
+ 3002 04b1 63686172 		.ascii	"char\000"
+ 3002      00
+ 3003              	.LASF15:
+ 3004 04b6 696E7433 		.ascii	"int32_t\000"
+ 3004      325F7400 
+ 3005              	.LASF6:
+ 3006 04be 73686F72 		.ascii	"short unsigned int\000"
+ 3006      7420756E 
+ 3006      7369676E 
+ 3006      65642069 
+ 3006      6E7400
+ 3007              	.LASF48:
+ 3008 04d1 5F426F6F 		.ascii	"_Bool\000"
+ 3008      6C00
+ 3009              	.LASF64:
+ 3010 04d7 42415345 		.ascii	"BASE_36\000"
+ 3010      5F333600 
+ 3011              	.LASF26:
+ 3012 04df 4C4F475F 		.ascii	"LOG_CATEGORY_TAG\000"
+ 3012      43415445 
+ 3012      474F5259 
+ 3012      5F544147 
+ 3012      00
+ 3013              	.LASF58:
+ 3014 04f0 74696D65 		.ascii	"timeLen\000"
+ 3014      4C656E00 
+ 3015              	.LASF40:
+ 3016 04f8 494F5448 		.ascii	"IOTHUB_DIAGNOSTIC_SETTING_DATA\000"
+ 3016      55425F44 
+ 3016      4941474E 
+ 3016      4F535449 
+ 3016      435F5345 
+ 3017              	.LASF22:
+ 3018 0517 415A5F4C 		.ascii	"AZ_LOG_INFO\000"
+ 3018      4F475F49 
+ 3018      4E464F00 
+ 3019              	.LASF30:
+ 3020 0523 494F5448 		.ascii	"IOTHUB_MESSAGE_INVALID_TYPE\000"
+ 3020      55425F4D 
+ 3020      45535341 
+ 3020      47455F49 
+ 3020      4E56414C 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 62
+
+
+ 3021              	.LASF18:
+ 3022 053f 646F7562 		.ascii	"double\000"
+ 3022      6C6500
+ 3023              	.LASF33:
+ 3024 0546 64696167 		.ascii	"diagnosticId\000"
+ 3024      6E6F7374 
+ 3024      69634964 
+ 3024      00
+ 3025              	.LASF31:
+ 3026 0553 494F5448 		.ascii	"IOTHUB_MESSAGE_ERROR\000"
+ 3026      55425F4D 
+ 3026      45535341 
+ 3026      47455F45 
+ 3026      52524F52 
+ 3027              	.LASF68:
+ 3028 0568 6765745F 		.ascii	"get_time\000"
+ 3028      74696D65 
+ 3028      00
+ 3029              	.LASF8:
+ 3030 0571 5F5F696E 		.ascii	"__int32_t\000"
+ 3030      7433325F 
+ 3030      7400
+ 3031              	.LASF32:
+ 3032 057b 494F5448 		.ascii	"IOTHUB_MESSAGE_HANDLE\000"
+ 3032      55425F4D 
+ 3032      45535341 
+ 3032      47455F48 
+ 3032      414E444C 
+ 3033              	.LASF28:
+ 3034 0591 494F5448 		.ascii	"IOTHUB_MESSAGE_OK\000"
+ 3034      55425F4D 
+ 3034      45535341 
+ 3034      47455F4F 
+ 3034      4B00
+ 3035              	.LASF36:
+ 3036 05a3 494F5448 		.ascii	"IOTHUB_MESSAGE_DIAGNOSTIC_PROPERTY_DATA_TAG\000"
+ 3036      55425F4D 
+ 3036      45535341 
+ 3036      47455F44 
+ 3036      4941474E 
+ 3037              	.LASF57:
+ 3038 05cf 65706F63 		.ascii	"epochTime\000"
+ 3038      6854696D 
+ 3038      6500
+ 3039              	.LASF76:
+ 3040 05d9 494F5448 		.ascii	"IOTHUB_MESSAGE_HANDLE_DATA_TAG\000"
+ 3040      55425F4D 
+ 3040      45535341 
+ 3040      47455F48 
+ 3040      414E444C 
+ 3041              	.LASF46:
+ 3042 05f8 6E756D62 		.ascii	"number\000"
+ 3042      657200
+ 3043              	.LASF71:
+ 3044 05ff 66726565 		.ascii	"free\000"
+ 3044      00
+ 3045              	.LASF41:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccy2wtPc.s 			page 63
+
+
+ 3046 0604 6765745F 		.ascii	"get_base36_char\000"
+ 3046      62617365 
+ 3046      33365F63 
+ 3046      68617200 
+ 3047              	.LASF56:
+ 3048 0614 74696D65 		.ascii	"timeBuffer\000"
+ 3048      42756666 
+ 3048      657200
+ 3049              	.LASF53:
+ 3050 061f 66697273 		.ascii	"first\000"
+ 3050      7400
+ 3051              	.LASF25:
+ 3052 0625 4C4F4747 		.ascii	"LOGGER_LOG\000"
+ 3052      45525F4C 
+ 3052      4F4700
+ 3053              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

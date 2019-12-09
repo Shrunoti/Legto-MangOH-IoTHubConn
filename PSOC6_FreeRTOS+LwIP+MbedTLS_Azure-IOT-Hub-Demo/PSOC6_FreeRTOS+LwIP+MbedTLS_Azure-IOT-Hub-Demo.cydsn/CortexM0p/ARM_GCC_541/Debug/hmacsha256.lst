@@ -1,0 +1,1095 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"hmacsha256.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.HMACSHA256_ComputeHash,"ax",%progbits
+  20              		.align	2
+  21              		.global	HMACSHA256_ComputeHash
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	HMACSHA256_ComputeHash, %function
+  25              	HMACSHA256_ComputeHash:
+  26              	.LFB0:
+  27              		.file 1 "Source\\azure_iot_sdk\\c-utility\\src\\hmacsha256.c"
+   1:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** // Copyright (c) Microsoft. All rights reserved.
+   2:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** // Licensed under the MIT license. See LICENSE file in the project root for full license informatio
+   3:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** 
+   4:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** #include <stddef.h>
+   5:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** #include "azure_c_shared_utility/hmacsha256.h"
+   6:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** #include "azure_c_shared_utility/hmac.h"
+   7:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** #include "azure_c_shared_utility/buffer_.h"
+   8:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** 
+   9:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** HMACSHA256_RESULT HMACSHA256_ComputeHash(const unsigned char* key, size_t keyLen, const unsigned ch
+  10:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** {
+  28              		.loc 1 10 0
+  29              		.cfi_startproc
+  30              		@ args = 4, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  33 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+  34              		.cfi_def_cfa_offset 20
+  35              		.cfi_offset 4, -20
+  36              		.cfi_offset 5, -16
+  37              		.cfi_offset 6, -12
+  38              		.cfi_offset 7, -8
+  39              		.cfi_offset 14, -4
+  40 0002 83B0     		sub	sp, sp, #12
+  41              		.cfi_def_cfa_offset 32
+  42 0004 0400     		movs	r4, r0
+  43 0006 0D00     		movs	r5, r1
+  44 0008 1600     		movs	r6, r2
+  45 000a 1F00     		movs	r7, r3
+  11:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****     HMACSHA256_RESULT result;
+  12:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 2
+
+
+  13:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****     if (key == NULL ||
+  46              		.loc 1 13 0
+  47 000c 0028     		cmp	r0, #0
+  48 000e 1CD0     		beq	.L3
+  49              		.loc 1 13 0 is_stmt 0 discriminator 1
+  50 0010 0029     		cmp	r1, #0
+  51 0012 1CD0     		beq	.L4
+  14:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****         keyLen == 0 ||
+  52              		.loc 1 14 0 is_stmt 1
+  53 0014 002A     		cmp	r2, #0
+  54 0016 1CD0     		beq	.L5
+  15:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****         payload == NULL ||
+  55              		.loc 1 15 0
+  56 0018 002B     		cmp	r3, #0
+  57 001a 1CD0     		beq	.L6
+  16:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****         payloadLen == 0 ||
+  58              		.loc 1 16 0
+  59 001c 089B     		ldr	r3, [sp, #32]
+  60              	.LVL1:
+  61 001e 002B     		cmp	r3, #0
+  62 0020 1BD0     		beq	.L7
+  17:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****         hash == NULL)
+  18:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****     {
+  19:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****         result = HMACSHA256_INVALID_ARG;
+  20:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****     }
+  21:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****     else
+  22:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****     {
+  23:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****         if ((BUFFER_enlarge(hash, 32) != 0) ||
+  63              		.loc 1 23 0
+  64 0022 2021     		movs	r1, #32
+  65              	.LVL2:
+  66 0024 1800     		movs	r0, r3
+  67              	.LVL3:
+  68 0026 FFF7FEFF 		bl	BUFFER_enlarge
+  69              	.LVL4:
+  70 002a 0028     		cmp	r0, #0
+  71 002c 17D1     		bne	.L8
+  24:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****             (hmac(SHA256, payload, (int)payloadLen, key, (int)keyLen, BUFFER_u_char(hash) ) != 0))
+  72              		.loc 1 24 0 discriminator 1
+  73 002e 0898     		ldr	r0, [sp, #32]
+  74 0030 FFF7FEFF 		bl	BUFFER_u_char
+  75              	.LVL5:
+  76 0034 0190     		str	r0, [sp, #4]
+  77 0036 0095     		str	r5, [sp]
+  78 0038 2300     		movs	r3, r4
+  79 003a 3A00     		movs	r2, r7
+  80 003c 3100     		movs	r1, r6
+  81 003e 0220     		movs	r0, #2
+  82 0040 FFF7FEFF 		bl	hmac
+  83              	.LVL6:
+  23:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****             (hmac(SHA256, payload, (int)payloadLen, key, (int)keyLen, BUFFER_u_char(hash) ) != 0))
+  84              		.loc 1 23 0 discriminator 1
+  85 0044 0028     		cmp	r0, #0
+  86 0046 0CD1     		bne	.L9
+  87 0048 0CE0     		b	.L2
+  88              	.LVL7:
+  89              	.L3:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 3
+
+
+  19:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****     }
+  90              		.loc 1 19 0
+  91 004a 0120     		movs	r0, #1
+  92              	.LVL8:
+  93 004c 0AE0     		b	.L2
+  94              	.LVL9:
+  95              	.L4:
+  96 004e 0120     		movs	r0, #1
+  97              	.LVL10:
+  98 0050 08E0     		b	.L2
+  99              	.LVL11:
+ 100              	.L5:
+ 101 0052 0120     		movs	r0, #1
+ 102              	.LVL12:
+ 103 0054 06E0     		b	.L2
+ 104              	.LVL13:
+ 105              	.L6:
+ 106 0056 0120     		movs	r0, #1
+ 107              	.LVL14:
+ 108 0058 04E0     		b	.L2
+ 109              	.LVL15:
+ 110              	.L7:
+ 111 005a 0120     		movs	r0, #1
+ 112              	.LVL16:
+ 113 005c 02E0     		b	.L2
+ 114              	.LVL17:
+ 115              	.L8:
+  25:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****         {
+  26:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****             result = HMACSHA256_ERROR;
+ 116              		.loc 1 26 0
+ 117 005e 0220     		movs	r0, #2
+ 118 0060 00E0     		b	.L2
+ 119              	.L9:
+ 120 0062 0220     		movs	r0, #2
+ 121              	.L2:
+ 122              	.LVL18:
+  27:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****         }
+  28:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****         else
+  29:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****         {
+  30:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****             result = HMACSHA256_OK;
+  31:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****         }
+  32:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****     }
+  33:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** 
+  34:Source\azure_iot_sdk\c-utility\src/hmacsha256.c ****     return result;
+  35:Source\azure_iot_sdk\c-utility\src/hmacsha256.c **** }
+ 123              		.loc 1 35 0
+ 124 0064 03B0     		add	sp, sp, #12
+ 125              		@ sp needed
+ 126              	.LVL19:
+ 127              	.LVL20:
+ 128              	.LVL21:
+ 129              	.LVL22:
+ 130 0066 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 131              		.cfi_endproc
+ 132              	.LFE0:
+ 133              		.size	HMACSHA256_ComputeHash, .-HMACSHA256_ComputeHash
+ 134              		.text
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 4
+
+
+ 135              	.Letext0:
+ 136              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 137              		.file 3 ".\\Source\\azure_iot_sdk\\c-utility\\inc/azure_c_shared_utility/buffer_.h"
+ 138              		.file 4 ".\\Source\\azure_iot_sdk\\c-utility\\inc/azure_c_shared_utility/hmacsha256.h"
+ 139              		.file 5 ".\\Source\\azure_iot_sdk\\c-utility\\inc/azure_c_shared_utility/sha.h"
+ 140              		.file 6 ".\\Source\\azure_iot_sdk\\c-utility\\inc/azure_c_shared_utility/hmac.h"
+ 141              		.section	.debug_info,"",%progbits
+ 142              	.Ldebug_info0:
+ 143 0000 F0010000 		.4byte	0x1f0
+ 144 0004 0400     		.2byte	0x4
+ 145 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 146 000a 04       		.byte	0x4
+ 147 000b 01       		.uleb128 0x1
+ 148 000c 62020000 		.4byte	.LASF32
+ 149 0010 0C       		.byte	0xc
+ 150 0011 A3000000 		.4byte	.LASF33
+ 151 0015 13010000 		.4byte	.LASF34
+ 152 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 153 001d 00000000 		.4byte	0
+ 154 0021 00000000 		.4byte	.Ldebug_line0
+ 155 0025 02       		.uleb128 0x2
+ 156 0026 04       		.byte	0x4
+ 157 0027 05       		.byte	0x5
+ 158 0028 696E7400 		.ascii	"int\000"
+ 159 002c 03       		.uleb128 0x3
+ 160 002d 0B000000 		.4byte	.LASF12
+ 161 0031 02       		.byte	0x2
+ 162 0032 D8       		.byte	0xd8
+ 163 0033 37000000 		.4byte	0x37
+ 164 0037 04       		.uleb128 0x4
+ 165 0038 04       		.byte	0x4
+ 166 0039 07       		.byte	0x7
+ 167 003a 06010000 		.4byte	.LASF0
+ 168 003e 04       		.uleb128 0x4
+ 169 003f 08       		.byte	0x8
+ 170 0040 05       		.byte	0x5
+ 171 0041 1A020000 		.4byte	.LASF1
+ 172 0045 04       		.uleb128 0x4
+ 173 0046 08       		.byte	0x8
+ 174 0047 04       		.byte	0x4
+ 175 0048 56020000 		.4byte	.LASF2
+ 176 004c 04       		.uleb128 0x4
+ 177 004d 01       		.byte	0x1
+ 178 004e 06       		.byte	0x6
+ 179 004f F4020000 		.4byte	.LASF3
+ 180 0053 04       		.uleb128 0x4
+ 181 0054 01       		.byte	0x1
+ 182 0055 08       		.byte	0x8
+ 183 0056 70000000 		.4byte	.LASF4
+ 184 005a 04       		.uleb128 0x4
+ 185 005b 02       		.byte	0x2
+ 186 005c 05       		.byte	0x5
+ 187 005d 34020000 		.4byte	.LASF5
+ 188 0061 04       		.uleb128 0x4
+ 189 0062 02       		.byte	0x2
+ 190 0063 07       		.byte	0x7
+ 191 0064 12000000 		.4byte	.LASF6
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 5
+
+
+ 192 0068 04       		.uleb128 0x4
+ 193 0069 04       		.byte	0x4
+ 194 006a 05       		.byte	0x5
+ 195 006b 3E020000 		.4byte	.LASF7
+ 196 006f 04       		.uleb128 0x4
+ 197 0070 04       		.byte	0x4
+ 198 0071 07       		.byte	0x7
+ 199 0072 83000000 		.4byte	.LASF8
+ 200 0076 04       		.uleb128 0x4
+ 201 0077 08       		.byte	0x8
+ 202 0078 07       		.byte	0x7
+ 203 0079 B8010000 		.4byte	.LASF9
+ 204 007d 04       		.uleb128 0x4
+ 205 007e 04       		.byte	0x4
+ 206 007f 07       		.byte	0x7
+ 207 0080 11020000 		.4byte	.LASF10
+ 208 0084 04       		.uleb128 0x4
+ 209 0085 01       		.byte	0x1
+ 210 0086 08       		.byte	0x8
+ 211 0087 2F020000 		.4byte	.LASF11
+ 212 008b 03       		.uleb128 0x3
+ 213 008c F1010000 		.4byte	.LASF13
+ 214 0090 03       		.byte	0x3
+ 215 0091 12       		.byte	0x12
+ 216 0092 96000000 		.4byte	0x96
+ 217 0096 05       		.uleb128 0x5
+ 218 0097 04       		.byte	0x4
+ 219 0098 9C000000 		.4byte	0x9c
+ 220 009c 06       		.uleb128 0x6
+ 221 009d 25000000 		.4byte	.LASF35
+ 222 00a1 07       		.uleb128 0x7
+ 223 00a2 D6010000 		.4byte	.LASF18
+ 224 00a6 01       		.byte	0x1
+ 225 00a7 53000000 		.4byte	0x53
+ 226 00ab 04       		.byte	0x4
+ 227 00ac 14       		.byte	0x14
+ 228 00ad C4000000 		.4byte	0xc4
+ 229 00b1 08       		.uleb128 0x8
+ 230 00b2 00030000 		.4byte	.LASF14
+ 231 00b6 00       		.byte	0
+ 232 00b7 08       		.uleb128 0x8
+ 233 00b8 54000000 		.4byte	.LASF15
+ 234 00bc 01       		.byte	0x1
+ 235 00bd 08       		.uleb128 0x8
+ 236 00be 43000000 		.4byte	.LASF16
+ 237 00c2 02       		.byte	0x2
+ 238 00c3 00       		.byte	0
+ 239 00c4 03       		.uleb128 0x3
+ 240 00c5 FF010000 		.4byte	.LASF17
+ 241 00c9 04       		.byte	0x4
+ 242 00ca 14       		.byte	0x14
+ 243 00cb A1000000 		.4byte	0xa1
+ 244 00cf 07       		.uleb128 0x7
+ 245 00d0 00000000 		.4byte	.LASF19
+ 246 00d4 01       		.byte	0x1
+ 247 00d5 53000000 		.4byte	0x53
+ 248 00d9 05       		.byte	0x5
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 6
+
+
+ 249 00da 53       		.byte	0x53
+ 250 00db FE000000 		.4byte	0xfe
+ 251 00df 08       		.uleb128 0x8
+ 252 00e0 7E000000 		.4byte	.LASF20
+ 253 00e4 00       		.byte	0
+ 254 00e5 08       		.uleb128 0x8
+ 255 00e6 DA000000 		.4byte	.LASF21
+ 256 00ea 01       		.byte	0x1
+ 257 00eb 08       		.uleb128 0x8
+ 258 00ec D3000000 		.4byte	.LASF22
+ 259 00f0 02       		.byte	0x2
+ 260 00f1 08       		.uleb128 0x8
+ 261 00f2 9C000000 		.4byte	.LASF23
+ 262 00f6 03       		.byte	0x3
+ 263 00f7 08       		.uleb128 0x8
+ 264 00f8 95000000 		.4byte	.LASF24
+ 265 00fc 04       		.byte	0x4
+ 266 00fd 00       		.byte	0
+ 267 00fe 09       		.uleb128 0x9
+ 268 00ff EF000000 		.4byte	.LASF36
+ 269 0103 01       		.byte	0x1
+ 270 0104 09       		.byte	0x9
+ 271 0105 C4000000 		.4byte	0xc4
+ 272 0109 00000000 		.4byte	.LFB0
+ 273 010d 68000000 		.4byte	.LFE0-.LFB0
+ 274 0111 01       		.uleb128 0x1
+ 275 0112 9C       		.byte	0x9c
+ 276 0113 C7010000 		.4byte	0x1c7
+ 277 0117 0A       		.uleb128 0xa
+ 278 0118 6B657900 		.ascii	"key\000"
+ 279 011c 01       		.byte	0x1
+ 280 011d 09       		.byte	0x9
+ 281 011e C7010000 		.4byte	0x1c7
+ 282 0122 00000000 		.4byte	.LLST0
+ 283 0126 0B       		.uleb128 0xb
+ 284 0127 28020000 		.4byte	.LASF25
+ 285 012b 01       		.byte	0x1
+ 286 012c 09       		.byte	0x9
+ 287 012d 2C000000 		.4byte	0x2c
+ 288 0131 9A000000 		.4byte	.LLST1
+ 289 0135 0B       		.uleb128 0xb
+ 290 0136 3B000000 		.4byte	.LASF26
+ 291 013a 01       		.byte	0x1
+ 292 013b 09       		.byte	0x9
+ 293 013c C7010000 		.4byte	0x1c7
+ 294 0140 DC000000 		.4byte	.LLST2
+ 295 0144 0B       		.uleb128 0xb
+ 296 0145 30000000 		.4byte	.LASF27
+ 297 0149 01       		.byte	0x1
+ 298 014a 09       		.byte	0x9
+ 299 014b 2C000000 		.4byte	0x2c
+ 300 014f 1E010000 		.4byte	.LLST3
+ 301 0153 0C       		.uleb128 0xc
+ 302 0154 EC010000 		.4byte	.LASF28
+ 303 0158 01       		.byte	0x1
+ 304 0159 09       		.byte	0x9
+ 305 015a 8B000000 		.4byte	0x8b
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 7
+
+
+ 306 015e 02       		.uleb128 0x2
+ 307 015f 91       		.byte	0x91
+ 308 0160 00       		.sleb128 0
+ 309 0161 0D       		.uleb128 0xd
+ 310 0162 CF010000 		.4byte	.LASF37
+ 311 0166 01       		.byte	0x1
+ 312 0167 0B       		.byte	0xb
+ 313 0168 C4000000 		.4byte	0xc4
+ 314 016c 01       		.uleb128 0x1
+ 315 016d 50       		.byte	0x50
+ 316 016e 0E       		.uleb128 0xe
+ 317 016f 2A000000 		.4byte	.LVL4
+ 318 0173 D2010000 		.4byte	0x1d2
+ 319 0177 89010000 		.4byte	0x189
+ 320 017b 0F       		.uleb128 0xf
+ 321 017c 01       		.uleb128 0x1
+ 322 017d 50       		.byte	0x50
+ 323 017e 03       		.uleb128 0x3
+ 324 017f 91       		.byte	0x91
+ 325 0180 00       		.sleb128 0
+ 326 0181 06       		.byte	0x6
+ 327 0182 0F       		.uleb128 0xf
+ 328 0183 01       		.uleb128 0x1
+ 329 0184 51       		.byte	0x51
+ 330 0185 02       		.uleb128 0x2
+ 331 0186 08       		.byte	0x8
+ 332 0187 20       		.byte	0x20
+ 333 0188 00       		.byte	0
+ 334 0189 0E       		.uleb128 0xe
+ 335 018a 34000000 		.4byte	.LVL5
+ 336 018e DD010000 		.4byte	0x1dd
+ 337 0192 9E010000 		.4byte	0x19e
+ 338 0196 0F       		.uleb128 0xf
+ 339 0197 01       		.uleb128 0x1
+ 340 0198 50       		.byte	0x50
+ 341 0199 03       		.uleb128 0x3
+ 342 019a 91       		.byte	0x91
+ 343 019b 00       		.sleb128 0
+ 344 019c 06       		.byte	0x6
+ 345 019d 00       		.byte	0
+ 346 019e 10       		.uleb128 0x10
+ 347 019f 44000000 		.4byte	.LVL6
+ 348 01a3 E8010000 		.4byte	0x1e8
+ 349 01a7 0F       		.uleb128 0xf
+ 350 01a8 01       		.uleb128 0x1
+ 351 01a9 50       		.byte	0x50
+ 352 01aa 01       		.uleb128 0x1
+ 353 01ab 32       		.byte	0x32
+ 354 01ac 0F       		.uleb128 0xf
+ 355 01ad 01       		.uleb128 0x1
+ 356 01ae 51       		.byte	0x51
+ 357 01af 02       		.uleb128 0x2
+ 358 01b0 76       		.byte	0x76
+ 359 01b1 00       		.sleb128 0
+ 360 01b2 0F       		.uleb128 0xf
+ 361 01b3 01       		.uleb128 0x1
+ 362 01b4 52       		.byte	0x52
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 8
+
+
+ 363 01b5 02       		.uleb128 0x2
+ 364 01b6 77       		.byte	0x77
+ 365 01b7 00       		.sleb128 0
+ 366 01b8 0F       		.uleb128 0xf
+ 367 01b9 01       		.uleb128 0x1
+ 368 01ba 53       		.byte	0x53
+ 369 01bb 02       		.uleb128 0x2
+ 370 01bc 74       		.byte	0x74
+ 371 01bd 00       		.sleb128 0
+ 372 01be 0F       		.uleb128 0xf
+ 373 01bf 02       		.uleb128 0x2
+ 374 01c0 7D       		.byte	0x7d
+ 375 01c1 00       		.sleb128 0
+ 376 01c2 02       		.uleb128 0x2
+ 377 01c3 75       		.byte	0x75
+ 378 01c4 00       		.sleb128 0
+ 379 01c5 00       		.byte	0
+ 380 01c6 00       		.byte	0
+ 381 01c7 05       		.uleb128 0x5
+ 382 01c8 04       		.byte	0x4
+ 383 01c9 CD010000 		.4byte	0x1cd
+ 384 01cd 11       		.uleb128 0x11
+ 385 01ce 53000000 		.4byte	0x53
+ 386 01d2 12       		.uleb128 0x12
+ 387 01d3 47020000 		.4byte	.LASF29
+ 388 01d7 47020000 		.4byte	.LASF29
+ 389 01db 03       		.byte	0x3
+ 390 01dc 1B       		.byte	0x1b
+ 391 01dd 12       		.uleb128 0x12
+ 392 01de E1000000 		.4byte	.LASF30
+ 393 01e2 E1000000 		.4byte	.LASF30
+ 394 01e6 03       		.byte	0x3
+ 395 01e7 22       		.byte	0x22
+ 396 01e8 12       		.uleb128 0x12
+ 397 01e9 6B000000 		.4byte	.LASF31
+ 398 01ed 6B000000 		.4byte	.LASF31
+ 399 01f1 06       		.byte	0x6
+ 400 01f2 0E       		.byte	0xe
+ 401 01f3 00       		.byte	0
+ 402              		.section	.debug_abbrev,"",%progbits
+ 403              	.Ldebug_abbrev0:
+ 404 0000 01       		.uleb128 0x1
+ 405 0001 11       		.uleb128 0x11
+ 406 0002 01       		.byte	0x1
+ 407 0003 25       		.uleb128 0x25
+ 408 0004 0E       		.uleb128 0xe
+ 409 0005 13       		.uleb128 0x13
+ 410 0006 0B       		.uleb128 0xb
+ 411 0007 03       		.uleb128 0x3
+ 412 0008 0E       		.uleb128 0xe
+ 413 0009 1B       		.uleb128 0x1b
+ 414 000a 0E       		.uleb128 0xe
+ 415 000b 55       		.uleb128 0x55
+ 416 000c 17       		.uleb128 0x17
+ 417 000d 11       		.uleb128 0x11
+ 418 000e 01       		.uleb128 0x1
+ 419 000f 10       		.uleb128 0x10
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 9
+
+
+ 420 0010 17       		.uleb128 0x17
+ 421 0011 00       		.byte	0
+ 422 0012 00       		.byte	0
+ 423 0013 02       		.uleb128 0x2
+ 424 0014 24       		.uleb128 0x24
+ 425 0015 00       		.byte	0
+ 426 0016 0B       		.uleb128 0xb
+ 427 0017 0B       		.uleb128 0xb
+ 428 0018 3E       		.uleb128 0x3e
+ 429 0019 0B       		.uleb128 0xb
+ 430 001a 03       		.uleb128 0x3
+ 431 001b 08       		.uleb128 0x8
+ 432 001c 00       		.byte	0
+ 433 001d 00       		.byte	0
+ 434 001e 03       		.uleb128 0x3
+ 435 001f 16       		.uleb128 0x16
+ 436 0020 00       		.byte	0
+ 437 0021 03       		.uleb128 0x3
+ 438 0022 0E       		.uleb128 0xe
+ 439 0023 3A       		.uleb128 0x3a
+ 440 0024 0B       		.uleb128 0xb
+ 441 0025 3B       		.uleb128 0x3b
+ 442 0026 0B       		.uleb128 0xb
+ 443 0027 49       		.uleb128 0x49
+ 444 0028 13       		.uleb128 0x13
+ 445 0029 00       		.byte	0
+ 446 002a 00       		.byte	0
+ 447 002b 04       		.uleb128 0x4
+ 448 002c 24       		.uleb128 0x24
+ 449 002d 00       		.byte	0
+ 450 002e 0B       		.uleb128 0xb
+ 451 002f 0B       		.uleb128 0xb
+ 452 0030 3E       		.uleb128 0x3e
+ 453 0031 0B       		.uleb128 0xb
+ 454 0032 03       		.uleb128 0x3
+ 455 0033 0E       		.uleb128 0xe
+ 456 0034 00       		.byte	0
+ 457 0035 00       		.byte	0
+ 458 0036 05       		.uleb128 0x5
+ 459 0037 0F       		.uleb128 0xf
+ 460 0038 00       		.byte	0
+ 461 0039 0B       		.uleb128 0xb
+ 462 003a 0B       		.uleb128 0xb
+ 463 003b 49       		.uleb128 0x49
+ 464 003c 13       		.uleb128 0x13
+ 465 003d 00       		.byte	0
+ 466 003e 00       		.byte	0
+ 467 003f 06       		.uleb128 0x6
+ 468 0040 13       		.uleb128 0x13
+ 469 0041 00       		.byte	0
+ 470 0042 03       		.uleb128 0x3
+ 471 0043 0E       		.uleb128 0xe
+ 472 0044 3C       		.uleb128 0x3c
+ 473 0045 19       		.uleb128 0x19
+ 474 0046 00       		.byte	0
+ 475 0047 00       		.byte	0
+ 476 0048 07       		.uleb128 0x7
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 10
+
+
+ 477 0049 04       		.uleb128 0x4
+ 478 004a 01       		.byte	0x1
+ 479 004b 03       		.uleb128 0x3
+ 480 004c 0E       		.uleb128 0xe
+ 481 004d 0B       		.uleb128 0xb
+ 482 004e 0B       		.uleb128 0xb
+ 483 004f 49       		.uleb128 0x49
+ 484 0050 13       		.uleb128 0x13
+ 485 0051 3A       		.uleb128 0x3a
+ 486 0052 0B       		.uleb128 0xb
+ 487 0053 3B       		.uleb128 0x3b
+ 488 0054 0B       		.uleb128 0xb
+ 489 0055 01       		.uleb128 0x1
+ 490 0056 13       		.uleb128 0x13
+ 491 0057 00       		.byte	0
+ 492 0058 00       		.byte	0
+ 493 0059 08       		.uleb128 0x8
+ 494 005a 28       		.uleb128 0x28
+ 495 005b 00       		.byte	0
+ 496 005c 03       		.uleb128 0x3
+ 497 005d 0E       		.uleb128 0xe
+ 498 005e 1C       		.uleb128 0x1c
+ 499 005f 0B       		.uleb128 0xb
+ 500 0060 00       		.byte	0
+ 501 0061 00       		.byte	0
+ 502 0062 09       		.uleb128 0x9
+ 503 0063 2E       		.uleb128 0x2e
+ 504 0064 01       		.byte	0x1
+ 505 0065 3F       		.uleb128 0x3f
+ 506 0066 19       		.uleb128 0x19
+ 507 0067 03       		.uleb128 0x3
+ 508 0068 0E       		.uleb128 0xe
+ 509 0069 3A       		.uleb128 0x3a
+ 510 006a 0B       		.uleb128 0xb
+ 511 006b 3B       		.uleb128 0x3b
+ 512 006c 0B       		.uleb128 0xb
+ 513 006d 27       		.uleb128 0x27
+ 514 006e 19       		.uleb128 0x19
+ 515 006f 49       		.uleb128 0x49
+ 516 0070 13       		.uleb128 0x13
+ 517 0071 11       		.uleb128 0x11
+ 518 0072 01       		.uleb128 0x1
+ 519 0073 12       		.uleb128 0x12
+ 520 0074 06       		.uleb128 0x6
+ 521 0075 40       		.uleb128 0x40
+ 522 0076 18       		.uleb128 0x18
+ 523 0077 9742     		.uleb128 0x2117
+ 524 0079 19       		.uleb128 0x19
+ 525 007a 01       		.uleb128 0x1
+ 526 007b 13       		.uleb128 0x13
+ 527 007c 00       		.byte	0
+ 528 007d 00       		.byte	0
+ 529 007e 0A       		.uleb128 0xa
+ 530 007f 05       		.uleb128 0x5
+ 531 0080 00       		.byte	0
+ 532 0081 03       		.uleb128 0x3
+ 533 0082 08       		.uleb128 0x8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 11
+
+
+ 534 0083 3A       		.uleb128 0x3a
+ 535 0084 0B       		.uleb128 0xb
+ 536 0085 3B       		.uleb128 0x3b
+ 537 0086 0B       		.uleb128 0xb
+ 538 0087 49       		.uleb128 0x49
+ 539 0088 13       		.uleb128 0x13
+ 540 0089 02       		.uleb128 0x2
+ 541 008a 17       		.uleb128 0x17
+ 542 008b 00       		.byte	0
+ 543 008c 00       		.byte	0
+ 544 008d 0B       		.uleb128 0xb
+ 545 008e 05       		.uleb128 0x5
+ 546 008f 00       		.byte	0
+ 547 0090 03       		.uleb128 0x3
+ 548 0091 0E       		.uleb128 0xe
+ 549 0092 3A       		.uleb128 0x3a
+ 550 0093 0B       		.uleb128 0xb
+ 551 0094 3B       		.uleb128 0x3b
+ 552 0095 0B       		.uleb128 0xb
+ 553 0096 49       		.uleb128 0x49
+ 554 0097 13       		.uleb128 0x13
+ 555 0098 02       		.uleb128 0x2
+ 556 0099 17       		.uleb128 0x17
+ 557 009a 00       		.byte	0
+ 558 009b 00       		.byte	0
+ 559 009c 0C       		.uleb128 0xc
+ 560 009d 05       		.uleb128 0x5
+ 561 009e 00       		.byte	0
+ 562 009f 03       		.uleb128 0x3
+ 563 00a0 0E       		.uleb128 0xe
+ 564 00a1 3A       		.uleb128 0x3a
+ 565 00a2 0B       		.uleb128 0xb
+ 566 00a3 3B       		.uleb128 0x3b
+ 567 00a4 0B       		.uleb128 0xb
+ 568 00a5 49       		.uleb128 0x49
+ 569 00a6 13       		.uleb128 0x13
+ 570 00a7 02       		.uleb128 0x2
+ 571 00a8 18       		.uleb128 0x18
+ 572 00a9 00       		.byte	0
+ 573 00aa 00       		.byte	0
+ 574 00ab 0D       		.uleb128 0xd
+ 575 00ac 34       		.uleb128 0x34
+ 576 00ad 00       		.byte	0
+ 577 00ae 03       		.uleb128 0x3
+ 578 00af 0E       		.uleb128 0xe
+ 579 00b0 3A       		.uleb128 0x3a
+ 580 00b1 0B       		.uleb128 0xb
+ 581 00b2 3B       		.uleb128 0x3b
+ 582 00b3 0B       		.uleb128 0xb
+ 583 00b4 49       		.uleb128 0x49
+ 584 00b5 13       		.uleb128 0x13
+ 585 00b6 02       		.uleb128 0x2
+ 586 00b7 18       		.uleb128 0x18
+ 587 00b8 00       		.byte	0
+ 588 00b9 00       		.byte	0
+ 589 00ba 0E       		.uleb128 0xe
+ 590 00bb 898201   		.uleb128 0x4109
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 12
+
+
+ 591 00be 01       		.byte	0x1
+ 592 00bf 11       		.uleb128 0x11
+ 593 00c0 01       		.uleb128 0x1
+ 594 00c1 31       		.uleb128 0x31
+ 595 00c2 13       		.uleb128 0x13
+ 596 00c3 01       		.uleb128 0x1
+ 597 00c4 13       		.uleb128 0x13
+ 598 00c5 00       		.byte	0
+ 599 00c6 00       		.byte	0
+ 600 00c7 0F       		.uleb128 0xf
+ 601 00c8 8A8201   		.uleb128 0x410a
+ 602 00cb 00       		.byte	0
+ 603 00cc 02       		.uleb128 0x2
+ 604 00cd 18       		.uleb128 0x18
+ 605 00ce 9142     		.uleb128 0x2111
+ 606 00d0 18       		.uleb128 0x18
+ 607 00d1 00       		.byte	0
+ 608 00d2 00       		.byte	0
+ 609 00d3 10       		.uleb128 0x10
+ 610 00d4 898201   		.uleb128 0x4109
+ 611 00d7 01       		.byte	0x1
+ 612 00d8 11       		.uleb128 0x11
+ 613 00d9 01       		.uleb128 0x1
+ 614 00da 31       		.uleb128 0x31
+ 615 00db 13       		.uleb128 0x13
+ 616 00dc 00       		.byte	0
+ 617 00dd 00       		.byte	0
+ 618 00de 11       		.uleb128 0x11
+ 619 00df 26       		.uleb128 0x26
+ 620 00e0 00       		.byte	0
+ 621 00e1 49       		.uleb128 0x49
+ 622 00e2 13       		.uleb128 0x13
+ 623 00e3 00       		.byte	0
+ 624 00e4 00       		.byte	0
+ 625 00e5 12       		.uleb128 0x12
+ 626 00e6 2E       		.uleb128 0x2e
+ 627 00e7 00       		.byte	0
+ 628 00e8 3F       		.uleb128 0x3f
+ 629 00e9 19       		.uleb128 0x19
+ 630 00ea 3C       		.uleb128 0x3c
+ 631 00eb 19       		.uleb128 0x19
+ 632 00ec 6E       		.uleb128 0x6e
+ 633 00ed 0E       		.uleb128 0xe
+ 634 00ee 03       		.uleb128 0x3
+ 635 00ef 0E       		.uleb128 0xe
+ 636 00f0 3A       		.uleb128 0x3a
+ 637 00f1 0B       		.uleb128 0xb
+ 638 00f2 3B       		.uleb128 0x3b
+ 639 00f3 0B       		.uleb128 0xb
+ 640 00f4 00       		.byte	0
+ 641 00f5 00       		.byte	0
+ 642 00f6 00       		.byte	0
+ 643              		.section	.debug_loc,"",%progbits
+ 644              	.Ldebug_loc0:
+ 645              	.LLST0:
+ 646 0000 00000000 		.4byte	.LVL0
+ 647 0004 26000000 		.4byte	.LVL3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 13
+
+
+ 648 0008 0100     		.2byte	0x1
+ 649 000a 50       		.byte	0x50
+ 650 000b 26000000 		.4byte	.LVL3
+ 651 000f 4A000000 		.4byte	.LVL7
+ 652 0013 0100     		.2byte	0x1
+ 653 0015 54       		.byte	0x54
+ 654 0016 4A000000 		.4byte	.LVL7
+ 655 001a 4C000000 		.4byte	.LVL8
+ 656 001e 0100     		.2byte	0x1
+ 657 0020 50       		.byte	0x50
+ 658 0021 4C000000 		.4byte	.LVL8
+ 659 0025 4E000000 		.4byte	.LVL9
+ 660 0029 0100     		.2byte	0x1
+ 661 002b 54       		.byte	0x54
+ 662 002c 4E000000 		.4byte	.LVL9
+ 663 0030 50000000 		.4byte	.LVL10
+ 664 0034 0100     		.2byte	0x1
+ 665 0036 50       		.byte	0x50
+ 666 0037 50000000 		.4byte	.LVL10
+ 667 003b 52000000 		.4byte	.LVL11
+ 668 003f 0100     		.2byte	0x1
+ 669 0041 54       		.byte	0x54
+ 670 0042 52000000 		.4byte	.LVL11
+ 671 0046 54000000 		.4byte	.LVL12
+ 672 004a 0100     		.2byte	0x1
+ 673 004c 50       		.byte	0x50
+ 674 004d 54000000 		.4byte	.LVL12
+ 675 0051 56000000 		.4byte	.LVL13
+ 676 0055 0100     		.2byte	0x1
+ 677 0057 54       		.byte	0x54
+ 678 0058 56000000 		.4byte	.LVL13
+ 679 005c 58000000 		.4byte	.LVL14
+ 680 0060 0100     		.2byte	0x1
+ 681 0062 50       		.byte	0x50
+ 682 0063 58000000 		.4byte	.LVL14
+ 683 0067 5A000000 		.4byte	.LVL15
+ 684 006b 0100     		.2byte	0x1
+ 685 006d 54       		.byte	0x54
+ 686 006e 5A000000 		.4byte	.LVL15
+ 687 0072 5C000000 		.4byte	.LVL16
+ 688 0076 0100     		.2byte	0x1
+ 689 0078 50       		.byte	0x50
+ 690 0079 5C000000 		.4byte	.LVL16
+ 691 007d 66000000 		.4byte	.LVL19
+ 692 0081 0100     		.2byte	0x1
+ 693 0083 54       		.byte	0x54
+ 694 0084 66000000 		.4byte	.LVL19
+ 695 0088 68000000 		.4byte	.LFE0
+ 696 008c 0400     		.2byte	0x4
+ 697 008e F3       		.byte	0xf3
+ 698 008f 01       		.uleb128 0x1
+ 699 0090 50       		.byte	0x50
+ 700 0091 9F       		.byte	0x9f
+ 701 0092 00000000 		.4byte	0
+ 702 0096 00000000 		.4byte	0
+ 703              	.LLST1:
+ 704 009a 00000000 		.4byte	.LVL0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 14
+
+
+ 705 009e 24000000 		.4byte	.LVL2
+ 706 00a2 0100     		.2byte	0x1
+ 707 00a4 51       		.byte	0x51
+ 708 00a5 24000000 		.4byte	.LVL2
+ 709 00a9 4A000000 		.4byte	.LVL7
+ 710 00ad 0100     		.2byte	0x1
+ 711 00af 55       		.byte	0x55
+ 712 00b0 4A000000 		.4byte	.LVL7
+ 713 00b4 5E000000 		.4byte	.LVL17
+ 714 00b8 0100     		.2byte	0x1
+ 715 00ba 51       		.byte	0x51
+ 716 00bb 5E000000 		.4byte	.LVL17
+ 717 00bf 66000000 		.4byte	.LVL20
+ 718 00c3 0100     		.2byte	0x1
+ 719 00c5 55       		.byte	0x55
+ 720 00c6 66000000 		.4byte	.LVL20
+ 721 00ca 68000000 		.4byte	.LFE0
+ 722 00ce 0400     		.2byte	0x4
+ 723 00d0 F3       		.byte	0xf3
+ 724 00d1 01       		.uleb128 0x1
+ 725 00d2 51       		.byte	0x51
+ 726 00d3 9F       		.byte	0x9f
+ 727 00d4 00000000 		.4byte	0
+ 728 00d8 00000000 		.4byte	0
+ 729              	.LLST2:
+ 730 00dc 00000000 		.4byte	.LVL0
+ 731 00e0 29000000 		.4byte	.LVL4-1
+ 732 00e4 0100     		.2byte	0x1
+ 733 00e6 52       		.byte	0x52
+ 734 00e7 29000000 		.4byte	.LVL4-1
+ 735 00eb 4A000000 		.4byte	.LVL7
+ 736 00ef 0100     		.2byte	0x1
+ 737 00f1 56       		.byte	0x56
+ 738 00f2 4A000000 		.4byte	.LVL7
+ 739 00f6 5E000000 		.4byte	.LVL17
+ 740 00fa 0100     		.2byte	0x1
+ 741 00fc 52       		.byte	0x52
+ 742 00fd 5E000000 		.4byte	.LVL17
+ 743 0101 66000000 		.4byte	.LVL21
+ 744 0105 0100     		.2byte	0x1
+ 745 0107 56       		.byte	0x56
+ 746 0108 66000000 		.4byte	.LVL21
+ 747 010c 68000000 		.4byte	.LFE0
+ 748 0110 0400     		.2byte	0x4
+ 749 0112 F3       		.byte	0xf3
+ 750 0113 01       		.uleb128 0x1
+ 751 0114 52       		.byte	0x52
+ 752 0115 9F       		.byte	0x9f
+ 753 0116 00000000 		.4byte	0
+ 754 011a 00000000 		.4byte	0
+ 755              	.LLST3:
+ 756 011e 00000000 		.4byte	.LVL0
+ 757 0122 1E000000 		.4byte	.LVL1
+ 758 0126 0100     		.2byte	0x1
+ 759 0128 53       		.byte	0x53
+ 760 0129 1E000000 		.4byte	.LVL1
+ 761 012d 4A000000 		.4byte	.LVL7
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 15
+
+
+ 762 0131 0100     		.2byte	0x1
+ 763 0133 57       		.byte	0x57
+ 764 0134 4A000000 		.4byte	.LVL7
+ 765 0138 5A000000 		.4byte	.LVL15
+ 766 013c 0100     		.2byte	0x1
+ 767 013e 53       		.byte	0x53
+ 768 013f 5A000000 		.4byte	.LVL15
+ 769 0143 66000000 		.4byte	.LVL22
+ 770 0147 0100     		.2byte	0x1
+ 771 0149 57       		.byte	0x57
+ 772 014a 66000000 		.4byte	.LVL22
+ 773 014e 68000000 		.4byte	.LFE0
+ 774 0152 0400     		.2byte	0x4
+ 775 0154 F3       		.byte	0xf3
+ 776 0155 01       		.uleb128 0x1
+ 777 0156 53       		.byte	0x53
+ 778 0157 9F       		.byte	0x9f
+ 779 0158 00000000 		.4byte	0
+ 780 015c 00000000 		.4byte	0
+ 781              		.section	.debug_aranges,"",%progbits
+ 782 0000 1C000000 		.4byte	0x1c
+ 783 0004 0200     		.2byte	0x2
+ 784 0006 00000000 		.4byte	.Ldebug_info0
+ 785 000a 04       		.byte	0x4
+ 786 000b 00       		.byte	0
+ 787 000c 0000     		.2byte	0
+ 788 000e 0000     		.2byte	0
+ 789 0010 00000000 		.4byte	.LFB0
+ 790 0014 68000000 		.4byte	.LFE0-.LFB0
+ 791 0018 00000000 		.4byte	0
+ 792 001c 00000000 		.4byte	0
+ 793              		.section	.debug_ranges,"",%progbits
+ 794              	.Ldebug_ranges0:
+ 795 0000 00000000 		.4byte	.LFB0
+ 796 0004 68000000 		.4byte	.LFE0
+ 797 0008 00000000 		.4byte	0
+ 798 000c 00000000 		.4byte	0
+ 799              		.section	.debug_line,"",%progbits
+ 800              	.Ldebug_line0:
+ 801 0000 64010000 		.section	.debug_str,"MS",%progbits,1
+ 801      02003401 
+ 801      00000201 
+ 801      FB0E0D00 
+ 801      01010101 
+ 802              	.LASF19:
+ 803 0000 53484176 		.ascii	"SHAversion\000"
+ 803      65727369 
+ 803      6F6E00
+ 804              	.LASF12:
+ 805 000b 73697A65 		.ascii	"size_t\000"
+ 805      5F7400
+ 806              	.LASF6:
+ 807 0012 73686F72 		.ascii	"short unsigned int\000"
+ 807      7420756E 
+ 807      7369676E 
+ 807      65642069 
+ 807      6E7400
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 16
+
+
+ 808              	.LASF35:
+ 809 0025 42554646 		.ascii	"BUFFER_TAG\000"
+ 809      45525F54 
+ 809      414700
+ 810              	.LASF27:
+ 811 0030 7061796C 		.ascii	"payloadLen\000"
+ 811      6F61644C 
+ 811      656E00
+ 812              	.LASF26:
+ 813 003b 7061796C 		.ascii	"payload\000"
+ 813      6F616400 
+ 814              	.LASF16:
+ 815 0043 484D4143 		.ascii	"HMACSHA256_ERROR\000"
+ 815      53484132 
+ 815      35365F45 
+ 815      52524F52 
+ 815      00
+ 816              	.LASF15:
+ 817 0054 484D4143 		.ascii	"HMACSHA256_INVALID_ARG\000"
+ 817      53484132 
+ 817      35365F49 
+ 817      4E56414C 
+ 817      49445F41 
+ 818              	.LASF31:
+ 819 006b 686D6163 		.ascii	"hmac\000"
+ 819      00
+ 820              	.LASF4:
+ 821 0070 756E7369 		.ascii	"unsigned char\000"
+ 821      676E6564 
+ 821      20636861 
+ 821      7200
+ 822              	.LASF20:
+ 823 007e 53484131 		.ascii	"SHA1\000"
+ 823      00
+ 824              	.LASF8:
+ 825 0083 6C6F6E67 		.ascii	"long unsigned int\000"
+ 825      20756E73 
+ 825      69676E65 
+ 825      6420696E 
+ 825      7400
+ 826              	.LASF24:
+ 827 0095 53484135 		.ascii	"SHA512\000"
+ 827      313200
+ 828              	.LASF23:
+ 829 009c 53484133 		.ascii	"SHA384\000"
+ 829      383400
+ 830              	.LASF33:
+ 831 00a3 536F7572 		.ascii	"Source\\azure_iot_sdk\\c-utility\\src\\hmacsha256.c"
+ 831      63655C61 
+ 831      7A757265 
+ 831      5F696F74 
+ 831      5F73646B 
+ 832 00d2 00       		.ascii	"\000"
+ 833              	.LASF22:
+ 834 00d3 53484132 		.ascii	"SHA256\000"
+ 834      353600
+ 835              	.LASF21:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 17
+
+
+ 836 00da 53484132 		.ascii	"SHA224\000"
+ 836      323400
+ 837              	.LASF30:
+ 838 00e1 42554646 		.ascii	"BUFFER_u_char\000"
+ 838      45525F75 
+ 838      5F636861 
+ 838      7200
+ 839              	.LASF36:
+ 840 00ef 484D4143 		.ascii	"HMACSHA256_ComputeHash\000"
+ 840      53484132 
+ 840      35365F43 
+ 840      6F6D7075 
+ 840      74654861 
+ 841              	.LASF0:
+ 842 0106 756E7369 		.ascii	"unsigned int\000"
+ 842      676E6564 
+ 842      20696E74 
+ 842      00
+ 843              	.LASF34:
+ 844 0113 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 844      73657273 
+ 844      5C506875 
+ 844      6F6E675C 
+ 844      446F6375 
+ 845 0141 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 845      6F742D73 
+ 845      646B2D69 
+ 845      6F742D64 
+ 845      65765C50 
+ 846 0172 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 846      494F542D 
+ 846      4875622D 
+ 846      44656D6F 
+ 846      5C50534F 
+ 847 01a4 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 847      2D487562 
+ 847      2D44656D 
+ 847      6F2E6379 
+ 847      64736E00 
+ 848              	.LASF9:
+ 849 01b8 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 849      206C6F6E 
+ 849      6720756E 
+ 849      7369676E 
+ 849      65642069 
+ 850              	.LASF37:
+ 851 01cf 72657375 		.ascii	"result\000"
+ 851      6C7400
+ 852              	.LASF18:
+ 853 01d6 484D4143 		.ascii	"HMACSHA256_RESULT_TAG\000"
+ 853      53484132 
+ 853      35365F52 
+ 853      4553554C 
+ 853      545F5441 
+ 854              	.LASF28:
+ 855 01ec 68617368 		.ascii	"hash\000"
+ 855      00
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 18
+
+
+ 856              	.LASF13:
+ 857 01f1 42554646 		.ascii	"BUFFER_HANDLE\000"
+ 857      45525F48 
+ 857      414E444C 
+ 857      4500
+ 858              	.LASF17:
+ 859 01ff 484D4143 		.ascii	"HMACSHA256_RESULT\000"
+ 859      53484132 
+ 859      35365F52 
+ 859      4553554C 
+ 859      5400
+ 860              	.LASF10:
+ 861 0211 73697A65 		.ascii	"sizetype\000"
+ 861      74797065 
+ 861      00
+ 862              	.LASF1:
+ 863 021a 6C6F6E67 		.ascii	"long long int\000"
+ 863      206C6F6E 
+ 863      6720696E 
+ 863      7400
+ 864              	.LASF25:
+ 865 0228 6B65794C 		.ascii	"keyLen\000"
+ 865      656E00
+ 866              	.LASF11:
+ 867 022f 63686172 		.ascii	"char\000"
+ 867      00
+ 868              	.LASF5:
+ 869 0234 73686F72 		.ascii	"short int\000"
+ 869      7420696E 
+ 869      7400
+ 870              	.LASF7:
+ 871 023e 6C6F6E67 		.ascii	"long int\000"
+ 871      20696E74 
+ 871      00
+ 872              	.LASF29:
+ 873 0247 42554646 		.ascii	"BUFFER_enlarge\000"
+ 873      45525F65 
+ 873      6E6C6172 
+ 873      676500
+ 874              	.LASF2:
+ 875 0256 6C6F6E67 		.ascii	"long double\000"
+ 875      20646F75 
+ 875      626C6500 
+ 876              	.LASF32:
+ 877 0262 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 877      43313120 
+ 877      352E342E 
+ 877      31203230 
+ 877      31363036 
+ 878 0295 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 878      20726576 
+ 878      6973696F 
+ 878      6E203233 
+ 878      37373135 
+ 879 02c8 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 879      67202D66 
+ 879      66756E63 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc7DxEYy.s 			page 19
+
+
+ 879      74696F6E 
+ 879      2D736563 
+ 880              	.LASF3:
+ 881 02f4 7369676E 		.ascii	"signed char\000"
+ 881      65642063 
+ 881      68617200 
+ 882              	.LASF14:
+ 883 0300 484D4143 		.ascii	"HMACSHA256_OK\000"
+ 883      53484132 
+ 883      35365F4F 
+ 883      4B00
+ 884              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

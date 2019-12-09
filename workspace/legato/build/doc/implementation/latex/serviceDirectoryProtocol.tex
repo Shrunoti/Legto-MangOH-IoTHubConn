@@ -1,0 +1,44 @@
+\hyperlink{serviceDirectoryProtocol_serviceDirectoryProtocol_Intro}{Introduction} ~\newline
+ \hyperlink{serviceDirectoryProtocol_serviceDirectoryProtocol_SocketsAndCredentials}{Sockets and Credentials} ~\newline
+ \hyperlink{serviceDirectoryProtocol_serviceDirectoryProtocol_Servers}{Server-\/to-\/\+Directory Communication} ~\newline
+ \hyperlink{serviceDirectoryProtocol_serviceDirectoryProtocol_Clients}{Client-\/to-\/\+Directory Communication} ~\newline
+ \hyperlink{serviceDirectoryProtocol_serviceDirectoryProtocol_Packing}{Byte Ordering and Packing}\hypertarget{serviceDirectoryProtocol_serviceDirectoryProtocol_Intro}{}\section{Introduction}\label{serviceDirectoryProtocol_serviceDirectoryProtocol_Intro}
+The Legato Service Directory Protocol is the protocol that Legato inter-\/process communication (I\+PC) clients and servers use to communicate with the Service Directory.
+
+The Service Directory is a daemon process that keeps track of what I\+PC services are offered by what processes and what clients are connected to them. It is a key component in the implementation of the \hyperlink{c_messaging}{Low-\/level Messaging A\+PI}.\hypertarget{serviceDirectoryProtocol_serviceDirectoryProtocol_SocketsAndCredentials}{}\section{Sockets and Credentials}\label{serviceDirectoryProtocol_serviceDirectoryProtocol_SocketsAndCredentials}
+The Service Directory has two Unix domain sockets, bound to well-\/known file system paths. Servers connect to one of these sockets when they need to provide a service to other processes. Clients connect to the other one when they need to open a service offered by another process.
+
+When a client or server connects, the Service Directory gets a new socket that it can use to communicate with that remote process. Also, because it is a S\+O\+C\+K\+\_\+\+S\+E\+Q\+P\+A\+C\+K\+ET connection, it can get the credentials (uid, gid, and pid) of the connected process using getsockopt() with the S\+O\+\_\+\+P\+E\+E\+R\+C\+R\+ED option. These credentials are authenticated by the OS kernel, so the Service Directory can be assured that they have not been forged when using them to enforce access control restrictions.\hypertarget{serviceDirectoryProtocol_serviceDirectoryProtocol_Servers}{}\section{Server-\/to-\/\+Directory Communication}\label{serviceDirectoryProtocol_serviceDirectoryProtocol_Servers}
+When a server wants to offer a service to other processes, it opens a socket and connects it to the Service Directory\textquotesingle{}s server connection socket. The server then sends in the name of the service that it is offering and information about the protocol that clients will need to use to communicate with that service.
+
+\begin{DoxyNote}{Note}
+This implies one pair of connected sockets per service being offered, even if no clients are connected to the service.
+\end{DoxyNote}
+When a client connects to a service, the Service Directory will send the server a file descriptor of a Unix Domain S\+O\+C\+K\+\_\+\+S\+E\+Q\+P\+A\+C\+K\+ET socket that is connected to the client. The server should then send a welcome message (L\+E\+\_\+\+OK) to the client over that connection and switch to using the protocol that it advertised for that service.
+
+\begin{DoxyNote}{Note}
+This implies a pair of connected sockets per session.
+\end{DoxyNote}
+When a server wants to stop offering a service, it simply closes its connection to the Service Directory.
+
+\begin{DoxyNote}{Note}
+The server socket is a named socket, rather than an abstract socket because this allows file system permissions to be used to prevent DoS attacks on this socket.
+\end{DoxyNote}
+\hypertarget{serviceDirectoryProtocol_serviceDirectoryProtocol_Clients}{}\section{Client-\/to-\/\+Directory Communication}\label{serviceDirectoryProtocol_serviceDirectoryProtocol_Clients}
+When a client wants to open a session with a service, it opens a socket and connects it to the Service Directory\textquotesingle{}s client connection socket. The client then sends in the name of the interface that it wants to connect and information about the protocol it intends to use to communicate with that service.
+
+If the client\textquotesingle{}s interface is bound to a service and that service is advertised by its server, then the Service Directory sends the file descriptor for the client connection over to the server using the server connection (see \hyperlink{serviceDirectoryProtocol_serviceDirectoryProtocol_Servers}{Server-\/to-\/\+Directory Communication}) and closes its file descriptor for the client connection, thereby taking the Service Directory out of the loop for I\+PC between that client and that server. The client should then receive a welcome message (L\+E\+\_\+\+OK) from the server over that connection and switch to using the protocol that it requested for that service.
+
+If the client interface is bound to a service, but the service does not yet exist, the client can (and usually does) request that the Service Directory hold onto the client connection until the server connects and advertises the service. If the client does not ask to wait for the server, then the Service Directory will immediately respond with an L\+E\+\_\+\+U\+N\+A\+V\+A\+I\+L\+A\+B\+LE result code message and close the connection to the client.
+
+If the client interface is not bound to a service, then the client can (and usually does) request that the Service Directory hold onto the client connection until a binding is created for that client interface. If the client does not ask to wait then the Service Directory will immediately respond with an L\+E\+\_\+\+N\+O\+T\+\_\+\+P\+E\+R\+M\+I\+T\+T\+ED result code message and close the connection to the client.
+
+If the client misbehaves according to the protocol rules, the Service Directory will send L\+E\+\_\+\+F\+A\+U\+LT to the client and drop its connection.
+
+\begin{DoxyNote}{Note}
+The client socket is a named socket, rather than an abstract socket because this allows file system permissions to be used to prevent DoS attacks on this socket.
+\end{DoxyNote}
+\hypertarget{serviceDirectoryProtocol_serviceDirectoryProtocol_Packing}{}\section{Byte Ordering and Packing}\label{serviceDirectoryProtocol_serviceDirectoryProtocol_Packing}
+This protocol only goes between processes on the same host, so there\textquotesingle{}s no need to do byte swapping. Furthermore, all message members are multiples of the processor\textquotesingle{}s natural word size, so there\textquotesingle{}s little risk of structure packing misalignment.
+
+Copyright (C) Sierra Wireless Inc. 

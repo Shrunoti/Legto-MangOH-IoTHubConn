@@ -1,0 +1,512 @@
+\hypertarget{pa__wifi__ap__ti_8c}{}\section{modules/\+Wi\+Fi/service/platform\+Adaptor/ti/pa\+\_\+wifi\+\_\+ap\+\_\+ti.c File Reference}
+\label{pa__wifi__ap__ti_8c}\index{modules/\+Wi\+Fi/service/platform\+Adaptor/ti/pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{modules/\+Wi\+Fi/service/platform\+Adaptor/ti/pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+{\ttfamily \#include $<$sys/types.\+h$>$}\\*
+{\ttfamily \#include $<$sys/wait.\+h$>$}\\*
+{\ttfamily \#include $<$arpa/inet.\+h$>$}\\*
+{\ttfamily \#include $<$stdlib.\+h$>$}\\*
+{\ttfamily \#include $<$unistd.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}interfaces.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}pa\+\_\+wifi\+\_\+ap.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stdio.\+h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a96c63dc4ca047d0b655c97ef68c77afe}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT}~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+T\+A\+RT\char`\"{}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a819511fb1ab1a032ff23bbfbce8108c5}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP}~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+T\+OP\char`\"{}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a53ebd986f6acb1a394b71827885a9af7}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP}~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP\char`\"{}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_af95f5f4d92047e96a0e20770449c816d}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT}~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT\char`\"{}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a6deba3253f1a42204f4553979c34ffdc}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+A\+RT}~\char`\"{}wlan0 W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+A\+RT\char`\"{}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_ad14904a60f4f916ad9d62e7b395c9fc4}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+OP}~\char`\"{}wlan0 W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+OP\char`\"{}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a8e5c9ce69d1fcfe271a13fff1fc558cd}{C\+O\+M\+M\+A\+N\+D\+\_\+\+I\+P\+T\+A\+B\+L\+E\+\_\+\+D\+H\+C\+P\+\_\+\+W\+L\+A\+N0}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a194cf0770876626daa38e83bb8e082da}{W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH}~\char`\"{}/legato/systems/current/apps/wifi\+Service/read-\/only/pa\+\_\+wifi.\+sh \char`\"{}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a97227411badaa33a3096f510cbee273d}{D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+L\+I\+NK}~\char`\"{}/etc/dnsmasq.\+d/dnsmasq.\+wlan.\+conf\char`\"{}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a065ec40b5f1c78f2f7c6cc8c1b47eb90}{D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+F\+I\+LE}~\char`\"{}/tmp/dnsmasq.\+wlan.\+conf\char`\"{}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a478e60db37a9bcdcf30297a22f3c09ed}{W\+I\+F\+I\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+F\+I\+LE}~\char`\"{}/tmp/hostapd.\+conf\char`\"{}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a5878e385f4725d606e8283fc75eae35d}{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+H\+O\+S\+T\+A\+PD}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_ac44cdf6d1aeab9d9483875cfe839bd4f}{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a77e19d871420f4923ecc78ff67de2271}{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2}
+\item 
+\#define \hyperlink{pa__wifi__ap__ti_8c_a0c3be46c5a923c4e97f069b98c890861}{T\+I\+\_\+\+W\+I\+F\+I\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+RS}~10
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$ \hyperlink{pa__wifi__ap__ti_8c_a5e5a02ad831a1a1ecb6c7c5bd49a10a8}{Wifi\+Ap\+Pa\+Thread\+Main} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{pa__wifi__ap__ti_8c_a446912f768b5f594fc778f40cf782f3c}{Thread\+Destructor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{pa__wifi__ap__ti_8c_ae79989dfe16bbdf53870226307d14fcc}{First\+Layer\+Wifi\+Ap\+Event\+Handler} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$report\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$second\+Layer\+Handler\+Func)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_ab67436e9f36b79196c4b9f0f027d316c}{Write\+Ap\+Cfg\+File} (const char $\ast$data\+Ptr, F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a72f61a71f65340728ef6621218a93a7f}{pa\+\_\+wifi\+Ap\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a8bcf7d5c9245634f818c210c38fcdb3d}{pa\+\_\+wifi\+Ap\+\_\+\+Release} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a7c9db8ab213023fecd8463906e1bc1f4}{pa\+\_\+wifi\+Ap\+\_\+\+Start} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a2c1e127ee5d2a54891044a3d44eb03af}{pa\+\_\+wifi\+Ap\+\_\+\+Stop} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a9c91b96126bd5b09a99940d08ee070ec}{pa\+\_\+wifi\+Ap\+\_\+\+Add\+Event\+Handler} (\hyperlink{pa__wifi__ap_8h_ae4d625333d3d62bfe1a5fedbb0ca0c4a}{pa\+\_\+wifi\+Ap\+\_\+\+New\+Event\+Handler\+Func\+\_\+t} handler\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a9067115097eaac9042e58e000842ab5f}{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ssid} (const uint8\+\_\+t $\ast$ssid\+Ptr, size\+\_\+t ssid\+Num\+Elements)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a9d2839a22f368c3e1cbbf8e0e5cdb6e3}{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Security\+Protocol} (\hyperlink{le__wifi_ap__interface_8h_abb658c71d7d836247ec091fb349758b9}{le\+\_\+wifi\+Ap\+\_\+\+Security\+Protocol\+\_\+t} security\+Protocol)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a5edaddcdc43c27e59da6887fd3d8df68}{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pass\+Phrase} (const char $\ast$passphrase\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_af89b72bfa9cc0124e7b1abf2cf1385d3}{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pre\+Shared\+Key} (const char $\ast$pre\+Shared\+Key\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_aed26d5c1e01ffe6be0a4afcda864cc83}{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Discoverable} (bool is\+Discoverable)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a5b321d1be4ff476c5fa3ca35a61ddd68}{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Channel} (int8\+\_\+t channel\+Number)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a14584f0c1712c75fef95285975e3ada5}{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Max\+Number\+Clients} (int max\+Number\+Clients)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a694deb71637cdad832de1b6bc731a665}{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ip\+Range} (const char $\ast$ip\+Ap\+Ptr, const char $\ast$ip\+Start\+Ptr, const char $\ast$ip\+Stop\+Ptr)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{le__wifi_ap__interface_8h_abb658c71d7d836247ec091fb349758b9}{le\+\_\+wifi\+Ap\+\_\+\+Security\+Protocol\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_a3ba4415939f2d63d97474a2ac2922020}{Saved\+Security\+Protocol}
+\item 
+static char \hyperlink{pa__wifi__ap__ti_8c_ad4b0d61891da7d452684a08b4a852039}{Saved\+Ssid} \mbox{[}\hyperlink{le__wifi_defs__interface_8h_abba88ade60f4a8508fd8a1db0e1f9bc0}{L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+S\+S\+I\+D\+\_\+\+B\+Y\+T\+ES}\mbox{]} = \char`\"{}\char`\"{}
+\item 
+static bool \hyperlink{pa__wifi__ap__ti_8c_a2649f2804a2fe75758c2053c7762a3b0}{Saved\+Discoverable} = true
+\item 
+static uint32\+\_\+t \hyperlink{pa__wifi__ap__ti_8c_a681f75011614ca12bcd9e35f6c567778}{Saved\+Channel\+Number} = 1
+\item 
+static uint32\+\_\+t \hyperlink{pa__wifi__ap__ti_8c_aa9ff842136cc98bdace05c0328416e8e}{Saved\+Max\+Num\+Clients} = \hyperlink{pa__wifi__ap__ti_8c_a0c3be46c5a923c4e97f069b98c890861}{T\+I\+\_\+\+W\+I\+F\+I\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+RS}
+\item 
+static char \hyperlink{pa__wifi__ap__ti_8c_ac1092d56f2b497856db6c29ac0d969f2}{Saved\+Passphrase} \mbox{[}\hyperlink{le__wifi_defs__interface_8h_aa9249c1a7ad61484f5ce85b58c86beff}{L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+S\+E\+\_\+\+B\+Y\+T\+ES}\mbox{]} = \char`\"{}\char`\"{}
+\item 
+static char \hyperlink{pa__wifi__ap__ti_8c_a674460aa5f8bfa411d30444cd25c7c88}{Saved\+Pre\+Shared\+Key} \mbox{[}\hyperlink{le__wifi_defs__interface_8h_a857a627e42baa75acc46d07c557ebd16}{L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+P\+S\+K\+\_\+\+B\+Y\+T\+ES}\mbox{]} = \char`\"{}\char`\"{}
+\item 
+static \hyperlink{le__thread_8h_a32121104c6b4ca39008eb79a4d6862f2}{le\+\_\+thread\+\_\+\+Ref\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_aa1de298090d08d0939056994dbc9ebd5}{Wifi\+Ap\+Pa\+Thread} = N\+U\+LL
+\item 
+static F\+I\+LE $\ast$ \hyperlink{pa__wifi__ap__ti_8c_a2d10acb1a0a8bcd66a61f5de60c68ac4}{Iw\+Thread\+Pipe\+Ptr} = N\+U\+LL
+\item 
+static \hyperlink{le__event_loop_8h_ae6e351b38bc95954f159d16d19d2d55c}{le\+\_\+event\+\_\+\+Id\+\_\+t} \hyperlink{pa__wifi__ap__ti_8c_ad6ad28a03e14d78ee7cb9fd155147fab}{Wifi\+Ap\+Pa\+Event}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+I\+P\+T\+A\+B\+L\+E\+\_\+\+D\+H\+C\+P\+\_\+\+W\+L\+A\+N0@{C\+O\+M\+M\+A\+N\+D\+\_\+\+I\+P\+T\+A\+B\+L\+E\+\_\+\+D\+H\+C\+P\+\_\+\+W\+L\+A\+N0}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+I\+P\+T\+A\+B\+L\+E\+\_\+\+D\+H\+C\+P\+\_\+\+W\+L\+A\+N0@{C\+O\+M\+M\+A\+N\+D\+\_\+\+I\+P\+T\+A\+B\+L\+E\+\_\+\+D\+H\+C\+P\+\_\+\+W\+L\+A\+N0}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+I\+P\+T\+A\+B\+L\+E\+\_\+\+D\+H\+C\+P\+\_\+\+W\+L\+A\+N0}{COMMAND_IPTABLE_DHCP_WLAN0}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+I\+P\+T\+A\+B\+L\+E\+\_\+\+D\+H\+C\+P\+\_\+\+W\+L\+A\+N0}\hypertarget{pa__wifi__ap__ti_8c_a8e5c9ce69d1fcfe271a13fff1fc558cd}{}\label{pa__wifi__ap__ti_8c_a8e5c9ce69d1fcfe271a13fff1fc558cd}
+{\bfseries Value\+:}
+\begin{DoxyCode}
+\textcolor{stringliteral}{"INPUT -i wlan0 -p udp -m udp "} \(\backslash\)
+                                     \textcolor{stringliteral}{"--sport 67:68 --dport 67:68 -j ACCEPT"}
+\end{DoxyCode}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT}{COMMAND_WIFI_HW_START}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+T\+A\+RT\char`\"{}}\hypertarget{pa__wifi__ap__ti_8c_a96c63dc4ca047d0b655c97ef68c77afe}{}\label{pa__wifi__ap__ti_8c_a96c63dc4ca047d0b655c97ef68c77afe}
+PA for Wi\+Fi Access Point
+
+Copyright (C) Sierra Wireless Inc. \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP}{COMMAND_WIFI_HW_STOP}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+T\+OP\char`\"{}}\hypertarget{pa__wifi__ap__ti_8c_a819511fb1ab1a032ff23bbfbce8108c5}{}\label{pa__wifi__ap__ti_8c_a819511fb1ab1a032ff23bbfbce8108c5}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT}{COMMAND_WIFI_SET_EVENT}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT\char`\"{}}\hypertarget{pa__wifi__ap__ti_8c_af95f5f4d92047e96a0e20770449c816d}{}\label{pa__wifi__ap__ti_8c_af95f5f4d92047e96a0e20770449c816d}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP}{COMMAND_WIFI_WLAN_UP}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP\char`\"{}}\hypertarget{pa__wifi__ap__ti_8c_a53ebd986f6acb1a394b71827885a9af7}{}\label{pa__wifi__ap__ti_8c_a53ebd986f6acb1a394b71827885a9af7}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+A\+RT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+A\+RT}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+A\+RT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+A\+RT}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+A\+RT}{COMMAND_WIFIAP_HOSTAPD_START}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+A\+RT~\char`\"{}wlan0 W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+A\+RT\char`\"{}}\hypertarget{pa__wifi__ap__ti_8c_a6deba3253f1a42204f4553979c34ffdc}{}\label{pa__wifi__ap__ti_8c_a6deba3253f1a42204f4553979c34ffdc}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+OP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+OP}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+OP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+OP}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+OP}{COMMAND_WIFIAP_HOSTAPD_STOP}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+OP~\char`\"{}wlan0 W\+I\+F\+I\+A\+P\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+S\+T\+OP\char`\"{}}\hypertarget{pa__wifi__ap__ti_8c_ad14904a60f4f916ad9d62e7b395c9fc4}{}\label{pa__wifi__ap__ti_8c_ad14904a60f4f916ad9d62e7b395c9fc4}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+F\+I\+LE@{D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+F\+I\+LE}}
+\index{D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+F\+I\+LE@{D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+F\+I\+LE}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+F\+I\+LE}{DNSMASQ_CFG_FILE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+F\+I\+LE~\char`\"{}/tmp/dnsmasq.\+wlan.\+conf\char`\"{}}\hypertarget{pa__wifi__ap__ti_8c_a065ec40b5f1c78f2f7c6cc8c1b47eb90}{}\label{pa__wifi__ap__ti_8c_a065ec40b5f1c78f2f7c6cc8c1b47eb90}
+dnsmasq related configuration file \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+L\+I\+NK@{D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+L\+I\+NK}}
+\index{D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+L\+I\+NK@{D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+L\+I\+NK}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+L\+I\+NK}{DNSMASQ_CFG_LINK}}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+N\+S\+M\+A\+S\+Q\+\_\+\+C\+F\+G\+\_\+\+L\+I\+NK~\char`\"{}/etc/dnsmasq.\+d/dnsmasq.\+wlan.\+conf\char`\"{}}\hypertarget{pa__wifi__ap__ti_8c_a97227411badaa33a3096f510cbee273d}{}\label{pa__wifi__ap__ti_8c_a97227411badaa33a3096f510cbee273d}
+Link to the dnsmasq related configuration file \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!T\+I\+\_\+\+W\+I\+F\+I\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+RS@{T\+I\+\_\+\+W\+I\+F\+I\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+RS}}
+\index{T\+I\+\_\+\+W\+I\+F\+I\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+RS@{T\+I\+\_\+\+W\+I\+F\+I\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+RS}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{T\+I\+\_\+\+W\+I\+F\+I\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+RS}{TI_WIFI_MAX_USERS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define T\+I\+\_\+\+W\+I\+F\+I\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+RS~10}\hypertarget{pa__wifi__ap__ti_8c_a0c3be46c5a923c4e97f069b98c890861}{}\label{pa__wifi__ap__ti_8c_a0c3be46c5a923c4e97f069b98c890861}
+Maximum numbers of Wi\+Fi connections for the TI chip \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+H\+O\+S\+T\+A\+PD@{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+H\+O\+S\+T\+A\+PD}}
+\index{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+H\+O\+S\+T\+A\+PD@{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+H\+O\+S\+T\+A\+PD}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+H\+O\+S\+T\+A\+PD}{WIFI_AP_CONFIG_HOSTAPD}}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+H\+O\+S\+T\+A\+PD}\hypertarget{pa__wifi__ap__ti_8c_a5878e385f4725d606e8283fc75eae35d}{}\label{pa__wifi__ap__ti_8c_a5878e385f4725d606e8283fc75eae35d}
+{\bfseries Value\+:}
+\begin{DoxyCode}
+\textcolor{stringliteral}{"interface=wlan0\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"driver=nl80211\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"hw\_mode=g\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"beacon\_int=100\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"dtim\_period=2\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"rts\_threshold=2347\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"fragm\_threshold=2346\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"ctrl\_interface=/var/run/hostapd\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"ctrl\_interface\_group=0\(\backslash\)n"}
+\end{DoxyCode}
+Host access point global configuration. \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE@{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE}}
+\index{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE@{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE}{WIFI_AP_CONFIG_SECURITY_NONE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE}\hypertarget{pa__wifi__ap__ti_8c_ac44cdf6d1aeab9d9483875cfe839bd4f}{}\label{pa__wifi__ap__ti_8c_ac44cdf6d1aeab9d9483875cfe839bd4f}
+{\bfseries Value\+:}
+\begin{DoxyCode}
+\textcolor{stringliteral}{"auth\_algs=1\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"eap\_server=0\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"eapol\_key\_index\_workaround=0\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"wmm\_enabled=1\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"macaddr\_acl=0\(\backslash\)n"}
+\end{DoxyCode}
+Host access point configuration with security disabled. \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2@{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2}}
+\index{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2@{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2}{WIFI_AP_CONFIG_SECURITY_WPA2}}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\+I\+F\+I\+\_\+\+A\+P\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2}\hypertarget{pa__wifi__ap__ti_8c_a77e19d871420f4923ecc78ff67de2271}{}\label{pa__wifi__ap__ti_8c_a77e19d871420f4923ecc78ff67de2271}
+{\bfseries Value\+:}
+\begin{DoxyCode}
+\textcolor{stringliteral}{"wpa=2\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"wpa\_key\_mgmt=WPA-PSK\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"wpa\_pairwise=CCMP\(\backslash\)n"}\(\backslash\)
+    \textcolor{stringliteral}{"rsn\_pairwise=CCMP\(\backslash\)n"}
+\end{DoxyCode}
+Host access point configuration with security enabled. \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!W\+I\+F\+I\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+F\+I\+LE@{W\+I\+F\+I\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+F\+I\+LE}}
+\index{W\+I\+F\+I\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+F\+I\+LE@{W\+I\+F\+I\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+F\+I\+LE}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{W\+I\+F\+I\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+F\+I\+LE}{WIFI_HOSTAPD_FILE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\+I\+F\+I\+\_\+\+H\+O\+S\+T\+A\+P\+D\+\_\+\+F\+I\+LE~\char`\"{}/tmp/hostapd.\+conf\char`\"{}}\hypertarget{pa__wifi__ap__ti_8c_a478e60db37a9bcdcf30297a22f3c09ed}{}\label{pa__wifi__ap__ti_8c_a478e60db37a9bcdcf30297a22f3c09ed}
+Wi\+Fi access point configuration file \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH@{W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH}}
+\index{W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH@{W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH}{WIFI_SCRIPT_PATH}}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH~\char`\"{}/legato/systems/current/apps/wifi\+Service/read-\/only/pa\+\_\+wifi.\+sh \char`\"{}}\hypertarget{pa__wifi__ap__ti_8c_a194cf0770876626daa38e83bb8e082da}{}\label{pa__wifi__ap__ti_8c_a194cf0770876626daa38e83bb8e082da}
+Wi\+Fi platform adaptor shell script 
+
+\subsection{Function Documentation}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!First\+Layer\+Wifi\+Ap\+Event\+Handler@{First\+Layer\+Wifi\+Ap\+Event\+Handler}}
+\index{First\+Layer\+Wifi\+Ap\+Event\+Handler@{First\+Layer\+Wifi\+Ap\+Event\+Handler}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{First\+Layer\+Wifi\+Ap\+Event\+Handler(void $\ast$report\+Ptr, void $\ast$second\+Layer\+Handler\+Func)}{FirstLayerWifiApEventHandler(void *reportPtr, void *secondLayerHandlerFunc)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} First\+Layer\+Wifi\+Ap\+Event\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{report\+Ptr, }
+\item[{{\bf void} $\ast$}]{second\+Layer\+Handler\+Func}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_ae79989dfe16bbdf53870226307d14fcc}{}\label{pa__wifi__ap__ti_8c_ae79989dfe16bbdf53870226307d14fcc}
+The first-\/layer Wi\+Fi Client Event Handler. \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Add\+Event\+Handler@{pa\+\_\+wifi\+Ap\+\_\+\+Add\+Event\+Handler}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Add\+Event\+Handler@{pa\+\_\+wifi\+Ap\+\_\+\+Add\+Event\+Handler}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Add\+Event\+Handler(pa\+\_\+wifi\+Ap\+\_\+\+New\+Event\+Handler\+Func\+\_\+t handler\+Ptr, void $\ast$context\+Ptr)}{pa_wifiAp_AddEventHandler(pa_wifiAp_NewEventHandlerFunc_t handlerPtr, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Add\+Event\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf pa\+\_\+wifi\+Ap\+\_\+\+New\+Event\+Handler\+Func\+\_\+t}}]{handler\+Ptr, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_a9c91b96126bd5b09a99940d08ee070ec}{}\label{pa__wifi__ap__ti_8c_a9c91b96126bd5b09a99940d08ee070ec}
+Add handler function for Wi\+Fi related events.
+
+These events provide information on Wi\+Fi access point status.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER Some parameter is invalid. 
+
+L\+E\+\_\+\+OK Function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em handler\+Ptr} & Event handler function pointer \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Associated event context \\
+\hline
+\end{DoxyParams}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Init@{pa\+\_\+wifi\+Ap\+\_\+\+Init}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Init@{pa\+\_\+wifi\+Ap\+\_\+\+Init}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Init(void)}{pa_wifiAp_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_a72f61a71f65340728ef6621218a93a7f}{}\label{pa__wifi__ap__ti_8c_a72f61a71f65340728ef6621218a93a7f}
+This function must be called to initialize the Wi\+Fi module platform adapter (PA).
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+F\+A\+U\+LT The function failed. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Release@{pa\+\_\+wifi\+Ap\+\_\+\+Release}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Release@{pa\+\_\+wifi\+Ap\+\_\+\+Release}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Release(void)}{pa_wifiAp_Release(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Release (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_a8bcf7d5c9245634f818c210c38fcdb3d}{}\label{pa__wifi__ap__ti_8c_a8bcf7d5c9245634f818c210c38fcdb3d}
+This function must be called to release the Wi\+Fi module platform adapter (PA).
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Set\+Channel@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Channel}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Channel@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Channel}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Channel(int8\+\_\+t channel\+Number)}{pa_wifiAp_SetChannel(int8_t channelNumber)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Set\+Channel (
+\begin{DoxyParamCaption}
+\item[{int8\+\_\+t}]{channel\+Number}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_a5b321d1be4ff476c5fa3ca35a61ddd68}{}\label{pa__wifi__ap__ti_8c_a5b321d1be4ff476c5fa3ca35a61ddd68}
+Set the Wi\+Fi channel to use. Default value is 1. Some legal restrictions for values 12 -\/ 14 might apply for your region.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+O\+U\+T\+\_\+\+O\+F\+\_\+\+R\+A\+N\+GE Requested channel number is out of range. 
+
+L\+E\+\_\+\+OK Function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em channel\+Number} & the channel number must be between 1 and 14. \\
+\hline
+\end{DoxyParams}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Set\+Discoverable@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Discoverable}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Discoverable@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Discoverable}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Discoverable(bool is\+Discoverable)}{pa_wifiAp_SetDiscoverable(bool isDiscoverable)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Set\+Discoverable (
+\begin{DoxyParamCaption}
+\item[{bool}]{is\+Discoverable}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_aed26d5c1e01ffe6be0a4afcda864cc83}{}\label{pa__wifi__ap__ti_8c_aed26d5c1e01ffe6be0a4afcda864cc83}
+Set if the access point should announce its presence. Default value is T\+R\+UE. If the value is set to F\+A\+L\+SE, the access point will be hidden.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK Function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em is\+Discoverable} & If T\+R\+UE, the access point S\+S\+ID is visible by the clients otherwise it is hidden. \\
+\hline
+\end{DoxyParams}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ip\+Range@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ip\+Range}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ip\+Range@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ip\+Range}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ip\+Range(const char $\ast$ip\+Ap\+Ptr, const char $\ast$ip\+Start\+Ptr, const char $\ast$ip\+Stop\+Ptr)}{pa_wifiAp_SetIpRange(const char *ipApPtr, const char *ipStartPtr, const char *ipStopPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ip\+Range (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{ip\+Ap\+Ptr, }
+\item[{const char $\ast$}]{ip\+Start\+Ptr, }
+\item[{const char $\ast$}]{ip\+Stop\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_a694deb71637cdad832de1b6bc731a665}{}\label{pa__wifi__ap__ti_8c_a694deb71637cdad832de1b6bc731a665}
+Define the access point IP address and the client IP addresses range.
+
+\begin{DoxyNote}{Note}
+The access point IP address must be defined outside the client IP addresses range.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER At least, one of the given IP addresses is invalid. 
+
+L\+E\+\_\+\+F\+A\+U\+LT A system call has failed. 
+
+L\+E\+\_\+\+OK Function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em ip\+Ap\+Ptr} & the IP address of the Access Point. \\
+\hline
+\mbox{\tt in}  & {\em ip\+Start\+Ptr} & the start IP address of the Access Point. \\
+\hline
+\mbox{\tt in}  & {\em ip\+Stop\+Ptr} & the stop IP address of the Access Point. \\
+\hline
+\end{DoxyParams}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Set\+Max\+Number\+Clients@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Max\+Number\+Clients}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Max\+Number\+Clients@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Max\+Number\+Clients}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Max\+Number\+Clients(int max\+Number\+Clients)}{pa_wifiAp_SetMaxNumberClients(int maxNumberClients)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Set\+Max\+Number\+Clients (
+\begin{DoxyParamCaption}
+\item[{int}]{max\+Number\+Clients}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_a14584f0c1712c75fef95285975e3ada5}{}\label{pa__wifi__ap__ti_8c_a14584f0c1712c75fef95285975e3ada5}
+Set the maximum number of clients allowed to be connected to Wi\+Fi access point at the same time. Default value is 10.
+
+\begin{DoxyNote}{Note}
+This value depends on the hardware/software capabilities of the Wi\+Fi module used.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+O\+U\+T\+\_\+\+O\+F\+\_\+\+R\+A\+N\+GE Requested number of users exceeds the capabilities of the Access Point. 
+
+L\+E\+\_\+\+OK Function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em max\+Number\+Clients} & The maximum number of clients. This depends on the hardware/software capabilities. \\
+\hline
+\end{DoxyParams}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pass\+Phrase@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pass\+Phrase}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pass\+Phrase@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pass\+Phrase}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pass\+Phrase(const char $\ast$passphrase\+Ptr)}{pa_wifiAp_SetPassPhrase(const char *passphrasePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pass\+Phrase (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{passphrase\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_a5edaddcdc43c27e59da6887fd3d8df68}{}\label{pa__wifi__ap__ti_8c_a5edaddcdc43c27e59da6887fd3d8df68}
+Set the passphrase used to generate the P\+SK.
+
+\begin{DoxyNote}{Note}
+This is one way to authenticate against the access point. The other one is provided by the \hyperlink{pa__wifi__ap__ti_8c_af89b72bfa9cc0124e7b1abf2cf1385d3}{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pre\+Shared\+Key()} function. Both ways are exclusive and are effective only when used with W\+P\+A-\/personal authentication.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER Parameter is invalid. 
+
+L\+E\+\_\+\+OK Function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em passphrase\+Ptr} & Passphrase to authenticate against the access point. \\
+\hline
+\end{DoxyParams}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pre\+Shared\+Key@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pre\+Shared\+Key}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pre\+Shared\+Key@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pre\+Shared\+Key}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pre\+Shared\+Key(const char $\ast$pre\+Shared\+Key\+Ptr)}{pa_wifiAp_SetPreSharedKey(const char *preSharedKeyPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pre\+Shared\+Key (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{pre\+Shared\+Key\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_af89b72bfa9cc0124e7b1abf2cf1385d3}{}\label{pa__wifi__ap__ti_8c_af89b72bfa9cc0124e7b1abf2cf1385d3}
+Set the pre-\/shared key (P\+SK).
+
+\begin{DoxyNote}{Note}
+This is one way to authenticate against the access point. The other one is provided by the \hyperlink{pa__wifi__ap__ti_8c_a5edaddcdc43c27e59da6887fd3d8df68}{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Pass\+Phrase()} function. Both ways are exclusive and are effective only when used with W\+P\+A-\/personal authentication.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER Parameter is invalid. 
+
+L\+E\+\_\+\+OK Function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pre\+Shared\+Key\+Ptr} & Pre-\/shared key used to authenticate against the access point. \\
+\hline
+\end{DoxyParams}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Set\+Security\+Protocol@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Security\+Protocol}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Security\+Protocol@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Security\+Protocol}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Security\+Protocol(le\+\_\+wifi\+Ap\+\_\+\+Security\+Protocol\+\_\+t security\+Protocol)}{pa_wifiAp_SetSecurityProtocol(le_wifiAp_SecurityProtocol_t securityProtocol)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Set\+Security\+Protocol (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+wifi\+Ap\+\_\+\+Security\+Protocol\+\_\+t}}]{security\+Protocol}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_a9d2839a22f368c3e1cbbf8e0e5cdb6e3}{}\label{pa__wifi__ap__ti_8c_a9d2839a22f368c3e1cbbf8e0e5cdb6e3}
+Set the security protocol used to communicate.
+
+\begin{DoxyNote}{Note}
+W\+EP is not supported as it is unsecure and has been deprecated in favor of W\+P\+A/\+W\+P\+A2. This limitation applies to access point mode only.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER Some parameter is invalid. 
+
+L\+E\+\_\+\+OK Function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em security\+Protocol} & The security protocol used to communicate with the access point. \\
+\hline
+\end{DoxyParams}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ssid@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ssid}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ssid@{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ssid}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ssid(const uint8\+\_\+t $\ast$ssid\+Ptr, size\+\_\+t ssid\+Num\+Elements)}{pa_wifiAp_SetSsid(const uint8_t *ssidPtr, size_t ssidNumElements)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Set\+Ssid (
+\begin{DoxyParamCaption}
+\item[{const uint8\+\_\+t $\ast$}]{ssid\+Ptr, }
+\item[{size\+\_\+t}]{ssid\+Num\+Elements}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_a9067115097eaac9042e58e000842ab5f}{}\label{pa__wifi__ap__ti_8c_a9067115097eaac9042e58e000842ab5f}
+Set the Service Set I\+Dentification (S\+S\+ID) of the access point
+
+\begin{DoxyNote}{Note}
+The S\+S\+ID does not have to be human readable A\+S\+C\+II values, but often is.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER Some parameter is invalid. 
+
+L\+E\+\_\+\+OK Function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em ssid\+Ptr} & The S\+S\+ID to set as an octet array. \\
+\hline
+\mbox{\tt in}  & {\em ssid\+Num\+Elements} & The length of the S\+S\+ID in bytes. \\
+\hline
+\end{DoxyParams}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Start@{pa\+\_\+wifi\+Ap\+\_\+\+Start}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Start@{pa\+\_\+wifi\+Ap\+\_\+\+Start}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Start(void)}{pa_wifiAp_Start(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Start (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_a7c9db8ab213023fecd8463906e1bc1f4}{}\label{pa__wifi__ap__ti_8c_a7c9db8ab213023fecd8463906e1bc1f4}
+This function starts the Wi\+Fi access point. Note that all settings, if to be used, such as security, username, password must set prior to starting the access point.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+F\+A\+U\+LT The function failed. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!pa\+\_\+wifi\+Ap\+\_\+\+Stop@{pa\+\_\+wifi\+Ap\+\_\+\+Stop}}
+\index{pa\+\_\+wifi\+Ap\+\_\+\+Stop@{pa\+\_\+wifi\+Ap\+\_\+\+Stop}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Ap\+\_\+\+Stop(void)}{pa_wifiAp_Stop(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Ap\+\_\+\+Stop (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{pa__wifi__ap__ti_8c_a2c1e127ee5d2a54891044a3d44eb03af}{}\label{pa__wifi__ap__ti_8c_a2c1e127ee5d2a54891044a3d44eb03af}
+This function stops the Wi\+Fi access point.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+F\+A\+U\+LT The function failed. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Thread\+Destructor@{Thread\+Destructor}}
+\index{Thread\+Destructor@{Thread\+Destructor}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Destructor(void $\ast$context\+Ptr)}{ThreadDestructor(void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Thread\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_a446912f768b5f594fc778f40cf782f3c}{}\label{pa__wifi__ap__ti_8c_a446912f768b5f594fc778f40cf782f3c}
+Thread destructor \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Wifi\+Ap\+Pa\+Thread\+Main@{Wifi\+Ap\+Pa\+Thread\+Main}}
+\index{Wifi\+Ap\+Pa\+Thread\+Main@{Wifi\+Ap\+Pa\+Thread\+Main}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Wifi\+Ap\+Pa\+Thread\+Main(void $\ast$context\+Ptr)}{WifiApPaThreadMain(void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} $\ast$ Wifi\+Ap\+Pa\+Thread\+Main (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_a5e5a02ad831a1a1ecb6c7c5bd49a10a8}{}\label{pa__wifi__ap__ti_8c_a5e5a02ad831a1a1ecb6c7c5bd49a10a8}
+The main thread running the Wi\+Fi service
+
+Wi\+Fi access point platform adaptor thread \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Write\+Ap\+Cfg\+File@{Write\+Ap\+Cfg\+File}}
+\index{Write\+Ap\+Cfg\+File@{Write\+Ap\+Cfg\+File}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Write\+Ap\+Cfg\+File(const char $\ast$data\+Ptr, F\+I\+L\+E $\ast$file\+Ptr)}{WriteApCfgFile(const char *dataPtr, FILE *filePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Write\+Ap\+Cfg\+File (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{data\+Ptr, }
+\item[{F\+I\+LE $\ast$}]{file\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_ab67436e9f36b79196c4b9f0f027d316c}{}\label{pa__wifi__ap__ti_8c_ab67436e9f36b79196c4b9f0f027d316c}
+This function handles AP configuration file related operations. 
+
+\subsection{Variable Documentation}
+\index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Iw\+Thread\+Pipe\+Ptr@{Iw\+Thread\+Pipe\+Ptr}}
+\index{Iw\+Thread\+Pipe\+Ptr@{Iw\+Thread\+Pipe\+Ptr}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Iw\+Thread\+Pipe\+Ptr}{IwThreadPipePtr}}]{\setlength{\rightskip}{0pt plus 5cm}F\+I\+LE$\ast$ Iw\+Thread\+Pipe\+Ptr = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_a2d10acb1a0a8bcd66a61f5de60c68ac4}{}\label{pa__wifi__ap__ti_8c_a2d10acb1a0a8bcd66a61f5de60c68ac4}
+The handle of the input pipe used to be notified of the Wi\+Fi related events. \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Saved\+Channel\+Number@{Saved\+Channel\+Number}}
+\index{Saved\+Channel\+Number@{Saved\+Channel\+Number}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Channel\+Number}{SavedChannelNumber}}]{\setlength{\rightskip}{0pt plus 5cm}uint32\+\_\+t Saved\+Channel\+Number = 1\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_a681f75011614ca12bcd9e35f6c567778}{}\label{pa__wifi__ap__ti_8c_a681f75011614ca12bcd9e35f6c567778}
+The Wi\+Fi channel associated with the S\+S\+ID \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Saved\+Discoverable@{Saved\+Discoverable}}
+\index{Saved\+Discoverable@{Saved\+Discoverable}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Discoverable}{SavedDiscoverable}}]{\setlength{\rightskip}{0pt plus 5cm}bool Saved\+Discoverable = true\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_a2649f2804a2fe75758c2053c7762a3b0}{}\label{pa__wifi__ap__ti_8c_a2649f2804a2fe75758c2053c7762a3b0}
+Defines whether the S\+S\+ID is hidden or not \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Saved\+Max\+Num\+Clients@{Saved\+Max\+Num\+Clients}}
+\index{Saved\+Max\+Num\+Clients@{Saved\+Max\+Num\+Clients}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Max\+Num\+Clients}{SavedMaxNumClients}}]{\setlength{\rightskip}{0pt plus 5cm}uint32\+\_\+t Saved\+Max\+Num\+Clients = {\bf T\+I\+\_\+\+W\+I\+F\+I\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+RS}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_aa9ff842136cc98bdace05c0328416e8e}{}\label{pa__wifi__ap__ti_8c_aa9ff842136cc98bdace05c0328416e8e}
+The maximum numbers of clients the AP is able to manage \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Saved\+Passphrase@{Saved\+Passphrase}}
+\index{Saved\+Passphrase@{Saved\+Passphrase}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Passphrase}{SavedPassphrase}}]{\setlength{\rightskip}{0pt plus 5cm}char Saved\+Passphrase\mbox{[}{\bf L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+S\+E\+\_\+\+B\+Y\+T\+ES}\mbox{]} = \char`\"{}\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_ac1092d56f2b497856db6c29ac0d969f2}{}\label{pa__wifi__ap__ti_8c_ac1092d56f2b497856db6c29ac0d969f2}
+Passphrase used for authentication. Used only with W\+P\+A/\+W\+P\+A2 protocol. \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Saved\+Pre\+Shared\+Key@{Saved\+Pre\+Shared\+Key}}
+\index{Saved\+Pre\+Shared\+Key@{Saved\+Pre\+Shared\+Key}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Pre\+Shared\+Key}{SavedPreSharedKey}}]{\setlength{\rightskip}{0pt plus 5cm}char Saved\+Pre\+Shared\+Key\mbox{[}{\bf L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+P\+S\+K\+\_\+\+B\+Y\+T\+ES}\mbox{]} = \char`\"{}\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_a674460aa5f8bfa411d30444cd25c7c88}{}\label{pa__wifi__ap__ti_8c_a674460aa5f8bfa411d30444cd25c7c88}
+Pre-\/\+Shared-\/\+Key used for authentication. Used only with W\+P\+A/\+W\+P\+A2 protocol. \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Saved\+Security\+Protocol@{Saved\+Security\+Protocol}}
+\index{Saved\+Security\+Protocol@{Saved\+Security\+Protocol}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Security\+Protocol}{SavedSecurityProtocol}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+wifi\+Ap\+\_\+\+Security\+Protocol\+\_\+t} Saved\+Security\+Protocol\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_a3ba4415939f2d63d97474a2ac2922020}{}\label{pa__wifi__ap__ti_8c_a3ba4415939f2d63d97474a2ac2922020}
+The current security protocol \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Saved\+Ssid@{Saved\+Ssid}}
+\index{Saved\+Ssid@{Saved\+Ssid}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Ssid}{SavedSsid}}]{\setlength{\rightskip}{0pt plus 5cm}char Saved\+Ssid\mbox{[}{\bf L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+S\+S\+I\+D\+\_\+\+B\+Y\+T\+ES}\mbox{]} = \char`\"{}\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_ad4b0d61891da7d452684a08b4a852039}{}\label{pa__wifi__ap__ti_8c_ad4b0d61891da7d452684a08b4a852039}
+The current S\+S\+ID \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Wifi\+Ap\+Pa\+Event@{Wifi\+Ap\+Pa\+Event}}
+\index{Wifi\+Ap\+Pa\+Event@{Wifi\+Ap\+Pa\+Event}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Wifi\+Ap\+Pa\+Event}{WifiApPaEvent}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+event\+\_\+\+Id\+\_\+t} Wifi\+Ap\+Pa\+Event\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_ad6ad28a03e14d78ee7cb9fd155147fab}{}\label{pa__wifi__ap__ti_8c_ad6ad28a03e14d78ee7cb9fd155147fab}
+Wifi\+Ap state event ID used to report Wifi\+Ap state events to the registered event handlers. \index{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}!Wifi\+Ap\+Pa\+Thread@{Wifi\+Ap\+Pa\+Thread}}
+\index{Wifi\+Ap\+Pa\+Thread@{Wifi\+Ap\+Pa\+Thread}!pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c@{pa\+\_\+wifi\+\_\+ap\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Wifi\+Ap\+Pa\+Thread}{WifiApPaThread}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+thread\+\_\+\+Ref\+\_\+t} Wifi\+Ap\+Pa\+Thread = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{pa__wifi__ap__ti_8c_aa1de298090d08d0939056994dbc9ebd5}{}\label{pa__wifi__ap__ti_8c_aa1de298090d08d0939056994dbc9ebd5}
+The handle of the Wi\+Fi service thread 

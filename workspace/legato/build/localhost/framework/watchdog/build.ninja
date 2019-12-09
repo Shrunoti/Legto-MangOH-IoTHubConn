@@ -1,0 +1,177 @@
+# Build script for executable 'watchdog'
+
+# == Auto-generated file.  Do not edit. ==
+
+builddir = /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/watchdog
+
+cFlags =  -I /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/watchdog -I/home/shrunoti/Downloads/workspace/legato/interfaces -I/home/shrunoti/Downloads/workspace/legato/framework/include -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux -I.
+
+cxxFlags =  -I /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/watchdog -I/home/shrunoti/Downloads/workspace/legato/interfaces -I/home/shrunoti/Downloads/workspace/legato/framework/include -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux -I.
+
+ldFlags = 
+
+target = localhost
+
+ifgenFlags =  --import-dir /home/shrunoti/Downloads/workspace/legato/interfaces --import-dir /home/shrunoti/Downloads/workspace/legato/framework/include --import-dir /home/shrunoti/Downloads/workspace/legato/framework/liblegato --import-dir /home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux --import-dir .
+
+rule CompileC
+  description = Compiling C source
+  depfile = $out.d
+  command = /usr/bin//gcc --sysroot=/ -MMD -MF $out.d -c $in -o $out -DLE_FILENAME=`basename $in` -Wall -fPIC -Werror -fvisibility=hidden -DMK_TOOLS_BUILD -g $cFlags
+
+rule CompileCxx
+  description = Compiling C++ source
+  depfile = $out.d
+  command = /usr/bin//g++ --sysroot=/ -MMD -MF $out.d -c $in -o $out -DLE_FILENAME=`basename $in` -Wall -fPIC -Werror -fvisibility=hidden  -DMK_TOOLS_BUILD -g $cxxFlags
+
+rule LinkCLib
+  description = Linking C library
+  command = /usr/bin//gcc --sysroot=/ -Wl,--build-id -g -shared -o $out $in $ldFlags $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCxxLib
+  description = Linking C++ library
+  command = /usr/bin//g++ --sysroot=/ -Wl,--build-id -g -shared -o $out $in $ldFlags $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCExe
+  description = Linking C executable
+  command = /usr/bin//gcc --sysroot=/ -Wl,--build-id -g -fPIE -pie -o $out $in $ldFlags -g $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCxxExe
+  description = Linking C++ executable
+  command = /usr/bin//g++ --sysroot=/ -Wl,--build-id -g -fPIE -pie -o $out $in $ldFlags -g $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule CompileJava
+  description = Compiling Java source
+  command = javac -cp $classPath -d `dirname $out` $in && touch $out
+
+rule MakeJar
+  description = Making JAR file
+  command = INDIR=`dirname $in`; find $$INDIR -name '*.class' -printf "-C $$INDIR\n%P\n"|xargs jar -cf $out
+
+rule MakeKernelModule
+  description = Build kernel driver module
+  depfile = $out.d
+  command = make -C $in
+
+rule BuildExternal
+  description = Running external build step
+  command = cd $builddir/$workingdir && $
+            export CFLAGS="--sysroot=/ $cFlags" $
+            CXXFLAGS="--sysroot=/ $cxxFlags" $
+            LDFLAGS="--sysroot=/ $ldFlags" $
+            PATH="/usr/bin/:$$PATH" && $
+            $externalCommand
+
+rule GenInterfaceCode
+  description = Generating IPC interface code
+  command = ifgen --output-dir $outputDir $ifgenFlags $in
+
+rule GenPyApiCExtension
+  description = Generating Python API C Extension
+  command = cextgenerator.py $in -o $workDir > /dev/null
+rule CopyFile
+  description = Copying file
+  command = cp -d -f -T $in $out
+
+rule RegenNinjaScript
+  description = Regenerating build script
+  generator = 1
+  command = mkexe --dont-run-ninja "-o" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/bin/watchdog" "-t" "localhost" "-w" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/watchdog" "-l" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib" "-d" "/home/shrunoti/Downloads/workspace/legato/build/localhost/debug" "-i" "/home/shrunoti/Downloads/workspace/legato/framework/liblegato" "-i" "/home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux" "/home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/watchdog/watchdogDaemon"
+
+build $builddir/obj/watchdog/_main.c.o: CompileC /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/watchdog/src/watchdog/_main.c
+  cFlags = $cFlags -DLE_COMPONENT_NAME=watchdog_exe -DLE_LOG_SESSION=watchdog_exe_LogSession -DLE_LOG_LEVEL_FILTER_PTR=watchdog_exe_LogLevelFilterPtr 
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/bin/watchdog: LinkCExe $builddir/obj/watchdog/_main.c.o | /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/libComponent_le_pa_wdog.so /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/liblegato.so /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/libComponent_watchdogDaemon.so /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/liblegato.so /home/shrunoti/Downloads/workspace/legato/build/$target/framework/lib/liblegato.so
+  ldFlags = -rdynamic -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib:$$LEGATO_BUILD/framework/lib" -L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib "-L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib" -lComponent_watchdogDaemon "-L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib" -lComponent_le_pa_wdog "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -ldl -lm $ldFlags
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/libComponent_le_pa_wdog.so: LinkCLib $builddir/component/66df0e69015faefce3e51da9679c6109/obj/5ef76bd3c747af54e514a8cfbdb76fad.o $builddir/component/66df0e69015faefce3e51da9679c6109/obj/_componentMain.c.o | /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/liblegato.so
+  ldFlags =  -L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib:$$LEGATO_BUILD/framework/lib" "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -lm
+
+build $builddir/component/66df0e69015faefce3e51da9679c6109/obj/5ef76bd3c747af54e514a8cfbdb76fad.o: CompileC /home/shrunoti/Downloads/workspace/legato/platformAdaptor/wdog/linux/components/le_pa_wdog/pa_wdog.c
+  cFlags = $cFlags -I$builddir/component/66df0e69015faefce3e51da9679c6109/src -DLE_COMPONENT_NAME=le_pa_wdog -DLE_LOG_SESSION=le_pa_wdog_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=le_pa_wdog_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _le_pa_wdog_COMPONENT_INIT()" -I/home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/watchdog/inc
+
+build $builddir/component/66df0e69015faefce3e51da9679c6109/obj/_componentMain.c.o: CompileC $builddir/component/66df0e69015faefce3e51da9679c6109/src/_componentMain.c
+  cFlags = $cFlags -I$builddir/component/66df0e69015faefce3e51da9679c6109/src -DLE_COMPONENT_NAME=le_pa_wdog -DLE_LOG_SESSION=le_pa_wdog_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=le_pa_wdog_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _le_pa_wdog_COMPONENT_INIT()"
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/libComponent_watchdogDaemon.so: LinkCLib $builddir/component/e55c4984236ec308d705db5da3e0e19a/obj/2679f790ad39705f8e5f7fb0d8ad0461.o $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_client.c.o $builddir/api/1f9b39092f2aae5e4efd334659519085/client/le_instStat_client.c.o $builddir/api/e27ffb79d7f4403b1a3a577e98035171/client/le_appInfo_client.c.o $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/configTreeWdog_client.c.o $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/logDaemonWdog_client.c.o $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/updateDaemonWdog_client.c.o $builddir/api/77d054d6d773846fa0ae2c88e596cea4/client/wdog_client.c.o $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/supervisorWdog_client.c.o $builddir/api/990badb6bb97b7267e8b01c3682ca13b/server/le_wdog_server.o $builddir/component/e55c4984236ec308d705db5da3e0e19a/obj/_componentMain.c.o | /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/liblegato.so /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/libComponent_le_pa_wdog.so /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/liblegato.so
+  ldFlags =  -L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib:$$LEGATO_BUILD/framework/lib" "-L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib" -lComponent_le_pa_wdog "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -lm
+
+build $builddir/component/e55c4984236ec308d705db5da3e0e19a/obj/2679f790ad39705f8e5f7fb0d8ad0461.o: CompileC /home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/watchdog/watchdogDaemon/watchdog.c || $builddir/api/990badb6bb97b7267e8b01c3682ca13b/server/le_wdog_server.h $builddir/api/990badb6bb97b7267e8b01c3682ca13b/server/le_wdog_messages.h $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_interface.h $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_messages.h $builddir/api/1f9b39092f2aae5e4efd334659519085/client/le_instStat_interface.h $builddir/api/1f9b39092f2aae5e4efd334659519085/client/le_instStat_messages.h $builddir/api/e27ffb79d7f4403b1a3a577e98035171/client/le_appInfo_interface.h $builddir/api/e27ffb79d7f4403b1a3a577e98035171/client/le_appInfo_messages.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/configTreeWdog_interface.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/configTreeWdog_messages.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/logDaemonWdog_interface.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/logDaemonWdog_messages.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/updateDaemonWdog_interface.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/updateDaemonWdog_messages.h $builddir/api/77d054d6d773846fa0ae2c88e596cea4/client/wdog_interface.h $builddir/api/77d054d6d773846fa0ae2c88e596cea4/client/wdog_messages.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/supervisorWdog_interface.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/supervisorWdog_messages.h $builddir/api/b0405ed1080555feee94a613afef58d8/client/le_limit_interface.h 
+  cFlags = $cFlags -I$builddir/component/e55c4984236ec308d705db5da3e0e19a/src -I$builddir/api/990badb6bb97b7267e8b01c3682ca13b/server -I$builddir/api/4f33761436c6dc37adc956530e707788/client -I$builddir/api/1f9b39092f2aae5e4efd334659519085/client -I$builddir/api/e27ffb79d7f4403b1a3a577e98035171/client -I$builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client -I$builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client -I$builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client -I$builddir/api/77d054d6d773846fa0ae2c88e596cea4/client -I$builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client -I$builddir/api/b0405ed1080555feee94a613afef58d8/client -DLE_COMPONENT_NAME=watchdogDaemon -DLE_LOG_SESSION=watchdogDaemon_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=watchdogDaemon_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _watchdogDaemon_COMPONENT_INIT()" -I/home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/watchdog/inc
+
+build $builddir/component/e55c4984236ec308d705db5da3e0e19a/obj/_componentMain.c.o: CompileC $builddir/component/e55c4984236ec308d705db5da3e0e19a/src/_componentMain.c
+  cFlags = $cFlags -I$builddir/component/e55c4984236ec308d705db5da3e0e19a/src -I$builddir/api/990badb6bb97b7267e8b01c3682ca13b/server -I$builddir/api/4f33761436c6dc37adc956530e707788/client -I$builddir/api/1f9b39092f2aae5e4efd334659519085/client -I$builddir/api/e27ffb79d7f4403b1a3a577e98035171/client -I$builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client -I$builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client -I$builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client -I$builddir/api/77d054d6d773846fa0ae2c88e596cea4/client -I$builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client -I$builddir/api/b0405ed1080555feee94a613afef58d8/client -DLE_COMPONENT_NAME=watchdogDaemon -DLE_LOG_SESSION=watchdogDaemon_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=watchdogDaemon_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _watchdogDaemon_COMPONENT_INIT()"
+
+build $builddir/api/b0405ed1080555feee94a613afef58d8/client/le_limit_interface.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/le_limit.api |
+  outputDir = $builddir/api/b0405ed1080555feee94a613afef58d8/client
+  ifgenFlags = --gen-interface $ifgenFlags
+
+build $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_client.c.o: CompileC $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_client.c | $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_messages.h $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_interface.h
+  cFlags = $cFlags
+
+build $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_client.c $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_interface.h $builddir/api/4f33761436c6dc37adc956530e707788/client/le_cfg_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/le_cfg.api |
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix le_cfg $ifgenFlags
+  outputDir = $builddir/api/4f33761436c6dc37adc956530e707788/client
+
+build $builddir/api/1f9b39092f2aae5e4efd334659519085/client/le_instStat_client.c.o: CompileC $builddir/api/1f9b39092f2aae5e4efd334659519085/client/le_instStat_client.c | $builddir/api/1f9b39092f2aae5e4efd334659519085/client/le_instStat_messages.h $builddir/api/1f9b39092f2aae5e4efd334659519085/client/le_instStat_interface.h $builddir/api/b0405ed1080555feee94a613afef58d8/client/le_limit_interface.h
+  cFlags = $cFlags -I$builddir/api/b0405ed1080555feee94a613afef58d8/client
+
+build $builddir/api/1f9b39092f2aae5e4efd334659519085/client/le_instStat_client.c $builddir/api/1f9b39092f2aae5e4efd334659519085/client/le_instStat_interface.h $builddir/api/1f9b39092f2aae5e4efd334659519085/client/le_instStat_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/le_instStat.api | /home/shrunoti/Downloads/workspace/legato/interfaces/le_limit.api
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix le_instStat $ifgenFlags
+  outputDir = $builddir/api/1f9b39092f2aae5e4efd334659519085/client
+
+build $builddir/api/e27ffb79d7f4403b1a3a577e98035171/client/le_appInfo_client.c.o: CompileC $builddir/api/e27ffb79d7f4403b1a3a577e98035171/client/le_appInfo_client.c | $builddir/api/e27ffb79d7f4403b1a3a577e98035171/client/le_appInfo_messages.h $builddir/api/e27ffb79d7f4403b1a3a577e98035171/client/le_appInfo_interface.h $builddir/api/b0405ed1080555feee94a613afef58d8/client/le_limit_interface.h
+  cFlags = $cFlags -I$builddir/api/b0405ed1080555feee94a613afef58d8/client
+
+build $builddir/api/e27ffb79d7f4403b1a3a577e98035171/client/le_appInfo_client.c $builddir/api/e27ffb79d7f4403b1a3a577e98035171/client/le_appInfo_interface.h $builddir/api/e27ffb79d7f4403b1a3a577e98035171/client/le_appInfo_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/le_appInfo.api | /home/shrunoti/Downloads/workspace/legato/interfaces/le_limit.api
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix le_appInfo $ifgenFlags
+  outputDir = $builddir/api/e27ffb79d7f4403b1a3a577e98035171/client
+
+build $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/configTreeWdog_client.c.o: CompileC $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/configTreeWdog_client.c | $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/configTreeWdog_messages.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/configTreeWdog_interface.h
+  cFlags = $cFlags
+
+build $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/configTreeWdog_client.c $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/configTreeWdog_interface.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/configTreeWdog_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/watchdog/frameworkWdog.api |
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix configTreeWdog $ifgenFlags
+  outputDir = $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client
+
+build $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/logDaemonWdog_client.c.o: CompileC $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/logDaemonWdog_client.c | $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/logDaemonWdog_messages.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/logDaemonWdog_interface.h
+  cFlags = $cFlags
+
+build $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/logDaemonWdog_client.c $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/logDaemonWdog_interface.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/logDaemonWdog_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/watchdog/frameworkWdog.api |
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix logDaemonWdog $ifgenFlags
+  outputDir = $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client
+
+build $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/updateDaemonWdog_client.c.o: CompileC $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/updateDaemonWdog_client.c | $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/updateDaemonWdog_messages.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/updateDaemonWdog_interface.h
+  cFlags = $cFlags
+
+build $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/updateDaemonWdog_client.c $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/updateDaemonWdog_interface.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/updateDaemonWdog_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/watchdog/frameworkWdog.api |
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix updateDaemonWdog $ifgenFlags
+  outputDir = $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client
+
+build $builddir/api/77d054d6d773846fa0ae2c88e596cea4/client/wdog_client.c.o: CompileC $builddir/api/77d054d6d773846fa0ae2c88e596cea4/client/wdog_client.c | $builddir/api/77d054d6d773846fa0ae2c88e596cea4/client/wdog_messages.h $builddir/api/77d054d6d773846fa0ae2c88e596cea4/client/wdog_interface.h
+  cFlags = $cFlags
+
+build $builddir/api/77d054d6d773846fa0ae2c88e596cea4/client/wdog_client.c $builddir/api/77d054d6d773846fa0ae2c88e596cea4/client/wdog_interface.h $builddir/api/77d054d6d773846fa0ae2c88e596cea4/client/wdog_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/supervisor/wdog.api |
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix wdog $ifgenFlags
+  outputDir = $builddir/api/77d054d6d773846fa0ae2c88e596cea4/client
+
+build $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/supervisorWdog_client.c.o: CompileC $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/supervisorWdog_client.c | $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/supervisorWdog_messages.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/supervisorWdog_interface.h
+  cFlags = $cFlags
+
+build $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/supervisorWdog_client.c $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/supervisorWdog_interface.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client/supervisorWdog_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/watchdog/frameworkWdog.api |
+  ifgenFlags = --gen-client --gen-interface --gen-local --name-prefix supervisorWdog $ifgenFlags
+  outputDir = $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/client
+
+build $builddir/api/990badb6bb97b7267e8b01c3682ca13b/server/le_wdog_server.o: CompileC $builddir/api/990badb6bb97b7267e8b01c3682ca13b/server/le_wdog_server.c | $builddir/api/990badb6bb97b7267e8b01c3682ca13b/server/le_wdog_messages.h $builddir/api/990badb6bb97b7267e8b01c3682ca13b/server/le_wdog_server.h
+  cFlags = $cFlags
+
+build $builddir/api/990badb6bb97b7267e8b01c3682ca13b/server/le_wdog_server.c $builddir/api/990badb6bb97b7267e8b01c3682ca13b/server/le_wdog_server.h $builddir/api/990badb6bb97b7267e8b01c3682ca13b/server/le_wdog_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/le_wdog.api |
+  ifgenFlags = --gen-server --gen-server-interface --gen-local --name-prefix le_wdog $ifgenFlags
+  outputDir = $builddir/api/990badb6bb97b7267e8b01c3682ca13b/server
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/watchdog/build.ninja: RegenNinjaScript | /home/shrunoti/Downloads/workspace/legato/build/tools/mk /home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/watchdog/watchdogDaemon/Component.cdef /home/shrunoti/Downloads/workspace/legato/interfaces/le_appInfo.api /home/shrunoti/Downloads/workspace/legato/interfaces/le_cfg.api /home/shrunoti/Downloads/workspace/legato/interfaces/le_instStat.api /home/shrunoti/Downloads/workspace/legato/interfaces/le_limit.api /home/shrunoti/Downloads/workspace/legato/interfaces/le_wdog.api /home/shrunoti/Downloads/workspace/legato/interfaces/supervisor/wdog.api /home/shrunoti/Downloads/workspace/legato/interfaces/watchdog/frameworkWdog.api /home/shrunoti/Downloads/workspace/legato/platformAdaptor/wdog/linux/components/le_pa_wdog/Component.cdef
+

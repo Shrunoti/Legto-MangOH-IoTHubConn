@@ -1,0 +1,847 @@
+\hypertarget{user_8c}{}\section{framework/liblegato/linux/user.c File Reference}
+\label{user_8c}\index{framework/liblegato/linux/user.\+c@{framework/liblegato/linux/user.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}user.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$pwd.\+h$>$}\\*
+{\ttfamily \#include $<$grp.\+h$>$}\\*
+{\ttfamily \#include $<$sys/file.\+h$>$}\\*
+{\ttfamily \#include $<$sys/sendfile.\+h$>$}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structapp_tab__t}{app\+Tab\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{user_8c_adfdac3e94aa311c4fea9919acf2f93bc}{B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+U\+ID}~1100
+\item 
+\#define \hyperlink{user_8c_ac2051ef151fcc6ed5946f86b3603382f}{B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+G\+ID}~1100
+\item 
+\#define \hyperlink{user_8c_afdc21f8b3043e23dc879ac4bd32a219e}{U\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR}~\char`\"{}U\+I\+D\+\_\+\+M\+IN\char`\"{}
+\item 
+\#define \hyperlink{user_8c_ac756ce1f626f71be948a0b3636cdde18}{U\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR}~\char`\"{}U\+I\+D\+\_\+\+M\+AX\char`\"{}
+\item 
+\#define \hyperlink{user_8c_ade6865a19c7428c767ef558eb5220203}{G\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR}~\char`\"{}G\+I\+D\+\_\+\+M\+IN\char`\"{}
+\item 
+\#define \hyperlink{user_8c_a5d5d8c8f287533627c5765d69eecf17d}{G\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR}~\char`\"{}G\+I\+D\+\_\+\+M\+AX\char`\"{}
+\item 
+\#define \hyperlink{user_8c_afea2750e6edeef83a5d986ed0030c1c3}{U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+P\+R\+E\+F\+IX}~\char`\"{}app\char`\"{}
+\item 
+\#define \hyperlink{user_8c_a3185399cacfe486f4d189498aaa41af3}{U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+T\+A\+B\+L\+E\+\_\+\+P\+R\+E\+F\+IX}~\char`\"{}app\+Legato\char`\"{}
+\item 
+\#define \hyperlink{user_8c_a49b0d3f4f7f7687d16ef7390bb5bf39e}{P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE}~\char`\"{}/etc/passwd\char`\"{}
+\item 
+\#define \hyperlink{user_8c_a1d53a99bb300d9f09d063748f2332974}{G\+R\+O\+U\+P\+\_\+\+F\+I\+LE}~\char`\"{}/etc/group\char`\"{}
+\item 
+\#define \hyperlink{user_8c_a993819823db6aa175fde4c070d7dd9f7}{B\+A\+C\+K\+U\+P\+\_\+\+P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE}~\char`\"{}/etc/passwd.\+bak\char`\"{}
+\item 
+\#define \hyperlink{user_8c_a6d9608a18f91559e1c4ac3adcf6bccb3}{B\+A\+C\+K\+U\+P\+\_\+\+G\+R\+O\+U\+P\+\_\+\+F\+I\+LE}~\char`\"{}/etc/group.\+bak\char`\"{}
+\item 
+\#define \hyperlink{user_8c_a855a91c435c66de897b659ffdaf1d2cd}{L\+O\+G\+I\+N\+\_\+\+D\+E\+F\+\_\+\+F\+I\+LE}~\char`\"{}/etc/login.\+defs\char`\"{}
+\item 
+\#define \hyperlink{user_8c_a06cea574611e014ac250ca97744725f6}{A\+P\+P\+S\+\_\+\+T\+R\+A\+N\+S\+L\+A\+T\+I\+O\+N\+\_\+\+F\+I\+LE}~\char`\"{}/legato/systems/current/config/apps\+Tab.\+bin\char`\"{}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static bool \hyperlink{user_8c_a24d6b052641798df7570208d2031a371}{Update\+Local\+Uid\+Gid\+From\+Str} (const char $\ast$str\+Ptr, const char $\ast$name\+Of\+Value\+To\+Update\+Ptr, int $\ast$value\+To\+Update\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{user_8c_a714264fb3d72f7bc7cec9a9cfec7ba43}{Delete\+File} (const char $\ast$file\+Name\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a7f319b8c6250f1e0c6db8983a41b18e2}{Set\+File\+Length} (F\+I\+LE $\ast$\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}, off\+\_\+t size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a772e9c5219e148a3bd323700f40e386f}{Make\+Backup} (const char $\ast$orig\+File\+Name\+Ptr, const char $\ast$backup\+File\+Name\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_afe563e0890487953940f06f90eb54823}{Restore\+Backup} (const char $\ast$orig\+File\+Name\+Ptr, const char $\ast$backup\+File\+Name\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{user_8c_a9549060828c15f208d532e4643d6f06c}{user\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a2afc61ce4fc394c8514d9ac695daff9b}{Get\+Name} (uid\+\_\+t uid, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_af8e91962458cc5f516a3f8dd3e3eefad}{Get\+Group\+Name} (gid\+\_\+t gid, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a39681dfe35d18e54c6276697fa6146cd}{Get\+I\+Ds} (const char $\ast$username\+Ptr, uid\+\_\+t $\ast$uid\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_abdcf4623c8f9fbbc3c0673f055526783}{Get\+Uid} (const char $\ast$username\+Ptr, uid\+\_\+t $\ast$uid\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_adc47d9a04ce8892b6024a0e98f3153d9}{Get\+Gid} (const char $\ast$group\+Name\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a32a1d770d6e20857364728b3c7135719}{Get\+Avail\+Uid} (uid\+\_\+t $\ast$uid\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a2aad8f9377f359a58be442a584658e6c}{Get\+Avail\+Gid} (gid\+\_\+t $\ast$gid\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_aaec9f49ce1c4a3463e0cb9d9cbd7cd0e}{Create\+Group} (const char $\ast$name\+Ptr, gid\+\_\+t gid, F\+I\+LE $\ast$group\+File\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_abc70c4325ec37c759db34ff70a749298}{Create\+User} (const char $\ast$name\+Ptr, uid\+\_\+t uid, gid\+\_\+t gid, F\+I\+LE $\ast$passwd\+File\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_ab4c3ebc356a622c5bda37b5a89366f57}{user\+\_\+\+Create} (const char $\ast$username\+Ptr, uid\+\_\+t $\ast$uid\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a6b10aca6dc53fd91885dc297d09ee073}{user\+\_\+\+Create\+Group} (const char $\ast$group\+Name\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a2032bdac70adef83d9545bbe1e7ab6ee}{Delete\+Group} (const char $\ast$name\+Ptr, F\+I\+LE $\ast$group\+File\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a0222ffa89b8707f03d458cc016c8aec7}{Delete\+User} (const char $\ast$name\+Ptr, F\+I\+LE $\ast$passwd\+File\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_ad454197e00b43fe8fb0b0a710f0c1dad}{user\+\_\+\+Delete} (const char $\ast$name\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_af68277b30e29cc6510e1fdc1dce3b430}{user\+\_\+\+Delete\+Group} (const char $\ast$group\+Name\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a5f0002639ea2cad3d10dbc572026e7fb}{user\+\_\+\+Get\+I\+Ds} (const char $\ast$username\+Ptr, uid\+\_\+t $\ast$uid\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a39131f3890c5383ef32516f46f44be6c}{user\+\_\+\+Get\+Uid} (const char $\ast$username\+Ptr, uid\+\_\+t $\ast$uid\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a299b01848e72e1c3f3fe3ce67eddbb49}{user\+\_\+\+Get\+Gid} (const char $\ast$group\+Name\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a97326b1fd996bdb7c4042335cfe1d773}{user\+\_\+\+Get\+Name} (uid\+\_\+t uid, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a00837d54b8af4f04acabaafb4d226128}{user\+\_\+\+Get\+Group\+Name} (gid\+\_\+t gid, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_af635b01a3b2920649ce2c1a64461e3eb}{user\+\_\+\+Get\+App\+Name} (uid\+\_\+t uid, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a8153cdbc230f1eddc96d71981ee5aae1}{user\+\_\+\+App\+Name\+To\+User\+Name} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a5b24eb4a48dd4b7f57778a0ee1610616}{user\+\_\+\+Get\+App\+Uid} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, uid\+\_\+t $\ast$uid\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{user_8c_a07c1738dc167d245a5b6909765b6c4de}{user\+\_\+\+Get\+App\+Gid} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, gid\+\_\+t $\ast$gid\+Ptr)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static uid\+\_\+t \hyperlink{user_8c_ae22f396cf19a864829befe9c6bb7b941}{Min\+Local\+Uid} = 1000
+\item 
+static uid\+\_\+t \hyperlink{user_8c_a4d85d36825e1f649883069565b0623d4}{Max\+Local\+Uid} = 60000
+\item 
+static gid\+\_\+t \hyperlink{user_8c_ac132e844f2bcc375aa76260a2fbde003}{Min\+Local\+Gid} = 1000
+\item 
+static gid\+\_\+t \hyperlink{user_8c_a7862957a536eb1c2f0a292ae49e639af}{Max\+Local\+Gid} = 60000
+\item 
+static size\+\_\+t \hyperlink{user_8c_a6b61635d762d6101610f9810f3b8cde5}{Max\+Passwd\+Entry\+Size} = \hyperlink{limit_8h_accd19a6264ef965c02f113dc01610e14}{L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+P\+A\+T\+H\+\_\+\+B\+Y\+T\+ES} $\ast$ 3
+\item 
+static size\+\_\+t \hyperlink{user_8c_a6b4662f0b83109dfdec57de72c4758a4}{Max\+Group\+Entry\+Size} = \hyperlink{limit_8h_accd19a6264ef965c02f113dc01610e14}{L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+P\+A\+T\+H\+\_\+\+B\+Y\+T\+ES}
+\item 
+static uint32\+\_\+t \hyperlink{user_8c_aad1e2afdb10783a195fc327e12d96220}{Nb\+Apps\+In\+Translation\+Table} = 0
+\item 
+static \hyperlink{structapp_tab__t}{app\+Tab\+\_\+t} $\ast$ \hyperlink{user_8c_a24dfe270d011e5d0621e0eb6fa153a58}{Apps\+Tab}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{user_8c_af300a39a90ae087af71807887da5c50b}{Apps\+Tab\+Pool} = N\+U\+LL
+\item 
+static bool \hyperlink{user_8c_a470827b823f75475eb54b18cf850f215}{Is\+Etc\+Writable} = false
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+A\+PI for creating/deleting Linux users and groups.
+
+Users are created and deleted by modifying the /etc/passwd files and this is done by using the atomic file access mechanism. This guarantees against corruption of passwd file on unclean reboot. Atomic access A\+PI also ensures file locking while opening for read or write. This ensures that the file does not get corrupted due to multiple simultaneous access. Locking the file allows this A\+PI to be thread safe. However, the file locking mechanism provided by the atomic access A\+PI is advisory only which means that other threads may access the passwd file simultaneously if they are not using this A\+PI. The file locking mechanism used here is blocking so a deadlock will occur if an attempt is made to obtain a lock on a file that has already been locked in the same thread.
+
+Groups are created and deleted by modifying the /etc/group file. File update and locking is handled in the same way as the passwd file.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{user.\+c@{user.\+c}!A\+P\+P\+S\+\_\+\+T\+R\+A\+N\+S\+L\+A\+T\+I\+O\+N\+\_\+\+F\+I\+LE@{A\+P\+P\+S\+\_\+\+T\+R\+A\+N\+S\+L\+A\+T\+I\+O\+N\+\_\+\+F\+I\+LE}}
+\index{A\+P\+P\+S\+\_\+\+T\+R\+A\+N\+S\+L\+A\+T\+I\+O\+N\+\_\+\+F\+I\+LE@{A\+P\+P\+S\+\_\+\+T\+R\+A\+N\+S\+L\+A\+T\+I\+O\+N\+\_\+\+F\+I\+LE}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{A\+P\+P\+S\+\_\+\+T\+R\+A\+N\+S\+L\+A\+T\+I\+O\+N\+\_\+\+F\+I\+LE}{APPS_TRANSLATION_FILE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\+P\+P\+S\+\_\+\+T\+R\+A\+N\+S\+L\+A\+T\+I\+O\+N\+\_\+\+F\+I\+LE~\char`\"{}/legato/systems/current/config/apps\+Tab.\+bin\char`\"{}}\hypertarget{user_8c_a06cea574611e014ac250ca97744725f6}{}\label{user_8c_a06cea574611e014ac250ca97744725f6}
+Name of the apps translation table used internally to replace the write access to /etc/passwd and /etc/group. \index{user.\+c@{user.\+c}!B\+A\+C\+K\+U\+P\+\_\+\+G\+R\+O\+U\+P\+\_\+\+F\+I\+LE@{B\+A\+C\+K\+U\+P\+\_\+\+G\+R\+O\+U\+P\+\_\+\+F\+I\+LE}}
+\index{B\+A\+C\+K\+U\+P\+\_\+\+G\+R\+O\+U\+P\+\_\+\+F\+I\+LE@{B\+A\+C\+K\+U\+P\+\_\+\+G\+R\+O\+U\+P\+\_\+\+F\+I\+LE}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{B\+A\+C\+K\+U\+P\+\_\+\+G\+R\+O\+U\+P\+\_\+\+F\+I\+LE}{BACKUP_GROUP_FILE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\+A\+C\+K\+U\+P\+\_\+\+G\+R\+O\+U\+P\+\_\+\+F\+I\+LE~\char`\"{}/etc/group.\+bak\char`\"{}}\hypertarget{user_8c_a6d9608a18f91559e1c4ac3adcf6bccb3}{}\label{user_8c_a6d9608a18f91559e1c4ac3adcf6bccb3}
+\index{user.\+c@{user.\+c}!B\+A\+C\+K\+U\+P\+\_\+\+P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE@{B\+A\+C\+K\+U\+P\+\_\+\+P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE}}
+\index{B\+A\+C\+K\+U\+P\+\_\+\+P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE@{B\+A\+C\+K\+U\+P\+\_\+\+P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{B\+A\+C\+K\+U\+P\+\_\+\+P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE}{BACKUP_PASSWORD_FILE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\+A\+C\+K\+U\+P\+\_\+\+P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE~\char`\"{}/etc/passwd.\+bak\char`\"{}}\hypertarget{user_8c_a993819823db6aa175fde4c070d7dd9f7}{}\label{user_8c_a993819823db6aa175fde4c070d7dd9f7}
+\index{user.\+c@{user.\+c}!B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+G\+ID@{B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+G\+ID}}
+\index{B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+G\+ID@{B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+G\+ID}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+G\+ID}{BASE_MIN_GID}}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+G\+ID~1100}\hypertarget{user_8c_ac2051ef151fcc6ed5946f86b3603382f}{}\label{user_8c_ac2051ef151fcc6ed5946f86b3603382f}
+\index{user.\+c@{user.\+c}!B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+U\+ID@{B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+U\+ID}}
+\index{B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+U\+ID@{B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+U\+ID}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+U\+ID}{BASE_MIN_UID}}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+U\+ID~1100}\hypertarget{user_8c_adfdac3e94aa311c4fea9919acf2f93bc}{}\label{user_8c_adfdac3e94aa311c4fea9919acf2f93bc}
+The base local user and group ID to use if /etc/passwd and /etc/group are not writable. \index{user.\+c@{user.\+c}!G\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR@{G\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR}}
+\index{G\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR@{G\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{G\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR}{GID_MAX_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR~\char`\"{}G\+I\+D\+\_\+\+M\+AX\char`\"{}}\hypertarget{user_8c_a5d5d8c8f287533627c5765d69eecf17d}{}\label{user_8c_a5d5d8c8f287533627c5765d69eecf17d}
+\index{user.\+c@{user.\+c}!G\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR@{G\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR}}
+\index{G\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR@{G\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{G\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR}{GID_MIN_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR~\char`\"{}G\+I\+D\+\_\+\+M\+IN\char`\"{}}\hypertarget{user_8c_ade6865a19c7428c767ef558eb5220203}{}\label{user_8c_ade6865a19c7428c767ef558eb5220203}
+\index{user.\+c@{user.\+c}!G\+R\+O\+U\+P\+\_\+\+F\+I\+LE@{G\+R\+O\+U\+P\+\_\+\+F\+I\+LE}}
+\index{G\+R\+O\+U\+P\+\_\+\+F\+I\+LE@{G\+R\+O\+U\+P\+\_\+\+F\+I\+LE}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{G\+R\+O\+U\+P\+\_\+\+F\+I\+LE}{GROUP_FILE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define G\+R\+O\+U\+P\+\_\+\+F\+I\+LE~\char`\"{}/etc/group\char`\"{}}\hypertarget{user_8c_a1d53a99bb300d9f09d063748f2332974}{}\label{user_8c_a1d53a99bb300d9f09d063748f2332974}
+\index{user.\+c@{user.\+c}!L\+O\+G\+I\+N\+\_\+\+D\+E\+F\+\_\+\+F\+I\+LE@{L\+O\+G\+I\+N\+\_\+\+D\+E\+F\+\_\+\+F\+I\+LE}}
+\index{L\+O\+G\+I\+N\+\_\+\+D\+E\+F\+\_\+\+F\+I\+LE@{L\+O\+G\+I\+N\+\_\+\+D\+E\+F\+\_\+\+F\+I\+LE}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{L\+O\+G\+I\+N\+\_\+\+D\+E\+F\+\_\+\+F\+I\+LE}{LOGIN_DEF_FILE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+G\+I\+N\+\_\+\+D\+E\+F\+\_\+\+F\+I\+LE~\char`\"{}/etc/login.\+defs\char`\"{}}\hypertarget{user_8c_a855a91c435c66de897b659ffdaf1d2cd}{}\label{user_8c_a855a91c435c66de897b659ffdaf1d2cd}
+\index{user.\+c@{user.\+c}!P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE@{P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE}}
+\index{P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE@{P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE}{PASSWORD_FILE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+F\+I\+LE~\char`\"{}/etc/passwd\char`\"{}}\hypertarget{user_8c_a49b0d3f4f7f7687d16ef7390bb5bf39e}{}\label{user_8c_a49b0d3f4f7f7687d16ef7390bb5bf39e}
+Names of the password file, group file and temporary password and group files and the login definition file. \index{user.\+c@{user.\+c}!U\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR@{U\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR}}
+\index{U\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR@{U\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{U\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR}{UID_MAX_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\+I\+D\+\_\+\+M\+A\+X\+\_\+\+S\+TR~\char`\"{}U\+I\+D\+\_\+\+M\+AX\char`\"{}}\hypertarget{user_8c_ac756ce1f626f71be948a0b3636cdde18}{}\label{user_8c_ac756ce1f626f71be948a0b3636cdde18}
+\index{user.\+c@{user.\+c}!U\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR@{U\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR}}
+\index{U\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR@{U\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{U\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR}{UID_MIN_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\+I\+D\+\_\+\+M\+I\+N\+\_\+\+S\+TR~\char`\"{}U\+I\+D\+\_\+\+M\+IN\char`\"{}}\hypertarget{user_8c_afdc21f8b3043e23dc879ac4bd32a219e}{}\label{user_8c_afdc21f8b3043e23dc879ac4bd32a219e}
+The local user and group ID range strings in /etc/login.defs. \index{user.\+c@{user.\+c}!U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+P\+R\+E\+F\+IX@{U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+P\+R\+E\+F\+IX}}
+\index{U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+P\+R\+E\+F\+IX@{U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+P\+R\+E\+F\+IX}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+P\+R\+E\+F\+IX}{USERNAME_PREFIX}}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+P\+R\+E\+F\+IX~\char`\"{}app\char`\"{}}\hypertarget{user_8c_afea2750e6edeef83a5d986ed0030c1c3}{}\label{user_8c_afea2750e6edeef83a5d986ed0030c1c3}
+Username prefix. The prefix to prepend to the application name to create the username for the application. \index{user.\+c@{user.\+c}!U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+T\+A\+B\+L\+E\+\_\+\+P\+R\+E\+F\+IX@{U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+T\+A\+B\+L\+E\+\_\+\+P\+R\+E\+F\+IX}}
+\index{U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+T\+A\+B\+L\+E\+\_\+\+P\+R\+E\+F\+IX@{U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+T\+A\+B\+L\+E\+\_\+\+P\+R\+E\+F\+IX}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+T\+A\+B\+L\+E\+\_\+\+P\+R\+E\+F\+IX}{USERNAME_TABLE_PREFIX}}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+T\+A\+B\+L\+E\+\_\+\+P\+R\+E\+F\+IX~\char`\"{}app\+Legato\char`\"{}}\hypertarget{user_8c_a3185399cacfe486f4d189498aaa41af3}{}\label{user_8c_a3185399cacfe486f4d189498aaa41af3}
+Username and group aliases used in case of /etc/passwd and /etc/group are not writable. These generic names should be already populated into the /etc/passwd and /etc/group. 
+
+\subsection{Function Documentation}
+\index{user.\+c@{user.\+c}!Create\+Group@{Create\+Group}}
+\index{Create\+Group@{Create\+Group}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Group(const char $\ast$name\+Ptr, gid\+\_\+t gid, F\+I\+L\+E $\ast$group\+File\+Ptr)}{CreateGroup(const char *namePtr, gid_t gid, FILE *groupFilePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+Group (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{name\+Ptr, }
+\item[{gid\+\_\+t}]{gid, }
+\item[{F\+I\+LE $\ast$}]{group\+File\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_aaec9f49ce1c4a3463e0cb9d9cbd7cd0e}{}\label{user_8c_aaec9f49ce1c4a3463e0cb9d9cbd7cd0e}
+Creates a group with the specified name and group ID.
+
+\begin{DoxyNote}{Note}
+Does not lock the passwd or group files.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em name\+Ptr} & Pointer to the name of group to create. \\
+\hline
+\mbox{\tt in}  & {\em gid} & The group ID to use. \\
+\hline
+\mbox{\tt in}  & {\em group\+File\+Ptr} & Pointer to the group file. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Create\+User@{Create\+User}}
+\index{Create\+User@{Create\+User}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Create\+User(const char $\ast$name\+Ptr, uid\+\_\+t uid, gid\+\_\+t gid, F\+I\+L\+E $\ast$passwd\+File\+Ptr)}{CreateUser(const char *namePtr, uid_t uid, gid_t gid, FILE *passwdFilePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+User (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{name\+Ptr, }
+\item[{uid\+\_\+t}]{uid, }
+\item[{gid\+\_\+t}]{gid, }
+\item[{F\+I\+LE $\ast$}]{passwd\+File\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_abc70c4325ec37c759db34ff70a749298}{}\label{user_8c_abc70c4325ec37c759db34ff70a749298}
+Creates a user, and sets its primary group.
+
+\begin{DoxyNote}{Note}
+Does not lock the passwd or group files.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em name\+Ptr} & Pointer to the name of user and group to create. \\
+\hline
+\mbox{\tt in}  & {\em uid} & The uid for the user. \\
+\hline
+\mbox{\tt in}  & {\em gid} & The gid for the group. \\
+\hline
+\mbox{\tt in}  & {\em passwd\+File\+Ptr} & Pointer to the passwd file. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Delete\+File@{Delete\+File}}
+\index{Delete\+File@{Delete\+File}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+File(const char $\ast$file\+Name\+Ptr)}{DeleteFile(const char *fileNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+File (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{file\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a714264fb3d72f7bc7cec9a9cfec7ba43}{}\label{user_8c_a714264fb3d72f7bc7cec9a9cfec7ba43}
+Deletes a file. \index{user.\+c@{user.\+c}!Delete\+Group@{Delete\+Group}}
+\index{Delete\+Group@{Delete\+Group}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Group(const char $\ast$name\+Ptr, F\+I\+L\+E $\ast$group\+File\+Ptr)}{DeleteGroup(const char *namePtr, FILE *groupFilePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Delete\+Group (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{name\+Ptr, }
+\item[{F\+I\+LE $\ast$}]{group\+File\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a2032bdac70adef83d9545bbe1e7ab6ee}{}\label{user_8c_a2032bdac70adef83d9545bbe1e7ab6ee}
+Deletes a group.
+
+\begin{DoxyNote}{Note}
+Does not lock the group file.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em name\+Ptr} & Pointer to the name of the user and group to delete. \\
+\hline
+\mbox{\tt in}  & {\em group\+File\+Ptr} & Pointer to the group file. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Delete\+User@{Delete\+User}}
+\index{Delete\+User@{Delete\+User}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+User(const char $\ast$name\+Ptr, F\+I\+L\+E $\ast$passwd\+File\+Ptr)}{DeleteUser(const char *namePtr, FILE *passwdFilePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Delete\+User (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{name\+Ptr, }
+\item[{F\+I\+LE $\ast$}]{passwd\+File\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a0222ffa89b8707f03d458cc016c8aec7}{}\label{user_8c_a0222ffa89b8707f03d458cc016c8aec7}
+Deletes a user.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em name\+Ptr} & Pointer to the name of the user and group to delete. \\
+\hline
+\mbox{\tt in}  & {\em passwd\+File\+Ptr} & Pointer to the passwd file. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Get\+Avail\+Gid@{Get\+Avail\+Gid}}
+\index{Get\+Avail\+Gid@{Get\+Avail\+Gid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Avail\+Gid(gid\+\_\+t $\ast$gid\+Ptr)}{GetAvailGid(gid_t *gidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Avail\+Gid (
+\begin{DoxyParamCaption}
+\item[{gid\+\_\+t $\ast$}]{gid\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a2aad8f9377f359a58be442a584658e6c}{}\label{user_8c_a2aad8f9377f359a58be442a584658e6c}
+Gets the first available group ID.
+
+\begin{DoxyNote}{Note}
+Does not lock the group file.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if there are no more available I\+Ds. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em gid\+Ptr} & Pointer to store the gid. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Get\+Avail\+Uid@{Get\+Avail\+Uid}}
+\index{Get\+Avail\+Uid@{Get\+Avail\+Uid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Avail\+Uid(uid\+\_\+t $\ast$uid\+Ptr)}{GetAvailUid(uid_t *uidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Avail\+Uid (
+\begin{DoxyParamCaption}
+\item[{uid\+\_\+t $\ast$}]{uid\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a32a1d770d6e20857364728b3c7135719}{}\label{user_8c_a32a1d770d6e20857364728b3c7135719}
+Gets the first available user ID.
+
+\begin{DoxyNote}{Note}
+Does not lock the passwd file.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if there are no more available I\+Ds. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em uid\+Ptr} & Pointer to store the uid. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Get\+Gid@{Get\+Gid}}
+\index{Get\+Gid@{Get\+Gid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Gid(const char $\ast$group\+Name\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)}{GetGid(const char *groupNamePtr, gid_t *gidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Gid (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{group\+Name\+Ptr, }
+\item[{gid\+\_\+t $\ast$}]{gid\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_adc47d9a04ce8892b6024a0e98f3153d9}{}\label{user_8c_adc47d9a04ce8892b6024a0e98f3153d9}
+Gets the group ID for a group name.
+
+\begin{DoxyNote}{Note}
+Does not lock the group file.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the group does not exist. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em group\+Name\+Ptr} & The name of the group to get. \\
+\hline
+\mbox{\tt out}  & {\em gid\+Ptr} & Pointer to store the gid of the group. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Get\+Group\+Name@{Get\+Group\+Name}}
+\index{Get\+Group\+Name@{Get\+Group\+Name}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Group\+Name(gid\+\_\+t gid, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)}{GetGroupName(gid_t gid, char *nameBufPtr, size_t nameBufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Group\+Name (
+\begin{DoxyParamCaption}
+\item[{gid\+\_\+t}]{gid, }
+\item[{char $\ast$}]{name\+Buf\+Ptr, }
+\item[{size\+\_\+t}]{name\+Buf\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_af8e91962458cc5f516a3f8dd3e3eefad}{}\label{user_8c_af8e91962458cc5f516a3f8dd3e3eefad}
+Gets a group name from a group ID.
+
+\begin{DoxyNote}{Note}
+Does not lock the group file.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the provided buffer is too small and only part of the group name was copied. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the group was not found. L\+E\+\_\+\+F\+A\+U\+LT if there was an error getting the group name. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em gid} & The gid of the group to get the name for. \\
+\hline
+\mbox{\tt out}  & {\em name\+Buf\+Ptr} & The buffer to store the group name in. \\
+\hline
+\mbox{\tt in}  & {\em name\+Buf\+Size} & The size of the buffer that the group name will be stored in. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Get\+I\+Ds@{Get\+I\+Ds}}
+\index{Get\+I\+Ds@{Get\+I\+Ds}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Get\+I\+Ds(const char $\ast$username\+Ptr, uid\+\_\+t $\ast$uid\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)}{GetIDs(const char *usernamePtr, uid_t *uidPtr, gid_t *gidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+I\+Ds (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{username\+Ptr, }
+\item[{uid\+\_\+t $\ast$}]{uid\+Ptr, }
+\item[{gid\+\_\+t $\ast$}]{gid\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a39681dfe35d18e54c6276697fa6146cd}{}\label{user_8c_a39681dfe35d18e54c6276697fa6146cd}
+Gets the user ID and group ID of a user and stores them in the locations pointed to by uid\+Ptr and gid\+Ptr. If there was an error then the values at uid\+Ptr and gid\+Ptr are undefined.
+
+\begin{DoxyNote}{Note}
+Does not lock the passwd or group file.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the user does not exist. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em username\+Ptr} & The name of the user to get. \\
+\hline
+\mbox{\tt out}  & {\em uid\+Ptr} & A pointer to a location to store the uid for this user. This can be N\+U\+LL if the uid is not needed. \\
+\hline
+\mbox{\tt out}  & {\em gid\+Ptr} & A pointer to a location to store the gid for this user. This can be N\+U\+LL if the gid is not needed. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Get\+Name@{Get\+Name}}
+\index{Get\+Name@{Get\+Name}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Name(uid\+\_\+t uid, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)}{GetName(uid_t uid, char *nameBufPtr, size_t nameBufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Name (
+\begin{DoxyParamCaption}
+\item[{uid\+\_\+t}]{uid, }
+\item[{char $\ast$}]{name\+Buf\+Ptr, }
+\item[{size\+\_\+t}]{name\+Buf\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a2afc61ce4fc394c8514d9ac695daff9b}{}\label{user_8c_a2afc61ce4fc394c8514d9ac695daff9b}
+Gets a user name from a user ID.
+
+\begin{DoxyNote}{Note}
+Does not lock the passwd file.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the provided buffer is too small and only part of the user name was copied. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the user was not found. L\+E\+\_\+\+F\+A\+U\+LT if there was an error getting the user name. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em uid} & The uid of the user to get the name for. \\
+\hline
+\mbox{\tt out}  & {\em name\+Buf\+Ptr} & The buffer to store the user name in. \\
+\hline
+\mbox{\tt in}  & {\em name\+Buf\+Size} & The size of the buffer that the user name will be stored in. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Get\+Uid@{Get\+Uid}}
+\index{Get\+Uid@{Get\+Uid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Uid(const char $\ast$username\+Ptr, uid\+\_\+t $\ast$uid\+Ptr)}{GetUid(const char *usernamePtr, uid_t *uidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Uid (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{username\+Ptr, }
+\item[{uid\+\_\+t $\ast$}]{uid\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_abdcf4623c8f9fbbc3c0673f055526783}{}\label{user_8c_abdcf4623c8f9fbbc3c0673f055526783}
+Gets the user ID for a user name.
+
+\begin{DoxyNote}{Note}
+Does not lock the passwd file.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the user does not exist. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em username\+Ptr} & The name of the user to get. \\
+\hline
+\mbox{\tt out}  & {\em uid\+Ptr} & Pointer to store the uid of the user. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Make\+Backup@{Make\+Backup}}
+\index{Make\+Backup@{Make\+Backup}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Make\+Backup(const char $\ast$orig\+File\+Name\+Ptr, const char $\ast$backup\+File\+Name\+Ptr)}{MakeBackup(const char *origFileNamePtr, const char *backupFileNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Make\+Backup (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{orig\+File\+Name\+Ptr, }
+\item[{const char $\ast$}]{backup\+File\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a772e9c5219e148a3bd323700f40e386f}{}\label{user_8c_a772e9c5219e148a3bd323700f40e386f}
+Create backup file. Copies the contents of the original file to backup file. If /etc is not writable, return directly.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the original file could not be found. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em orig\+File\+Name\+Ptr} & Pointer to the original file name. \\
+\hline
+\mbox{\tt in}  & {\em backup\+File\+Name\+Ptr} & Pointer to the backup file name. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Restore\+Backup@{Restore\+Backup}}
+\index{Restore\+Backup@{Restore\+Backup}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Restore\+Backup(const char $\ast$orig\+File\+Name\+Ptr, const char $\ast$backup\+File\+Name\+Ptr)}{RestoreBackup(const char *origFileNamePtr, const char *backupFileNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Restore\+Backup (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{orig\+File\+Name\+Ptr, }
+\item[{const char $\ast$}]{backup\+File\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_afe563e0890487953940f06f90eb54823}{}\label{user_8c_afe563e0890487953940f06f90eb54823}
+Restore original file from backup file and removes the backup file. If /etc is not writable, return directly.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the original file could not be found. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em orig\+File\+Name\+Ptr} & Pointer to the file name will be restored. \\
+\hline
+\mbox{\tt in}  & {\em backup\+File\+Name\+Ptr} & Pointer to the file name of the backup file. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Set\+File\+Length@{Set\+File\+Length}}
+\index{Set\+File\+Length@{Set\+File\+Length}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Set\+File\+Length(\+F\+I\+L\+E $\ast$file\+Ptr, off\+\_\+t size)}{SetFileLength(FILE *filePtr, off_t size)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Set\+File\+Length (
+\begin{DoxyParamCaption}
+\item[{F\+I\+LE $\ast$}]{file\+Ptr, }
+\item[{off\+\_\+t}]{size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a7f319b8c6250f1e0c6db8983a41b18e2}{}\label{user_8c_a7f319b8c6250f1e0c6db8983a41b18e2}
+Sets a file to a specified size. If the size is smaller than the original file size, the file is truncated and the extra data is lost. If the size is larger than the original file size, the file is extended and the extended portion is filled with N\+U\+L\+Ls (\textquotesingle{}\textbackslash{}0\textquotesingle{}).
+
+The file must be opened for writing.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Ptr} & Pointer to the file to size. \\
+\hline
+\mbox{\tt in}  & {\em size} & The size in bytes to set the file to. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!Update\+Local\+Uid\+Gid\+From\+Str@{Update\+Local\+Uid\+Gid\+From\+Str}}
+\index{Update\+Local\+Uid\+Gid\+From\+Str@{Update\+Local\+Uid\+Gid\+From\+Str}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Update\+Local\+Uid\+Gid\+From\+Str(const char $\ast$str\+Ptr, const char $\ast$name\+Of\+Value\+To\+Update\+Ptr, int $\ast$value\+To\+Update\+Ptr)}{UpdateLocalUidGidFromStr(const char *strPtr, const char *nameOfValueToUpdatePtr, int *valueToUpdatePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Update\+Local\+Uid\+Gid\+From\+Str (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{str\+Ptr, }
+\item[{const char $\ast$}]{name\+Of\+Value\+To\+Update\+Ptr, }
+\item[{int $\ast$}]{value\+To\+Update\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a24d6b052641798df7570208d2031a371}{}\label{user_8c_a24d6b052641798df7570208d2031a371}
+Updates the user or group ID range value from a string. If the string contains the value to update, this function parses the string and updates the value.
+
+\begin{DoxyReturn}{Returns}
+true if the value was updated successfully. false if the value was not updated. 
+\end{DoxyReturn}
+\index{user.\+c@{user.\+c}!user\+\_\+\+App\+Name\+To\+User\+Name@{user\+\_\+\+App\+Name\+To\+User\+Name}}
+\index{user\+\_\+\+App\+Name\+To\+User\+Name@{user\+\_\+\+App\+Name\+To\+User\+Name}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+App\+Name\+To\+User\+Name(const char $\ast$app\+Name, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)}{user_AppNameToUserName(const char *appName, char *nameBufPtr, size_t nameBufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+App\+Name\+To\+User\+Name (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name, }
+\item[{char $\ast$}]{name\+Buf\+Ptr, }
+\item[{size\+\_\+t}]{name\+Buf\+Size}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_a8153cdbc230f1eddc96d71981ee5aae1}{}\label{user_8c_a8153cdbc230f1eddc96d71981ee5aae1}
+Converts an application\textquotesingle{}s name to a user name.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the provided buffer is too small and only part of the name was copied. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name} & The application\textquotesingle{}s name. \\
+\hline
+\mbox{\tt out}  & {\em name\+Buf\+Ptr} & The buffer to store the user name in. \\
+\hline
+\mbox{\tt in}  & {\em name\+Buf\+Size} & The size of the buffer that the user name will be stored in. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Create@{user\+\_\+\+Create}}
+\index{user\+\_\+\+Create@{user\+\_\+\+Create}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Create(const char $\ast$username\+Ptr, uid\+\_\+t $\ast$uid\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)}{user_Create(const char *usernamePtr, uid_t *uidPtr, gid_t *gidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Create (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{username\+Ptr, }
+\item[{uid\+\_\+t $\ast$}]{uid\+Ptr, }
+\item[{gid\+\_\+t $\ast$}]{gid\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_ab4c3ebc356a622c5bda37b5a89366f57}{}\label{user_8c_ab4c3ebc356a622c5bda37b5a89366f57}
+Creates a user account with the specified name. A group with the same name as the username will also be created and the group will be set as the user\textquotesingle{}s primary group. If the user and group are successfully created the user ID and group ID are stored at the location pointed to by uid\+Ptr and gid\+Ptr respectively. If the user/group accounts already exist then L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE will be returned and the user account\textquotesingle{}s user ID and group ID are stored at the location pointed to by uid\+Ptr and gid\+Ptr respectively. If there is an error then L\+E\+\_\+\+F\+A\+U\+LT will be returned and the values at uid\+Ptr and gid\+Ptr are undefined.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE if the user or group already exists. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em username\+Ptr} & Pointer to the name of the user and group to create. \\
+\hline
+\mbox{\tt out}  & {\em uid\+Ptr} & Pinter to a location to store the uid for the created user. This can be N\+U\+LL if the uid is not needed. \\
+\hline
+\mbox{\tt out}  & {\em gid\+Ptr} & Pointer to a location to store the gid for the created user. This can be N\+U\+LL if the gid is not needed. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Create\+Group@{user\+\_\+\+Create\+Group}}
+\index{user\+\_\+\+Create\+Group@{user\+\_\+\+Create\+Group}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Create\+Group(const char $\ast$group\+Name\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)}{user_CreateGroup(const char *groupNamePtr, gid_t *gidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Create\+Group (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{group\+Name\+Ptr, }
+\item[{gid\+\_\+t $\ast$}]{gid\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_a6b10aca6dc53fd91885dc297d09ee073}{}\label{user_8c_a6b10aca6dc53fd91885dc297d09ee073}
+Creates a group with the specified name.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE if the group already exists. If the group already exists the gid of the group is still returned in $\ast$gid\+Ptr. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em group\+Name\+Ptr} & Pointer to the name of the group to create. \\
+\hline
+\mbox{\tt out}  & {\em gid\+Ptr} & Pointer to store the gid. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Delete@{user\+\_\+\+Delete}}
+\index{user\+\_\+\+Delete@{user\+\_\+\+Delete}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Delete(const char $\ast$name\+Ptr)}{user_Delete(const char *namePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Delete (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_ad454197e00b43fe8fb0b0a710f0c1dad}{}\label{user_8c_ad454197e00b43fe8fb0b0a710f0c1dad}
+Deletes a user and its primary group.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the user could not be found. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em name\+Ptr} & Pointer to the name of the user to delete. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Delete\+Group@{user\+\_\+\+Delete\+Group}}
+\index{user\+\_\+\+Delete\+Group@{user\+\_\+\+Delete\+Group}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Delete\+Group(const char $\ast$group\+Name\+Ptr)}{user_DeleteGroup(const char *groupNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Delete\+Group (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{group\+Name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_af68277b30e29cc6510e1fdc1dce3b430}{}\label{user_8c_af68277b30e29cc6510e1fdc1dce3b430}
+Deletes a group.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the group could not be found. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em group\+Name\+Ptr} & Pointer to the name of the group to delete. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Get\+App\+Gid@{user\+\_\+\+Get\+App\+Gid}}
+\index{user\+\_\+\+Get\+App\+Gid@{user\+\_\+\+Get\+App\+Gid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Get\+App\+Gid(const char $\ast$app\+Name, gid\+\_\+t $\ast$gid\+Ptr)}{user_GetAppGid(const char *appName, gid_t *gidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Get\+App\+Gid (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name, }
+\item[{gid\+\_\+t $\ast$}]{gid\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_a07c1738dc167d245a5b6909765b6c4de}{}\label{user_8c_a07c1738dc167d245a5b6909765b6c4de}
+Get\textquotesingle{}s an application\textquotesingle{}s group ID.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the application does not exist. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the application name is too long. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name} & Name of the application to get the gid for. \\
+\hline
+\mbox{\tt out}  & {\em gid\+Ptr} & G\+ID of the application. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Get\+App\+Name@{user\+\_\+\+Get\+App\+Name}}
+\index{user\+\_\+\+Get\+App\+Name@{user\+\_\+\+Get\+App\+Name}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Get\+App\+Name(uid\+\_\+t uid, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)}{user_GetAppName(uid_t uid, char *nameBufPtr, size_t nameBufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Get\+App\+Name (
+\begin{DoxyParamCaption}
+\item[{uid\+\_\+t}]{uid, }
+\item[{char $\ast$}]{name\+Buf\+Ptr, }
+\item[{size\+\_\+t}]{name\+Buf\+Size}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_af635b01a3b2920649ce2c1a64461e3eb}{}\label{user_8c_af635b01a3b2920649ce2c1a64461e3eb}
+Gets an application\textquotesingle{}s name for a user.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the provided buffer is too small and only part of the name was copied. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the user does not have an application or the user ID is not valid. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em uid} & The uid of the user. \\
+\hline
+\mbox{\tt out}  & {\em name\+Buf\+Ptr} & The buffer to store the app name in. \\
+\hline
+\mbox{\tt in}  & {\em name\+Buf\+Size} & The size of the buffer that the app name will be stored in. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Get\+App\+Uid@{user\+\_\+\+Get\+App\+Uid}}
+\index{user\+\_\+\+Get\+App\+Uid@{user\+\_\+\+Get\+App\+Uid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Get\+App\+Uid(const char $\ast$app\+Name, uid\+\_\+t $\ast$uid\+Ptr)}{user_GetAppUid(const char *appName, uid_t *uidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Get\+App\+Uid (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name, }
+\item[{uid\+\_\+t $\ast$}]{uid\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_a5b24eb4a48dd4b7f57778a0ee1610616}{}\label{user_8c_a5b24eb4a48dd4b7f57778a0ee1610616}
+Get\textquotesingle{}s an application\textquotesingle{}s user ID.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the application does not exist. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the application name is too long. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name} & Name of the application to get the uid for. \\
+\hline
+\mbox{\tt out}  & {\em uid\+Ptr} & U\+ID of the application. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Get\+Gid@{user\+\_\+\+Get\+Gid}}
+\index{user\+\_\+\+Get\+Gid@{user\+\_\+\+Get\+Gid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Get\+Gid(const char $\ast$group\+Name\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)}{user_GetGid(const char *groupNamePtr, gid_t *gidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Get\+Gid (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{group\+Name\+Ptr, }
+\item[{gid\+\_\+t $\ast$}]{gid\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_a299b01848e72e1c3f3fe3ce67eddbb49}{}\label{user_8c_a299b01848e72e1c3f3fe3ce67eddbb49}
+Gets the group ID from a group name.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the group does not exist. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em group\+Name\+Ptr} & Pointer to the name of the group. \\
+\hline
+\mbox{\tt out}  & {\em gid\+Ptr} & Pointer to store the gid. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Get\+Group\+Name@{user\+\_\+\+Get\+Group\+Name}}
+\index{user\+\_\+\+Get\+Group\+Name@{user\+\_\+\+Get\+Group\+Name}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Get\+Group\+Name(gid\+\_\+t gid, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)}{user_GetGroupName(gid_t gid, char *nameBufPtr, size_t nameBufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Get\+Group\+Name (
+\begin{DoxyParamCaption}
+\item[{gid\+\_\+t}]{gid, }
+\item[{char $\ast$}]{name\+Buf\+Ptr, }
+\item[{size\+\_\+t}]{name\+Buf\+Size}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_a00837d54b8af4f04acabaafb4d226128}{}\label{user_8c_a00837d54b8af4f04acabaafb4d226128}
+Gets a group name from a group ID.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the provided buffer is too small and only part of the group name was copied. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the group was not found. L\+E\+\_\+\+F\+A\+U\+LT if there was an error getting the group name. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em gid} & The gid of the group to get the name for. \\
+\hline
+\mbox{\tt out}  & {\em name\+Buf\+Ptr} & The buffer to store the group name in. \\
+\hline
+\mbox{\tt in}  & {\em name\+Buf\+Size} & The size of the buffer that the group name will be stored in. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Get\+I\+Ds@{user\+\_\+\+Get\+I\+Ds}}
+\index{user\+\_\+\+Get\+I\+Ds@{user\+\_\+\+Get\+I\+Ds}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Get\+I\+Ds(const char $\ast$username\+Ptr, uid\+\_\+t $\ast$uid\+Ptr, gid\+\_\+t $\ast$gid\+Ptr)}{user_GetIDs(const char *usernamePtr, uid_t *uidPtr, gid_t *gidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Get\+I\+Ds (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{username\+Ptr, }
+\item[{uid\+\_\+t $\ast$}]{uid\+Ptr, }
+\item[{gid\+\_\+t $\ast$}]{gid\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_a5f0002639ea2cad3d10dbc572026e7fb}{}\label{user_8c_a5f0002639ea2cad3d10dbc572026e7fb}
+Gets the user ID and group ID of a user and stores them in the locations pointed to by uid\+Ptr and gid\+Ptr. If there was an error then the values at uid\+Ptr and gid\+Ptr are undefined.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the user does not exist. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em username\+Ptr} & Pointer to the name of the user to get. \\
+\hline
+\mbox{\tt out}  & {\em uid\+Ptr} & Pinter to a location to store the uid for this user. This can be N\+U\+LL if the uid is not needed. \\
+\hline
+\mbox{\tt out}  & {\em gid\+Ptr} & Pointer to a location to store the gid for this user. This can be N\+U\+LL if the gid is not needed. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Get\+Name@{user\+\_\+\+Get\+Name}}
+\index{user\+\_\+\+Get\+Name@{user\+\_\+\+Get\+Name}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Get\+Name(uid\+\_\+t uid, char $\ast$name\+Buf\+Ptr, size\+\_\+t name\+Buf\+Size)}{user_GetName(uid_t uid, char *nameBufPtr, size_t nameBufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Get\+Name (
+\begin{DoxyParamCaption}
+\item[{uid\+\_\+t}]{uid, }
+\item[{char $\ast$}]{name\+Buf\+Ptr, }
+\item[{size\+\_\+t}]{name\+Buf\+Size}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_a97326b1fd996bdb7c4042335cfe1d773}{}\label{user_8c_a97326b1fd996bdb7c4042335cfe1d773}
+Gets a user name from a user ID.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the provided buffer is too small and only part of the user name was copied. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the user was not found. L\+E\+\_\+\+F\+A\+U\+LT if there was an error getting the user name. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em uid} & The uid of the user to get the name for. \\
+\hline
+\mbox{\tt out}  & {\em name\+Buf\+Ptr} & The buffer to store the user name in. \\
+\hline
+\mbox{\tt in}  & {\em name\+Buf\+Size} & The size of the buffer that the user name will be stored in. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Get\+Uid@{user\+\_\+\+Get\+Uid}}
+\index{user\+\_\+\+Get\+Uid@{user\+\_\+\+Get\+Uid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Get\+Uid(const char $\ast$username\+Ptr, uid\+\_\+t $\ast$uid\+Ptr)}{user_GetUid(const char *usernamePtr, uid_t *uidPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} user\+\_\+\+Get\+Uid (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{username\+Ptr, }
+\item[{uid\+\_\+t $\ast$}]{uid\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_a39131f3890c5383ef32516f46f44be6c}{}\label{user_8c_a39131f3890c5383ef32516f46f44be6c}
+Gets the user ID from a user name.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the user does not exist. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em username\+Ptr} & Pointer to the name of the user to get. \\
+\hline
+\mbox{\tt out}  & {\em uid\+Ptr} & Pointer to store the uid. \\
+\hline
+\end{DoxyParams}
+\index{user.\+c@{user.\+c}!user\+\_\+\+Init@{user\+\_\+\+Init}}
+\index{user\+\_\+\+Init@{user\+\_\+\+Init}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Init(void)}{user_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} user\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{user_8c_a9549060828c15f208d532e4643d6f06c}{}\label{user_8c_a9549060828c15f208d532e4643d6f06c}
+Initialize the user system. This should be called before any other function in this A\+PI. 
+
+\subsection{Variable Documentation}
+\index{user.\+c@{user.\+c}!Apps\+Tab@{Apps\+Tab}}
+\index{Apps\+Tab@{Apps\+Tab}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Apps\+Tab}{AppsTab}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf app\+Tab\+\_\+t}$\ast$ Apps\+Tab\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a24dfe270d011e5d0621e0eb6fa153a58}{}\label{user_8c_a24dfe270d011e5d0621e0eb6fa153a58}
+Apps translation table\+: contains the correspondance between an apps name and the app\+Legato\+NN user and group reserved for it. The index of the apps name is the uid/gid reserved for this apps + the B\+A\+S\+E\+\_\+\+M\+I\+N\+\_\+\+U\+I\+D/\+G\+ID. When an apps is freed, the name is just filled to 0 and so may be used again for a new apps. \index{user.\+c@{user.\+c}!Apps\+Tab\+Pool@{Apps\+Tab\+Pool}}
+\index{Apps\+Tab\+Pool@{Apps\+Tab\+Pool}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Apps\+Tab\+Pool}{AppsTabPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Apps\+Tab\+Pool = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_af300a39a90ae087af71807887da5c50b}{}\label{user_8c_af300a39a90ae087af71807887da5c50b}
+Pool for apps translation table block. \index{user.\+c@{user.\+c}!Is\+Etc\+Writable@{Is\+Etc\+Writable}}
+\index{Is\+Etc\+Writable@{Is\+Etc\+Writable}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Etc\+Writable}{IsEtcWritable}}]{\setlength{\rightskip}{0pt plus 5cm}bool Is\+Etc\+Writable = false\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a470827b823f75475eb54b18cf850f215}{}\label{user_8c_a470827b823f75475eb54b18cf850f215}
+Boolean to verify if /etc is writable or not. \index{user.\+c@{user.\+c}!Max\+Group\+Entry\+Size@{Max\+Group\+Entry\+Size}}
+\index{Max\+Group\+Entry\+Size@{Max\+Group\+Entry\+Size}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Max\+Group\+Entry\+Size}{MaxGroupEntrySize}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Max\+Group\+Entry\+Size = {\bf L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+P\+A\+T\+H\+\_\+\+B\+Y\+T\+ES}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a6b4662f0b83109dfdec57de72c4758a4}{}\label{user_8c_a6b4662f0b83109dfdec57de72c4758a4}
+\index{user.\+c@{user.\+c}!Max\+Local\+Gid@{Max\+Local\+Gid}}
+\index{Max\+Local\+Gid@{Max\+Local\+Gid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Max\+Local\+Gid}{MaxLocalGid}}]{\setlength{\rightskip}{0pt plus 5cm}gid\+\_\+t Max\+Local\+Gid = 60000\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a7862957a536eb1c2f0a292ae49e639af}{}\label{user_8c_a7862957a536eb1c2f0a292ae49e639af}
+\index{user.\+c@{user.\+c}!Max\+Local\+Uid@{Max\+Local\+Uid}}
+\index{Max\+Local\+Uid@{Max\+Local\+Uid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Max\+Local\+Uid}{MaxLocalUid}}]{\setlength{\rightskip}{0pt plus 5cm}uid\+\_\+t Max\+Local\+Uid = 60000\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a4d85d36825e1f649883069565b0623d4}{}\label{user_8c_a4d85d36825e1f649883069565b0623d4}
+\index{user.\+c@{user.\+c}!Max\+Passwd\+Entry\+Size@{Max\+Passwd\+Entry\+Size}}
+\index{Max\+Passwd\+Entry\+Size@{Max\+Passwd\+Entry\+Size}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Max\+Passwd\+Entry\+Size}{MaxPasswdEntrySize}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Max\+Passwd\+Entry\+Size = {\bf L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+P\+A\+T\+H\+\_\+\+B\+Y\+T\+ES} $\ast$ 3\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_a6b61635d762d6101610f9810f3b8cde5}{}\label{user_8c_a6b61635d762d6101610f9810f3b8cde5}
+The maximum size in bytes of a password entry and group entry. The initial default values are a best guess. These values may be updated on initialization. \index{user.\+c@{user.\+c}!Min\+Local\+Gid@{Min\+Local\+Gid}}
+\index{Min\+Local\+Gid@{Min\+Local\+Gid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Min\+Local\+Gid}{MinLocalGid}}]{\setlength{\rightskip}{0pt plus 5cm}gid\+\_\+t Min\+Local\+Gid = 1000\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_ac132e844f2bcc375aa76260a2fbde003}{}\label{user_8c_ac132e844f2bcc375aa76260a2fbde003}
+\index{user.\+c@{user.\+c}!Min\+Local\+Uid@{Min\+Local\+Uid}}
+\index{Min\+Local\+Uid@{Min\+Local\+Uid}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Min\+Local\+Uid}{MinLocalUid}}]{\setlength{\rightskip}{0pt plus 5cm}uid\+\_\+t Min\+Local\+Uid = 1000\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_ae22f396cf19a864829befe9c6bb7b941}{}\label{user_8c_ae22f396cf19a864829befe9c6bb7b941}
+The local user and group ID ranges read from /etc/login.defs. \index{user.\+c@{user.\+c}!Nb\+Apps\+In\+Translation\+Table@{Nb\+Apps\+In\+Translation\+Table}}
+\index{Nb\+Apps\+In\+Translation\+Table@{Nb\+Apps\+In\+Translation\+Table}!user.\+c@{user.\+c}}
+\subsubsection[{\texorpdfstring{Nb\+Apps\+In\+Translation\+Table}{NbAppsInTranslationTable}}]{\setlength{\rightskip}{0pt plus 5cm}uint32\+\_\+t Nb\+Apps\+In\+Translation\+Table = 0\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{user_8c_aad1e2afdb10783a195fc327e12d96220}{}\label{user_8c_aad1e2afdb10783a195fc327e12d96220}
+Number of apps potentially supported by the apps translation table\+: 00 to 79. 

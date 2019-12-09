@@ -1,0 +1,548 @@
+\hypertarget{simu_2pa__wifi__client__ti_8c}{}\section{modules/\+Wi\+Fi/service/platform\+Adaptor/ti\+\_\+simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.c File Reference}
+\label{simu_2pa__wifi__client__ti_8c}\index{modules/\+Wi\+Fi/service/platform\+Adaptor/ti\+\_\+simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{modules/\+Wi\+Fi/service/platform\+Adaptor/ti\+\_\+simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+{\ttfamily \#include $<$sys/types.\+h$>$}\\*
+{\ttfamily \#include $<$sys/wait.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}interfaces.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}pa\+\_\+wifi.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}stdio.\+h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a194cf0770876626daa38e83bb8e082da}{W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH}~\char`\"{}/legato/systems/current/apps/wifi\+Service/read-\/only/pa\+\_\+wifi.\+sh \char`\"{}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a96c63dc4ca047d0b655c97ef68c77afe}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT}~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+T\+A\+RT\char`\"{}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a819511fb1ab1a032ff23bbfbce8108c5}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP}~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+T\+OP\char`\"{} /$\ast$ not sure that this works $\ast$/
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a53ebd986f6acb1a394b71827885a9af7}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP}~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP\char`\"{}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_af95f5f4d92047e96a0e20770449c816d}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT}~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT\char`\"{}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a4fbd1bdac50427744022ed137f50d486}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+C\+AN}~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+C\+AN\char`\"{}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a16a27e957d721ae96754eeb51d0af5b8}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+D\+I\+S\+C\+O\+N\+N\+E\+CT}~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+D\+I\+S\+C\+O\+N\+N\+E\+CT\char`\"{}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a2ac3c4f1cee6c6ff135ef61f698e5a75}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_accff4b51c04738a3d80809469e4b7b19}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+EP}~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+EP \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%d\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a9ae1262718ac230d84d21e3fd0e84130}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL}~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a554f05a9303faed9d984a7b2d370630e}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL}~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a9a0485bb06c2c8f11b12b5cf51fd38e3}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE}~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%d\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a23b32df43f9aced98f6b4f335ba5d881}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE}~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%d\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}
+\item 
+\#define \hyperlink{simu_2pa__wifi__client__ti_8c_a6b5e6b885c3e69cbf98bad9f9a0d75e3}{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+W\+P\+A\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+SE}~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+W\+P\+A\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+SE \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \%s\char`\"{}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$ \hyperlink{simu_2pa__wifi__client__ti_8c_a469ca6f24609f73b581cb19783474b4b}{Wifi\+Client\+Pa\+Thread\+Main} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{simu_2pa__wifi__client__ti_8c_a446912f768b5f594fc778f40cf782f3c}{Thread\+Destructor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{simu_2pa__wifi__client__ti_8c_a0f74fb4ef2fd106a26c62d8e1c66881b}{First\+Layer\+Wifi\+Client\+Event\+Handler} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$report\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$second\+Layer\+Handler\+Func\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_a0ca04f49c907d0dd6da8cc4912eae93b}{pa\+\_\+wifi\+Client\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_a18e3aff324334470117fbefc45649422}{pa\+\_\+wifi\+Client\+\_\+\+Release} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_a4e01cc9cccd2284019cf2ffb8c247452}{pa\+\_\+wifi\+Client\+\_\+\+Start} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_a9970b236dc734ce53a6c8174d4933e13}{pa\+\_\+wifi\+Client\+\_\+\+Stop} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_a4e870aad000fc5f944f4ec0506e7ece6}{pa\+\_\+wifi\+Client\+\_\+\+Scan} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+bool \hyperlink{simu_2pa__wifi__client__ti_8c_aea35c2c7b943e0111d9ce949c2f5d8e5}{pa\+\_\+wifi\+Client\+\_\+\+Is\+Scan\+Running} ()
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_af40c2104e63b3b58106bbba2a7ffa960}{pa\+\_\+wifi\+Client\+\_\+\+Get\+Scan\+Result} (\hyperlink{structpa__wifi_client___access_point__t}{pa\+\_\+wifi\+Client\+\_\+\+Access\+Point\+\_\+t} $\ast$access\+Point\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_aac399dc21846d3e827eed7b3b1e37885}{pa\+\_\+wifi\+Client\+\_\+\+Scan\+Done} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_ab5b549b1d9fe645993bc595727772ef6}{pa\+\_\+wifi\+Client\+\_\+\+Set\+Security\+Protocol} (const \hyperlink{le__wifi_client__interface_8h_a3acda5a68db1e0d601ee840a94542304}{le\+\_\+wifi\+Client\+\_\+\+Security\+Protocol\+\_\+t} security\+Protocol)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_acc912feac693193bf74a4efdc50d77e4}{pa\+\_\+wifi\+Client\+\_\+\+Connect} (uint8\+\_\+t ssid\+Bytes\mbox{[}\hyperlink{le__wifi_defs__interface_8h_abba88ade60f4a8508fd8a1db0e1f9bc0}{L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+S\+S\+I\+D\+\_\+\+B\+Y\+T\+ES}\mbox{]}, uint8\+\_\+t ssid\+Length)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_ae568382474941d56bc6397f137a925f7}{pa\+\_\+wifi\+Client\+\_\+\+Disconnect} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_abaef7379e471f4ffe4360b088ef34813}{pa\+\_\+wifi\+Client\+\_\+\+Clear\+All\+Credentials} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_a0525ad11aaf16a46fe5fe6842b660dc6}{pa\+\_\+wifi\+Client\+\_\+\+Set\+Wep\+Key} (const char $\ast$wep\+Key\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_a166582ed74384e3ff077fd720970e37a}{pa\+\_\+wifi\+Client\+\_\+\+Set\+Pre\+Shared\+Key} (const char $\ast$pre\+Shared\+Key\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{simu_2pa__wifi__client__ti_8c_a425c5ef198caabc6ed15e06638505b92}{pa\+\_\+wifi\+Client\+\_\+\+Set\+Hidden\+Network\+Attribute} (bool hidden)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_a2e94980ad5a49db0c91dd96e91f84555}{pa\+\_\+wifi\+Client\+\_\+\+Set\+Passphrase} (const char $\ast$passphrase\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_aba742190d51dce93b0278613e94df191}{pa\+\_\+wifi\+Client\+\_\+\+Set\+User\+Credentials} (const char $\ast$username\+Ptr, const char $\ast$password\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_a6a94e6bc91d6f8da47a2448f3c8af6cc}{pa\+\_\+wifi\+Client\+\_\+\+Add\+Event\+Handler} (\hyperlink{pa__wifi_8h_ac21865a035eab633753a520e351a71a6}{pa\+\_\+wifi\+Client\+\_\+\+New\+Event\+Handler\+Func\+\_\+t} handler\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{le__wifi_client__interface_8h_a3acda5a68db1e0d601ee840a94542304}{le\+\_\+wifi\+Client\+\_\+\+Security\+Protocol\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_a2767944201a93b40f080b66cc418fa1e}{Saved\+Security\+Protocol}
+\item 
+static char \hyperlink{simu_2pa__wifi__client__ti_8c_a3c780117122198cde7c10e66f816232d}{Saved\+Wep\+Key} \mbox{[}\hyperlink{le__wifi_defs__interface_8h_a1ab4c80e50d3738db0f6a43bbb5c4d29}{L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+W\+E\+P\+K\+E\+Y\+\_\+\+B\+Y\+T\+ES}\mbox{]}
+\item 
+static char \hyperlink{simu_2pa__wifi__client__ti_8c_ac1092d56f2b497856db6c29ac0d969f2}{Saved\+Passphrase} \mbox{[}\hyperlink{le__wifi_defs__interface_8h_aa9249c1a7ad61484f5ce85b58c86beff}{L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+S\+E\+\_\+\+B\+Y\+T\+ES}\mbox{]}
+\item 
+static char \hyperlink{simu_2pa__wifi__client__ti_8c_a674460aa5f8bfa411d30444cd25c7c88}{Saved\+Pre\+Shared\+Key} \mbox{[}\hyperlink{le__wifi_defs__interface_8h_a857a627e42baa75acc46d07c557ebd16}{L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+P\+S\+K\+\_\+\+B\+Y\+T\+ES}\mbox{]}
+\item 
+static char \hyperlink{simu_2pa__wifi__client__ti_8c_ac102d0701236aacd8c24a6b6ab17cdb9}{Saved\+Username} \mbox{[}\hyperlink{le__wifi_defs__interface_8h_a21e2c2c7083f695c87924417da0e93e8}{L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}\mbox{]}
+\item 
+static char \hyperlink{simu_2pa__wifi__client__ti_8c_ac974a07a2b3dc20a14599e51f07aba8b}{Saved\+Password} \mbox{[}\hyperlink{le__wifi_defs__interface_8h_a12dd4a338f0754fd396c04d7359ff152}{L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+B\+Y\+T\+ES}\mbox{]}
+\item 
+static bool \hyperlink{simu_2pa__wifi__client__ti_8c_ac270c93ff349060e746b2d096218f68f}{Hidden\+Access\+Point} = false
+\item 
+static F\+I\+LE $\ast$ \hyperlink{simu_2pa__wifi__client__ti_8c_a8385d31985e03296d2aaa7984b31351b}{Iw\+Scan\+Pipe\+Ptr} = N\+U\+LL
+\item 
+static F\+I\+LE $\ast$ \hyperlink{simu_2pa__wifi__client__ti_8c_a901bc86dac8e933dc0f28a16aa58368c}{Iw\+Connect\+Pipe\+Ptr} = N\+U\+LL
+\item 
+static F\+I\+LE $\ast$ \hyperlink{simu_2pa__wifi__client__ti_8c_a2d10acb1a0a8bcd66a61f5de60c68ac4}{Iw\+Thread\+Pipe\+Ptr} = N\+U\+LL
+\item 
+static bool \hyperlink{simu_2pa__wifi__client__ti_8c_ae8f853b3cabb42d95e48651c77ce5613}{Is\+Scan\+Running} = false
+\item 
+static \hyperlink{le__thread_8h_a32121104c6b4ca39008eb79a4d6862f2}{le\+\_\+thread\+\_\+\+Ref\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_a77291f54c04c70ec55f514a945ae91c4}{Wifi\+Client\+Pa\+Thread} = N\+U\+LL
+\item 
+static \hyperlink{le__event_loop_8h_ae6e351b38bc95954f159d16d19d2d55c}{le\+\_\+event\+\_\+\+Id\+\_\+t} \hyperlink{simu_2pa__wifi__client__ti_8c_ae8fe77cd40ba310eebb12239c739e508}{Wifi\+Client\+Pa\+Event}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT}{COMMAND_WIFI_HW_START}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+A\+RT~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+T\+A\+RT\char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_a96c63dc4ca047d0b655c97ef68c77afe}{}\label{simu_2pa__wifi__client__ti_8c_a96c63dc4ca047d0b655c97ef68c77afe}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP}{COMMAND_WIFI_HW_STOP}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+H\+W\+\_\+\+S\+T\+OP~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+T\+OP\char`\"{} /$\ast$ not sure that this works $\ast$/}\hypertarget{simu_2pa__wifi__client__ti_8c_a819511fb1ab1a032ff23bbfbce8108c5}{}\label{simu_2pa__wifi__client__ti_8c_a819511fb1ab1a032ff23bbfbce8108c5}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT}{COMMAND_WIFI_SET_EVENT}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+S\+E\+T\+\_\+\+E\+V\+E\+NT\char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_af95f5f4d92047e96a0e20770449c816d}{}\label{simu_2pa__wifi__client__ti_8c_af95f5f4d92047e96a0e20770449c816d}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP}{COMMAND_WIFI_WLAN_UP}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP~\char`\"{}wlan0 W\+I\+F\+I\+\_\+\+W\+L\+A\+N\+\_\+\+UP\char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_a53ebd986f6acb1a394b71827885a9af7}{}\label{simu_2pa__wifi__client__ti_8c_a53ebd986f6acb1a394b71827885a9af7}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE}{COMMAND_WIFICLIENT_CONNECT_SECURITY_NONE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+N\+O\+NE}\hypertarget{simu_2pa__wifi__client__ti_8c_a2ac3c4f1cee6c6ff135ef61f698e5a75}{}\label{simu_2pa__wifi__client__ti_8c_a2ac3c4f1cee6c6ff135ef61f698e5a75}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+EP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+EP}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+EP@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+EP}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+EP}{COMMAND_WIFICLIENT_CONNECT_SECURITY_WEP}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+EP~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+EP \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%d\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_accff4b51c04738a3d80809469e4b7b19}{}\label{simu_2pa__wifi__client__ti_8c_accff4b51c04738a3d80809469e4b7b19}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE}{COMMAND_WIFICLIENT_CONNECT_SECURITY_WPA2_EAP_PEAP0_ENTERPRISE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%d\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_a23b32df43f9aced98f6b4f335ba5d881}{}\label{simu_2pa__wifi__client__ti_8c_a23b32df43f9aced98f6b4f335ba5d881}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL}{COMMAND_WIFICLIENT_CONNECT_SECURITY_WPA2_PSK_PERSONAL}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A2\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_a554f05a9303faed9d984a7b2d370630e}{}\label{simu_2pa__wifi__client__ti_8c_a554f05a9303faed9d984a7b2d370630e}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE}{COMMAND_WIFICLIENT_CONNECT_SECURITY_WPA_EAP_PEAP0_ENTERPRISE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+E\+A\+P\+\_\+\+P\+E\+A\+P0\+\_\+\+E\+N\+T\+E\+R\+P\+R\+I\+SE \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%d\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_a9a0485bb06c2c8f11b12b5cf51fd38e3}{}\label{simu_2pa__wifi__client__ti_8c_a9a0485bb06c2c8f11b12b5cf51fd38e3}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL}{COMMAND_WIFICLIENT_CONNECT_SECURITY_WPA_PSK_PERSONAL}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+S\+E\+C\+U\+R\+I\+T\+Y\+\_\+\+W\+P\+A\+\_\+\+P\+S\+K\+\_\+\+P\+E\+R\+S\+O\+N\+AL \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{} \textbackslash{}\char`\"{}\%s\textbackslash{}\char`\"{}\char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_a9ae1262718ac230d84d21e3fd0e84130}{}\label{simu_2pa__wifi__client__ti_8c_a9ae1262718ac230d84d21e3fd0e84130}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+W\+P\+A\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+SE@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+W\+P\+A\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+SE}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+W\+P\+A\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+SE@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+W\+P\+A\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+SE}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+W\+P\+A\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+SE}{COMMAND_WIFICLIENT_CONNECT_WPA_PASSPHRASE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+W\+P\+A\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+SE~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+W\+P\+A\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+SE \textbackslash{}\char`\"{}\%.$\ast$s\textbackslash{}\char`\"{} \%s\char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_a6b5e6b885c3e69cbf98bad9f9a0d75e3}{}\label{simu_2pa__wifi__client__ti_8c_a6b5e6b885c3e69cbf98bad9f9a0d75e3}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+D\+I\+S\+C\+O\+N\+N\+E\+CT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+D\+I\+S\+C\+O\+N\+N\+E\+CT}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+D\+I\+S\+C\+O\+N\+N\+E\+CT@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+D\+I\+S\+C\+O\+N\+N\+E\+CT}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+D\+I\+S\+C\+O\+N\+N\+E\+CT}{COMMAND_WIFICLIENT_DISCONNECT}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+D\+I\+S\+C\+O\+N\+N\+E\+CT~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+D\+I\+S\+C\+O\+N\+N\+E\+CT\char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_a16a27e957d721ae96754eeb51d0af5b8}{}\label{simu_2pa__wifi__client__ti_8c_a16a27e957d721ae96754eeb51d0af5b8}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+C\+AN@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+C\+AN}}
+\index{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+C\+AN@{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+C\+AN}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+C\+AN}{COMMAND_WIFICLIENT_START_SCAN}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+O\+M\+M\+A\+N\+D\+\_\+\+W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+C\+AN~\char`\"{}wlan0 W\+I\+F\+I\+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+R\+T\+\_\+\+S\+C\+AN\char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_a4fbd1bdac50427744022ed137f50d486}{}\label{simu_2pa__wifi__client__ti_8c_a4fbd1bdac50427744022ed137f50d486}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH@{W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH}}
+\index{W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH@{W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH}{WIFI_SCRIPT_PATH}}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\+I\+F\+I\+\_\+\+S\+C\+R\+I\+P\+T\+\_\+\+P\+A\+TH~\char`\"{}/legato/systems/current/apps/wifi\+Service/read-\/only/pa\+\_\+wifi.\+sh \char`\"{}}\hypertarget{simu_2pa__wifi__client__ti_8c_a194cf0770876626daa38e83bb8e082da}{}\label{simu_2pa__wifi__client__ti_8c_a194cf0770876626daa38e83bb8e082da}
+Wi\+Fi Client Platform Adapter
+
+Copyright (C) Sierra Wireless Inc. Wi\+Fi platform adaptor shell script 
+
+\subsection{Function Documentation}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!First\+Layer\+Wifi\+Client\+Event\+Handler@{First\+Layer\+Wifi\+Client\+Event\+Handler}}
+\index{First\+Layer\+Wifi\+Client\+Event\+Handler@{First\+Layer\+Wifi\+Client\+Event\+Handler}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{First\+Layer\+Wifi\+Client\+Event\+Handler(void $\ast$report\+Ptr, void $\ast$second\+Layer\+Handler\+Func\+Ptr)}{FirstLayerWifiClientEventHandler(void *reportPtr, void *secondLayerHandlerFuncPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} First\+Layer\+Wifi\+Client\+Event\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{report\+Ptr, }
+\item[{{\bf void} $\ast$}]{second\+Layer\+Handler\+Func\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_a0f74fb4ef2fd106a26c62d8e1c66881b}{}\label{simu_2pa__wifi__client__ti_8c_a0f74fb4ef2fd106a26c62d8e1c66881b}
+The first-\/layer Wi\+Fi Client Event Handler. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Add\+Event\+Handler@{pa\+\_\+wifi\+Client\+\_\+\+Add\+Event\+Handler}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Add\+Event\+Handler@{pa\+\_\+wifi\+Client\+\_\+\+Add\+Event\+Handler}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Add\+Event\+Handler(pa\+\_\+wifi\+Client\+\_\+\+New\+Event\+Handler\+Func\+\_\+t handler\+Ptr, void $\ast$context\+Ptr)}{pa_wifiClient_AddEventHandler(pa_wifiClient_NewEventHandlerFunc_t handlerPtr, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Add\+Event\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf pa\+\_\+wifi\+Client\+\_\+\+New\+Event\+Handler\+Func\+\_\+t}}]{handler\+Ptr, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_a6a94e6bc91d6f8da47a2448f3c8af6cc}{}\label{simu_2pa__wifi__client__ti_8c_a6a94e6bc91d6f8da47a2448f3c8af6cc}
+Add handler function for PA E\+V\+E\+NT \textquotesingle{}le\+\_\+wifi\+Client\+\_\+\+Event\+\_\+t\textquotesingle{}
+
+This event provide information on PA Wi\+Fi Client event changes.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER The function failed due to an invalid parameter. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em handler\+Ptr} & Event handler function pointer. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Associated event context. \\
+\hline
+\end{DoxyParams}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Clear\+All\+Credentials@{pa\+\_\+wifi\+Client\+\_\+\+Clear\+All\+Credentials}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Clear\+All\+Credentials@{pa\+\_\+wifi\+Client\+\_\+\+Clear\+All\+Credentials}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Clear\+All\+Credentials(void)}{pa_wifiClient_ClearAllCredentials(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Clear\+All\+Credentials (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_abaef7379e471f4ffe4360b088ef34813}{}\label{simu_2pa__wifi__client__ti_8c_abaef7379e471f4ffe4360b088ef34813}
+Clears all username, password, Pre\+Shared Key, passphrase settings previously made by
+
+\begin{DoxySeeAlso}{See also}
+pa\+\_\+wifi\+Client\+\_\+\+Set\+Pass\+Phrase 
+
+\hyperlink{pa__wifi__client__ti_8c_a166582ed74384e3ff077fd720970e37a}{pa\+\_\+wifi\+Client\+\_\+\+Set\+Pre\+Shared\+Key} 
+
+\hyperlink{pa__wifi__client__ti_8c_aba742190d51dce93b0278613e94df191}{pa\+\_\+wifi\+Client\+\_\+\+Set\+User\+Credentials}
+\end{DoxySeeAlso}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Connect@{pa\+\_\+wifi\+Client\+\_\+\+Connect}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Connect@{pa\+\_\+wifi\+Client\+\_\+\+Connect}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Connect(uint8\+\_\+t ssid\+Bytes[L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+S\+S\+I\+D\+\_\+\+B\+Y\+T\+ES], uint8\+\_\+t ssid\+Length)}{pa_wifiClient_Connect(uint8_t ssidBytes[LE_WIFIDEFS_MAX_SSID_BYTES], uint8_t ssidLength)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Connect (
+\begin{DoxyParamCaption}
+\item[{uint8\+\_\+t}]{ssid\+Bytes\mbox{[}\+L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+S\+S\+I\+D\+\_\+\+B\+Y\+T\+E\+S\mbox{]}, }
+\item[{uint8\+\_\+t}]{ssid\+Length}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_acc912feac693193bf74a4efdc50d77e4}{}\label{simu_2pa__wifi__client__ti_8c_acc912feac693193bf74a4efdc50d77e4}
+This function connects a wifi\+Client.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+F\+A\+U\+LT The function failed. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em ssid\+Bytes} & Contains ssid\+Length number of bytes \\
+\hline
+\mbox{\tt in}  & {\em ssid\+Length} & The number of Bytes in the ssid\+Bytes \\
+\hline
+\end{DoxyParams}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Disconnect@{pa\+\_\+wifi\+Client\+\_\+\+Disconnect}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Disconnect@{pa\+\_\+wifi\+Client\+\_\+\+Disconnect}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Disconnect(void)}{pa_wifiClient_Disconnect(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Disconnect (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_ae568382474941d56bc6397f137a925f7}{}\label{simu_2pa__wifi__client__ti_8c_ae568382474941d56bc6397f137a925f7}
+This function disconnects a wifi\+Client.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+F\+A\+U\+LT The function failed. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Get\+Scan\+Result@{pa\+\_\+wifi\+Client\+\_\+\+Get\+Scan\+Result}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Get\+Scan\+Result@{pa\+\_\+wifi\+Client\+\_\+\+Get\+Scan\+Result}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Get\+Scan\+Result(pa\+\_\+wifi\+Client\+\_\+\+Access\+Point\+\_\+t $\ast$access\+Point\+Ptr)}{pa_wifiClient_GetScanResult(pa_wifiClient_AccessPoint_t *accessPointPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Get\+Scan\+Result (
+\begin{DoxyParamCaption}
+\item[{{\bf pa\+\_\+wifi\+Client\+\_\+\+Access\+Point\+\_\+t} $\ast$}]{access\+Point\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_af40c2104e63b3b58106bbba2a7ffa960}{}\label{simu_2pa__wifi__client__ti_8c_af40c2104e63b3b58106bbba2a7ffa960}
+This function can be called after pa\+\_\+wifi\+\_\+\+Scan. When the reading is done, it no longer returns L\+E\+\_\+\+OK, pa\+\_\+wifi\+Client\+\_\+\+Scan\+Done M\+U\+ST be called.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND There is no more AP\+:s found. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+
+L\+E\+\_\+\+F\+A\+U\+LT The function failed. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em access\+Point\+Ptr} & \mbox{[}O\+UT\mbox{]} Structure provided by calling function. Results filled out if result was L\+E\+\_\+\+OK. \\
+\hline
+\end{DoxyParams}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Init@{pa\+\_\+wifi\+Client\+\_\+\+Init}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Init@{pa\+\_\+wifi\+Client\+\_\+\+Init}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Init(void)}{pa_wifiClient_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_a0ca04f49c907d0dd6da8cc4912eae93b}{}\label{simu_2pa__wifi__client__ti_8c_a0ca04f49c907d0dd6da8cc4912eae93b}
+This function must be called to initialize the PA Wi\+Fi Module.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Is\+Scan\+Running@{pa\+\_\+wifi\+Client\+\_\+\+Is\+Scan\+Running}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Is\+Scan\+Running@{pa\+\_\+wifi\+Client\+\_\+\+Is\+Scan\+Running}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Is\+Scan\+Running()}{pa_wifiClient_IsScanRunning()}}]{\setlength{\rightskip}{0pt plus 5cm}bool pa\+\_\+wifi\+Client\+\_\+\+Is\+Scan\+Running (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_aea35c2c7b943e0111d9ce949c2f5d8e5}{}\label{simu_2pa__wifi__client__ti_8c_aea35c2c7b943e0111d9ce949c2f5d8e5}
+This function is used to find out if a scan is currently running.
+
+\begin{DoxyReturn}{Returns}
+T\+R\+UE Scan is running. 
+
+F\+A\+L\+SE Scan is not running 
+\end{DoxyReturn}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Release@{pa\+\_\+wifi\+Client\+\_\+\+Release}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Release@{pa\+\_\+wifi\+Client\+\_\+\+Release}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Release(void)}{pa_wifiClient_Release(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Release (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_a18e3aff324334470117fbefc45649422}{}\label{simu_2pa__wifi__client__ti_8c_a18e3aff324334470117fbefc45649422}
+This function must be called to release the PA Wi\+Fi Module.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Scan@{pa\+\_\+wifi\+Client\+\_\+\+Scan}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Scan@{pa\+\_\+wifi\+Client\+\_\+\+Scan}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Scan(void)}{pa_wifiClient_Scan(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Scan (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_a4e870aad000fc5f944f4ec0506e7ece6}{}\label{simu_2pa__wifi__client__ti_8c_a4e870aad000fc5f944f4ec0506e7ece6}
+This function will start a scan and returns when it is done. It should N\+OT return until the scan is done. Results are read via pa\+\_\+wifi\+Client\+\_\+\+Get\+Scan\+Result. When the reading is done pa\+\_\+wifi\+Client\+\_\+\+Scan\+Done M\+U\+ST be called.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+F\+A\+U\+LT The function failed. 
+
+L\+E\+\_\+\+B\+U\+SY The function is already ongoing. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Scan\+Done@{pa\+\_\+wifi\+Client\+\_\+\+Scan\+Done}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Scan\+Done@{pa\+\_\+wifi\+Client\+\_\+\+Scan\+Done}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Scan\+Done(void)}{pa_wifiClient_ScanDone(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Scan\+Done (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_aac399dc21846d3e827eed7b3b1e37885}{}\label{simu_2pa__wifi__client__ti_8c_aac399dc21846d3e827eed7b3b1e37885}
+This function must be called after the \hyperlink{pa__wifi__client__ti_8c_a4e870aad000fc5f944f4ec0506e7ece6}{pa\+\_\+wifi\+Client\+\_\+\+Scan()} has been done. It signals that the scan results are no longer needed and frees some internal resources.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Set\+Hidden\+Network\+Attribute@{pa\+\_\+wifi\+Client\+\_\+\+Set\+Hidden\+Network\+Attribute}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Set\+Hidden\+Network\+Attribute@{pa\+\_\+wifi\+Client\+\_\+\+Set\+Hidden\+Network\+Attribute}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Set\+Hidden\+Network\+Attribute(bool hidden)}{pa_wifiClient_SetHiddenNetworkAttribute(bool hidden)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} pa\+\_\+wifi\+Client\+\_\+\+Set\+Hidden\+Network\+Attribute (
+\begin{DoxyParamCaption}
+\item[{bool}]{hidden}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_a425c5ef198caabc6ed15e06638505b92}{}\label{simu_2pa__wifi__client__ti_8c_a425c5ef198caabc6ed15e06638505b92}
+This function specifies whether the target Access Point is hiding its presence from clients or not. When an Access Point is hidden, it cannot be discovered by a scan process.
+
+\begin{DoxyNote}{Note}
+By default, this attribute is not set which means that the client is unable to connect to a hidden access point. When enabled, the client will be able to connect to the access point whether it is hidden or not. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em hidden} & If T\+R\+UE, the W\+I\+FI client will be able to connect to a hidden access point. \\
+\hline
+\end{DoxyParams}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Set\+Passphrase@{pa\+\_\+wifi\+Client\+\_\+\+Set\+Passphrase}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Set\+Passphrase@{pa\+\_\+wifi\+Client\+\_\+\+Set\+Passphrase}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Set\+Passphrase(const char $\ast$passphrase\+Ptr)}{pa_wifiClient_SetPassphrase(const char *passphrasePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Set\+Passphrase (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{passphrase\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_a2e94980ad5a49db0c91dd96e91f84555}{}\label{simu_2pa__wifi__client__ti_8c_a2e94980ad5a49db0c91dd96e91f84555}
+Set the Pass\+Phrase used to create P\+SK (W\+P\+A-\/\+Personal).
+
+\begin{DoxySeeAlso}{See also}
+\hyperlink{pa__wifi__client__ti_8c_a166582ed74384e3ff077fd720970e37a}{pa\+\_\+wifi\+Client\+\_\+\+Set\+Pre\+Shared\+Key}
+\end{DoxySeeAlso}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER The function failed due to an invalid parameter. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em passphrase\+Ptr} & Passphrase used for authentication \\
+\hline
+\end{DoxyParams}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Set\+Pre\+Shared\+Key@{pa\+\_\+wifi\+Client\+\_\+\+Set\+Pre\+Shared\+Key}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Set\+Pre\+Shared\+Key@{pa\+\_\+wifi\+Client\+\_\+\+Set\+Pre\+Shared\+Key}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Set\+Pre\+Shared\+Key(const char $\ast$pre\+Shared\+Key\+Ptr)}{pa_wifiClient_SetPreSharedKey(const char *preSharedKeyPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Set\+Pre\+Shared\+Key (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{pre\+Shared\+Key\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_a166582ed74384e3ff077fd720970e37a}{}\label{simu_2pa__wifi__client__ti_8c_a166582ed74384e3ff077fd720970e37a}
+Set the Wi\+Fi pre-\/shared key (W\+P\+A-\/\+Personal)
+
+\begin{DoxySeeAlso}{See also}
+pa\+\_\+wifi\+Client\+\_\+\+Set\+Pass\+Phrase
+\end{DoxySeeAlso}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER The function failed due to an invalid parameter. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pre\+Shared\+Key\+Ptr} & Pre-\/shared key (P\+SK) used for authentication \\
+\hline
+\end{DoxyParams}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Set\+Security\+Protocol@{pa\+\_\+wifi\+Client\+\_\+\+Set\+Security\+Protocol}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Set\+Security\+Protocol@{pa\+\_\+wifi\+Client\+\_\+\+Set\+Security\+Protocol}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Set\+Security\+Protocol(const le\+\_\+wifi\+Client\+\_\+\+Security\+Protocol\+\_\+t security\+Protocol)}{pa_wifiClient_SetSecurityProtocol(const le_wifiClient_SecurityProtocol_t securityProtocol)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Set\+Security\+Protocol (
+\begin{DoxyParamCaption}
+\item[{const {\bf le\+\_\+wifi\+Client\+\_\+\+Security\+Protocol\+\_\+t}}]{security\+Protocol}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_ab5b549b1d9fe645993bc595727772ef6}{}\label{simu_2pa__wifi__client__ti_8c_ab5b549b1d9fe645993bc595727772ef6}
+Set the security protocol for communication.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER The function failed due to an invalid parameter. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em security\+Protocol} & Security protocol used for communication. \\
+\hline
+\end{DoxyParams}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Set\+User\+Credentials@{pa\+\_\+wifi\+Client\+\_\+\+Set\+User\+Credentials}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Set\+User\+Credentials@{pa\+\_\+wifi\+Client\+\_\+\+Set\+User\+Credentials}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Set\+User\+Credentials(const char $\ast$username\+Ptr, const char $\ast$password\+Ptr)}{pa_wifiClient_SetUserCredentials(const char *usernamePtr, const char *passwordPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Set\+User\+Credentials (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{username\+Ptr, }
+\item[{const char $\ast$}]{password\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_aba742190d51dce93b0278613e94df191}{}\label{simu_2pa__wifi__client__ti_8c_aba742190d51dce93b0278613e94df191}
+Set the username and password (W\+P\+A-\/\+Entreprise).
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER The function failed due to an invalid parameter. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em username\+Ptr} & Username used for authentication \\
+\hline
+\mbox{\tt in}  & {\em password\+Ptr} & Password used for authentication \\
+\hline
+\end{DoxyParams}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Set\+Wep\+Key@{pa\+\_\+wifi\+Client\+\_\+\+Set\+Wep\+Key}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Set\+Wep\+Key@{pa\+\_\+wifi\+Client\+\_\+\+Set\+Wep\+Key}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Set\+Wep\+Key(const char $\ast$wep\+Key\+Ptr)}{pa_wifiClient_SetWepKey(const char *wepKeyPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Set\+Wep\+Key (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{wep\+Key\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_a0525ad11aaf16a46fe5fe6842b660dc6}{}\label{simu_2pa__wifi__client__ti_8c_a0525ad11aaf16a46fe5fe6842b660dc6}
+Set the W\+EP key (Wired Equivalent Privacy)
+
+\begin{DoxyNote}{Note}
+W\+EP is unsecure and has been deprecated by the Wi\+Fi alliance. Still, it can be used in user mode.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+B\+A\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER The function failed due to an invalid parameter. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em wep\+Key\+Ptr} & Wired Equivalent Privacy (W\+EP) key used for authentication \\
+\hline
+\end{DoxyParams}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Start@{pa\+\_\+wifi\+Client\+\_\+\+Start}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Start@{pa\+\_\+wifi\+Client\+\_\+\+Start}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Start(void)}{pa_wifiClient_Start(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Start (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_a4e01cc9cccd2284019cf2ffb8c247452}{}\label{simu_2pa__wifi__client__ti_8c_a4e01cc9cccd2284019cf2ffb8c247452}
+Start Wi\+Fi Client PA
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+F\+A\+U\+LT The function failed. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+Return value of -\/1 means that the fork() has failed (see man system). The script /etc/init.d/tiwifi returns 0 if the kernel modules are loaded correctly and the wlan0 interface is seen, 127 if modules not loaded or interface not seen, 1 if the option passed if unknown (start stop and restart).\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!pa\+\_\+wifi\+Client\+\_\+\+Stop@{pa\+\_\+wifi\+Client\+\_\+\+Stop}}
+\index{pa\+\_\+wifi\+Client\+\_\+\+Stop@{pa\+\_\+wifi\+Client\+\_\+\+Stop}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wifi\+Client\+\_\+\+Stop(void)}{pa_wifiClient_Stop(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} pa\+\_\+wifi\+Client\+\_\+\+Stop (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{simu_2pa__wifi__client__ti_8c_a9970b236dc734ce53a6c8174d4933e13}{}\label{simu_2pa__wifi__client__ti_8c_a9970b236dc734ce53a6c8174d4933e13}
+Stop Wi\+Fi Client PA
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+F\+A\+U\+LT The function failed. 
+
+L\+E\+\_\+\+OK The function succeeded. 
+\end{DoxyReturn}
+Return value of -\/1 means that the fork() has failed (see man system). The script /etc/init.d/tiwifi returns 0 if the kernel modules are loaded correctly and the wlan0 interface is seen, 127 if modules not loaded or interface not seen, 1 if the option passed if unknown (start stop and restart).\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Thread\+Destructor@{Thread\+Destructor}}
+\index{Thread\+Destructor@{Thread\+Destructor}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Thread\+Destructor(void $\ast$context\+Ptr)}{ThreadDestructor(void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Thread\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_a446912f768b5f594fc778f40cf782f3c}{}\label{simu_2pa__wifi__client__ti_8c_a446912f768b5f594fc778f40cf782f3c}
+Thread destructor \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Wifi\+Client\+Pa\+Thread\+Main@{Wifi\+Client\+Pa\+Thread\+Main}}
+\index{Wifi\+Client\+Pa\+Thread\+Main@{Wifi\+Client\+Pa\+Thread\+Main}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Wifi\+Client\+Pa\+Thread\+Main(void $\ast$context\+Ptr)}{WifiClientPaThreadMain(void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} $\ast$ Wifi\+Client\+Pa\+Thread\+Main (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_a469ca6f24609f73b581cb19783474b4b}{}\label{simu_2pa__wifi__client__ti_8c_a469ca6f24609f73b581cb19783474b4b}
+The main thread running the Wi\+Fi platform adaptor.
+
+Wi\+Fi Client PA Thread 
+
+\subsection{Variable Documentation}
+\index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Hidden\+Access\+Point@{Hidden\+Access\+Point}}
+\index{Hidden\+Access\+Point@{Hidden\+Access\+Point}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Hidden\+Access\+Point}{HiddenAccessPoint}}]{\setlength{\rightskip}{0pt plus 5cm}bool Hidden\+Access\+Point = false\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_ac270c93ff349060e746b2d096218f68f}{}\label{simu_2pa__wifi__client__ti_8c_ac270c93ff349060e746b2d096218f68f}
+Indicates if the Access Point S\+S\+ID is hidden from scan or not \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Is\+Scan\+Running@{Is\+Scan\+Running}}
+\index{Is\+Scan\+Running@{Is\+Scan\+Running}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Scan\+Running}{IsScanRunning}}]{\setlength{\rightskip}{0pt plus 5cm}bool Is\+Scan\+Running = false\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_ae8f853b3cabb42d95e48651c77ce5613}{}\label{simu_2pa__wifi__client__ti_8c_ae8f853b3cabb42d95e48651c77ce5613}
+Flag set when a Wi\+Fi scan is in progress. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Iw\+Connect\+Pipe\+Ptr@{Iw\+Connect\+Pipe\+Ptr}}
+\index{Iw\+Connect\+Pipe\+Ptr@{Iw\+Connect\+Pipe\+Ptr}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Iw\+Connect\+Pipe\+Ptr}{IwConnectPipePtr}}]{\setlength{\rightskip}{0pt plus 5cm}F\+I\+LE$\ast$ Iw\+Connect\+Pipe\+Ptr = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_a901bc86dac8e933dc0f28a16aa58368c}{}\label{simu_2pa__wifi__client__ti_8c_a901bc86dac8e933dc0f28a16aa58368c}
+The handle of the input pipe used to be notified of the Wi\+Fi (dis)connections. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Iw\+Scan\+Pipe\+Ptr@{Iw\+Scan\+Pipe\+Ptr}}
+\index{Iw\+Scan\+Pipe\+Ptr@{Iw\+Scan\+Pipe\+Ptr}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Iw\+Scan\+Pipe\+Ptr}{IwScanPipePtr}}]{\setlength{\rightskip}{0pt plus 5cm}F\+I\+LE$\ast$ Iw\+Scan\+Pipe\+Ptr = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_a8385d31985e03296d2aaa7984b31351b}{}\label{simu_2pa__wifi__client__ti_8c_a8385d31985e03296d2aaa7984b31351b}
+The handle of the input pipe used to be notified of the Wi\+Fi events during the scan. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Iw\+Thread\+Pipe\+Ptr@{Iw\+Thread\+Pipe\+Ptr}}
+\index{Iw\+Thread\+Pipe\+Ptr@{Iw\+Thread\+Pipe\+Ptr}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Iw\+Thread\+Pipe\+Ptr}{IwThreadPipePtr}}]{\setlength{\rightskip}{0pt plus 5cm}F\+I\+LE$\ast$ Iw\+Thread\+Pipe\+Ptr = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_a2d10acb1a0a8bcd66a61f5de60c68ac4}{}\label{simu_2pa__wifi__client__ti_8c_a2d10acb1a0a8bcd66a61f5de60c68ac4}
+The handle of the input pipe used to be notified of the Wi\+Fi events. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Saved\+Passphrase@{Saved\+Passphrase}}
+\index{Saved\+Passphrase@{Saved\+Passphrase}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Passphrase}{SavedPassphrase}}]{\setlength{\rightskip}{0pt plus 5cm}char Saved\+Passphrase\mbox{[}{\bf L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+P\+A\+S\+S\+P\+H\+R\+A\+S\+E\+\_\+\+B\+Y\+T\+ES}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_ac1092d56f2b497856db6c29ac0d969f2}{}\label{simu_2pa__wifi__client__ti_8c_ac1092d56f2b497856db6c29ac0d969f2}
+Passphrase used for authentication. Used only with W\+P\+A/\+W\+P\+A2 protocol. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Saved\+Password@{Saved\+Password}}
+\index{Saved\+Password@{Saved\+Password}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Password}{SavedPassword}}]{\setlength{\rightskip}{0pt plus 5cm}char Saved\+Password\mbox{[}{\bf L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+P\+A\+S\+S\+W\+O\+R\+D\+\_\+\+B\+Y\+T\+ES}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_ac974a07a2b3dc20a14599e51f07aba8b}{}\label{simu_2pa__wifi__client__ti_8c_ac974a07a2b3dc20a14599e51f07aba8b}
+Password used for authentication. Used only with W\+P\+A/\+W\+P\+A2 protocol with R\+A\+D\+I\+US server. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Saved\+Pre\+Shared\+Key@{Saved\+Pre\+Shared\+Key}}
+\index{Saved\+Pre\+Shared\+Key@{Saved\+Pre\+Shared\+Key}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Pre\+Shared\+Key}{SavedPreSharedKey}}]{\setlength{\rightskip}{0pt plus 5cm}char Saved\+Pre\+Shared\+Key\mbox{[}{\bf L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+P\+S\+K\+\_\+\+B\+Y\+T\+ES}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_a674460aa5f8bfa411d30444cd25c7c88}{}\label{simu_2pa__wifi__client__ti_8c_a674460aa5f8bfa411d30444cd25c7c88}
+Pre-\/\+Shared-\/\+Key used for authentication. Used only with W\+P\+A/\+W\+P\+A2 protocol. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Saved\+Security\+Protocol@{Saved\+Security\+Protocol}}
+\index{Saved\+Security\+Protocol@{Saved\+Security\+Protocol}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Security\+Protocol}{SavedSecurityProtocol}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+wifi\+Client\+\_\+\+Security\+Protocol\+\_\+t} Saved\+Security\+Protocol\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_a2767944201a93b40f080b66cc418fa1e}{}\label{simu_2pa__wifi__client__ti_8c_a2767944201a93b40f080b66cc418fa1e}
+The current security protocol. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Saved\+Username@{Saved\+Username}}
+\index{Saved\+Username@{Saved\+Username}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Username}{SavedUsername}}]{\setlength{\rightskip}{0pt plus 5cm}char Saved\+Username\mbox{[}{\bf L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+U\+S\+E\+R\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_ac102d0701236aacd8c24a6b6ab17cdb9}{}\label{simu_2pa__wifi__client__ti_8c_ac102d0701236aacd8c24a6b6ab17cdb9}
+Username used for authentication. Used only with W\+P\+A/\+W\+P\+A2 protocol with R\+A\+D\+I\+US server. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Saved\+Wep\+Key@{Saved\+Wep\+Key}}
+\index{Saved\+Wep\+Key@{Saved\+Wep\+Key}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Saved\+Wep\+Key}{SavedWepKey}}]{\setlength{\rightskip}{0pt plus 5cm}char Saved\+Wep\+Key\mbox{[}{\bf L\+E\+\_\+\+W\+I\+F\+I\+D\+E\+F\+S\+\_\+\+M\+A\+X\+\_\+\+W\+E\+P\+K\+E\+Y\+\_\+\+B\+Y\+T\+ES}\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_a3c780117122198cde7c10e66f816232d}{}\label{simu_2pa__wifi__client__ti_8c_a3c780117122198cde7c10e66f816232d}
+W\+EP key used for authentication. Used only with W\+EP protocol. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Wifi\+Client\+Pa\+Event@{Wifi\+Client\+Pa\+Event}}
+\index{Wifi\+Client\+Pa\+Event@{Wifi\+Client\+Pa\+Event}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Wifi\+Client\+Pa\+Event}{WifiClientPaEvent}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+event\+\_\+\+Id\+\_\+t} Wifi\+Client\+Pa\+Event\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_ae8fe77cd40ba310eebb12239c739e508}{}\label{simu_2pa__wifi__client__ti_8c_ae8fe77cd40ba310eebb12239c739e508}
+Wifi\+Client state event ID used to report Wifi\+Client state events to the registered event handlers. \index{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}!Wifi\+Client\+Pa\+Thread@{Wifi\+Client\+Pa\+Thread}}
+\index{Wifi\+Client\+Pa\+Thread@{Wifi\+Client\+Pa\+Thread}!simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c@{simu/pa\+\_\+wifi\+\_\+client\+\_\+ti.\+c}}
+\subsubsection[{\texorpdfstring{Wifi\+Client\+Pa\+Thread}{WifiClientPaThread}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+thread\+\_\+\+Ref\+\_\+t} Wifi\+Client\+Pa\+Thread = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{simu_2pa__wifi__client__ti_8c_a77291f54c04c70ec55f514a945ae91c4}{}\label{simu_2pa__wifi__client__ti_8c_a77291f54c04c70ec55f514a945ae91c4}
+The handle of the Wi\+Fi platform adaptor thread. 

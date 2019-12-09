@@ -1,0 +1,5191 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"raw.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.raw_input_match,"ax",%progbits
+  20              		.align	2
+  21              		.code	16
+  22              		.thumb_func
+  23              		.type	raw_input_match, %function
+  24              	raw_input_match:
+  25              	.LFB53:
+  26              		.file 1 "Source\\LwIP\\src\\core\\raw.c"
+   1:Source\LwIP\src\core/raw.c **** /**
+   2:Source\LwIP\src\core/raw.c ****  * @file
+   3:Source\LwIP\src\core/raw.c ****  * Implementation of raw protocol PCBs for low-level handling of
+   4:Source\LwIP\src\core/raw.c ****  * different types of protocols besides (or overriding) those
+   5:Source\LwIP\src\core/raw.c ****  * already available in lwIP.\n
+   6:Source\LwIP\src\core/raw.c ****  * See also @ref raw_raw
+   7:Source\LwIP\src\core/raw.c ****  * 
+   8:Source\LwIP\src\core/raw.c ****  * @defgroup raw_raw RAW
+   9:Source\LwIP\src\core/raw.c ****  * @ingroup callbackstyle_api
+  10:Source\LwIP\src\core/raw.c ****  * Implementation of raw protocol PCBs for low-level handling of
+  11:Source\LwIP\src\core/raw.c ****  * different types of protocols besides (or overriding) those
+  12:Source\LwIP\src\core/raw.c ****  * already available in lwIP.\n
+  13:Source\LwIP\src\core/raw.c ****  * @see @ref raw_api
+  14:Source\LwIP\src\core/raw.c ****  */
+  15:Source\LwIP\src\core/raw.c **** 
+  16:Source\LwIP\src\core/raw.c **** /*
+  17:Source\LwIP\src\core/raw.c ****  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
+  18:Source\LwIP\src\core/raw.c ****  * All rights reserved.
+  19:Source\LwIP\src\core/raw.c ****  *
+  20:Source\LwIP\src\core/raw.c ****  * Redistribution and use in source and binary forms, with or without modification,
+  21:Source\LwIP\src\core/raw.c ****  * are permitted provided that the following conditions are met:
+  22:Source\LwIP\src\core/raw.c ****  *
+  23:Source\LwIP\src\core/raw.c ****  * 1. Redistributions of source code must retain the above copyright notice,
+  24:Source\LwIP\src\core/raw.c ****  *    this list of conditions and the following disclaimer.
+  25:Source\LwIP\src\core/raw.c ****  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  26:Source\LwIP\src\core/raw.c ****  *    this list of conditions and the following disclaimer in the documentation
+  27:Source\LwIP\src\core/raw.c ****  *    and/or other materials provided with the distribution.
+  28:Source\LwIP\src\core/raw.c ****  * 3. The name of the author may not be used to endorse or promote products
+  29:Source\LwIP\src\core/raw.c ****  *    derived from this software without specific prior written permission.
+  30:Source\LwIP\src\core/raw.c ****  *
+  31:Source\LwIP\src\core/raw.c ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 2
+
+
+  32:Source\LwIP\src\core/raw.c ****  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+  33:Source\LwIP\src\core/raw.c ****  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+  34:Source\LwIP\src\core/raw.c ****  * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  35:Source\LwIP\src\core/raw.c ****  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+  36:Source\LwIP\src\core/raw.c ****  * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  37:Source\LwIP\src\core/raw.c ****  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  38:Source\LwIP\src\core/raw.c ****  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+  39:Source\LwIP\src\core/raw.c ****  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+  40:Source\LwIP\src\core/raw.c ****  * OF SUCH DAMAGE.
+  41:Source\LwIP\src\core/raw.c ****  *
+  42:Source\LwIP\src\core/raw.c ****  * This file is part of the lwIP TCP/IP stack.
+  43:Source\LwIP\src\core/raw.c ****  *
+  44:Source\LwIP\src\core/raw.c ****  * Author: Adam Dunkels <adam@sics.se>
+  45:Source\LwIP\src\core/raw.c ****  *
+  46:Source\LwIP\src\core/raw.c ****  */
+  47:Source\LwIP\src\core/raw.c **** 
+  48:Source\LwIP\src\core/raw.c **** #include "lwip/opt.h"
+  49:Source\LwIP\src\core/raw.c **** 
+  50:Source\LwIP\src\core/raw.c **** #if LWIP_RAW /* don't build if not configured for use in lwipopts.h */
+  51:Source\LwIP\src\core/raw.c **** 
+  52:Source\LwIP\src\core/raw.c **** #include "lwip/def.h"
+  53:Source\LwIP\src\core/raw.c **** #include "lwip/memp.h"
+  54:Source\LwIP\src\core/raw.c **** #include "lwip/ip_addr.h"
+  55:Source\LwIP\src\core/raw.c **** #include "lwip/netif.h"
+  56:Source\LwIP\src\core/raw.c **** #include "lwip/raw.h"
+  57:Source\LwIP\src\core/raw.c **** #include "lwip/stats.h"
+  58:Source\LwIP\src\core/raw.c **** #include "lwip/ip6.h"
+  59:Source\LwIP\src\core/raw.c **** #include "lwip/ip6_addr.h"
+  60:Source\LwIP\src\core/raw.c **** #include "lwip/inet_chksum.h"
+  61:Source\LwIP\src\core/raw.c **** 
+  62:Source\LwIP\src\core/raw.c **** #include <string.h>
+  63:Source\LwIP\src\core/raw.c **** 
+  64:Source\LwIP\src\core/raw.c **** /** The list of RAW PCBs */
+  65:Source\LwIP\src\core/raw.c **** static struct raw_pcb *raw_pcbs;
+  66:Source\LwIP\src\core/raw.c **** 
+  67:Source\LwIP\src\core/raw.c **** static u8_t
+  68:Source\LwIP\src\core/raw.c **** raw_input_match(struct raw_pcb *pcb, u8_t broadcast)
+  69:Source\LwIP\src\core/raw.c **** {
+  27              		.loc 1 69 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+  70:Source\LwIP\src\core/raw.c ****   LWIP_UNUSED_ARG(broadcast); /* in IPv6 only case */
+  71:Source\LwIP\src\core/raw.c **** 
+  72:Source\LwIP\src\core/raw.c **** #if LWIP_IPV4 && LWIP_IPV6
+  73:Source\LwIP\src\core/raw.c ****   /* Dual-stack: PCBs listening to any IP type also listen to any IP address */
+  74:Source\LwIP\src\core/raw.c ****   if (IP_IS_ANY_TYPE_VAL(pcb->local_ip)) {
+  75:Source\LwIP\src\core/raw.c **** #if IP_SOF_BROADCAST_RECV
+  76:Source\LwIP\src\core/raw.c ****     if ((broadcast != 0) && !ip_get_option(pcb, SOF_BROADCAST)) {
+  77:Source\LwIP\src\core/raw.c ****       return 0;
+  78:Source\LwIP\src\core/raw.c ****     }
+  79:Source\LwIP\src\core/raw.c **** #endif /* IP_SOF_BROADCAST_RECV */
+  80:Source\LwIP\src\core/raw.c ****     return 1;
+  81:Source\LwIP\src\core/raw.c ****   }
+  82:Source\LwIP\src\core/raw.c **** #endif /* LWIP_IPV4 && LWIP_IPV6 */
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 3
+
+
+  83:Source\LwIP\src\core/raw.c **** 
+  84:Source\LwIP\src\core/raw.c ****   /* Only need to check PCB if incoming IP version matches PCB IP version */
+  85:Source\LwIP\src\core/raw.c ****   if (IP_ADDR_PCB_VERSION_MATCH_EXACT(pcb, ip_current_dest_addr())) {
+  86:Source\LwIP\src\core/raw.c **** #if LWIP_IPV4
+  87:Source\LwIP\src\core/raw.c ****     /* Special case: IPv4 broadcast: receive all broadcasts
+  88:Source\LwIP\src\core/raw.c ****      * Note: broadcast variable can only be 1 if it is an IPv4 broadcast */
+  89:Source\LwIP\src\core/raw.c ****     if (broadcast != 0) {
+  33              		.loc 1 89 0
+  34 0000 0029     		cmp	r1, #0
+  35 0002 06D0     		beq	.L2
+  90:Source\LwIP\src\core/raw.c **** #if IP_SOF_BROADCAST_RECV
+  91:Source\LwIP\src\core/raw.c ****       if (ip_get_option(pcb, SOF_BROADCAST))
+  92:Source\LwIP\src\core/raw.c **** #endif /* IP_SOF_BROADCAST_RECV */
+  93:Source\LwIP\src\core/raw.c ****       {
+  94:Source\LwIP\src\core/raw.c ****         if (ip4_addr_isany(ip_2_ip4(&pcb->local_ip))) {
+  36              		.loc 1 94 0
+  37 0004 0028     		cmp	r0, #0
+  38 0006 0FD0     		beq	.L4
+  39              		.loc 1 94 0 is_stmt 0 discriminator 1
+  40 0008 0368     		ldr	r3, [r0]
+  41 000a 002B     		cmp	r3, #0
+  42 000c 0ED0     		beq	.L5
+  95:Source\LwIP\src\core/raw.c ****           return 1;
+  96:Source\LwIP\src\core/raw.c ****         }
+  97:Source\LwIP\src\core/raw.c ****       }
+  98:Source\LwIP\src\core/raw.c ****     } else
+  99:Source\LwIP\src\core/raw.c **** #endif /* LWIP_IPV4 */
+ 100:Source\LwIP\src\core/raw.c ****     /* Handle IPv4 and IPv6: catch all or exact match */
+ 101:Source\LwIP\src\core/raw.c ****     if (ip_addr_isany(&pcb->local_ip) ||
+ 102:Source\LwIP\src\core/raw.c ****        ip_addr_cmp(&pcb->local_ip, ip_current_dest_addr())) {
+ 103:Source\LwIP\src\core/raw.c ****       return 1;
+ 104:Source\LwIP\src\core/raw.c ****     }
+ 105:Source\LwIP\src\core/raw.c ****   }
+ 106:Source\LwIP\src\core/raw.c **** 
+ 107:Source\LwIP\src\core/raw.c ****   return 0;
+  43              		.loc 1 107 0 is_stmt 1
+  44 000e 0020     		movs	r0, #0
+  45              	.LVL1:
+  46 0010 13E0     		b	.L3
+  47              	.LVL2:
+  48              	.L2:
+ 101:Source\LwIP\src\core/raw.c ****        ip_addr_cmp(&pcb->local_ip, ip_current_dest_addr())) {
+  49              		.loc 1 101 0
+  50 0012 0028     		cmp	r0, #0
+  51 0014 0CD0     		beq	.L6
+ 101:Source\LwIP\src\core/raw.c ****        ip_addr_cmp(&pcb->local_ip, ip_current_dest_addr())) {
+  52              		.loc 1 101 0 is_stmt 0 discriminator 1
+  53 0016 0368     		ldr	r3, [r0]
+  54 0018 002B     		cmp	r3, #0
+  55 001a 0BD0     		beq	.L7
+ 102:Source\LwIP\src\core/raw.c ****       return 1;
+  56              		.loc 1 102 0 is_stmt 1 discriminator 2
+  57 001c 074A     		ldr	r2, .L9
+  58 001e 5269     		ldr	r2, [r2, #20]
+ 101:Source\LwIP\src\core/raw.c ****        ip_addr_cmp(&pcb->local_ip, ip_current_dest_addr())) {
+  59              		.loc 1 101 0 discriminator 2
+  60 0020 9342     		cmp	r3, r2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 4
+
+
+  61 0022 09D0     		beq	.L8
+  62              		.loc 1 107 0
+  63 0024 0020     		movs	r0, #0
+  64              	.LVL3:
+  65 0026 08E0     		b	.L3
+  66              	.LVL4:
+  67              	.L4:
+  95:Source\LwIP\src\core/raw.c ****           return 1;
+  68              		.loc 1 95 0
+  69 0028 0120     		movs	r0, #1
+  70              	.LVL5:
+  71 002a 06E0     		b	.L3
+  72              	.LVL6:
+  73              	.L5:
+  74 002c 0120     		movs	r0, #1
+  75              	.LVL7:
+  76 002e 04E0     		b	.L3
+  77              	.LVL8:
+  78              	.L6:
+ 103:Source\LwIP\src\core/raw.c ****     }
+  79              		.loc 1 103 0
+  80 0030 0120     		movs	r0, #1
+  81              	.LVL9:
+  82 0032 02E0     		b	.L3
+  83              	.LVL10:
+  84              	.L7:
+  85 0034 0120     		movs	r0, #1
+  86              	.LVL11:
+  87 0036 00E0     		b	.L3
+  88              	.LVL12:
+  89              	.L8:
+  90 0038 0120     		movs	r0, #1
+  91              	.LVL13:
+  92              	.L3:
+ 108:Source\LwIP\src\core/raw.c **** }
+  93              		.loc 1 108 0
+  94              		@ sp needed
+  95 003a 7047     		bx	lr
+  96              	.L10:
+  97              		.align	2
+  98              	.L9:
+  99 003c 00000000 		.word	ip_data
+ 100              		.cfi_endproc
+ 101              	.LFE53:
+ 102              		.size	raw_input_match, .-raw_input_match
+ 103              		.section	.text.raw_input,"ax",%progbits
+ 104              		.align	2
+ 105              		.global	raw_input
+ 106              		.code	16
+ 107              		.thumb_func
+ 108              		.type	raw_input, %function
+ 109              	raw_input:
+ 110              	.LFB54:
+ 109:Source\LwIP\src\core/raw.c **** 
+ 110:Source\LwIP\src\core/raw.c **** /**
+ 111:Source\LwIP\src\core/raw.c ****  * Determine if in incoming IP packet is covered by a RAW PCB
+ 112:Source\LwIP\src\core/raw.c ****  * and if so, pass it to a user-provided receive callback function.
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 5
+
+
+ 113:Source\LwIP\src\core/raw.c ****  *
+ 114:Source\LwIP\src\core/raw.c ****  * Given an incoming IP datagram (as a chain of pbufs) this function
+ 115:Source\LwIP\src\core/raw.c ****  * finds a corresponding RAW PCB and calls the corresponding receive
+ 116:Source\LwIP\src\core/raw.c ****  * callback function.
+ 117:Source\LwIP\src\core/raw.c ****  *
+ 118:Source\LwIP\src\core/raw.c ****  * @param p pbuf to be demultiplexed to a RAW PCB.
+ 119:Source\LwIP\src\core/raw.c ****  * @param inp network interface on which the datagram was received.
+ 120:Source\LwIP\src\core/raw.c ****  * @return - 1 if the packet has been eaten by a RAW PCB receive
+ 121:Source\LwIP\src\core/raw.c ****  *           callback function. The caller MAY NOT not reference the
+ 122:Source\LwIP\src\core/raw.c ****  *           packet any longer, and MAY NOT call pbuf_free().
+ 123:Source\LwIP\src\core/raw.c ****  * @return - 0 if packet is not eaten (pbuf is still referenced by the
+ 124:Source\LwIP\src\core/raw.c ****  *           caller).
+ 125:Source\LwIP\src\core/raw.c ****  *
+ 126:Source\LwIP\src\core/raw.c ****  */
+ 127:Source\LwIP\src\core/raw.c **** u8_t
+ 128:Source\LwIP\src\core/raw.c **** raw_input(struct pbuf *p, struct netif *inp)
+ 129:Source\LwIP\src\core/raw.c **** {
+ 111              		.loc 1 129 0
+ 112              		.cfi_startproc
+ 113              		@ args = 0, pretend = 0, frame = 8
+ 114              		@ frame_needed = 0, uses_anonymous_args = 0
+ 115              	.LVL14:
+ 116 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 117              		.cfi_def_cfa_offset 20
+ 118              		.cfi_offset 4, -20
+ 119              		.cfi_offset 5, -16
+ 120              		.cfi_offset 6, -12
+ 121              		.cfi_offset 7, -8
+ 122              		.cfi_offset 14, -4
+ 123 0002 5746     		mov	r7, r10
+ 124 0004 4E46     		mov	r6, r9
+ 125 0006 C0B4     		push	{r6, r7}
+ 126              		.cfi_def_cfa_offset 28
+ 127              		.cfi_offset 9, -28
+ 128              		.cfi_offset 10, -24
+ 129 0008 83B0     		sub	sp, sp, #12
+ 130              		.cfi_def_cfa_offset 40
+ 131 000a 8146     		mov	r9, r0
+ 132              	.LVL15:
+ 130:Source\LwIP\src\core/raw.c ****   struct raw_pcb *pcb, *prev;
+ 131:Source\LwIP\src\core/raw.c ****   s16_t proto;
+ 132:Source\LwIP\src\core/raw.c ****   u8_t eaten = 0;
+ 133:Source\LwIP\src\core/raw.c ****   u8_t broadcast = ip_addr_isbroadcast(ip_current_dest_addr(), ip_current_netif());
+ 133              		.loc 1 133 0
+ 134 000c 1E4B     		ldr	r3, .L17
+ 135 000e 5869     		ldr	r0, [r3, #20]
+ 136              	.LVL16:
+ 137 0010 1968     		ldr	r1, [r3]
+ 138              	.LVL17:
+ 139 0012 FFF7FEFF 		bl	ip4_addr_isbroadcast_u32
+ 140              	.LVL18:
+ 141 0016 0190     		str	r0, [sp, #4]
+ 142              	.LVL19:
+ 134:Source\LwIP\src\core/raw.c **** 
+ 135:Source\LwIP\src\core/raw.c ****   LWIP_UNUSED_ARG(inp);
+ 136:Source\LwIP\src\core/raw.c **** 
+ 137:Source\LwIP\src\core/raw.c **** #if LWIP_IPV6
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 6
+
+
+ 138:Source\LwIP\src\core/raw.c **** #if LWIP_IPV4
+ 139:Source\LwIP\src\core/raw.c ****   if (IP_HDR_GET_VERSION(p->payload) == 6)
+ 140:Source\LwIP\src\core/raw.c **** #endif /* LWIP_IPV4 */
+ 141:Source\LwIP\src\core/raw.c ****   {
+ 142:Source\LwIP\src\core/raw.c ****     struct ip6_hdr *ip6hdr = (struct ip6_hdr *)p->payload;
+ 143:Source\LwIP\src\core/raw.c ****     proto = IP6H_NEXTH(ip6hdr);
+ 144:Source\LwIP\src\core/raw.c ****   }
+ 145:Source\LwIP\src\core/raw.c **** #if LWIP_IPV4
+ 146:Source\LwIP\src\core/raw.c ****   else
+ 147:Source\LwIP\src\core/raw.c **** #endif /* LWIP_IPV4 */
+ 148:Source\LwIP\src\core/raw.c **** #endif /* LWIP_IPV6 */
+ 149:Source\LwIP\src\core/raw.c **** #if LWIP_IPV4
+ 150:Source\LwIP\src\core/raw.c ****   {
+ 151:Source\LwIP\src\core/raw.c ****     proto = IPH_PROTO((struct ip_hdr *)p->payload);
+ 143              		.loc 1 151 0
+ 144 0018 4B46     		mov	r3, r9
+ 145 001a 5B68     		ldr	r3, [r3, #4]
+ 146 001c 5E7A     		ldrb	r6, [r3, #9]
+ 147              	.LVL20:
+ 152:Source\LwIP\src\core/raw.c ****   }
+ 153:Source\LwIP\src\core/raw.c **** #endif /* LWIP_IPV4 */
+ 154:Source\LwIP\src\core/raw.c **** 
+ 155:Source\LwIP\src\core/raw.c ****   prev = NULL;
+ 156:Source\LwIP\src\core/raw.c ****   pcb = raw_pcbs;
+ 148              		.loc 1 156 0
+ 149 001e 1B4B     		ldr	r3, .L17+4
+ 150 0020 1C68     		ldr	r4, [r3]
+ 151              	.LVL21:
+ 132:Source\LwIP\src\core/raw.c ****   u8_t broadcast = ip_addr_isbroadcast(ip_current_dest_addr(), ip_current_netif());
+ 152              		.loc 1 132 0
+ 153 0022 0027     		movs	r7, #0
+ 155:Source\LwIP\src\core/raw.c ****   pcb = raw_pcbs;
+ 154              		.loc 1 155 0
+ 155 0024 0025     		movs	r5, #0
+ 157:Source\LwIP\src\core/raw.c ****   /* loop through all raw pcbs until the packet is eaten by one */
+ 158:Source\LwIP\src\core/raw.c ****   /* this allows multiple pcbs to match against the packet by design */
+ 159:Source\LwIP\src\core/raw.c ****   while ((eaten == 0) && (pcb != NULL)) {
+ 156              		.loc 1 159 0
+ 157 0026 24E0     		b	.L12
+ 158              	.LVL22:
+ 159              	.L15:
+ 160:Source\LwIP\src\core/raw.c ****     if ((pcb->protocol == proto) && raw_input_match(pcb, broadcast)) {
+ 160              		.loc 1 160 0
+ 161 0028 237C     		ldrb	r3, [r4, #16]
+ 162 002a 9E42     		cmp	r6, r3
+ 163 002c 1FD1     		bne	.L13
+ 164              		.loc 1 160 0 is_stmt 0 discriminator 1
+ 165 002e 0199     		ldr	r1, [sp, #4]
+ 166 0030 2000     		movs	r0, r4
+ 167 0032 FFF7FEFF 		bl	raw_input_match
+ 168              	.LVL23:
+ 169 0036 0028     		cmp	r0, #0
+ 170 0038 19D0     		beq	.L13
+ 161:Source\LwIP\src\core/raw.c ****       /* receive callback function available? */
+ 162:Source\LwIP\src\core/raw.c ****       if (pcb->recv != NULL) {
+ 171              		.loc 1 162 0 is_stmt 1
+ 172 003a 6369     		ldr	r3, [r4, #20]
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 7
+
+
+ 173 003c 9A46     		mov	r10, r3
+ 174 003e 002B     		cmp	r3, #0
+ 175 0040 15D0     		beq	.L13
+ 176              	.LVL24:
+ 177              	.LBB2:
+ 163:Source\LwIP\src\core/raw.c **** #ifndef LWIP_NOASSERT
+ 164:Source\LwIP\src\core/raw.c ****         void* old_payload = p->payload;
+ 165:Source\LwIP\src\core/raw.c **** #endif
+ 166:Source\LwIP\src\core/raw.c ****         /* the receive callback function did not eat the packet? */
+ 167:Source\LwIP\src\core/raw.c ****         eaten = pcb->recv(pcb->recv_arg, pcb, p, ip_current_src_addr());
+ 178              		.loc 1 167 0
+ 179 0042 134B     		ldr	r3, .L17+8
+ 180 0044 4A46     		mov	r2, r9
+ 181 0046 2100     		movs	r1, r4
+ 182 0048 A069     		ldr	r0, [r4, #24]
+ 183 004a D047     		blx	r10
+ 184              	.LVL25:
+ 185 004c 071E     		subs	r7, r0, #0
+ 186              	.LVL26:
+ 168:Source\LwIP\src\core/raw.c ****         if (eaten != 0) {
+ 187              		.loc 1 168 0
+ 188 004e 0ED0     		beq	.L13
+ 189              	.LVL27:
+ 169:Source\LwIP\src\core/raw.c ****           /* receive function ate the packet */
+ 170:Source\LwIP\src\core/raw.c ****           p = NULL;
+ 171:Source\LwIP\src\core/raw.c ****           eaten = 1;
+ 172:Source\LwIP\src\core/raw.c ****           if (prev != NULL) {
+ 190              		.loc 1 172 0
+ 191 0050 002D     		cmp	r5, #0
+ 192 0052 09D0     		beq	.L16
+ 173:Source\LwIP\src\core/raw.c ****           /* move the pcb to the front of raw_pcbs so that is
+ 174:Source\LwIP\src\core/raw.c ****              found faster next time */
+ 175:Source\LwIP\src\core/raw.c ****             prev->next = pcb->next;
+ 193              		.loc 1 175 0
+ 194 0054 E368     		ldr	r3, [r4, #12]
+ 195 0056 EB60     		str	r3, [r5, #12]
+ 176:Source\LwIP\src\core/raw.c ****             pcb->next = raw_pcbs;
+ 196              		.loc 1 176 0
+ 197 0058 0C4B     		ldr	r3, .L17+4
+ 198 005a 1A68     		ldr	r2, [r3]
+ 199 005c E260     		str	r2, [r4, #12]
+ 177:Source\LwIP\src\core/raw.c ****             raw_pcbs = pcb;
+ 200              		.loc 1 177 0
+ 201 005e 1C60     		str	r4, [r3]
+ 171:Source\LwIP\src\core/raw.c ****           if (prev != NULL) {
+ 202              		.loc 1 171 0
+ 203 0060 0127     		movs	r7, #1
+ 170:Source\LwIP\src\core/raw.c ****           eaten = 1;
+ 204              		.loc 1 170 0
+ 205 0062 0023     		movs	r3, #0
+ 206 0064 9946     		mov	r9, r3
+ 207 0066 02E0     		b	.L13
+ 208              	.L16:
+ 171:Source\LwIP\src\core/raw.c ****           if (prev != NULL) {
+ 209              		.loc 1 171 0
+ 210 0068 0127     		movs	r7, #1
+ 170:Source\LwIP\src\core/raw.c ****           eaten = 1;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 8
+
+
+ 211              		.loc 1 170 0
+ 212 006a 0023     		movs	r3, #0
+ 213 006c 9946     		mov	r9, r3
+ 214              	.LVL28:
+ 215              	.L13:
+ 216              	.LBE2:
+ 178:Source\LwIP\src\core/raw.c ****           }
+ 179:Source\LwIP\src\core/raw.c ****         } else {
+ 180:Source\LwIP\src\core/raw.c ****           /* sanity-check that the receive callback did not alter the pbuf */
+ 181:Source\LwIP\src\core/raw.c ****           LWIP_ASSERT("raw pcb recv callback altered pbuf payload pointer without eating packet",
+ 182:Source\LwIP\src\core/raw.c ****             p->payload == old_payload);
+ 183:Source\LwIP\src\core/raw.c ****         }
+ 184:Source\LwIP\src\core/raw.c ****       }
+ 185:Source\LwIP\src\core/raw.c ****       /* no receive callback function was set for this raw PCB */
+ 186:Source\LwIP\src\core/raw.c ****     }
+ 187:Source\LwIP\src\core/raw.c ****     /* drop the packet */
+ 188:Source\LwIP\src\core/raw.c ****     prev = pcb;
+ 217              		.loc 1 188 0
+ 218 006e 2500     		movs	r5, r4
+ 189:Source\LwIP\src\core/raw.c ****     pcb = pcb->next;
+ 219              		.loc 1 189 0
+ 220 0070 E468     		ldr	r4, [r4, #12]
+ 221              	.LVL29:
+ 222              	.L12:
+ 159:Source\LwIP\src\core/raw.c ****     if ((pcb->protocol == proto) && raw_input_match(pcb, broadcast)) {
+ 223              		.loc 1 159 0
+ 224 0072 002F     		cmp	r7, #0
+ 225 0074 01D1     		bne	.L14
+ 159:Source\LwIP\src\core/raw.c ****     if ((pcb->protocol == proto) && raw_input_match(pcb, broadcast)) {
+ 226              		.loc 1 159 0 is_stmt 0 discriminator 1
+ 227 0076 002C     		cmp	r4, #0
+ 228 0078 D6D1     		bne	.L15
+ 229              	.L14:
+ 190:Source\LwIP\src\core/raw.c ****   }
+ 191:Source\LwIP\src\core/raw.c ****   return eaten;
+ 192:Source\LwIP\src\core/raw.c **** }
+ 230              		.loc 1 192 0 is_stmt 1
+ 231 007a 3800     		movs	r0, r7
+ 232 007c 03B0     		add	sp, sp, #12
+ 233              		@ sp needed
+ 234              	.LVL30:
+ 235              	.LVL31:
+ 236              	.LVL32:
+ 237              	.LVL33:
+ 238              	.LVL34:
+ 239 007e 0CBC     		pop	{r2, r3}
+ 240 0080 9146     		mov	r9, r2
+ 241 0082 9A46     		mov	r10, r3
+ 242 0084 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 243              	.L18:
+ 244 0086 C046     		.align	2
+ 245              	.L17:
+ 246 0088 00000000 		.word	ip_data
+ 247 008c 00000000 		.word	.LANCHOR0
+ 248 0090 10000000 		.word	ip_data+16
+ 249              		.cfi_endproc
+ 250              	.LFE54:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 9
+
+
+ 251              		.size	raw_input, .-raw_input
+ 252              		.section	.text.raw_bind,"ax",%progbits
+ 253              		.align	2
+ 254              		.global	raw_bind
+ 255              		.code	16
+ 256              		.thumb_func
+ 257              		.type	raw_bind, %function
+ 258              	raw_bind:
+ 259              	.LFB55:
+ 193:Source\LwIP\src\core/raw.c **** 
+ 194:Source\LwIP\src\core/raw.c **** /**
+ 195:Source\LwIP\src\core/raw.c ****  * @ingroup raw_raw
+ 196:Source\LwIP\src\core/raw.c ****  * Bind a RAW PCB.
+ 197:Source\LwIP\src\core/raw.c ****  *
+ 198:Source\LwIP\src\core/raw.c ****  * @param pcb RAW PCB to be bound with a local address ipaddr.
+ 199:Source\LwIP\src\core/raw.c ****  * @param ipaddr local IP address to bind with. Use IP4_ADDR_ANY to
+ 200:Source\LwIP\src\core/raw.c ****  * bind to all local interfaces.
+ 201:Source\LwIP\src\core/raw.c ****  *
+ 202:Source\LwIP\src\core/raw.c ****  * @return lwIP error code.
+ 203:Source\LwIP\src\core/raw.c ****  * - ERR_OK. Successful. No error occurred.
+ 204:Source\LwIP\src\core/raw.c ****  * - ERR_USE. The specified IP address is already bound to by
+ 205:Source\LwIP\src\core/raw.c ****  * another RAW PCB.
+ 206:Source\LwIP\src\core/raw.c ****  *
+ 207:Source\LwIP\src\core/raw.c ****  * @see raw_disconnect()
+ 208:Source\LwIP\src\core/raw.c ****  */
+ 209:Source\LwIP\src\core/raw.c **** err_t
+ 210:Source\LwIP\src\core/raw.c **** raw_bind(struct raw_pcb *pcb, const ip_addr_t *ipaddr)
+ 211:Source\LwIP\src\core/raw.c **** {
+ 260              		.loc 1 211 0
+ 261              		.cfi_startproc
+ 262              		@ args = 0, pretend = 0, frame = 0
+ 263              		@ frame_needed = 0, uses_anonymous_args = 0
+ 264              		@ link register save eliminated.
+ 265              	.LVL35:
+ 212:Source\LwIP\src\core/raw.c ****   if ((pcb == NULL) || (ipaddr == NULL)) {
+ 266              		.loc 1 212 0
+ 267 0000 0028     		cmp	r0, #0
+ 268 0002 08D0     		beq	.L22
+ 269              		.loc 1 212 0 is_stmt 0 discriminator 1
+ 270 0004 0029     		cmp	r1, #0
+ 271 0006 09D0     		beq	.L23
+ 213:Source\LwIP\src\core/raw.c ****     return ERR_VAL;
+ 214:Source\LwIP\src\core/raw.c ****   }
+ 215:Source\LwIP\src\core/raw.c ****   ip_addr_set_ipaddr(&pcb->local_ip, ipaddr);
+ 272              		.loc 1 215 0 is_stmt 1
+ 273 0008 01D0     		beq	.L24
+ 274              		.loc 1 215 0 is_stmt 0 discriminator 1
+ 275 000a 0B68     		ldr	r3, [r1]
+ 276 000c 00E0     		b	.L21
+ 277              	.L24:
+ 278              		.loc 1 215 0
+ 279 000e 0023     		movs	r3, #0
+ 280              	.L21:
+ 281              		.loc 1 215 0 discriminator 4
+ 282 0010 0360     		str	r3, [r0]
+ 216:Source\LwIP\src\core/raw.c ****   return ERR_OK;
+ 283              		.loc 1 216 0 is_stmt 1 discriminator 4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 10
+
+
+ 284 0012 0020     		movs	r0, #0
+ 285              	.LVL36:
+ 286 0014 04E0     		b	.L20
+ 287              	.LVL37:
+ 288              	.L22:
+ 213:Source\LwIP\src\core/raw.c ****     return ERR_VAL;
+ 289              		.loc 1 213 0
+ 290 0016 0620     		movs	r0, #6
+ 291              	.LVL38:
+ 292 0018 4042     		rsbs	r0, r0, #0
+ 293 001a 01E0     		b	.L20
+ 294              	.LVL39:
+ 295              	.L23:
+ 296 001c 0620     		movs	r0, #6
+ 297              	.LVL40:
+ 298 001e 4042     		rsbs	r0, r0, #0
+ 299              	.L20:
+ 217:Source\LwIP\src\core/raw.c **** }
+ 300              		.loc 1 217 0
+ 301              		@ sp needed
+ 302 0020 7047     		bx	lr
+ 303              		.cfi_endproc
+ 304              	.LFE55:
+ 305              		.size	raw_bind, .-raw_bind
+ 306 0022 C046     		.section	.text.raw_connect,"ax",%progbits
+ 307              		.align	2
+ 308              		.global	raw_connect
+ 309              		.code	16
+ 310              		.thumb_func
+ 311              		.type	raw_connect, %function
+ 312              	raw_connect:
+ 313              	.LFB56:
+ 218:Source\LwIP\src\core/raw.c **** 
+ 219:Source\LwIP\src\core/raw.c **** /**
+ 220:Source\LwIP\src\core/raw.c ****  * @ingroup raw_raw
+ 221:Source\LwIP\src\core/raw.c ****  * Connect an RAW PCB. This function is required by upper layers
+ 222:Source\LwIP\src\core/raw.c ****  * of lwip. Using the raw api you could use raw_sendto() instead
+ 223:Source\LwIP\src\core/raw.c ****  *
+ 224:Source\LwIP\src\core/raw.c ****  * This will associate the RAW PCB with the remote address.
+ 225:Source\LwIP\src\core/raw.c ****  *
+ 226:Source\LwIP\src\core/raw.c ****  * @param pcb RAW PCB to be connected with remote address ipaddr and port.
+ 227:Source\LwIP\src\core/raw.c ****  * @param ipaddr remote IP address to connect with.
+ 228:Source\LwIP\src\core/raw.c ****  *
+ 229:Source\LwIP\src\core/raw.c ****  * @return lwIP error code
+ 230:Source\LwIP\src\core/raw.c ****  *
+ 231:Source\LwIP\src\core/raw.c ****  * @see raw_disconnect() and raw_sendto()
+ 232:Source\LwIP\src\core/raw.c ****  */
+ 233:Source\LwIP\src\core/raw.c **** err_t
+ 234:Source\LwIP\src\core/raw.c **** raw_connect(struct raw_pcb *pcb, const ip_addr_t *ipaddr)
+ 235:Source\LwIP\src\core/raw.c **** {
+ 314              		.loc 1 235 0
+ 315              		.cfi_startproc
+ 316              		@ args = 0, pretend = 0, frame = 0
+ 317              		@ frame_needed = 0, uses_anonymous_args = 0
+ 318              		@ link register save eliminated.
+ 319              	.LVL41:
+ 236:Source\LwIP\src\core/raw.c ****   if ((pcb == NULL) || (ipaddr == NULL)) {
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 11
+
+
+ 320              		.loc 1 236 0
+ 321 0000 0028     		cmp	r0, #0
+ 322 0002 08D0     		beq	.L28
+ 323              		.loc 1 236 0 is_stmt 0 discriminator 1
+ 324 0004 0029     		cmp	r1, #0
+ 325 0006 09D0     		beq	.L29
+ 237:Source\LwIP\src\core/raw.c ****     return ERR_VAL;
+ 238:Source\LwIP\src\core/raw.c ****   }
+ 239:Source\LwIP\src\core/raw.c ****   ip_addr_set_ipaddr(&pcb->remote_ip, ipaddr);
+ 326              		.loc 1 239 0 is_stmt 1
+ 327 0008 01D0     		beq	.L30
+ 328              		.loc 1 239 0 is_stmt 0 discriminator 1
+ 329 000a 0B68     		ldr	r3, [r1]
+ 330 000c 00E0     		b	.L27
+ 331              	.L30:
+ 332              		.loc 1 239 0
+ 333 000e 0023     		movs	r3, #0
+ 334              	.L27:
+ 335              		.loc 1 239 0 discriminator 4
+ 336 0010 4360     		str	r3, [r0, #4]
+ 240:Source\LwIP\src\core/raw.c ****   return ERR_OK;
+ 337              		.loc 1 240 0 is_stmt 1 discriminator 4
+ 338 0012 0020     		movs	r0, #0
+ 339              	.LVL42:
+ 340 0014 04E0     		b	.L26
+ 341              	.LVL43:
+ 342              	.L28:
+ 237:Source\LwIP\src\core/raw.c ****     return ERR_VAL;
+ 343              		.loc 1 237 0
+ 344 0016 0620     		movs	r0, #6
+ 345              	.LVL44:
+ 346 0018 4042     		rsbs	r0, r0, #0
+ 347 001a 01E0     		b	.L26
+ 348              	.LVL45:
+ 349              	.L29:
+ 350 001c 0620     		movs	r0, #6
+ 351              	.LVL46:
+ 352 001e 4042     		rsbs	r0, r0, #0
+ 353              	.L26:
+ 241:Source\LwIP\src\core/raw.c **** }
+ 354              		.loc 1 241 0
+ 355              		@ sp needed
+ 356 0020 7047     		bx	lr
+ 357              		.cfi_endproc
+ 358              	.LFE56:
+ 359              		.size	raw_connect, .-raw_connect
+ 360 0022 C046     		.section	.text.raw_recv,"ax",%progbits
+ 361              		.align	2
+ 362              		.global	raw_recv
+ 363              		.code	16
+ 364              		.thumb_func
+ 365              		.type	raw_recv, %function
+ 366              	raw_recv:
+ 367              	.LFB57:
+ 242:Source\LwIP\src\core/raw.c **** 
+ 243:Source\LwIP\src\core/raw.c **** /**
+ 244:Source\LwIP\src\core/raw.c ****  * @ingroup raw_raw
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 12
+
+
+ 245:Source\LwIP\src\core/raw.c ****  * Set the callback function for received packets that match the
+ 246:Source\LwIP\src\core/raw.c ****  * raw PCB's protocol and binding.
+ 247:Source\LwIP\src\core/raw.c ****  *
+ 248:Source\LwIP\src\core/raw.c ****  * The callback function MUST either
+ 249:Source\LwIP\src\core/raw.c ****  * - eat the packet by calling pbuf_free() and returning non-zero. The
+ 250:Source\LwIP\src\core/raw.c ****  *   packet will not be passed to other raw PCBs or other protocol layers.
+ 251:Source\LwIP\src\core/raw.c ****  * - not free the packet, and return zero. The packet will be matched
+ 252:Source\LwIP\src\core/raw.c ****  *   against further PCBs and/or forwarded to another protocol layers.
+ 253:Source\LwIP\src\core/raw.c ****  */
+ 254:Source\LwIP\src\core/raw.c **** void
+ 255:Source\LwIP\src\core/raw.c **** raw_recv(struct raw_pcb *pcb, raw_recv_fn recv, void *recv_arg)
+ 256:Source\LwIP\src\core/raw.c **** {
+ 368              		.loc 1 256 0
+ 369              		.cfi_startproc
+ 370              		@ args = 0, pretend = 0, frame = 0
+ 371              		@ frame_needed = 0, uses_anonymous_args = 0
+ 372              		@ link register save eliminated.
+ 373              	.LVL47:
+ 257:Source\LwIP\src\core/raw.c ****   /* remember recv() callback and user data */
+ 258:Source\LwIP\src\core/raw.c ****   pcb->recv = recv;
+ 374              		.loc 1 258 0
+ 375 0000 4161     		str	r1, [r0, #20]
+ 259:Source\LwIP\src\core/raw.c ****   pcb->recv_arg = recv_arg;
+ 376              		.loc 1 259 0
+ 377 0002 8261     		str	r2, [r0, #24]
+ 260:Source\LwIP\src\core/raw.c **** }
+ 378              		.loc 1 260 0
+ 379              		@ sp needed
+ 380 0004 7047     		bx	lr
+ 381              		.cfi_endproc
+ 382              	.LFE57:
+ 383              		.size	raw_recv, .-raw_recv
+ 384              		.section	.text.raw_sendto,"ax",%progbits
+ 385              		.align	2
+ 386              		.global	raw_sendto
+ 387              		.code	16
+ 388              		.thumb_func
+ 389              		.type	raw_sendto, %function
+ 390              	raw_sendto:
+ 391              	.LFB58:
+ 261:Source\LwIP\src\core/raw.c **** 
+ 262:Source\LwIP\src\core/raw.c **** /**
+ 263:Source\LwIP\src\core/raw.c ****  * @ingroup raw_raw
+ 264:Source\LwIP\src\core/raw.c ****  * Send the raw IP packet to the given address. Note that actually you cannot
+ 265:Source\LwIP\src\core/raw.c ****  * modify the IP headers (this is inconsistent with the receive callback where
+ 266:Source\LwIP\src\core/raw.c ****  * you actually get the IP headers), you can only specify the IP payload here.
+ 267:Source\LwIP\src\core/raw.c ****  * It requires some more changes in lwIP. (there will be a raw_send() function
+ 268:Source\LwIP\src\core/raw.c ****  * then.)
+ 269:Source\LwIP\src\core/raw.c ****  *
+ 270:Source\LwIP\src\core/raw.c ****  * @param pcb the raw pcb which to send
+ 271:Source\LwIP\src\core/raw.c ****  * @param p the IP payload to send
+ 272:Source\LwIP\src\core/raw.c ****  * @param ipaddr the destination address of the IP packet
+ 273:Source\LwIP\src\core/raw.c ****  *
+ 274:Source\LwIP\src\core/raw.c ****  */
+ 275:Source\LwIP\src\core/raw.c **** err_t
+ 276:Source\LwIP\src\core/raw.c **** raw_sendto(struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *ipaddr)
+ 277:Source\LwIP\src\core/raw.c **** {
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 13
+
+
+ 392              		.loc 1 277 0
+ 393              		.cfi_startproc
+ 394              		@ args = 0, pretend = 0, frame = 0
+ 395              		@ frame_needed = 0, uses_anonymous_args = 0
+ 396              	.LVL48:
+ 397 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 398              		.cfi_def_cfa_offset 20
+ 399              		.cfi_offset 4, -20
+ 400              		.cfi_offset 5, -16
+ 401              		.cfi_offset 6, -12
+ 402              		.cfi_offset 7, -8
+ 403              		.cfi_offset 14, -4
+ 404 0002 85B0     		sub	sp, sp, #20
+ 405              		.cfi_def_cfa_offset 40
+ 406 0004 0400     		movs	r4, r0
+ 407 0006 0D00     		movs	r5, r1
+ 408 0008 1700     		movs	r7, r2
+ 278:Source\LwIP\src\core/raw.c ****   err_t err;
+ 279:Source\LwIP\src\core/raw.c ****   struct netif *netif;
+ 280:Source\LwIP\src\core/raw.c ****   const ip_addr_t *src_ip;
+ 281:Source\LwIP\src\core/raw.c ****   struct pbuf *q; /* q will be sent down the stack */
+ 282:Source\LwIP\src\core/raw.c ****   s16_t header_size;
+ 283:Source\LwIP\src\core/raw.c **** 
+ 284:Source\LwIP\src\core/raw.c ****   if ((pcb == NULL) || (ipaddr == NULL) || !IP_ADDR_PCB_VERSION_MATCH(pcb, ipaddr)) {
+ 409              		.loc 1 284 0
+ 410 000a 0028     		cmp	r0, #0
+ 411 000c 46D0     		beq	.L39
+ 412              		.loc 1 284 0 is_stmt 0 discriminator 1
+ 413 000e 002A     		cmp	r2, #0
+ 414 0010 47D0     		beq	.L40
+ 415              	.LVL49:
+ 285:Source\LwIP\src\core/raw.c ****     return ERR_VAL;
+ 286:Source\LwIP\src\core/raw.c ****   }
+ 287:Source\LwIP\src\core/raw.c **** 
+ 288:Source\LwIP\src\core/raw.c ****   LWIP_DEBUGF(RAW_DEBUG | LWIP_DBG_TRACE, ("raw_sendto\n"));
+ 289:Source\LwIP\src\core/raw.c **** 
+ 290:Source\LwIP\src\core/raw.c ****   header_size = (
+ 291:Source\LwIP\src\core/raw.c **** #if LWIP_IPV4 && LWIP_IPV6
+ 292:Source\LwIP\src\core/raw.c ****     IP_IS_V6(ipaddr) ? IP6_HLEN : IP_HLEN);
+ 293:Source\LwIP\src\core/raw.c **** #elif LWIP_IPV4
+ 294:Source\LwIP\src\core/raw.c ****     IP_HLEN);
+ 295:Source\LwIP\src\core/raw.c **** #else
+ 296:Source\LwIP\src\core/raw.c ****     IP6_HLEN);
+ 297:Source\LwIP\src\core/raw.c **** #endif
+ 298:Source\LwIP\src\core/raw.c **** 
+ 299:Source\LwIP\src\core/raw.c ****   /* not enough space to add an IP header to first pbuf in given p chain? */
+ 300:Source\LwIP\src\core/raw.c ****   if (pbuf_header(p, header_size)) {
+ 416              		.loc 1 300 0 is_stmt 1
+ 417 0012 1421     		movs	r1, #20
+ 418              	.LVL50:
+ 419 0014 2800     		movs	r0, r5
+ 420              	.LVL51:
+ 421 0016 FFF7FEFF 		bl	pbuf_header
+ 422              	.LVL52:
+ 423 001a 0028     		cmp	r0, #0
+ 424 001c 0DD0     		beq	.L34
+ 301:Source\LwIP\src\core/raw.c ****     /* allocate header in new pbuf */
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 14
+
+
+ 302:Source\LwIP\src\core/raw.c ****     q = pbuf_alloc(PBUF_IP, 0, PBUF_RAM);
+ 425              		.loc 1 302 0
+ 426 001e 0022     		movs	r2, #0
+ 427 0020 0021     		movs	r1, #0
+ 428 0022 0120     		movs	r0, #1
+ 429 0024 FFF7FEFF 		bl	pbuf_alloc
+ 430              	.LVL53:
+ 431 0028 061E     		subs	r6, r0, #0
+ 432              	.LVL54:
+ 303:Source\LwIP\src\core/raw.c ****     /* new header pbuf could not be allocated? */
+ 304:Source\LwIP\src\core/raw.c ****     if (q == NULL) {
+ 433              		.loc 1 304 0
+ 434 002a 3DD0     		beq	.L41
+ 305:Source\LwIP\src\core/raw.c ****       LWIP_DEBUGF(RAW_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_LEVEL_SERIOUS, ("raw_sendto: could not allo
+ 306:Source\LwIP\src\core/raw.c ****       return ERR_MEM;
+ 307:Source\LwIP\src\core/raw.c ****     }
+ 308:Source\LwIP\src\core/raw.c ****     if (p->tot_len != 0) {
+ 435              		.loc 1 308 0
+ 436 002c 2B89     		ldrh	r3, [r5, #8]
+ 437 002e 002B     		cmp	r3, #0
+ 438 0030 0BD0     		beq	.L35
+ 309:Source\LwIP\src\core/raw.c ****       /* chain header q in front of given pbuf p */
+ 310:Source\LwIP\src\core/raw.c ****       pbuf_chain(q, p);
+ 439              		.loc 1 310 0
+ 440 0032 2900     		movs	r1, r5
+ 441 0034 FFF7FEFF 		bl	pbuf_chain
+ 442              	.LVL55:
+ 443 0038 07E0     		b	.L35
+ 444              	.LVL56:
+ 445              	.L34:
+ 311:Source\LwIP\src\core/raw.c ****     }
+ 312:Source\LwIP\src\core/raw.c ****     /* { first pbuf q points to header pbuf } */
+ 313:Source\LwIP\src\core/raw.c ****     LWIP_DEBUGF(RAW_DEBUG, ("raw_sendto: added header pbuf %p before given pbuf %p\n", (void *)q, (
+ 314:Source\LwIP\src\core/raw.c ****   } else {
+ 315:Source\LwIP\src\core/raw.c ****     /* first pbuf q equals given pbuf */
+ 316:Source\LwIP\src\core/raw.c ****     q = p;
+ 317:Source\LwIP\src\core/raw.c ****     if (pbuf_header(q, -header_size)) {
+ 446              		.loc 1 317 0
+ 447 003a 1421     		movs	r1, #20
+ 448 003c 4942     		rsbs	r1, r1, #0
+ 449 003e 2800     		movs	r0, r5
+ 450 0040 FFF7FEFF 		bl	pbuf_header
+ 451              	.LVL57:
+ 452 0044 0028     		cmp	r0, #0
+ 453 0046 32D1     		bne	.L42
+ 316:Source\LwIP\src\core/raw.c ****     if (pbuf_header(q, -header_size)) {
+ 454              		.loc 1 316 0
+ 455 0048 2E00     		movs	r6, r5
+ 456              	.LVL58:
+ 457              	.L35:
+ 318:Source\LwIP\src\core/raw.c ****       LWIP_ASSERT("Can't restore header we just removed!", 0);
+ 319:Source\LwIP\src\core/raw.c ****       return ERR_MEM;
+ 320:Source\LwIP\src\core/raw.c ****     }
+ 321:Source\LwIP\src\core/raw.c ****   }
+ 322:Source\LwIP\src\core/raw.c **** 
+ 323:Source\LwIP\src\core/raw.c ****   if(IP_IS_ANY_TYPE_VAL(pcb->local_ip)) {
+ 324:Source\LwIP\src\core/raw.c ****     /* Don't call ip_route() with IP_ANY_TYPE */
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 15
+
+
+ 325:Source\LwIP\src\core/raw.c ****     netif = ip_route(IP46_ADDR_ANY(IP_GET_TYPE(ipaddr)), ipaddr);
+ 326:Source\LwIP\src\core/raw.c ****   } else {
+ 327:Source\LwIP\src\core/raw.c ****     netif = ip_route(&pcb->local_ip, ipaddr);
+ 458              		.loc 1 327 0
+ 459 004a 3800     		movs	r0, r7
+ 460 004c FFF7FEFF 		bl	ip4_route
+ 461              	.LVL59:
+ 328:Source\LwIP\src\core/raw.c ****   }
+ 329:Source\LwIP\src\core/raw.c **** 
+ 330:Source\LwIP\src\core/raw.c ****   if (netif == NULL) {
+ 462              		.loc 1 330 0
+ 463 0050 0028     		cmp	r0, #0
+ 464 0052 07D1     		bne	.L36
+ 331:Source\LwIP\src\core/raw.c ****     LWIP_DEBUGF(RAW_DEBUG | LWIP_DBG_LEVEL_WARNING, ("raw_sendto: No route to "));
+ 332:Source\LwIP\src\core/raw.c ****     ip_addr_debug_print(RAW_DEBUG | LWIP_DBG_LEVEL_WARNING, ipaddr);
+ 333:Source\LwIP\src\core/raw.c ****     /* free any temporary header pbuf allocated by pbuf_header() */
+ 334:Source\LwIP\src\core/raw.c ****     if (q != p) {
+ 465              		.loc 1 334 0
+ 466 0054 AE42     		cmp	r6, r5
+ 467 0056 2DD0     		beq	.L43
+ 335:Source\LwIP\src\core/raw.c ****       pbuf_free(q);
+ 468              		.loc 1 335 0
+ 469 0058 3000     		movs	r0, r6
+ 470              	.LVL60:
+ 471 005a FFF7FEFF 		bl	pbuf_free
+ 472              	.LVL61:
+ 336:Source\LwIP\src\core/raw.c ****     }
+ 337:Source\LwIP\src\core/raw.c ****     return ERR_RTE;
+ 473              		.loc 1 337 0
+ 474 005e 0420     		movs	r0, #4
+ 475 0060 4042     		rsbs	r0, r0, #0
+ 476 0062 2AE0     		b	.L33
+ 477              	.LVL62:
+ 478              	.L36:
+ 338:Source\LwIP\src\core/raw.c ****   }
+ 339:Source\LwIP\src\core/raw.c **** 
+ 340:Source\LwIP\src\core/raw.c **** #if IP_SOF_BROADCAST
+ 341:Source\LwIP\src\core/raw.c ****   if (IP_IS_V4(ipaddr))
+ 342:Source\LwIP\src\core/raw.c ****   {
+ 343:Source\LwIP\src\core/raw.c ****     /* broadcast filter? */
+ 344:Source\LwIP\src\core/raw.c ****     if (!ip_get_option(pcb, SOF_BROADCAST) && ip_addr_isbroadcast(ipaddr, netif)) {
+ 345:Source\LwIP\src\core/raw.c ****       LWIP_DEBUGF(RAW_DEBUG | LWIP_DBG_LEVEL_WARNING, ("raw_sendto: SOF_BROADCAST not enabled on pc
+ 346:Source\LwIP\src\core/raw.c ****       /* free any temporary header pbuf allocated by pbuf_header() */
+ 347:Source\LwIP\src\core/raw.c ****       if (q != p) {
+ 348:Source\LwIP\src\core/raw.c ****         pbuf_free(q);
+ 349:Source\LwIP\src\core/raw.c ****       }
+ 350:Source\LwIP\src\core/raw.c ****       return ERR_VAL;
+ 351:Source\LwIP\src\core/raw.c ****     }
+ 352:Source\LwIP\src\core/raw.c ****   }
+ 353:Source\LwIP\src\core/raw.c **** #endif /* IP_SOF_BROADCAST */
+ 354:Source\LwIP\src\core/raw.c **** 
+ 355:Source\LwIP\src\core/raw.c ****   if (ip_addr_isany(&pcb->local_ip)) {
+ 479              		.loc 1 355 0
+ 480 0064 211E     		subs	r1, r4, #0
+ 481 0066 02D0     		beq	.L37
+ 482              	.LVL63:
+ 483              		.loc 1 355 0 is_stmt 0 discriminator 1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 16
+
+
+ 484 0068 2368     		ldr	r3, [r4]
+ 485 006a 002B     		cmp	r3, #0
+ 486 006c 04D1     		bne	.L38
+ 487              	.L37:
+ 356:Source\LwIP\src\core/raw.c ****     /* use outgoing network interface IP address as source address */
+ 357:Source\LwIP\src\core/raw.c ****     src_ip = ip_netif_get_local_ip(netif, ipaddr);
+ 488              		.loc 1 357 0 is_stmt 1
+ 489 006e 0028     		cmp	r0, #0
+ 490 0070 01D0     		beq	.L44
+ 491              		.loc 1 357 0 is_stmt 0 discriminator 1
+ 492 0072 011D     		adds	r1, r0, #4
+ 493              	.LVL64:
+ 494 0074 00E0     		b	.L38
+ 495              	.LVL65:
+ 496              	.L44:
+ 497              		.loc 1 357 0
+ 498 0076 0021     		movs	r1, #0
+ 499              	.LVL66:
+ 500              	.L38:
+ 358:Source\LwIP\src\core/raw.c **** #if LWIP_IPV6
+ 359:Source\LwIP\src\core/raw.c ****     if (src_ip == NULL) {
+ 360:Source\LwIP\src\core/raw.c ****       if (q != p) {
+ 361:Source\LwIP\src\core/raw.c ****         pbuf_free(q);
+ 362:Source\LwIP\src\core/raw.c ****       }
+ 363:Source\LwIP\src\core/raw.c ****       return ERR_RTE;
+ 364:Source\LwIP\src\core/raw.c ****     }
+ 365:Source\LwIP\src\core/raw.c **** #endif /* LWIP_IPV6 */
+ 366:Source\LwIP\src\core/raw.c ****   } else {
+ 367:Source\LwIP\src\core/raw.c ****     /* use RAW PCB local IP address as source address */
+ 368:Source\LwIP\src\core/raw.c ****     src_ip = &pcb->local_ip;
+ 369:Source\LwIP\src\core/raw.c ****   }
+ 370:Source\LwIP\src\core/raw.c **** 
+ 371:Source\LwIP\src\core/raw.c **** #if LWIP_IPV6
+ 372:Source\LwIP\src\core/raw.c ****   /* If requested, based on the IPV6_CHECKSUM socket option per RFC3542,
+ 373:Source\LwIP\src\core/raw.c ****      compute the checksum and update the checksum in the payload. */
+ 374:Source\LwIP\src\core/raw.c ****   if (IP_IS_V6(ipaddr) && pcb->chksum_reqd) {
+ 375:Source\LwIP\src\core/raw.c ****     u16_t chksum = ip6_chksum_pseudo(p, pcb->protocol, p->tot_len, ip_2_ip6(src_ip), ip_2_ip6(ipadd
+ 376:Source\LwIP\src\core/raw.c ****     LWIP_ASSERT("Checksum must fit into first pbuf", p->len >= (pcb->chksum_offset + 2));
+ 377:Source\LwIP\src\core/raw.c ****     SMEMCPY(((u8_t *)p->payload) + pcb->chksum_offset, &chksum, sizeof(u16_t));
+ 378:Source\LwIP\src\core/raw.c ****   }
+ 379:Source\LwIP\src\core/raw.c **** #endif
+ 380:Source\LwIP\src\core/raw.c **** 
+ 381:Source\LwIP\src\core/raw.c ****   NETIF_SET_HWADDRHINT(netif, &pcb->addr_hint);
+ 382:Source\LwIP\src\core/raw.c ****   err = ip_output_if(q, src_ip, ipaddr, pcb->ttl, pcb->tos, pcb->protocol, netif);
+ 501              		.loc 1 382 0 is_stmt 1
+ 502 0078 A37A     		ldrb	r3, [r4, #10]
+ 503 007a 627A     		ldrb	r2, [r4, #9]
+ 504 007c 247C     		ldrb	r4, [r4, #16]
+ 505              	.LVL67:
+ 506 007e 0290     		str	r0, [sp, #8]
+ 507 0080 0194     		str	r4, [sp, #4]
+ 508 0082 0092     		str	r2, [sp]
+ 509 0084 3A00     		movs	r2, r7
+ 510 0086 3000     		movs	r0, r6
+ 511              	.LVL68:
+ 512 0088 FFF7FEFF 		bl	ip4_output_if
+ 513              	.LVL69:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 17
+
+
+ 514 008c 0400     		movs	r4, r0
+ 515              	.LVL70:
+ 383:Source\LwIP\src\core/raw.c ****   NETIF_SET_HWADDRHINT(netif, NULL);
+ 384:Source\LwIP\src\core/raw.c **** 
+ 385:Source\LwIP\src\core/raw.c ****   /* did we chain a header earlier? */
+ 386:Source\LwIP\src\core/raw.c ****   if (q != p) {
+ 516              		.loc 1 386 0
+ 517 008e AE42     		cmp	r6, r5
+ 518 0090 13D0     		beq	.L45
+ 387:Source\LwIP\src\core/raw.c ****     /* free the header */
+ 388:Source\LwIP\src\core/raw.c ****     pbuf_free(q);
+ 519              		.loc 1 388 0
+ 520 0092 3000     		movs	r0, r6
+ 521              	.LVL71:
+ 522 0094 FFF7FEFF 		bl	pbuf_free
+ 523              	.LVL72:
+ 389:Source\LwIP\src\core/raw.c ****   }
+ 390:Source\LwIP\src\core/raw.c ****   return err;
+ 524              		.loc 1 390 0
+ 525 0098 2000     		movs	r0, r4
+ 526 009a 0EE0     		b	.L33
+ 527              	.LVL73:
+ 528              	.L39:
+ 285:Source\LwIP\src\core/raw.c ****   }
+ 529              		.loc 1 285 0
+ 530 009c 0620     		movs	r0, #6
+ 531              	.LVL74:
+ 532 009e 4042     		rsbs	r0, r0, #0
+ 533 00a0 0BE0     		b	.L33
+ 534              	.LVL75:
+ 535              	.L40:
+ 536 00a2 0620     		movs	r0, #6
+ 537              	.LVL76:
+ 538 00a4 4042     		rsbs	r0, r0, #0
+ 539 00a6 08E0     		b	.L33
+ 540              	.LVL77:
+ 541              	.L41:
+ 306:Source\LwIP\src\core/raw.c ****     }
+ 542              		.loc 1 306 0
+ 543 00a8 0120     		movs	r0, #1
+ 544              	.LVL78:
+ 545 00aa 4042     		rsbs	r0, r0, #0
+ 546 00ac 05E0     		b	.L33
+ 547              	.LVL79:
+ 548              	.L42:
+ 319:Source\LwIP\src\core/raw.c ****     }
+ 549              		.loc 1 319 0
+ 550 00ae 0120     		movs	r0, #1
+ 551 00b0 4042     		rsbs	r0, r0, #0
+ 552 00b2 02E0     		b	.L33
+ 553              	.LVL80:
+ 554              	.L43:
+ 337:Source\LwIP\src\core/raw.c ****   }
+ 555              		.loc 1 337 0
+ 556 00b4 0420     		movs	r0, #4
+ 557              	.LVL81:
+ 558 00b6 4042     		rsbs	r0, r0, #0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 18
+
+
+ 559 00b8 FFE7     		b	.L33
+ 560              	.LVL82:
+ 561              	.L45:
+ 562              	.L33:
+ 391:Source\LwIP\src\core/raw.c **** }
+ 563              		.loc 1 391 0
+ 564 00ba 05B0     		add	sp, sp, #20
+ 565              		@ sp needed
+ 566              	.LVL83:
+ 567              	.LVL84:
+ 568 00bc F0BD     		pop	{r4, r5, r6, r7, pc}
+ 569              		.cfi_endproc
+ 570              	.LFE58:
+ 571              		.size	raw_sendto, .-raw_sendto
+ 572 00be C046     		.section	.text.raw_send,"ax",%progbits
+ 573              		.align	2
+ 574              		.global	raw_send
+ 575              		.code	16
+ 576              		.thumb_func
+ 577              		.type	raw_send, %function
+ 578              	raw_send:
+ 579              	.LFB59:
+ 392:Source\LwIP\src\core/raw.c **** 
+ 393:Source\LwIP\src\core/raw.c **** /**
+ 394:Source\LwIP\src\core/raw.c ****  * @ingroup raw_raw
+ 395:Source\LwIP\src\core/raw.c ****  * Send the raw IP packet to the address given by raw_connect()
+ 396:Source\LwIP\src\core/raw.c ****  *
+ 397:Source\LwIP\src\core/raw.c ****  * @param pcb the raw pcb which to send
+ 398:Source\LwIP\src\core/raw.c ****  * @param p the IP payload to send
+ 399:Source\LwIP\src\core/raw.c ****  *
+ 400:Source\LwIP\src\core/raw.c ****  */
+ 401:Source\LwIP\src\core/raw.c **** err_t
+ 402:Source\LwIP\src\core/raw.c **** raw_send(struct raw_pcb *pcb, struct pbuf *p)
+ 403:Source\LwIP\src\core/raw.c **** {
+ 580              		.loc 1 403 0
+ 581              		.cfi_startproc
+ 582              		@ args = 0, pretend = 0, frame = 0
+ 583              		@ frame_needed = 0, uses_anonymous_args = 0
+ 584              	.LVL85:
+ 585 0000 10B5     		push	{r4, lr}
+ 586              		.cfi_def_cfa_offset 8
+ 587              		.cfi_offset 4, -8
+ 588              		.cfi_offset 14, -4
+ 404:Source\LwIP\src\core/raw.c ****   return raw_sendto(pcb, p, &pcb->remote_ip);
+ 589              		.loc 1 404 0
+ 590 0002 021D     		adds	r2, r0, #4
+ 591 0004 FFF7FEFF 		bl	raw_sendto
+ 592              	.LVL86:
+ 405:Source\LwIP\src\core/raw.c **** }
+ 593              		.loc 1 405 0
+ 594              		@ sp needed
+ 595 0008 10BD     		pop	{r4, pc}
+ 596              		.cfi_endproc
+ 597              	.LFE59:
+ 598              		.size	raw_send, .-raw_send
+ 599 000a C046     		.section	.text.raw_remove,"ax",%progbits
+ 600              		.align	2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 19
+
+
+ 601              		.global	raw_remove
+ 602              		.code	16
+ 603              		.thumb_func
+ 604              		.type	raw_remove, %function
+ 605              	raw_remove:
+ 606              	.LFB60:
+ 406:Source\LwIP\src\core/raw.c **** 
+ 407:Source\LwIP\src\core/raw.c **** /**
+ 408:Source\LwIP\src\core/raw.c ****  * @ingroup raw_raw
+ 409:Source\LwIP\src\core/raw.c ****  * Remove an RAW PCB.
+ 410:Source\LwIP\src\core/raw.c ****  *
+ 411:Source\LwIP\src\core/raw.c ****  * @param pcb RAW PCB to be removed. The PCB is removed from the list of
+ 412:Source\LwIP\src\core/raw.c ****  * RAW PCB's and the data structure is freed from memory.
+ 413:Source\LwIP\src\core/raw.c ****  *
+ 414:Source\LwIP\src\core/raw.c ****  * @see raw_new()
+ 415:Source\LwIP\src\core/raw.c ****  */
+ 416:Source\LwIP\src\core/raw.c **** void
+ 417:Source\LwIP\src\core/raw.c **** raw_remove(struct raw_pcb *pcb)
+ 418:Source\LwIP\src\core/raw.c **** {
+ 607              		.loc 1 418 0
+ 608              		.cfi_startproc
+ 609              		@ args = 0, pretend = 0, frame = 0
+ 610              		@ frame_needed = 0, uses_anonymous_args = 0
+ 611              	.LVL87:
+ 612 0000 10B5     		push	{r4, lr}
+ 613              		.cfi_def_cfa_offset 8
+ 614              		.cfi_offset 4, -8
+ 615              		.cfi_offset 14, -4
+ 616 0002 0100     		movs	r1, r0
+ 419:Source\LwIP\src\core/raw.c ****   struct raw_pcb *pcb2;
+ 420:Source\LwIP\src\core/raw.c ****   /* pcb to be removed is first in list? */
+ 421:Source\LwIP\src\core/raw.c ****   if (raw_pcbs == pcb) {
+ 617              		.loc 1 421 0
+ 618 0004 0B4B     		ldr	r3, .L53
+ 619 0006 1A68     		ldr	r2, [r3]
+ 620 0008 8242     		cmp	r2, r0
+ 621 000a 0DD1     		bne	.L48
+ 422:Source\LwIP\src\core/raw.c ****     /* make list start at 2nd pcb */
+ 423:Source\LwIP\src\core/raw.c ****     raw_pcbs = raw_pcbs->next;
+ 622              		.loc 1 423 0
+ 623 000c D268     		ldr	r2, [r2, #12]
+ 624 000e 1A60     		str	r2, [r3]
+ 625 0010 0CE0     		b	.L49
+ 626              	.LVL88:
+ 627              	.L50:
+ 424:Source\LwIP\src\core/raw.c ****     /* pcb not 1st in list */
+ 425:Source\LwIP\src\core/raw.c ****   } else {
+ 426:Source\LwIP\src\core/raw.c ****     for (pcb2 = raw_pcbs; pcb2 != NULL; pcb2 = pcb2->next) {
+ 427:Source\LwIP\src\core/raw.c ****       /* find pcb in raw_pcbs list */
+ 428:Source\LwIP\src\core/raw.c ****       if (pcb2->next != NULL && pcb2->next == pcb) {
+ 628              		.loc 1 428 0
+ 629 0012 D368     		ldr	r3, [r2, #12]
+ 630 0014 002B     		cmp	r3, #0
+ 631 0016 04D0     		beq	.L51
+ 632              		.loc 1 428 0 is_stmt 0 discriminator 1
+ 633 0018 9942     		cmp	r1, r3
+ 634 001a 04D1     		bne	.L52
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 20
+
+
+ 429:Source\LwIP\src\core/raw.c ****         /* remove pcb from list */
+ 430:Source\LwIP\src\core/raw.c ****         pcb2->next = pcb->next;
+ 635              		.loc 1 430 0 is_stmt 1
+ 636 001c CB68     		ldr	r3, [r1, #12]
+ 637 001e D360     		str	r3, [r2, #12]
+ 431:Source\LwIP\src\core/raw.c ****         break;
+ 638              		.loc 1 431 0
+ 639 0020 04E0     		b	.L49
+ 640              	.L51:
+ 641 0022 1A00     		movs	r2, r3
+ 642              	.LVL89:
+ 643 0024 00E0     		b	.L48
+ 644              	.LVL90:
+ 645              	.L52:
+ 646 0026 1A00     		movs	r2, r3
+ 647              	.LVL91:
+ 648              	.L48:
+ 426:Source\LwIP\src\core/raw.c ****       /* find pcb in raw_pcbs list */
+ 649              		.loc 1 426 0 discriminator 1
+ 650 0028 002A     		cmp	r2, #0
+ 651 002a F2D1     		bne	.L50
+ 652              	.LVL92:
+ 653              	.L49:
+ 432:Source\LwIP\src\core/raw.c ****       }
+ 433:Source\LwIP\src\core/raw.c ****     }
+ 434:Source\LwIP\src\core/raw.c ****   }
+ 435:Source\LwIP\src\core/raw.c ****   memp_free(MEMP_RAW_PCB, pcb);
+ 654              		.loc 1 435 0
+ 655 002c 0020     		movs	r0, #0
+ 656              	.LVL93:
+ 657 002e FFF7FEFF 		bl	memp_free
+ 658              	.LVL94:
+ 436:Source\LwIP\src\core/raw.c **** }
+ 659              		.loc 1 436 0
+ 660              		@ sp needed
+ 661 0032 10BD     		pop	{r4, pc}
+ 662              	.L54:
+ 663              		.align	2
+ 664              	.L53:
+ 665 0034 00000000 		.word	.LANCHOR0
+ 666              		.cfi_endproc
+ 667              	.LFE60:
+ 668              		.size	raw_remove, .-raw_remove
+ 669              		.section	.text.raw_new,"ax",%progbits
+ 670              		.align	2
+ 671              		.global	raw_new
+ 672              		.code	16
+ 673              		.thumb_func
+ 674              		.type	raw_new, %function
+ 675              	raw_new:
+ 676              	.LFB61:
+ 437:Source\LwIP\src\core/raw.c **** 
+ 438:Source\LwIP\src\core/raw.c **** /**
+ 439:Source\LwIP\src\core/raw.c ****  * @ingroup raw_raw
+ 440:Source\LwIP\src\core/raw.c ****  * Create a RAW PCB.
+ 441:Source\LwIP\src\core/raw.c ****  *
+ 442:Source\LwIP\src\core/raw.c ****  * @return The RAW PCB which was created. NULL if the PCB data structure
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 21
+
+
+ 443:Source\LwIP\src\core/raw.c ****  * could not be allocated.
+ 444:Source\LwIP\src\core/raw.c ****  *
+ 445:Source\LwIP\src\core/raw.c ****  * @param proto the protocol number of the IPs payload (e.g. IP_PROTO_ICMP)
+ 446:Source\LwIP\src\core/raw.c ****  *
+ 447:Source\LwIP\src\core/raw.c ****  * @see raw_remove()
+ 448:Source\LwIP\src\core/raw.c ****  */
+ 449:Source\LwIP\src\core/raw.c **** struct raw_pcb *
+ 450:Source\LwIP\src\core/raw.c **** raw_new(u8_t proto)
+ 451:Source\LwIP\src\core/raw.c **** {
+ 677              		.loc 1 451 0
+ 678              		.cfi_startproc
+ 679              		@ args = 0, pretend = 0, frame = 0
+ 680              		@ frame_needed = 0, uses_anonymous_args = 0
+ 681              	.LVL95:
+ 682 0000 70B5     		push	{r4, r5, r6, lr}
+ 683              		.cfi_def_cfa_offset 16
+ 684              		.cfi_offset 4, -16
+ 685              		.cfi_offset 5, -12
+ 686              		.cfi_offset 6, -8
+ 687              		.cfi_offset 14, -4
+ 688 0002 0500     		movs	r5, r0
+ 452:Source\LwIP\src\core/raw.c ****   struct raw_pcb *pcb;
+ 453:Source\LwIP\src\core/raw.c **** 
+ 454:Source\LwIP\src\core/raw.c ****   LWIP_DEBUGF(RAW_DEBUG | LWIP_DBG_TRACE, ("raw_new\n"));
+ 455:Source\LwIP\src\core/raw.c **** 
+ 456:Source\LwIP\src\core/raw.c ****   pcb = (struct raw_pcb *)memp_malloc(MEMP_RAW_PCB);
+ 689              		.loc 1 456 0
+ 690 0004 E422     		movs	r2, #228
+ 691 0006 5200     		lsls	r2, r2, #1
+ 692 0008 0949     		ldr	r1, .L57
+ 693 000a 0020     		movs	r0, #0
+ 694              	.LVL96:
+ 695 000c FFF7FEFF 		bl	memp_malloc_fn
+ 696              	.LVL97:
+ 697 0010 041E     		subs	r4, r0, #0
+ 698              	.LVL98:
+ 457:Source\LwIP\src\core/raw.c ****   /* could allocate RAW PCB? */
+ 458:Source\LwIP\src\core/raw.c ****   if (pcb != NULL) {
+ 699              		.loc 1 458 0
+ 700 0012 0AD0     		beq	.L56
+ 459:Source\LwIP\src\core/raw.c ****     /* initialize PCB to all zeroes */
+ 460:Source\LwIP\src\core/raw.c ****     memset(pcb, 0, sizeof(struct raw_pcb));
+ 701              		.loc 1 460 0
+ 702 0014 1C22     		movs	r2, #28
+ 703 0016 0021     		movs	r1, #0
+ 704 0018 FFF7FEFF 		bl	memset
+ 705              	.LVL99:
+ 461:Source\LwIP\src\core/raw.c ****     pcb->protocol = proto;
+ 706              		.loc 1 461 0
+ 707 001c 2574     		strb	r5, [r4, #16]
+ 462:Source\LwIP\src\core/raw.c ****     pcb->ttl = RAW_TTL;
+ 708              		.loc 1 462 0
+ 709 001e FF23     		movs	r3, #255
+ 710 0020 A372     		strb	r3, [r4, #10]
+ 463:Source\LwIP\src\core/raw.c ****     pcb->next = raw_pcbs;
+ 711              		.loc 1 463 0
+ 712 0022 044B     		ldr	r3, .L57+4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 22
+
+
+ 713 0024 1A68     		ldr	r2, [r3]
+ 714 0026 E260     		str	r2, [r4, #12]
+ 464:Source\LwIP\src\core/raw.c ****     raw_pcbs = pcb;
+ 715              		.loc 1 464 0
+ 716 0028 1C60     		str	r4, [r3]
+ 717              	.L56:
+ 465:Source\LwIP\src\core/raw.c ****   }
+ 466:Source\LwIP\src\core/raw.c ****   return pcb;
+ 467:Source\LwIP\src\core/raw.c **** }
+ 718              		.loc 1 467 0
+ 719 002a 2000     		movs	r0, r4
+ 720              		@ sp needed
+ 721              	.LVL100:
+ 722 002c 70BD     		pop	{r4, r5, r6, pc}
+ 723              	.L58:
+ 724 002e C046     		.align	2
+ 725              	.L57:
+ 726 0030 00000000 		.word	.LC5
+ 727 0034 00000000 		.word	.LANCHOR0
+ 728              		.cfi_endproc
+ 729              	.LFE61:
+ 730              		.size	raw_new, .-raw_new
+ 731              		.section	.text.raw_new_ip_type,"ax",%progbits
+ 732              		.align	2
+ 733              		.global	raw_new_ip_type
+ 734              		.code	16
+ 735              		.thumb_func
+ 736              		.type	raw_new_ip_type, %function
+ 737              	raw_new_ip_type:
+ 738              	.LFB62:
+ 468:Source\LwIP\src\core/raw.c **** 
+ 469:Source\LwIP\src\core/raw.c **** /**
+ 470:Source\LwIP\src\core/raw.c ****  * @ingroup raw_raw
+ 471:Source\LwIP\src\core/raw.c ****  * Create a RAW PCB for specific IP type.
+ 472:Source\LwIP\src\core/raw.c ****  *
+ 473:Source\LwIP\src\core/raw.c ****  * @return The RAW PCB which was created. NULL if the PCB data structure
+ 474:Source\LwIP\src\core/raw.c ****  * could not be allocated.
+ 475:Source\LwIP\src\core/raw.c ****  *
+ 476:Source\LwIP\src\core/raw.c ****  * @param type IP address type, see @ref lwip_ip_addr_type definitions.
+ 477:Source\LwIP\src\core/raw.c ****  * If you want to listen to IPv4 and IPv6 (dual-stack) packets,
+ 478:Source\LwIP\src\core/raw.c ****  * supply @ref IPADDR_TYPE_ANY as argument and bind to @ref IP_ANY_TYPE.
+ 479:Source\LwIP\src\core/raw.c ****  * @param proto the protocol number (next header) of the IPv6 packet payload
+ 480:Source\LwIP\src\core/raw.c ****  *              (e.g. IP6_NEXTH_ICMP6)
+ 481:Source\LwIP\src\core/raw.c ****  *
+ 482:Source\LwIP\src\core/raw.c ****  * @see raw_remove()
+ 483:Source\LwIP\src\core/raw.c ****  */
+ 484:Source\LwIP\src\core/raw.c **** struct raw_pcb *
+ 485:Source\LwIP\src\core/raw.c **** raw_new_ip_type(u8_t type, u8_t proto)
+ 486:Source\LwIP\src\core/raw.c **** {
+ 739              		.loc 1 486 0
+ 740              		.cfi_startproc
+ 741              		@ args = 0, pretend = 0, frame = 0
+ 742              		@ frame_needed = 0, uses_anonymous_args = 0
+ 743              	.LVL101:
+ 744 0000 10B5     		push	{r4, lr}
+ 745              		.cfi_def_cfa_offset 8
+ 746              		.cfi_offset 4, -8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 23
+
+
+ 747              		.cfi_offset 14, -4
+ 487:Source\LwIP\src\core/raw.c ****   struct raw_pcb *pcb;
+ 488:Source\LwIP\src\core/raw.c ****   pcb = raw_new(proto);
+ 748              		.loc 1 488 0
+ 749 0002 0800     		movs	r0, r1
+ 750              	.LVL102:
+ 751 0004 FFF7FEFF 		bl	raw_new
+ 752              	.LVL103:
+ 489:Source\LwIP\src\core/raw.c **** #if LWIP_IPV4 && LWIP_IPV6
+ 490:Source\LwIP\src\core/raw.c ****   if (pcb != NULL) {
+ 491:Source\LwIP\src\core/raw.c ****     IP_SET_TYPE_VAL(pcb->local_ip,  type);
+ 492:Source\LwIP\src\core/raw.c ****     IP_SET_TYPE_VAL(pcb->remote_ip, type);
+ 493:Source\LwIP\src\core/raw.c ****   }
+ 494:Source\LwIP\src\core/raw.c **** #else /* LWIP_IPV4 && LWIP_IPV6 */
+ 495:Source\LwIP\src\core/raw.c ****   LWIP_UNUSED_ARG(type);
+ 496:Source\LwIP\src\core/raw.c **** #endif /* LWIP_IPV4 && LWIP_IPV6 */
+ 497:Source\LwIP\src\core/raw.c ****   return pcb;
+ 498:Source\LwIP\src\core/raw.c **** }
+ 753              		.loc 1 498 0
+ 754              		@ sp needed
+ 755 0008 10BD     		pop	{r4, pc}
+ 756              		.cfi_endproc
+ 757              	.LFE62:
+ 758              		.size	raw_new_ip_type, .-raw_new_ip_type
+ 759 000a C046     		.section	.text.raw_netif_ip_addr_changed,"ax",%progbits
+ 760              		.align	2
+ 761              		.global	raw_netif_ip_addr_changed
+ 762              		.code	16
+ 763              		.thumb_func
+ 764              		.type	raw_netif_ip_addr_changed, %function
+ 765              	raw_netif_ip_addr_changed:
+ 766              	.LFB63:
+ 499:Source\LwIP\src\core/raw.c **** 
+ 500:Source\LwIP\src\core/raw.c **** /** This function is called from netif.c when address is changed
+ 501:Source\LwIP\src\core/raw.c ****  *
+ 502:Source\LwIP\src\core/raw.c ****  * @param old_addr IP address of the netif before change
+ 503:Source\LwIP\src\core/raw.c ****  * @param new_addr IP address of the netif after change
+ 504:Source\LwIP\src\core/raw.c ****  */
+ 505:Source\LwIP\src\core/raw.c **** void raw_netif_ip_addr_changed(const ip_addr_t* old_addr, const ip_addr_t* new_addr)
+ 506:Source\LwIP\src\core/raw.c **** {
+ 767              		.loc 1 506 0
+ 768              		.cfi_startproc
+ 769              		@ args = 0, pretend = 0, frame = 0
+ 770              		@ frame_needed = 0, uses_anonymous_args = 0
+ 771              	.LVL104:
+ 772 0000 10B5     		push	{r4, lr}
+ 773              		.cfi_def_cfa_offset 8
+ 774              		.cfi_offset 4, -8
+ 775              		.cfi_offset 14, -4
+ 507:Source\LwIP\src\core/raw.c ****   struct raw_pcb* rpcb;
+ 508:Source\LwIP\src\core/raw.c **** 
+ 509:Source\LwIP\src\core/raw.c ****   if (!ip_addr_isany(old_addr) && !ip_addr_isany(new_addr)) {
+ 776              		.loc 1 509 0
+ 777 0002 0028     		cmp	r0, #0
+ 778 0004 13D0     		beq	.L60
+ 779              		.loc 1 509 0 is_stmt 0 discriminator 1
+ 780 0006 0368     		ldr	r3, [r0]
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 24
+
+
+ 781 0008 002B     		cmp	r3, #0
+ 782 000a 10D0     		beq	.L60
+ 783              		.loc 1 509 0 discriminator 2
+ 784 000c 0029     		cmp	r1, #0
+ 785 000e 0ED0     		beq	.L60
+ 786              		.loc 1 509 0 discriminator 3
+ 787 0010 0B68     		ldr	r3, [r1]
+ 788 0012 002B     		cmp	r3, #0
+ 789 0014 0BD0     		beq	.L60
+ 510:Source\LwIP\src\core/raw.c ****     for (rpcb = raw_pcbs; rpcb != NULL; rpcb = rpcb->next) {
+ 790              		.loc 1 510 0 is_stmt 1
+ 791 0016 064B     		ldr	r3, .L65
+ 792 0018 1B68     		ldr	r3, [r3]
+ 793              	.LVL105:
+ 794 001a 06E0     		b	.L62
+ 795              	.L64:
+ 511:Source\LwIP\src\core/raw.c ****       /* PCB bound to current local interface address? */
+ 512:Source\LwIP\src\core/raw.c ****       if (ip_addr_cmp(&rpcb->local_ip, old_addr)) {
+ 796              		.loc 1 512 0
+ 797 001c 1A68     		ldr	r2, [r3]
+ 798 001e 0468     		ldr	r4, [r0]
+ 799 0020 A242     		cmp	r2, r4
+ 800 0022 01D1     		bne	.L63
+ 513:Source\LwIP\src\core/raw.c ****         /* The PCB is bound to the old ipaddr and
+ 514:Source\LwIP\src\core/raw.c ****          * is set to bound to the new one instead */
+ 515:Source\LwIP\src\core/raw.c ****         ip_addr_copy(rpcb->local_ip, *new_addr);
+ 801              		.loc 1 515 0
+ 802 0024 0A68     		ldr	r2, [r1]
+ 803 0026 1A60     		str	r2, [r3]
+ 804              	.L63:
+ 510:Source\LwIP\src\core/raw.c ****       /* PCB bound to current local interface address? */
+ 805              		.loc 1 510 0 discriminator 2
+ 806 0028 DB68     		ldr	r3, [r3, #12]
+ 807              	.LVL106:
+ 808              	.L62:
+ 510:Source\LwIP\src\core/raw.c ****       /* PCB bound to current local interface address? */
+ 809              		.loc 1 510 0 is_stmt 0 discriminator 1
+ 810 002a 002B     		cmp	r3, #0
+ 811 002c F6D1     		bne	.L64
+ 812              	.LVL107:
+ 813              	.L60:
+ 516:Source\LwIP\src\core/raw.c ****       }
+ 517:Source\LwIP\src\core/raw.c ****     }
+ 518:Source\LwIP\src\core/raw.c ****   }
+ 519:Source\LwIP\src\core/raw.c **** }
+ 814              		.loc 1 519 0 is_stmt 1
+ 815              		@ sp needed
+ 816 002e 10BD     		pop	{r4, pc}
+ 817              	.L66:
+ 818              		.align	2
+ 819              	.L65:
+ 820 0030 00000000 		.word	.LANCHOR0
+ 821              		.cfi_endproc
+ 822              	.LFE63:
+ 823              		.size	raw_netif_ip_addr_changed, .-raw_netif_ip_addr_changed
+ 824              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 825              		.align	2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 25
+
+
+ 826              	.LC5:
+ 827 0000 536F7572 		.ascii	"Source\\LwIP\\src\\core\\raw.c\000"
+ 827      63655C4C 
+ 827      7749505C 
+ 827      7372635C 
+ 827      636F7265 
+ 828              		.bss
+ 829              		.align	2
+ 830              		.set	.LANCHOR0,. + 0
+ 831              		.type	raw_pcbs, %object
+ 832              		.size	raw_pcbs, 4
+ 833              	raw_pcbs:
+ 834 0000 00000000 		.space	4
+ 835              		.text
+ 836              	.Letext0:
+ 837              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 838              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 839              		.file 4 ".\\Source\\LwIP\\src\\include/arch/cc.h"
+ 840              		.file 5 ".\\Source\\LwIP\\src\\include/lwip/ip4_addr.h"
+ 841              		.file 6 ".\\Source\\LwIP\\src\\include/lwip/ip_addr.h"
+ 842              		.file 7 ".\\Source\\LwIP\\src\\include/lwip/err.h"
+ 843              		.file 8 ".\\Source\\LwIP\\src\\include/lwip/memp.h"
+ 844              		.file 9 ".\\Source\\LwIP\\src\\include/lwip/pbuf.h"
+ 845              		.file 10 ".\\Source\\LwIP\\src\\include/lwip/netif.h"
+ 846              		.file 11 ".\\Source\\LwIP\\src\\include/lwip/prot/ip4.h"
+ 847              		.file 12 ".\\Source\\LwIP\\src\\include/lwip/ip.h"
+ 848              		.file 13 ".\\Source\\LwIP\\src\\include/lwip/raw.h"
+ 849              		.file 14 ".\\Source\\LwIP\\src\\include/lwip/ip4.h"
+ 850              		.section	.debug_info,"",%progbits
+ 851              	.Ldebug_info0:
+ 852 0000 F20B0000 		.4byte	0xbf2
+ 853 0004 0400     		.2byte	0x4
+ 854 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 855 000a 04       		.byte	0x4
+ 856 000b 01       		.uleb128 0x1
+ 857 000c C3060000 		.4byte	.LASF160
+ 858 0010 0C       		.byte	0xc
+ 859 0011 46020000 		.4byte	.LASF161
+ 860 0015 35040000 		.4byte	.LASF162
+ 861 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 862 001d 00000000 		.4byte	0
+ 863 0021 00000000 		.4byte	.Ldebug_line0
+ 864 0025 02       		.uleb128 0x2
+ 865 0026 01       		.byte	0x1
+ 866 0027 06       		.byte	0x6
+ 867 0028 66000000 		.4byte	.LASF0
+ 868 002c 02       		.uleb128 0x2
+ 869 002d 01       		.byte	0x1
+ 870 002e 08       		.byte	0x8
+ 871 002f 73050000 		.4byte	.LASF1
+ 872 0033 02       		.uleb128 0x2
+ 873 0034 02       		.byte	0x2
+ 874 0035 05       		.byte	0x5
+ 875 0036 D6050000 		.4byte	.LASF2
+ 876 003a 02       		.uleb128 0x2
+ 877 003b 02       		.byte	0x2
+ 878 003c 07       		.byte	0x7
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 26
+
+
+ 879 003d 1D030000 		.4byte	.LASF3
+ 880 0041 02       		.uleb128 0x2
+ 881 0042 04       		.byte	0x4
+ 882 0043 05       		.byte	0x5
+ 883 0044 4C010000 		.4byte	.LASF4
+ 884 0048 03       		.uleb128 0x3
+ 885 0049 27020000 		.4byte	.LASF12
+ 886 004d 02       		.byte	0x2
+ 887 004e 41       		.byte	0x41
+ 888 004f 53000000 		.4byte	0x53
+ 889 0053 02       		.uleb128 0x2
+ 890 0054 04       		.byte	0x4
+ 891 0055 07       		.byte	0x7
+ 892 0056 C6020000 		.4byte	.LASF5
+ 893 005a 02       		.uleb128 0x2
+ 894 005b 08       		.byte	0x8
+ 895 005c 05       		.byte	0x5
+ 896 005d F4000000 		.4byte	.LASF6
+ 897 0061 02       		.uleb128 0x2
+ 898 0062 08       		.byte	0x8
+ 899 0063 07       		.byte	0x7
+ 900 0064 91000000 		.4byte	.LASF7
+ 901 0068 04       		.uleb128 0x4
+ 902 0069 04       		.byte	0x4
+ 903 006a 05       		.byte	0x5
+ 904 006b 696E7400 		.ascii	"int\000"
+ 905 006f 02       		.uleb128 0x2
+ 906 0070 04       		.byte	0x4
+ 907 0071 07       		.byte	0x7
+ 908 0072 66070000 		.4byte	.LASF8
+ 909 0076 02       		.uleb128 0x2
+ 910 0077 08       		.byte	0x8
+ 911 0078 04       		.byte	0x4
+ 912 0079 55070000 		.4byte	.LASF9
+ 913 007d 05       		.uleb128 0x5
+ 914 007e 04       		.byte	0x4
+ 915 007f 02       		.uleb128 0x2
+ 916 0080 04       		.byte	0x4
+ 917 0081 07       		.byte	0x7
+ 918 0082 07040000 		.4byte	.LASF10
+ 919 0086 02       		.uleb128 0x2
+ 920 0087 01       		.byte	0x1
+ 921 0088 08       		.byte	0x8
+ 922 0089 61070000 		.4byte	.LASF11
+ 923 008d 06       		.uleb128 0x6
+ 924 008e 04       		.byte	0x4
+ 925 008f 93000000 		.4byte	0x93
+ 926 0093 07       		.uleb128 0x7
+ 927 0094 86000000 		.4byte	0x86
+ 928 0098 03       		.uleb128 0x3
+ 929 0099 B1060000 		.4byte	.LASF13
+ 930 009d 03       		.byte	0x3
+ 931 009e 30       		.byte	0x30
+ 932 009f 48000000 		.4byte	0x48
+ 933 00a3 02       		.uleb128 0x2
+ 934 00a4 04       		.byte	0x4
+ 935 00a5 04       		.byte	0x4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 27
+
+
+ 936 00a6 46080000 		.4byte	.LASF14
+ 937 00aa 02       		.uleb128 0x2
+ 938 00ab 08       		.byte	0x8
+ 939 00ac 04       		.byte	0x4
+ 940 00ad F2010000 		.4byte	.LASF15
+ 941 00b1 08       		.uleb128 0x8
+ 942 00b2 7D000000 		.4byte	0x7d
+ 943 00b6 C1000000 		.4byte	0xc1
+ 944 00ba 09       		.uleb128 0x9
+ 945 00bb 7F000000 		.4byte	0x7f
+ 946 00bf 01       		.byte	0x1
+ 947 00c0 00       		.byte	0
+ 948 00c1 03       		.uleb128 0x3
+ 949 00c2 9C020000 		.4byte	.LASF16
+ 950 00c6 04       		.byte	0x4
+ 951 00c7 31       		.byte	0x31
+ 952 00c8 2C000000 		.4byte	0x2c
+ 953 00cc 03       		.uleb128 0x3
+ 954 00cd 76060000 		.4byte	.LASF17
+ 955 00d1 04       		.byte	0x4
+ 956 00d2 32       		.byte	0x32
+ 957 00d3 25000000 		.4byte	0x25
+ 958 00d7 03       		.uleb128 0x3
+ 959 00d8 F6070000 		.4byte	.LASF18
+ 960 00dc 04       		.byte	0x4
+ 961 00dd 33       		.byte	0x33
+ 962 00de 3A000000 		.4byte	0x3a
+ 963 00e2 03       		.uleb128 0x3
+ 964 00e3 4E050000 		.4byte	.LASF19
+ 965 00e7 04       		.byte	0x4
+ 966 00e8 34       		.byte	0x34
+ 967 00e9 33000000 		.4byte	0x33
+ 968 00ed 03       		.uleb128 0x3
+ 969 00ee E4020000 		.4byte	.LASF20
+ 970 00f2 04       		.byte	0x4
+ 971 00f3 35       		.byte	0x35
+ 972 00f4 53000000 		.4byte	0x53
+ 973 00f8 0A       		.uleb128 0xa
+ 974 00f9 01       		.byte	0x1
+ 975 00fa 2C000000 		.4byte	0x2c
+ 976 00fe 08       		.byte	0x8
+ 977 00ff 34       		.byte	0x34
+ 978 0100 6B010000 		.4byte	0x16b
+ 979 0104 0B       		.uleb128 0xb
+ 980 0105 6C010000 		.4byte	.LASF21
+ 981 0109 00       		.byte	0
+ 982 010a 0B       		.uleb128 0xb
+ 983 010b 06020000 		.4byte	.LASF22
+ 984 010f 01       		.byte	0x1
+ 985 0110 0B       		.uleb128 0xb
+ 986 0111 02030000 		.4byte	.LASF23
+ 987 0115 02       		.byte	0x2
+ 988 0116 0B       		.uleb128 0xb
+ 989 0117 32020000 		.4byte	.LASF24
+ 990 011b 03       		.byte	0x3
+ 991 011c 0B       		.uleb128 0xb
+ 992 011d BB000000 		.4byte	.LASF25
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 28
+
+
+ 993 0121 04       		.byte	0x4
+ 994 0122 0B       		.uleb128 0xb
+ 995 0123 81020000 		.4byte	.LASF26
+ 996 0127 05       		.byte	0x5
+ 997 0128 0B       		.uleb128 0xb
+ 998 0129 75020000 		.4byte	.LASF27
+ 999 012d 06       		.byte	0x6
+ 1000 012e 0B       		.uleb128 0xb
+ 1001 012f 1B080000 		.4byte	.LASF28
+ 1002 0133 07       		.byte	0x7
+ 1003 0134 0B       		.uleb128 0xb
+ 1004 0135 62030000 		.4byte	.LASF29
+ 1005 0139 08       		.byte	0x8
+ 1006 013a 0B       		.uleb128 0xb
+ 1007 013b AB070000 		.4byte	.LASF30
+ 1008 013f 09       		.byte	0x9
+ 1009 0140 0B       		.uleb128 0xb
+ 1010 0141 E5000000 		.4byte	.LASF31
+ 1011 0145 0A       		.byte	0xa
+ 1012 0146 0B       		.uleb128 0xb
+ 1013 0147 A1020000 		.4byte	.LASF32
+ 1014 014b 0B       		.byte	0xb
+ 1015 014c 0B       		.uleb128 0xb
+ 1016 014d 19000000 		.4byte	.LASF33
+ 1017 0151 0C       		.byte	0xc
+ 1018 0152 0B       		.uleb128 0xb
+ 1019 0153 48000000 		.4byte	.LASF34
+ 1020 0157 0D       		.byte	0xd
+ 1021 0158 0B       		.uleb128 0xb
+ 1022 0159 BC020000 		.4byte	.LASF35
+ 1023 015d 0E       		.byte	0xe
+ 1024 015e 0B       		.uleb128 0xb
+ 1025 015f 89070000 		.4byte	.LASF36
+ 1026 0163 0F       		.byte	0xf
+ 1027 0164 0B       		.uleb128 0xb
+ 1028 0165 E0030000 		.4byte	.LASF37
+ 1029 0169 10       		.byte	0x10
+ 1030 016a 00       		.byte	0
+ 1031 016b 0C       		.uleb128 0xc
+ 1032 016c 79010000 		.4byte	.LASF67
+ 1033 0170 04       		.byte	0x4
+ 1034 0171 05       		.byte	0x5
+ 1035 0172 33       		.byte	0x33
+ 1036 0173 84010000 		.4byte	0x184
+ 1037 0177 0D       		.uleb128 0xd
+ 1038 0178 A8000000 		.4byte	.LASF69
+ 1039 017c 05       		.byte	0x5
+ 1040 017d 34       		.byte	0x34
+ 1041 017e ED000000 		.4byte	0xed
+ 1042 0182 00       		.byte	0
+ 1043 0183 00       		.byte	0
+ 1044 0184 03       		.uleb128 0x3
+ 1045 0185 EB070000 		.4byte	.LASF38
+ 1046 0189 05       		.byte	0x5
+ 1047 018a 39       		.byte	0x39
+ 1048 018b 6B010000 		.4byte	0x16b
+ 1049 018f 03       		.uleb128 0x3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 29
+
+
+ 1050 0190 F7030000 		.4byte	.LASF39
+ 1051 0194 06       		.byte	0x6
+ 1052 0195 F4       		.byte	0xf4
+ 1053 0196 84010000 		.4byte	0x184
+ 1054 019a 03       		.uleb128 0x3
+ 1055 019b 01040000 		.4byte	.LASF40
+ 1056 019f 07       		.byte	0x7
+ 1057 01a0 39       		.byte	0x39
+ 1058 01a1 CC000000 		.4byte	0xcc
+ 1059 01a5 0A       		.uleb128 0xa
+ 1060 01a6 01       		.byte	0x1
+ 1061 01a7 25000000 		.4byte	0x25
+ 1062 01ab 07       		.byte	0x7
+ 1063 01ac 3D       		.byte	0x3d
+ 1064 01ad 18020000 		.4byte	0x218
+ 1065 01b1 0B       		.uleb128 0xb
+ 1066 01b2 41000000 		.4byte	.LASF41
+ 1067 01b6 00       		.byte	0
+ 1068 01b7 0E       		.uleb128 0xe
+ 1069 01b8 73070000 		.4byte	.LASF42
+ 1070 01bc 7F       		.sleb128 -1
+ 1071 01bd 0E       		.uleb128 0xe
+ 1072 01be FC070000 		.4byte	.LASF43
+ 1073 01c2 7E       		.sleb128 -2
+ 1074 01c3 0E       		.uleb128 0xe
+ 1075 01c4 90020000 		.4byte	.LASF44
+ 1076 01c8 7D       		.sleb128 -3
+ 1077 01c9 0E       		.uleb128 0xe
+ 1078 01ca DD070000 		.4byte	.LASF45
+ 1079 01ce 7C       		.sleb128 -4
+ 1080 01cf 0E       		.uleb128 0xe
+ 1081 01d0 3F050000 		.4byte	.LASF46
+ 1082 01d4 7B       		.sleb128 -5
+ 1083 01d5 0E       		.uleb128 0xe
+ 1084 01d6 62050000 		.4byte	.LASF47
+ 1085 01da 7A       		.sleb128 -6
+ 1086 01db 0E       		.uleb128 0xe
+ 1087 01dc 57080000 		.4byte	.LASF48
+ 1088 01e0 79       		.sleb128 -7
+ 1089 01e1 0E       		.uleb128 0xe
+ 1090 01e2 0B010000 		.4byte	.LASF49
+ 1091 01e6 78       		.sleb128 -8
+ 1092 01e7 0E       		.uleb128 0xe
+ 1093 01e8 D8020000 		.4byte	.LASF50
+ 1094 01ec 77       		.sleb128 -9
+ 1095 01ed 0E       		.uleb128 0xe
+ 1096 01ee 0B080000 		.4byte	.LASF51
+ 1097 01f2 76       		.sleb128 -10
+ 1098 01f3 0E       		.uleb128 0xe
+ 1099 01f4 A2050000 		.4byte	.LASF52
+ 1100 01f8 75       		.sleb128 -11
+ 1101 01f9 0E       		.uleb128 0xe
+ 1102 01fa EB010000 		.4byte	.LASF53
+ 1103 01fe 74       		.sleb128 -12
+ 1104 01ff 0E       		.uleb128 0xe
+ 1105 0200 BA060000 		.4byte	.LASF54
+ 1106 0204 73       		.sleb128 -13
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 30
+
+
+ 1107 0205 0E       		.uleb128 0xe
+ 1108 0206 A9060000 		.4byte	.LASF55
+ 1109 020a 72       		.sleb128 -14
+ 1110 020b 0E       		.uleb128 0xe
+ 1111 020c D4070000 		.4byte	.LASF56
+ 1112 0210 71       		.sleb128 -15
+ 1113 0211 0E       		.uleb128 0xe
+ 1114 0212 81050000 		.4byte	.LASF57
+ 1115 0216 70       		.sleb128 -16
+ 1116 0217 00       		.byte	0
+ 1117 0218 0A       		.uleb128 0xa
+ 1118 0219 01       		.byte	0x1
+ 1119 021a 2C000000 		.4byte	0x2c
+ 1120 021e 09       		.byte	0x9
+ 1121 021f 48       		.byte	0x48
+ 1122 0220 43020000 		.4byte	0x243
+ 1123 0224 0B       		.uleb128 0xb
+ 1124 0225 8A030000 		.4byte	.LASF58
+ 1125 0229 00       		.byte	0
+ 1126 022a 0B       		.uleb128 0xb
+ 1127 022b 55010000 		.4byte	.LASF59
+ 1128 022f 01       		.byte	0x1
+ 1129 0230 0B       		.uleb128 0xb
+ 1130 0231 35050000 		.4byte	.LASF60
+ 1131 0235 02       		.byte	0x2
+ 1132 0236 0B       		.uleb128 0xb
+ 1133 0237 66080000 		.4byte	.LASF61
+ 1134 023b 03       		.byte	0x3
+ 1135 023c 0B       		.uleb128 0xb
+ 1136 023d 7B060000 		.4byte	.LASF62
+ 1137 0241 04       		.byte	0x4
+ 1138 0242 00       		.byte	0
+ 1139 0243 0A       		.uleb128 0xa
+ 1140 0244 01       		.byte	0x1
+ 1141 0245 2C000000 		.4byte	0x2c
+ 1142 0249 09       		.byte	0x9
+ 1143 024a 65       		.byte	0x65
+ 1144 024b 68020000 		.4byte	0x268
+ 1145 024f 0B       		.uleb128 0xb
+ 1146 0250 19060000 		.4byte	.LASF63
+ 1147 0254 00       		.byte	0
+ 1148 0255 0B       		.uleb128 0xb
+ 1149 0256 06050000 		.4byte	.LASF64
+ 1150 025a 01       		.byte	0x1
+ 1151 025b 0B       		.uleb128 0xb
+ 1152 025c A8010000 		.4byte	.LASF65
+ 1153 0260 02       		.byte	0x2
+ 1154 0261 0B       		.uleb128 0xb
+ 1155 0262 62010000 		.4byte	.LASF66
+ 1156 0266 03       		.byte	0x3
+ 1157 0267 00       		.byte	0
+ 1158 0268 0C       		.uleb128 0xc
+ 1159 0269 33000000 		.4byte	.LASF68
+ 1160 026d 10       		.byte	0x10
+ 1161 026e 09       		.byte	0x9
+ 1162 026f 8E       		.byte	0x8e
+ 1163 0270 C9020000 		.4byte	0x2c9
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 31
+
+
+ 1164 0274 0D       		.uleb128 0xd
+ 1165 0275 D0000000 		.4byte	.LASF70
+ 1166 0279 09       		.byte	0x9
+ 1167 027a 90       		.byte	0x90
+ 1168 027b C9020000 		.4byte	0x2c9
+ 1169 027f 00       		.byte	0
+ 1170 0280 0D       		.uleb128 0xd
+ 1171 0281 EA040000 		.4byte	.LASF71
+ 1172 0285 09       		.byte	0x9
+ 1173 0286 93       		.byte	0x93
+ 1174 0287 7D000000 		.4byte	0x7d
+ 1175 028b 04       		.byte	0x4
+ 1176 028c 0D       		.uleb128 0xd
+ 1177 028d 34010000 		.4byte	.LASF72
+ 1178 0291 09       		.byte	0x9
+ 1179 0292 9C       		.byte	0x9c
+ 1180 0293 D7000000 		.4byte	0xd7
+ 1181 0297 08       		.byte	0x8
+ 1182 0298 0F       		.uleb128 0xf
+ 1183 0299 6C656E00 		.ascii	"len\000"
+ 1184 029d 09       		.byte	0x9
+ 1185 029e 9F       		.byte	0x9f
+ 1186 029f D7000000 		.4byte	0xd7
+ 1187 02a3 0A       		.byte	0xa
+ 1188 02a4 0D       		.uleb128 0xd
+ 1189 02a5 81000000 		.4byte	.LASF73
+ 1190 02a9 09       		.byte	0x9
+ 1191 02aa A2       		.byte	0xa2
+ 1192 02ab C1000000 		.4byte	0xc1
+ 1193 02af 0C       		.byte	0xc
+ 1194 02b0 0D       		.uleb128 0xd
+ 1195 02b1 40080000 		.4byte	.LASF74
+ 1196 02b5 09       		.byte	0x9
+ 1197 02b6 A5       		.byte	0xa5
+ 1198 02b7 C1000000 		.4byte	0xc1
+ 1199 02bb 0D       		.byte	0xd
+ 1200 02bc 0F       		.uleb128 0xf
+ 1201 02bd 72656600 		.ascii	"ref\000"
+ 1202 02c1 09       		.byte	0x9
+ 1203 02c2 AC       		.byte	0xac
+ 1204 02c3 D7000000 		.4byte	0xd7
+ 1205 02c7 0E       		.byte	0xe
+ 1206 02c8 00       		.byte	0
+ 1207 02c9 06       		.uleb128 0x6
+ 1208 02ca 04       		.byte	0x4
+ 1209 02cb 68020000 		.4byte	0x268
+ 1210 02cf 10       		.uleb128 0x10
+ 1211 02d0 82010000 		.4byte	.LASF78
+ 1212 02d4 01       		.byte	0x1
+ 1213 02d5 2C000000 		.4byte	0x2c
+ 1214 02d9 0A       		.byte	0xa
+ 1215 02da 6B       		.byte	0x6b
+ 1216 02db F2020000 		.4byte	0x2f2
+ 1217 02df 0B       		.uleb128 0xb
+ 1218 02e0 2E060000 		.4byte	.LASF75
+ 1219 02e4 00       		.byte	0
+ 1220 02e5 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 32
+
+
+ 1221 02e6 B4050000 		.4byte	.LASF76
+ 1222 02ea 01       		.byte	0x1
+ 1223 02eb 0B       		.uleb128 0xb
+ 1224 02ec CA010000 		.4byte	.LASF77
+ 1225 02f0 02       		.byte	0x2
+ 1226 02f1 00       		.byte	0
+ 1227 02f2 10       		.uleb128 0x10
+ 1228 02f3 BE030000 		.4byte	.LASF79
+ 1229 02f7 01       		.byte	0x1
+ 1230 02f8 2C000000 		.4byte	0x2c
+ 1231 02fc 0A       		.byte	0xa
+ 1232 02fd 8F       		.byte	0x8f
+ 1233 02fe 0F030000 		.4byte	0x30f
+ 1234 0302 0B       		.uleb128 0xb
+ 1235 0303 75030000 		.4byte	.LASF80
+ 1236 0307 00       		.byte	0
+ 1237 0308 0B       		.uleb128 0xb
+ 1238 0309 94060000 		.4byte	.LASF81
+ 1239 030d 01       		.byte	0x1
+ 1240 030e 00       		.byte	0
+ 1241 030f 06       		.uleb128 0x6
+ 1242 0310 04       		.byte	0x4
+ 1243 0311 15030000 		.4byte	0x315
+ 1244 0315 0C       		.uleb128 0xc
+ 1245 0316 E5070000 		.4byte	.LASF82
+ 1246 031a 48       		.byte	0x48
+ 1247 031b 0A       		.byte	0xa
+ 1248 031c E1       		.byte	0xe1
+ 1249 031d 11040000 		.4byte	0x411
+ 1250 0321 0D       		.uleb128 0xd
+ 1251 0322 D0000000 		.4byte	.LASF70
+ 1252 0326 0A       		.byte	0xa
+ 1253 0327 E3       		.byte	0xe3
+ 1254 0328 0F030000 		.4byte	0x30f
+ 1255 032c 00       		.byte	0
+ 1256 032d 0D       		.uleb128 0xd
+ 1257 032e FE040000 		.4byte	.LASF83
+ 1258 0332 0A       		.byte	0xa
+ 1259 0333 E7       		.byte	0xe7
+ 1260 0334 8F010000 		.4byte	0x18f
+ 1261 0338 04       		.byte	0x4
+ 1262 0339 0D       		.uleb128 0xd
+ 1263 033a 13020000 		.4byte	.LASF84
+ 1264 033e 0A       		.byte	0xa
+ 1265 033f E8       		.byte	0xe8
+ 1266 0340 8F010000 		.4byte	0x18f
+ 1267 0344 08       		.byte	0x8
+ 1268 0345 0F       		.uleb128 0xf
+ 1269 0346 677700   		.ascii	"gw\000"
+ 1270 0349 0A       		.byte	0xa
+ 1271 034a E9       		.byte	0xe9
+ 1272 034b 8F010000 		.4byte	0x18f
+ 1273 034f 0C       		.byte	0xc
+ 1274 0350 0D       		.uleb128 0xd
+ 1275 0351 28060000 		.4byte	.LASF85
+ 1276 0355 0A       		.byte	0xa
+ 1277 0356 F4       		.byte	0xf4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 33
+
+
+ 1278 0357 11040000 		.4byte	0x411
+ 1279 035b 10       		.byte	0x10
+ 1280 035c 0D       		.uleb128 0xd
+ 1281 035d 5B050000 		.4byte	.LASF86
+ 1282 0361 0A       		.byte	0xa
+ 1283 0362 FA       		.byte	0xfa
+ 1284 0363 36040000 		.4byte	0x436
+ 1285 0367 14       		.byte	0x14
+ 1286 0368 0D       		.uleb128 0xd
+ 1287 0369 7B080000 		.4byte	.LASF87
+ 1288 036d 0A       		.byte	0xa
+ 1289 036e FF       		.byte	0xff
+ 1290 036f 6B040000 		.4byte	0x46b
+ 1291 0373 18       		.byte	0x18
+ 1292 0374 11       		.uleb128 0x11
+ 1293 0375 09060000 		.4byte	.LASF88
+ 1294 0379 0A       		.byte	0xa
+ 1295 037a 0A01     		.2byte	0x10a
+ 1296 037c 90040000 		.4byte	0x490
+ 1297 0380 1C       		.byte	0x1c
+ 1298 0381 11       		.uleb128 0x11
+ 1299 0382 3C010000 		.4byte	.LASF89
+ 1300 0386 0A       		.byte	0xa
+ 1301 0387 1701     		.2byte	0x117
+ 1302 0389 7D000000 		.4byte	0x7d
+ 1303 038d 20       		.byte	0x20
+ 1304 038e 11       		.uleb128 0x11
+ 1305 038f C0070000 		.4byte	.LASF90
+ 1306 0393 0A       		.byte	0xa
+ 1307 0394 1901     		.2byte	0x119
+ 1308 0396 B1000000 		.4byte	0xb1
+ 1309 039a 24       		.byte	0x24
+ 1310 039b 11       		.uleb128 0x11
+ 1311 039c 38000000 		.4byte	.LASF91
+ 1312 03a0 0A       		.byte	0xa
+ 1313 03a1 2101     		.2byte	0x121
+ 1314 03a3 C1000000 		.4byte	0xc1
+ 1315 03a7 2C       		.byte	0x2c
+ 1316 03a8 11       		.uleb128 0x11
+ 1317 03a9 72080000 		.4byte	.LASF92
+ 1318 03ad 0A       		.byte	0xa
+ 1319 03ae 2501     		.2byte	0x125
+ 1320 03b0 8D000000 		.4byte	0x8d
+ 1321 03b4 30       		.byte	0x30
+ 1322 03b5 12       		.uleb128 0x12
+ 1323 03b6 6D747500 		.ascii	"mtu\000"
+ 1324 03ba 0A       		.byte	0xa
+ 1325 03bb 2B01     		.2byte	0x12b
+ 1326 03bd D7000000 		.4byte	0xd7
+ 1327 03c1 34       		.byte	0x34
+ 1328 03c2 11       		.uleb128 0x11
+ 1329 03c3 86000000 		.4byte	.LASF93
+ 1330 03c7 0A       		.byte	0xa
+ 1331 03c8 2D01     		.2byte	0x12d
+ 1332 03ca C1000000 		.4byte	0xc1
+ 1333 03ce 36       		.byte	0x36
+ 1334 03cf 11       		.uleb128 0x11
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 34
+
+
+ 1335 03d0 2D010000 		.4byte	.LASF94
+ 1336 03d4 0A       		.byte	0xa
+ 1337 03d5 2F01     		.2byte	0x12f
+ 1338 03d7 D6040000 		.4byte	0x4d6
+ 1339 03db 37       		.byte	0x37
+ 1340 03dc 11       		.uleb128 0x11
+ 1341 03dd 40080000 		.4byte	.LASF74
+ 1342 03e1 0A       		.byte	0xa
+ 1343 03e2 3101     		.2byte	0x131
+ 1344 03e4 C1000000 		.4byte	0xc1
+ 1345 03e8 3D       		.byte	0x3d
+ 1346 03e9 11       		.uleb128 0x11
+ 1347 03ea F5020000 		.4byte	.LASF95
+ 1348 03ee 0A       		.byte	0xa
+ 1349 03ef 3301     		.2byte	0x133
+ 1350 03f1 E6040000 		.4byte	0x4e6
+ 1351 03f5 3E       		.byte	0x3e
+ 1352 03f6 12       		.uleb128 0x12
+ 1353 03f7 6E756D00 		.ascii	"num\000"
+ 1354 03fb 0A       		.byte	0xa
+ 1355 03fc 3501     		.2byte	0x135
+ 1356 03fe C1000000 		.4byte	0xc1
+ 1357 0402 40       		.byte	0x40
+ 1358 0403 11       		.uleb128 0x11
+ 1359 0404 DA040000 		.4byte	.LASF96
+ 1360 0408 0A       		.byte	0xa
+ 1361 0409 4301     		.2byte	0x143
+ 1362 040b AC040000 		.4byte	0x4ac
+ 1363 040f 44       		.byte	0x44
+ 1364 0410 00       		.byte	0
+ 1365 0411 03       		.uleb128 0x3
+ 1366 0412 26050000 		.4byte	.LASF97
+ 1367 0416 0A       		.byte	0xa
+ 1368 0417 A2       		.byte	0xa2
+ 1369 0418 1C040000 		.4byte	0x41c
+ 1370 041c 06       		.uleb128 0x6
+ 1371 041d 04       		.byte	0x4
+ 1372 041e 22040000 		.4byte	0x422
+ 1373 0422 13       		.uleb128 0x13
+ 1374 0423 9A010000 		.4byte	0x19a
+ 1375 0427 36040000 		.4byte	0x436
+ 1376 042b 14       		.uleb128 0x14
+ 1377 042c C9020000 		.4byte	0x2c9
+ 1378 0430 14       		.uleb128 0x14
+ 1379 0431 0F030000 		.4byte	0x30f
+ 1380 0435 00       		.byte	0
+ 1381 0436 03       		.uleb128 0x3
+ 1382 0437 E0050000 		.4byte	.LASF98
+ 1383 043b 0A       		.byte	0xa
+ 1384 043c AD       		.byte	0xad
+ 1385 043d 41040000 		.4byte	0x441
+ 1386 0441 06       		.uleb128 0x6
+ 1387 0442 04       		.byte	0x4
+ 1388 0443 47040000 		.4byte	0x447
+ 1389 0447 13       		.uleb128 0x13
+ 1390 0448 9A010000 		.4byte	0x19a
+ 1391 044c 60040000 		.4byte	0x460
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 35
+
+
+ 1392 0450 14       		.uleb128 0x14
+ 1393 0451 0F030000 		.4byte	0x30f
+ 1394 0455 14       		.uleb128 0x14
+ 1395 0456 C9020000 		.4byte	0x2c9
+ 1396 045a 14       		.uleb128 0x14
+ 1397 045b 60040000 		.4byte	0x460
+ 1398 045f 00       		.byte	0
+ 1399 0460 06       		.uleb128 0x6
+ 1400 0461 04       		.byte	0x4
+ 1401 0462 66040000 		.4byte	0x466
+ 1402 0466 07       		.uleb128 0x7
+ 1403 0467 84010000 		.4byte	0x184
+ 1404 046b 03       		.uleb128 0x3
+ 1405 046c 10040000 		.4byte	.LASF99
+ 1406 0470 0A       		.byte	0xa
+ 1407 0471 C4       		.byte	0xc4
+ 1408 0472 76040000 		.4byte	0x476
+ 1409 0476 06       		.uleb128 0x6
+ 1410 0477 04       		.byte	0x4
+ 1411 0478 7C040000 		.4byte	0x47c
+ 1412 047c 13       		.uleb128 0x13
+ 1413 047d 9A010000 		.4byte	0x19a
+ 1414 0481 90040000 		.4byte	0x490
+ 1415 0485 14       		.uleb128 0x14
+ 1416 0486 0F030000 		.4byte	0x30f
+ 1417 048a 14       		.uleb128 0x14
+ 1418 048b C9020000 		.4byte	0x2c9
+ 1419 048f 00       		.byte	0
+ 1420 0490 03       		.uleb128 0x3
+ 1421 0491 F0050000 		.4byte	.LASF100
+ 1422 0495 0A       		.byte	0xa
+ 1423 0496 C6       		.byte	0xc6
+ 1424 0497 9B040000 		.4byte	0x49b
+ 1425 049b 06       		.uleb128 0x6
+ 1426 049c 04       		.byte	0x4
+ 1427 049d A1040000 		.4byte	0x4a1
+ 1428 04a1 15       		.uleb128 0x15
+ 1429 04a2 AC040000 		.4byte	0x4ac
+ 1430 04a6 14       		.uleb128 0x14
+ 1431 04a7 0F030000 		.4byte	0x30f
+ 1432 04ab 00       		.byte	0
+ 1433 04ac 03       		.uleb128 0x3
+ 1434 04ad 00000000 		.4byte	.LASF101
+ 1435 04b1 0A       		.byte	0xa
+ 1436 04b2 C9       		.byte	0xc9
+ 1437 04b3 B7040000 		.4byte	0x4b7
+ 1438 04b7 06       		.uleb128 0x6
+ 1439 04b8 04       		.byte	0x4
+ 1440 04b9 BD040000 		.4byte	0x4bd
+ 1441 04bd 13       		.uleb128 0x13
+ 1442 04be 9A010000 		.4byte	0x19a
+ 1443 04c2 D6040000 		.4byte	0x4d6
+ 1444 04c6 14       		.uleb128 0x14
+ 1445 04c7 0F030000 		.4byte	0x30f
+ 1446 04cb 14       		.uleb128 0x14
+ 1447 04cc 60040000 		.4byte	0x460
+ 1448 04d0 14       		.uleb128 0x14
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 36
+
+
+ 1449 04d1 F2020000 		.4byte	0x2f2
+ 1450 04d5 00       		.byte	0
+ 1451 04d6 08       		.uleb128 0x8
+ 1452 04d7 C1000000 		.4byte	0xc1
+ 1453 04db E6040000 		.4byte	0x4e6
+ 1454 04df 09       		.uleb128 0x9
+ 1455 04e0 7F000000 		.4byte	0x7f
+ 1456 04e4 05       		.byte	0x5
+ 1457 04e5 00       		.byte	0
+ 1458 04e6 08       		.uleb128 0x8
+ 1459 04e7 86000000 		.4byte	0x86
+ 1460 04eb F6040000 		.4byte	0x4f6
+ 1461 04ef 09       		.uleb128 0x9
+ 1462 04f0 7F000000 		.4byte	0x7f
+ 1463 04f4 01       		.byte	0x1
+ 1464 04f5 00       		.byte	0
+ 1465 04f6 0C       		.uleb128 0xc
+ 1466 04f7 A2030000 		.4byte	.LASF102
+ 1467 04fb 04       		.byte	0x4
+ 1468 04fc 0B       		.byte	0xb
+ 1469 04fd 35       		.byte	0x35
+ 1470 04fe 0F050000 		.4byte	0x50f
+ 1471 0502 0D       		.uleb128 0xd
+ 1472 0503 A8000000 		.4byte	.LASF69
+ 1473 0507 0B       		.byte	0xb
+ 1474 0508 36       		.byte	0x36
+ 1475 0509 ED000000 		.4byte	0xed
+ 1476 050d 00       		.byte	0
+ 1477 050e 00       		.byte	0
+ 1478 050f 03       		.uleb128 0x3
+ 1479 0510 30030000 		.4byte	.LASF103
+ 1480 0514 0B       		.byte	0xb
+ 1481 0515 3D       		.byte	0x3d
+ 1482 0516 F6040000 		.4byte	0x4f6
+ 1483 051a 0C       		.uleb128 0xc
+ 1484 051b 16030000 		.4byte	.LASF104
+ 1485 051f 14       		.byte	0x14
+ 1486 0520 0B       		.byte	0xb
+ 1487 0521 47       		.byte	0x47
+ 1488 0522 9F050000 		.4byte	0x59f
+ 1489 0526 0D       		.uleb128 0xd
+ 1490 0527 3A080000 		.4byte	.LASF105
+ 1491 052b 0B       		.byte	0xb
+ 1492 052c 49       		.byte	0x49
+ 1493 052d C1000000 		.4byte	0xc1
+ 1494 0531 00       		.byte	0
+ 1495 0532 0D       		.uleb128 0xd
+ 1496 0533 16080000 		.4byte	.LASF106
+ 1497 0537 0B       		.byte	0xb
+ 1498 0538 4B       		.byte	0x4b
+ 1499 0539 C1000000 		.4byte	0xc1
+ 1500 053d 01       		.byte	0x1
+ 1501 053e 0D       		.uleb128 0xd
+ 1502 053f B4080000 		.4byte	.LASF107
+ 1503 0543 0B       		.byte	0xb
+ 1504 0544 4D       		.byte	0x4d
+ 1505 0545 D7000000 		.4byte	0xd7
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 37
+
+
+ 1506 0549 02       		.byte	0x2
+ 1507 054a 0F       		.uleb128 0xf
+ 1508 054b 5F696400 		.ascii	"_id\000"
+ 1509 054f 0B       		.byte	0xb
+ 1510 0550 4F       		.byte	0x4f
+ 1511 0551 D7000000 		.4byte	0xd7
+ 1512 0555 04       		.byte	0x4
+ 1513 0556 0D       		.uleb128 0xd
+ 1514 0557 FE010000 		.4byte	.LASF108
+ 1515 055b 0B       		.byte	0xb
+ 1516 055c 51       		.byte	0x51
+ 1517 055d D7000000 		.4byte	0xd7
+ 1518 0561 06       		.byte	0x6
+ 1519 0562 0D       		.uleb128 0xd
+ 1520 0563 30040000 		.4byte	.LASF109
+ 1521 0567 0B       		.byte	0xb
+ 1522 0568 57       		.byte	0x57
+ 1523 0569 C1000000 		.4byte	0xc1
+ 1524 056d 08       		.byte	0x8
+ 1525 056e 0D       		.uleb128 0xd
+ 1526 056f 0F030000 		.4byte	.LASF110
+ 1527 0573 0B       		.byte	0xb
+ 1528 0574 59       		.byte	0x59
+ 1529 0575 C1000000 		.4byte	0xc1
+ 1530 0579 09       		.byte	0x9
+ 1531 057a 0D       		.uleb128 0xd
+ 1532 057b FA020000 		.4byte	.LASF111
+ 1533 057f 0B       		.byte	0xb
+ 1534 0580 5B       		.byte	0x5b
+ 1535 0581 D7000000 		.4byte	0xd7
+ 1536 0585 0A       		.byte	0xa
+ 1537 0586 0F       		.uleb128 0xf
+ 1538 0587 73726300 		.ascii	"src\000"
+ 1539 058b 0B       		.byte	0xb
+ 1540 058c 5D       		.byte	0x5d
+ 1541 058d 0F050000 		.4byte	0x50f
+ 1542 0591 0C       		.byte	0xc
+ 1543 0592 0D       		.uleb128 0xd
+ 1544 0593 21050000 		.4byte	.LASF112
+ 1545 0597 0B       		.byte	0xb
+ 1546 0598 5E       		.byte	0x5e
+ 1547 0599 0F050000 		.4byte	0x50f
+ 1548 059d 10       		.byte	0x10
+ 1549 059e 00       		.byte	0
+ 1550 059f 0C       		.uleb128 0xc
+ 1551 05a0 4C080000 		.4byte	.LASF113
+ 1552 05a4 18       		.byte	0x18
+ 1553 05a5 0C       		.byte	0xc
+ 1554 05a6 69       		.byte	0x69
+ 1555 05a7 F4050000 		.4byte	0x5f4
+ 1556 05ab 0D       		.uleb128 0xd
+ 1557 05ac AD000000 		.4byte	.LASF114
+ 1558 05b0 0C       		.byte	0xc
+ 1559 05b1 6C       		.byte	0x6c
+ 1560 05b2 0F030000 		.4byte	0x30f
+ 1561 05b6 00       		.byte	0
+ 1562 05b7 0D       		.uleb128 0xd
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 38
+
+
+ 1563 05b8 B1010000 		.4byte	.LASF115
+ 1564 05bc 0C       		.byte	0xc
+ 1565 05bd 6E       		.byte	0x6e
+ 1566 05be 0F030000 		.4byte	0x30f
+ 1567 05c2 04       		.byte	0x4
+ 1568 05c3 0D       		.uleb128 0xd
+ 1569 05c4 98070000 		.4byte	.LASF116
+ 1570 05c8 0C       		.byte	0xc
+ 1571 05c9 71       		.byte	0x71
+ 1572 05ca F4050000 		.4byte	0x5f4
+ 1573 05ce 08       		.byte	0x8
+ 1574 05cf 0D       		.uleb128 0xd
+ 1575 05d0 5C060000 		.4byte	.LASF117
+ 1576 05d4 0C       		.byte	0xc
+ 1577 05d5 78       		.byte	0x78
+ 1578 05d6 D7000000 		.4byte	0xd7
+ 1579 05da 0C       		.byte	0xc
+ 1580 05db 0D       		.uleb128 0xd
+ 1581 05dc 3D030000 		.4byte	.LASF118
+ 1582 05e0 0C       		.byte	0xc
+ 1583 05e1 7A       		.byte	0x7a
+ 1584 05e2 8F010000 		.4byte	0x18f
+ 1585 05e6 10       		.byte	0x10
+ 1586 05e7 0D       		.uleb128 0xd
+ 1587 05e8 53000000 		.4byte	.LASF119
+ 1588 05ec 0C       		.byte	0xc
+ 1589 05ed 7C       		.byte	0x7c
+ 1590 05ee 8F010000 		.4byte	0x18f
+ 1591 05f2 14       		.byte	0x14
+ 1592 05f3 00       		.byte	0
+ 1593 05f4 06       		.uleb128 0x6
+ 1594 05f5 04       		.byte	0x4
+ 1595 05f6 1A050000 		.4byte	0x51a
+ 1596 05fa 03       		.uleb128 0x3
+ 1597 05fb 50060000 		.4byte	.LASF120
+ 1598 05ff 0D       		.byte	0xd
+ 1599 0600 43       		.byte	0x43
+ 1600 0601 05060000 		.4byte	0x605
+ 1601 0605 06       		.uleb128 0x6
+ 1602 0606 04       		.byte	0x4
+ 1603 0607 0B060000 		.4byte	0x60b
+ 1604 060b 13       		.uleb128 0x13
+ 1605 060c C1000000 		.4byte	0xc1
+ 1606 0610 29060000 		.4byte	0x629
+ 1607 0614 14       		.uleb128 0x14
+ 1608 0615 7D000000 		.4byte	0x7d
+ 1609 0619 14       		.uleb128 0x14
+ 1610 061a 29060000 		.4byte	0x629
+ 1611 061e 14       		.uleb128 0x14
+ 1612 061f C9020000 		.4byte	0x2c9
+ 1613 0623 14       		.uleb128 0x14
+ 1614 0624 A8060000 		.4byte	0x6a8
+ 1615 0628 00       		.byte	0
+ 1616 0629 06       		.uleb128 0x6
+ 1617 062a 04       		.byte	0x4
+ 1618 062b 2F060000 		.4byte	0x62f
+ 1619 062f 0C       		.uleb128 0xc
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 39
+
+
+ 1620 0630 C8000000 		.4byte	.LASF121
+ 1621 0634 1C       		.byte	0x1c
+ 1622 0635 0D       		.byte	0xd
+ 1623 0636 47       		.byte	0x47
+ 1624 0637 A8060000 		.4byte	0x6a8
+ 1625 063b 0D       		.uleb128 0xd
+ 1626 063c AB050000 		.4byte	.LASF122
+ 1627 0640 0D       		.byte	0xd
+ 1628 0641 49       		.byte	0x49
+ 1629 0642 8F010000 		.4byte	0x18f
+ 1630 0646 00       		.byte	0
+ 1631 0647 0D       		.uleb128 0xd
+ 1632 0648 86080000 		.4byte	.LASF123
+ 1633 064c 0D       		.byte	0xd
+ 1634 064d 49       		.byte	0x49
+ 1635 064e 8F010000 		.4byte	0x18f
+ 1636 0652 04       		.byte	0x4
+ 1637 0653 0D       		.uleb128 0xd
+ 1638 0654 EA020000 		.4byte	.LASF124
+ 1639 0658 0D       		.byte	0xd
+ 1640 0659 49       		.byte	0x49
+ 1641 065a C1000000 		.4byte	0xc1
+ 1642 065e 08       		.byte	0x8
+ 1643 065f 0F       		.uleb128 0xf
+ 1644 0660 746F7300 		.ascii	"tos\000"
+ 1645 0664 0D       		.byte	0xd
+ 1646 0665 49       		.byte	0x49
+ 1647 0666 C1000000 		.4byte	0xc1
+ 1648 066a 09       		.byte	0x9
+ 1649 066b 0F       		.uleb128 0xf
+ 1650 066c 74746C00 		.ascii	"ttl\000"
+ 1651 0670 0D       		.byte	0xd
+ 1652 0671 49       		.byte	0x49
+ 1653 0672 C1000000 		.4byte	0xc1
+ 1654 0676 0A       		.byte	0xa
+ 1655 0677 0D       		.uleb128 0xd
+ 1656 0678 D0000000 		.4byte	.LASF70
+ 1657 067c 0D       		.byte	0xd
+ 1658 067d 4B       		.byte	0x4b
+ 1659 067e 29060000 		.4byte	0x629
+ 1660 0682 0C       		.byte	0xc
+ 1661 0683 0D       		.uleb128 0xd
+ 1662 0684 6A050000 		.4byte	.LASF125
+ 1663 0688 0D       		.byte	0xd
+ 1664 0689 4D       		.byte	0x4d
+ 1665 068a C1000000 		.4byte	0xc1
+ 1666 068e 10       		.byte	0x10
+ 1667 068f 0D       		.uleb128 0xd
+ 1668 0690 C5010000 		.4byte	.LASF126
+ 1669 0694 0D       		.byte	0xd
+ 1670 0695 50       		.byte	0x50
+ 1671 0696 FA050000 		.4byte	0x5fa
+ 1672 069a 14       		.byte	0x14
+ 1673 069b 0D       		.uleb128 0xd
+ 1674 069c 99030000 		.4byte	.LASF127
+ 1675 06a0 0D       		.byte	0xd
+ 1676 06a1 52       		.byte	0x52
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 40
+
+
+ 1677 06a2 7D000000 		.4byte	0x7d
+ 1678 06a6 18       		.byte	0x18
+ 1679 06a7 00       		.byte	0
+ 1680 06a8 06       		.uleb128 0x6
+ 1681 06a9 04       		.byte	0x4
+ 1682 06aa AE060000 		.4byte	0x6ae
+ 1683 06ae 07       		.uleb128 0x7
+ 1684 06af 8F010000 		.4byte	0x18f
+ 1685 06b3 16       		.uleb128 0x16
+ 1686 06b4 84060000 		.4byte	.LASF163
+ 1687 06b8 01       		.byte	0x1
+ 1688 06b9 44       		.byte	0x44
+ 1689 06ba C1000000 		.4byte	0xc1
+ 1690 06be 00000000 		.4byte	.LFB53
+ 1691 06c2 40000000 		.4byte	.LFE53-.LFB53
+ 1692 06c6 01       		.uleb128 0x1
+ 1693 06c7 9C       		.byte	0x9c
+ 1694 06c8 E9060000 		.4byte	0x6e9
+ 1695 06cc 17       		.uleb128 0x17
+ 1696 06cd 70636200 		.ascii	"pcb\000"
+ 1697 06d1 01       		.byte	0x1
+ 1698 06d2 44       		.byte	0x44
+ 1699 06d3 29060000 		.4byte	0x629
+ 1700 06d7 00000000 		.4byte	.LLST0
+ 1701 06db 18       		.uleb128 0x18
+ 1702 06dc 42010000 		.4byte	.LASF128
+ 1703 06e0 01       		.byte	0x1
+ 1704 06e1 44       		.byte	0x44
+ 1705 06e2 C1000000 		.4byte	0xc1
+ 1706 06e6 01       		.uleb128 0x1
+ 1707 06e7 51       		.byte	0x51
+ 1708 06e8 00       		.byte	0
+ 1709 06e9 19       		.uleb128 0x19
+ 1710 06ea D6030000 		.4byte	.LASF133
+ 1711 06ee 01       		.byte	0x1
+ 1712 06ef 80       		.byte	0x80
+ 1713 06f0 C1000000 		.4byte	0xc1
+ 1714 06f4 00000000 		.4byte	.LFB54
+ 1715 06f8 94000000 		.4byte	.LFE54-.LFB54
+ 1716 06fc 01       		.uleb128 0x1
+ 1717 06fd 9C       		.byte	0x9c
+ 1718 06fe BD070000 		.4byte	0x7bd
+ 1719 0702 17       		.uleb128 0x17
+ 1720 0703 7000     		.ascii	"p\000"
+ 1721 0705 01       		.byte	0x1
+ 1722 0706 80       		.byte	0x80
+ 1723 0707 C9020000 		.4byte	0x2c9
+ 1724 070b B7000000 		.4byte	.LLST1
+ 1725 070f 17       		.uleb128 0x17
+ 1726 0710 696E7000 		.ascii	"inp\000"
+ 1727 0714 01       		.byte	0x1
+ 1728 0715 80       		.byte	0x80
+ 1729 0716 0F030000 		.4byte	0x30f
+ 1730 071a EC000000 		.4byte	.LLST2
+ 1731 071e 1A       		.uleb128 0x1a
+ 1732 071f 70636200 		.ascii	"pcb\000"
+ 1733 0723 01       		.byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 41
+
+
+ 1734 0724 82       		.byte	0x82
+ 1735 0725 29060000 		.4byte	0x629
+ 1736 0729 0D010000 		.4byte	.LLST3
+ 1737 072d 1B       		.uleb128 0x1b
+ 1738 072e 7C000000 		.4byte	.LASF129
+ 1739 0732 01       		.byte	0x1
+ 1740 0733 82       		.byte	0x82
+ 1741 0734 29060000 		.4byte	0x629
+ 1742 0738 37010000 		.4byte	.LLST4
+ 1743 073c 1B       		.uleb128 0x1b
+ 1744 073d 22060000 		.4byte	.LASF130
+ 1745 0741 01       		.byte	0x1
+ 1746 0742 83       		.byte	0x83
+ 1747 0743 E2000000 		.4byte	0xe2
+ 1748 0747 6C010000 		.4byte	.LLST5
+ 1749 074b 1B       		.uleb128 0x1b
+ 1750 074c 83070000 		.4byte	.LASF131
+ 1751 0750 01       		.byte	0x1
+ 1752 0751 84       		.byte	0x84
+ 1753 0752 C1000000 		.4byte	0xc1
+ 1754 0756 84010000 		.4byte	.LLST6
+ 1755 075a 1B       		.uleb128 0x1b
+ 1756 075b 42010000 		.4byte	.LASF128
+ 1757 075f 01       		.byte	0x1
+ 1758 0760 85       		.byte	0x85
+ 1759 0761 C1000000 		.4byte	0xc1
+ 1760 0765 C5010000 		.4byte	.LLST7
+ 1761 0769 1C       		.uleb128 0x1c
+ 1762 076a 42000000 		.4byte	.LBB2
+ 1763 076e 2C000000 		.4byte	.LBE2-.LBB2
+ 1764 0772 9B070000 		.4byte	0x79b
+ 1765 0776 1B       		.uleb128 0x1b
+ 1766 0777 24040000 		.4byte	.LASF132
+ 1767 077b 01       		.byte	0x1
+ 1768 077c A4       		.byte	0xa4
+ 1769 077d 7D000000 		.4byte	0x7d
+ 1770 0781 E4010000 		.4byte	.LLST8
+ 1771 0785 1D       		.uleb128 0x1d
+ 1772 0786 4C000000 		.4byte	.LVL25
+ 1773 078a 02       		.uleb128 0x2
+ 1774 078b 7A       		.byte	0x7a
+ 1775 078c 00       		.sleb128 0
+ 1776 078d 1E       		.uleb128 0x1e
+ 1777 078e 01       		.uleb128 0x1
+ 1778 078f 51       		.byte	0x51
+ 1779 0790 02       		.uleb128 0x2
+ 1780 0791 74       		.byte	0x74
+ 1781 0792 00       		.sleb128 0
+ 1782 0793 1E       		.uleb128 0x1e
+ 1783 0794 01       		.uleb128 0x1
+ 1784 0795 52       		.byte	0x52
+ 1785 0796 02       		.uleb128 0x2
+ 1786 0797 79       		.byte	0x79
+ 1787 0798 00       		.sleb128 0
+ 1788 0799 00       		.byte	0
+ 1789 079a 00       		.byte	0
+ 1790 079b 1F       		.uleb128 0x1f
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 42
+
+
+ 1791 079c 16000000 		.4byte	.LVL18
+ 1792 07a0 890B0000 		.4byte	0xb89
+ 1793 07a4 20       		.uleb128 0x20
+ 1794 07a5 36000000 		.4byte	.LVL23
+ 1795 07a9 B3060000 		.4byte	0x6b3
+ 1796 07ad 1E       		.uleb128 0x1e
+ 1797 07ae 01       		.uleb128 0x1
+ 1798 07af 50       		.byte	0x50
+ 1799 07b0 02       		.uleb128 0x2
+ 1800 07b1 74       		.byte	0x74
+ 1801 07b2 00       		.sleb128 0
+ 1802 07b3 1E       		.uleb128 0x1e
+ 1803 07b4 01       		.uleb128 0x1
+ 1804 07b5 51       		.byte	0x51
+ 1805 07b6 04       		.uleb128 0x4
+ 1806 07b7 91       		.byte	0x91
+ 1807 07b8 5C       		.sleb128 -36
+ 1808 07b9 94       		.byte	0x94
+ 1809 07ba 01       		.byte	0x1
+ 1810 07bb 00       		.byte	0
+ 1811 07bc 00       		.byte	0
+ 1812 07bd 19       		.uleb128 0x19
+ 1813 07be 18050000 		.4byte	.LASF134
+ 1814 07c2 01       		.byte	0x1
+ 1815 07c3 D2       		.byte	0xd2
+ 1816 07c4 9A010000 		.4byte	0x19a
+ 1817 07c8 00000000 		.4byte	.LFB55
+ 1818 07cc 22000000 		.4byte	.LFE55-.LFB55
+ 1819 07d0 01       		.uleb128 0x1
+ 1820 07d1 9C       		.byte	0x9c
+ 1821 07d2 F3070000 		.4byte	0x7f3
+ 1822 07d6 17       		.uleb128 0x17
+ 1823 07d7 70636200 		.ascii	"pcb\000"
+ 1824 07db 01       		.byte	0x1
+ 1825 07dc D2       		.byte	0xd2
+ 1826 07dd 29060000 		.4byte	0x629
+ 1827 07e1 F8010000 		.4byte	.LLST9
+ 1828 07e5 18       		.uleb128 0x18
+ 1829 07e6 28080000 		.4byte	.LASF135
+ 1830 07ea 01       		.byte	0x1
+ 1831 07eb D2       		.byte	0xd2
+ 1832 07ec A8060000 		.4byte	0x6a8
+ 1833 07f0 01       		.uleb128 0x1
+ 1834 07f1 51       		.byte	0x51
+ 1835 07f2 00       		.byte	0
+ 1836 07f3 19       		.uleb128 0x19
+ 1837 07f4 B2030000 		.4byte	.LASF136
+ 1838 07f8 01       		.byte	0x1
+ 1839 07f9 EA       		.byte	0xea
+ 1840 07fa 9A010000 		.4byte	0x19a
+ 1841 07fe 00000000 		.4byte	.LFB56
+ 1842 0802 22000000 		.4byte	.LFE56-.LFB56
+ 1843 0806 01       		.uleb128 0x1
+ 1844 0807 9C       		.byte	0x9c
+ 1845 0808 29080000 		.4byte	0x829
+ 1846 080c 17       		.uleb128 0x17
+ 1847 080d 70636200 		.ascii	"pcb\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 43
+
+
+ 1848 0811 01       		.byte	0x1
+ 1849 0812 EA       		.byte	0xea
+ 1850 0813 29060000 		.4byte	0x629
+ 1851 0817 4B020000 		.4byte	.LLST10
+ 1852 081b 18       		.uleb128 0x18
+ 1853 081c 28080000 		.4byte	.LASF135
+ 1854 0820 01       		.byte	0x1
+ 1855 0821 EA       		.byte	0xea
+ 1856 0822 A8060000 		.4byte	0x6a8
+ 1857 0826 01       		.uleb128 0x1
+ 1858 0827 51       		.byte	0x51
+ 1859 0828 00       		.byte	0
+ 1860 0829 21       		.uleb128 0x21
+ 1861 082a 61020000 		.4byte	.LASF141
+ 1862 082e 01       		.byte	0x1
+ 1863 082f FF       		.byte	0xff
+ 1864 0830 00000000 		.4byte	.LFB57
+ 1865 0834 06000000 		.4byte	.LFE57-.LFB57
+ 1866 0838 01       		.uleb128 0x1
+ 1867 0839 9C       		.byte	0x9c
+ 1868 083a 66080000 		.4byte	0x866
+ 1869 083e 22       		.uleb128 0x22
+ 1870 083f 70636200 		.ascii	"pcb\000"
+ 1871 0843 01       		.byte	0x1
+ 1872 0844 FF       		.byte	0xff
+ 1873 0845 29060000 		.4byte	0x629
+ 1874 0849 01       		.uleb128 0x1
+ 1875 084a 50       		.byte	0x50
+ 1876 084b 18       		.uleb128 0x18
+ 1877 084c C5010000 		.4byte	.LASF126
+ 1878 0850 01       		.byte	0x1
+ 1879 0851 FF       		.byte	0xff
+ 1880 0852 FA050000 		.4byte	0x5fa
+ 1881 0856 01       		.uleb128 0x1
+ 1882 0857 51       		.byte	0x51
+ 1883 0858 18       		.uleb128 0x18
+ 1884 0859 99030000 		.4byte	.LASF127
+ 1885 085d 01       		.byte	0x1
+ 1886 085e FF       		.byte	0xff
+ 1887 085f 7D000000 		.4byte	0x7d
+ 1888 0863 01       		.uleb128 0x1
+ 1889 0864 52       		.byte	0x52
+ 1890 0865 00       		.byte	0
+ 1891 0866 23       		.uleb128 0x23
+ 1892 0867 6A020000 		.4byte	.LASF137
+ 1893 086b 01       		.byte	0x1
+ 1894 086c 1401     		.2byte	0x114
+ 1895 086e 9A010000 		.4byte	0x19a
+ 1896 0872 00000000 		.4byte	.LFB58
+ 1897 0876 BE000000 		.4byte	.LFE58-.LFB58
+ 1898 087a 01       		.uleb128 0x1
+ 1899 087b 9C       		.byte	0x9c
+ 1900 087c C0090000 		.4byte	0x9c0
+ 1901 0880 24       		.uleb128 0x24
+ 1902 0881 70636200 		.ascii	"pcb\000"
+ 1903 0885 01       		.byte	0x1
+ 1904 0886 1401     		.2byte	0x114
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 44
+
+
+ 1905 0888 29060000 		.4byte	0x629
+ 1906 088c 9E020000 		.4byte	.LLST11
+ 1907 0890 24       		.uleb128 0x24
+ 1908 0891 7000     		.ascii	"p\000"
+ 1909 0893 01       		.byte	0x1
+ 1910 0894 1401     		.2byte	0x114
+ 1911 0896 C9020000 		.4byte	0x2c9
+ 1912 089a 30030000 		.4byte	.LLST12
+ 1913 089e 25       		.uleb128 0x25
+ 1914 089f 28080000 		.4byte	.LASF135
+ 1915 08a3 01       		.byte	0x1
+ 1916 08a4 1401     		.2byte	0x114
+ 1917 08a6 A8060000 		.4byte	0x6a8
+ 1918 08aa 72030000 		.4byte	.LLST13
+ 1919 08ae 26       		.uleb128 0x26
+ 1920 08af 65727200 		.ascii	"err\000"
+ 1921 08b3 01       		.byte	0x1
+ 1922 08b4 1601     		.2byte	0x116
+ 1923 08b6 9A010000 		.4byte	0x19a
+ 1924 08ba B4030000 		.4byte	.LLST14
+ 1925 08be 27       		.uleb128 0x27
+ 1926 08bf E5070000 		.4byte	.LASF82
+ 1927 08c3 01       		.byte	0x1
+ 1928 08c4 1701     		.2byte	0x117
+ 1929 08c6 0F030000 		.4byte	0x30f
+ 1930 08ca C7030000 		.4byte	.LLST15
+ 1931 08ce 27       		.uleb128 0x27
+ 1932 08cf 54050000 		.4byte	.LASF138
+ 1933 08d3 01       		.byte	0x1
+ 1934 08d4 1801     		.2byte	0x118
+ 1935 08d6 A8060000 		.4byte	0x6a8
+ 1936 08da FC030000 		.4byte	.LLST16
+ 1937 08de 26       		.uleb128 0x26
+ 1938 08df 7100     		.ascii	"q\000"
+ 1939 08e1 01       		.byte	0x1
+ 1940 08e2 1901     		.2byte	0x119
+ 1941 08e4 C9020000 		.4byte	0x2c9
+ 1942 08e8 0F040000 		.4byte	.LLST17
+ 1943 08ec 27       		.uleb128 0x27
+ 1944 08ed 1B020000 		.4byte	.LASF139
+ 1945 08f1 01       		.byte	0x1
+ 1946 08f2 1A01     		.2byte	0x11a
+ 1947 08f4 E2000000 		.4byte	0xe2
+ 1948 08f8 6F040000 		.4byte	.LLST18
+ 1949 08fc 28       		.uleb128 0x28
+ 1950 08fd 1A000000 		.4byte	.LVL52
+ 1951 0901 940B0000 		.4byte	0xb94
+ 1952 0905 15090000 		.4byte	0x915
+ 1953 0909 1E       		.uleb128 0x1e
+ 1954 090a 01       		.uleb128 0x1
+ 1955 090b 50       		.byte	0x50
+ 1956 090c 02       		.uleb128 0x2
+ 1957 090d 75       		.byte	0x75
+ 1958 090e 00       		.sleb128 0
+ 1959 090f 1E       		.uleb128 0x1e
+ 1960 0910 01       		.uleb128 0x1
+ 1961 0911 51       		.byte	0x51
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 45
+
+
+ 1962 0912 01       		.uleb128 0x1
+ 1963 0913 44       		.byte	0x44
+ 1964 0914 00       		.byte	0
+ 1965 0915 28       		.uleb128 0x28
+ 1966 0916 28000000 		.4byte	.LVL53
+ 1967 091a 9F0B0000 		.4byte	0xb9f
+ 1968 091e 32090000 		.4byte	0x932
+ 1969 0922 1E       		.uleb128 0x1e
+ 1970 0923 01       		.uleb128 0x1
+ 1971 0924 50       		.byte	0x50
+ 1972 0925 01       		.uleb128 0x1
+ 1973 0926 31       		.byte	0x31
+ 1974 0927 1E       		.uleb128 0x1e
+ 1975 0928 01       		.uleb128 0x1
+ 1976 0929 51       		.byte	0x51
+ 1977 092a 01       		.uleb128 0x1
+ 1978 092b 30       		.byte	0x30
+ 1979 092c 1E       		.uleb128 0x1e
+ 1980 092d 01       		.uleb128 0x1
+ 1981 092e 52       		.byte	0x52
+ 1982 092f 01       		.uleb128 0x1
+ 1983 0930 30       		.byte	0x30
+ 1984 0931 00       		.byte	0
+ 1985 0932 28       		.uleb128 0x28
+ 1986 0933 38000000 		.4byte	.LVL55
+ 1987 0937 AA0B0000 		.4byte	0xbaa
+ 1988 093b 4C090000 		.4byte	0x94c
+ 1989 093f 1E       		.uleb128 0x1e
+ 1990 0940 01       		.uleb128 0x1
+ 1991 0941 50       		.byte	0x50
+ 1992 0942 02       		.uleb128 0x2
+ 1993 0943 76       		.byte	0x76
+ 1994 0944 00       		.sleb128 0
+ 1995 0945 1E       		.uleb128 0x1e
+ 1996 0946 01       		.uleb128 0x1
+ 1997 0947 51       		.byte	0x51
+ 1998 0948 02       		.uleb128 0x2
+ 1999 0949 75       		.byte	0x75
+ 2000 094a 00       		.sleb128 0
+ 2001 094b 00       		.byte	0
+ 2002 094c 28       		.uleb128 0x28
+ 2003 094d 44000000 		.4byte	.LVL57
+ 2004 0951 940B0000 		.4byte	0xb94
+ 2005 0955 66090000 		.4byte	0x966
+ 2006 0959 1E       		.uleb128 0x1e
+ 2007 095a 01       		.uleb128 0x1
+ 2008 095b 50       		.byte	0x50
+ 2009 095c 02       		.uleb128 0x2
+ 2010 095d 75       		.byte	0x75
+ 2011 095e 00       		.sleb128 0
+ 2012 095f 1E       		.uleb128 0x1e
+ 2013 0960 01       		.uleb128 0x1
+ 2014 0961 51       		.byte	0x51
+ 2015 0962 02       		.uleb128 0x2
+ 2016 0963 09       		.byte	0x9
+ 2017 0964 EC       		.byte	0xec
+ 2018 0965 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 46
+
+
+ 2019 0966 28       		.uleb128 0x28
+ 2020 0967 50000000 		.4byte	.LVL59
+ 2021 096b B50B0000 		.4byte	0xbb5
+ 2022 096f 7A090000 		.4byte	0x97a
+ 2023 0973 1E       		.uleb128 0x1e
+ 2024 0974 01       		.uleb128 0x1
+ 2025 0975 50       		.byte	0x50
+ 2026 0976 02       		.uleb128 0x2
+ 2027 0977 77       		.byte	0x77
+ 2028 0978 00       		.sleb128 0
+ 2029 0979 00       		.byte	0
+ 2030 097a 28       		.uleb128 0x28
+ 2031 097b 5E000000 		.4byte	.LVL61
+ 2032 097f C00B0000 		.4byte	0xbc0
+ 2033 0983 8E090000 		.4byte	0x98e
+ 2034 0987 1E       		.uleb128 0x1e
+ 2035 0988 01       		.uleb128 0x1
+ 2036 0989 50       		.byte	0x50
+ 2037 098a 02       		.uleb128 0x2
+ 2038 098b 76       		.byte	0x76
+ 2039 098c 00       		.sleb128 0
+ 2040 098d 00       		.byte	0
+ 2041 098e 28       		.uleb128 0x28
+ 2042 098f 8C000000 		.4byte	.LVL69
+ 2043 0993 CB0B0000 		.4byte	0xbcb
+ 2044 0997 AF090000 		.4byte	0x9af
+ 2045 099b 1E       		.uleb128 0x1e
+ 2046 099c 01       		.uleb128 0x1
+ 2047 099d 50       		.byte	0x50
+ 2048 099e 02       		.uleb128 0x2
+ 2049 099f 76       		.byte	0x76
+ 2050 09a0 00       		.sleb128 0
+ 2051 09a1 1E       		.uleb128 0x1e
+ 2052 09a2 01       		.uleb128 0x1
+ 2053 09a3 52       		.byte	0x52
+ 2054 09a4 02       		.uleb128 0x2
+ 2055 09a5 77       		.byte	0x77
+ 2056 09a6 00       		.sleb128 0
+ 2057 09a7 1E       		.uleb128 0x1e
+ 2058 09a8 02       		.uleb128 0x2
+ 2059 09a9 7D       		.byte	0x7d
+ 2060 09aa 04       		.sleb128 4
+ 2061 09ab 02       		.uleb128 0x2
+ 2062 09ac 74       		.byte	0x74
+ 2063 09ad 00       		.sleb128 0
+ 2064 09ae 00       		.byte	0
+ 2065 09af 20       		.uleb128 0x20
+ 2066 09b0 98000000 		.4byte	.LVL72
+ 2067 09b4 C00B0000 		.4byte	0xbc0
+ 2068 09b8 1E       		.uleb128 0x1e
+ 2069 09b9 01       		.uleb128 0x1
+ 2070 09ba 50       		.byte	0x50
+ 2071 09bb 02       		.uleb128 0x2
+ 2072 09bc 76       		.byte	0x76
+ 2073 09bd 00       		.sleb128 0
+ 2074 09be 00       		.byte	0
+ 2075 09bf 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 47
+
+
+ 2076 09c0 23       		.uleb128 0x23
+ 2077 09c1 59030000 		.4byte	.LASF140
+ 2078 09c5 01       		.byte	0x1
+ 2079 09c6 9201     		.2byte	0x192
+ 2080 09c8 9A010000 		.4byte	0x19a
+ 2081 09cc 00000000 		.4byte	.LFB59
+ 2082 09d0 0A000000 		.4byte	.LFE59-.LFB59
+ 2083 09d4 01       		.uleb128 0x1
+ 2084 09d5 9C       		.byte	0x9c
+ 2085 09d6 1A0A0000 		.4byte	0xa1a
+ 2086 09da 24       		.uleb128 0x24
+ 2087 09db 70636200 		.ascii	"pcb\000"
+ 2088 09df 01       		.byte	0x1
+ 2089 09e0 9201     		.2byte	0x192
+ 2090 09e2 29060000 		.4byte	0x629
+ 2091 09e6 8F040000 		.4byte	.LLST19
+ 2092 09ea 24       		.uleb128 0x24
+ 2093 09eb 7000     		.ascii	"p\000"
+ 2094 09ed 01       		.byte	0x1
+ 2095 09ee 9201     		.2byte	0x192
+ 2096 09f0 C9020000 		.4byte	0x2c9
+ 2097 09f4 B0040000 		.4byte	.LLST20
+ 2098 09f8 20       		.uleb128 0x20
+ 2099 09f9 08000000 		.4byte	.LVL86
+ 2100 09fd 66080000 		.4byte	0x866
+ 2101 0a01 1E       		.uleb128 0x1e
+ 2102 0a02 01       		.uleb128 0x1
+ 2103 0a03 50       		.byte	0x50
+ 2104 0a04 03       		.uleb128 0x3
+ 2105 0a05 F3       		.byte	0xf3
+ 2106 0a06 01       		.uleb128 0x1
+ 2107 0a07 50       		.byte	0x50
+ 2108 0a08 1E       		.uleb128 0x1e
+ 2109 0a09 01       		.uleb128 0x1
+ 2110 0a0a 51       		.byte	0x51
+ 2111 0a0b 03       		.uleb128 0x3
+ 2112 0a0c F3       		.byte	0xf3
+ 2113 0a0d 01       		.uleb128 0x1
+ 2114 0a0e 51       		.byte	0x51
+ 2115 0a0f 1E       		.uleb128 0x1e
+ 2116 0a10 01       		.uleb128 0x1
+ 2117 0a11 52       		.byte	0x52
+ 2118 0a12 05       		.uleb128 0x5
+ 2119 0a13 F3       		.byte	0xf3
+ 2120 0a14 01       		.uleb128 0x1
+ 2121 0a15 50       		.byte	0x50
+ 2122 0a16 23       		.byte	0x23
+ 2123 0a17 04       		.uleb128 0x4
+ 2124 0a18 00       		.byte	0
+ 2125 0a19 00       		.byte	0
+ 2126 0a1a 29       		.uleb128 0x29
+ 2127 0a1b B1020000 		.4byte	.LASF142
+ 2128 0a1f 01       		.byte	0x1
+ 2129 0a20 A101     		.2byte	0x1a1
+ 2130 0a22 00000000 		.4byte	.LFB60
+ 2131 0a26 38000000 		.4byte	.LFE60-.LFB60
+ 2132 0a2a 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 48
+
+
+ 2133 0a2b 9C       		.byte	0x9c
+ 2134 0a2c 600A0000 		.4byte	0xa60
+ 2135 0a30 24       		.uleb128 0x24
+ 2136 0a31 70636200 		.ascii	"pcb\000"
+ 2137 0a35 01       		.byte	0x1
+ 2138 0a36 A101     		.2byte	0x1a1
+ 2139 0a38 29060000 		.4byte	0x629
+ 2140 0a3c D1040000 		.4byte	.LLST21
+ 2141 0a40 27       		.uleb128 0x27
+ 2142 0a41 F9010000 		.4byte	.LASF143
+ 2143 0a45 01       		.byte	0x1
+ 2144 0a46 A301     		.2byte	0x1a3
+ 2145 0a48 29060000 		.4byte	0x629
+ 2146 0a4c FD040000 		.4byte	.LLST22
+ 2147 0a50 20       		.uleb128 0x20
+ 2148 0a51 32000000 		.4byte	.LVL94
+ 2149 0a55 D60B0000 		.4byte	0xbd6
+ 2150 0a59 1E       		.uleb128 0x1e
+ 2151 0a5a 01       		.uleb128 0x1
+ 2152 0a5b 50       		.byte	0x50
+ 2153 0a5c 01       		.uleb128 0x1
+ 2154 0a5d 30       		.byte	0x30
+ 2155 0a5e 00       		.byte	0
+ 2156 0a5f 00       		.byte	0
+ 2157 0a60 23       		.uleb128 0x23
+ 2158 0a61 7B070000 		.4byte	.LASF144
+ 2159 0a65 01       		.byte	0x1
+ 2160 0a66 C201     		.2byte	0x1c2
+ 2161 0a68 29060000 		.4byte	0x629
+ 2162 0a6c 00000000 		.4byte	.LFB61
+ 2163 0a70 38000000 		.4byte	.LFE61-.LFB61
+ 2164 0a74 01       		.uleb128 0x1
+ 2165 0a75 9C       		.byte	0x9c
+ 2166 0a76 D80A0000 		.4byte	0xad8
+ 2167 0a7a 25       		.uleb128 0x25
+ 2168 0a7b 22060000 		.4byte	.LASF130
+ 2169 0a7f 01       		.byte	0x1
+ 2170 0a80 C201     		.2byte	0x1c2
+ 2171 0a82 C1000000 		.4byte	0xc1
+ 2172 0a86 1B050000 		.4byte	.LLST23
+ 2173 0a8a 26       		.uleb128 0x26
+ 2174 0a8b 70636200 		.ascii	"pcb\000"
+ 2175 0a8f 01       		.byte	0x1
+ 2176 0a90 C401     		.2byte	0x1c4
+ 2177 0a92 29060000 		.4byte	0x629
+ 2178 0a96 3C050000 		.4byte	.LLST24
+ 2179 0a9a 28       		.uleb128 0x28
+ 2180 0a9b 10000000 		.4byte	.LVL97
+ 2181 0a9f E10B0000 		.4byte	0xbe1
+ 2182 0aa3 BD0A0000 		.4byte	0xabd
+ 2183 0aa7 1E       		.uleb128 0x1e
+ 2184 0aa8 01       		.uleb128 0x1
+ 2185 0aa9 50       		.byte	0x50
+ 2186 0aaa 01       		.uleb128 0x1
+ 2187 0aab 30       		.byte	0x30
+ 2188 0aac 1E       		.uleb128 0x1e
+ 2189 0aad 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 49
+
+
+ 2190 0aae 51       		.byte	0x51
+ 2191 0aaf 05       		.uleb128 0x5
+ 2192 0ab0 03       		.byte	0x3
+ 2193 0ab1 00000000 		.4byte	.LC5
+ 2194 0ab5 1E       		.uleb128 0x1e
+ 2195 0ab6 01       		.uleb128 0x1
+ 2196 0ab7 52       		.byte	0x52
+ 2197 0ab8 03       		.uleb128 0x3
+ 2198 0ab9 0A       		.byte	0xa
+ 2199 0aba C801     		.2byte	0x1c8
+ 2200 0abc 00       		.byte	0
+ 2201 0abd 20       		.uleb128 0x20
+ 2202 0abe 1C000000 		.4byte	.LVL99
+ 2203 0ac2 EC0B0000 		.4byte	0xbec
+ 2204 0ac6 1E       		.uleb128 0x1e
+ 2205 0ac7 01       		.uleb128 0x1
+ 2206 0ac8 50       		.byte	0x50
+ 2207 0ac9 02       		.uleb128 0x2
+ 2208 0aca 74       		.byte	0x74
+ 2209 0acb 00       		.sleb128 0
+ 2210 0acc 1E       		.uleb128 0x1e
+ 2211 0acd 01       		.uleb128 0x1
+ 2212 0ace 51       		.byte	0x51
+ 2213 0acf 01       		.uleb128 0x1
+ 2214 0ad0 30       		.byte	0x30
+ 2215 0ad1 1E       		.uleb128 0x1e
+ 2216 0ad2 01       		.uleb128 0x1
+ 2217 0ad3 52       		.byte	0x52
+ 2218 0ad4 01       		.uleb128 0x1
+ 2219 0ad5 4C       		.byte	0x4c
+ 2220 0ad6 00       		.byte	0
+ 2221 0ad7 00       		.byte	0
+ 2222 0ad8 23       		.uleb128 0x23
+ 2223 0ad9 D5000000 		.4byte	.LASF145
+ 2224 0add 01       		.byte	0x1
+ 2225 0ade E501     		.2byte	0x1e5
+ 2226 0ae0 29060000 		.4byte	0x629
+ 2227 0ae4 00000000 		.4byte	.LFB62
+ 2228 0ae8 0A000000 		.4byte	.LFE62-.LFB62
+ 2229 0aec 01       		.uleb128 0x1
+ 2230 0aed 9C       		.byte	0x9c
+ 2231 0aee 2A0B0000 		.4byte	0xb2a
+ 2232 0af2 25       		.uleb128 0x25
+ 2233 0af3 81000000 		.4byte	.LASF73
+ 2234 0af7 01       		.byte	0x1
+ 2235 0af8 E501     		.2byte	0x1e5
+ 2236 0afa C1000000 		.4byte	0xc1
+ 2237 0afe 65050000 		.4byte	.LLST25
+ 2238 0b02 25       		.uleb128 0x25
+ 2239 0b03 22060000 		.4byte	.LASF130
+ 2240 0b07 01       		.byte	0x1
+ 2241 0b08 E501     		.2byte	0x1e5
+ 2242 0b0a C1000000 		.4byte	0xc1
+ 2243 0b0e 86050000 		.4byte	.LLST26
+ 2244 0b12 2A       		.uleb128 0x2a
+ 2245 0b13 70636200 		.ascii	"pcb\000"
+ 2246 0b17 01       		.byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 50
+
+
+ 2247 0b18 E701     		.2byte	0x1e7
+ 2248 0b1a 29060000 		.4byte	0x629
+ 2249 0b1e 01       		.uleb128 0x1
+ 2250 0b1f 50       		.byte	0x50
+ 2251 0b20 1F       		.uleb128 0x1f
+ 2252 0b21 08000000 		.4byte	.LVL103
+ 2253 0b25 600A0000 		.4byte	0xa60
+ 2254 0b29 00       		.byte	0
+ 2255 0b2a 29       		.uleb128 0x29
+ 2256 0b2b 13010000 		.4byte	.LASF146
+ 2257 0b2f 01       		.byte	0x1
+ 2258 0b30 F901     		.2byte	0x1f9
+ 2259 0b32 00000000 		.4byte	.LFB63
+ 2260 0b36 34000000 		.4byte	.LFE63-.LFB63
+ 2261 0b3a 01       		.uleb128 0x1
+ 2262 0b3b 9C       		.byte	0x9c
+ 2263 0b3c 6D0B0000 		.4byte	0xb6d
+ 2264 0b40 2B       		.uleb128 0x2b
+ 2265 0b41 2A000000 		.4byte	.LASF147
+ 2266 0b45 01       		.byte	0x1
+ 2267 0b46 F901     		.2byte	0x1f9
+ 2268 0b48 A8060000 		.4byte	0x6a8
+ 2269 0b4c 01       		.uleb128 0x1
+ 2270 0b4d 50       		.byte	0x50
+ 2271 0b4e 2B       		.uleb128 0x2b
+ 2272 0b4f 02010000 		.4byte	.LASF148
+ 2273 0b53 01       		.byte	0x1
+ 2274 0b54 F901     		.2byte	0x1f9
+ 2275 0b56 A8060000 		.4byte	0x6a8
+ 2276 0b5a 01       		.uleb128 0x1
+ 2277 0b5b 51       		.byte	0x51
+ 2278 0b5c 27       		.uleb128 0x27
+ 2279 0b5d 5D010000 		.4byte	.LASF149
+ 2280 0b61 01       		.byte	0x1
+ 2281 0b62 FB01     		.2byte	0x1fb
+ 2282 0b64 29060000 		.4byte	0x629
+ 2283 0b68 A7050000 		.4byte	.LLST27
+ 2284 0b6c 00       		.byte	0
+ 2285 0b6d 2C       		.uleb128 0x2c
+ 2286 0b6e 0F050000 		.4byte	.LASF150
+ 2287 0b72 01       		.byte	0x1
+ 2288 0b73 41       		.byte	0x41
+ 2289 0b74 29060000 		.4byte	0x629
+ 2290 0b78 05       		.uleb128 0x5
+ 2291 0b79 03       		.byte	0x3
+ 2292 0b7a 00000000 		.4byte	raw_pcbs
+ 2293 0b7e 2D       		.uleb128 0x2d
+ 2294 0b7f CC070000 		.4byte	.LASF164
+ 2295 0b83 0C       		.byte	0xc
+ 2296 0b84 7E       		.byte	0x7e
+ 2297 0b85 9F050000 		.4byte	0x59f
+ 2298 0b89 2E       		.uleb128 0x2e
+ 2299 0b8a 89050000 		.4byte	.LASF151
+ 2300 0b8e 89050000 		.4byte	.LASF151
+ 2301 0b92 05       		.byte	0x5
+ 2302 0b93 AE       		.byte	0xae
+ 2303 0b94 2E       		.uleb128 0x2e
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 51
+
+
+ 2304 0b95 F2040000 		.4byte	.LASF152
+ 2305 0b99 F2040000 		.4byte	.LASF152
+ 2306 0b9d 09       		.byte	0x9
+ 2307 0b9e E6       		.byte	0xe6
+ 2308 0b9f 2E       		.uleb128 0x2e
+ 2309 0ba0 90080000 		.4byte	.LASF153
+ 2310 0ba4 90080000 		.4byte	.LASF153
+ 2311 0ba8 09       		.byte	0x9
+ 2312 0ba9 DF       		.byte	0xdf
+ 2313 0baa 2E       		.uleb128 0x2e
+ 2314 0bab 2F080000 		.4byte	.LASF154
+ 2315 0baf 2F080000 		.4byte	.LASF154
+ 2316 0bb3 09       		.byte	0x9
+ 2317 0bb4 EC       		.byte	0xec
+ 2318 0bb5 2E       		.uleb128 0x2e
+ 2319 0bb6 9B080000 		.4byte	.LASF155
+ 2320 0bba 9B080000 		.4byte	.LASF155
+ 2321 0bbe 0E       		.byte	0xe
+ 2322 0bbf 41       		.byte	0x41
+ 2323 0bc0 2E       		.uleb128 0x2e
+ 2324 0bc1 4F030000 		.4byte	.LASF156
+ 2325 0bc5 4F030000 		.4byte	.LASF156
+ 2326 0bc9 09       		.byte	0x9
+ 2327 0bca E9       		.byte	0xe9
+ 2328 0bcb 2E       		.uleb128 0x2e
+ 2329 0bcc E9030000 		.4byte	.LASF157
+ 2330 0bd0 E9030000 		.4byte	.LASF157
+ 2331 0bd4 0E       		.byte	0xe
+ 2332 0bd5 4A       		.byte	0x4a
+ 2333 0bd6 2E       		.uleb128 0x2e
+ 2334 0bd7 72000000 		.4byte	.LASF158
+ 2335 0bdb 72000000 		.4byte	.LASF158
+ 2336 0bdf 08       		.byte	0x8
+ 2337 0be0 95       		.byte	0x95
+ 2338 0be1 2E       		.uleb128 0x2e
+ 2339 0be2 A5080000 		.4byte	.LASF159
+ 2340 0be6 A5080000 		.4byte	.LASF159
+ 2341 0bea 08       		.byte	0x8
+ 2342 0beb 90       		.byte	0x90
+ 2343 0bec 2F       		.uleb128 0x2f
+ 2344 0bed 04080000 		.4byte	.LASF165
+ 2345 0bf1 04080000 		.4byte	.LASF165
+ 2346 0bf5 00       		.byte	0
+ 2347              		.section	.debug_abbrev,"",%progbits
+ 2348              	.Ldebug_abbrev0:
+ 2349 0000 01       		.uleb128 0x1
+ 2350 0001 11       		.uleb128 0x11
+ 2351 0002 01       		.byte	0x1
+ 2352 0003 25       		.uleb128 0x25
+ 2353 0004 0E       		.uleb128 0xe
+ 2354 0005 13       		.uleb128 0x13
+ 2355 0006 0B       		.uleb128 0xb
+ 2356 0007 03       		.uleb128 0x3
+ 2357 0008 0E       		.uleb128 0xe
+ 2358 0009 1B       		.uleb128 0x1b
+ 2359 000a 0E       		.uleb128 0xe
+ 2360 000b 55       		.uleb128 0x55
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 52
+
+
+ 2361 000c 17       		.uleb128 0x17
+ 2362 000d 11       		.uleb128 0x11
+ 2363 000e 01       		.uleb128 0x1
+ 2364 000f 10       		.uleb128 0x10
+ 2365 0010 17       		.uleb128 0x17
+ 2366 0011 00       		.byte	0
+ 2367 0012 00       		.byte	0
+ 2368 0013 02       		.uleb128 0x2
+ 2369 0014 24       		.uleb128 0x24
+ 2370 0015 00       		.byte	0
+ 2371 0016 0B       		.uleb128 0xb
+ 2372 0017 0B       		.uleb128 0xb
+ 2373 0018 3E       		.uleb128 0x3e
+ 2374 0019 0B       		.uleb128 0xb
+ 2375 001a 03       		.uleb128 0x3
+ 2376 001b 0E       		.uleb128 0xe
+ 2377 001c 00       		.byte	0
+ 2378 001d 00       		.byte	0
+ 2379 001e 03       		.uleb128 0x3
+ 2380 001f 16       		.uleb128 0x16
+ 2381 0020 00       		.byte	0
+ 2382 0021 03       		.uleb128 0x3
+ 2383 0022 0E       		.uleb128 0xe
+ 2384 0023 3A       		.uleb128 0x3a
+ 2385 0024 0B       		.uleb128 0xb
+ 2386 0025 3B       		.uleb128 0x3b
+ 2387 0026 0B       		.uleb128 0xb
+ 2388 0027 49       		.uleb128 0x49
+ 2389 0028 13       		.uleb128 0x13
+ 2390 0029 00       		.byte	0
+ 2391 002a 00       		.byte	0
+ 2392 002b 04       		.uleb128 0x4
+ 2393 002c 24       		.uleb128 0x24
+ 2394 002d 00       		.byte	0
+ 2395 002e 0B       		.uleb128 0xb
+ 2396 002f 0B       		.uleb128 0xb
+ 2397 0030 3E       		.uleb128 0x3e
+ 2398 0031 0B       		.uleb128 0xb
+ 2399 0032 03       		.uleb128 0x3
+ 2400 0033 08       		.uleb128 0x8
+ 2401 0034 00       		.byte	0
+ 2402 0035 00       		.byte	0
+ 2403 0036 05       		.uleb128 0x5
+ 2404 0037 0F       		.uleb128 0xf
+ 2405 0038 00       		.byte	0
+ 2406 0039 0B       		.uleb128 0xb
+ 2407 003a 0B       		.uleb128 0xb
+ 2408 003b 00       		.byte	0
+ 2409 003c 00       		.byte	0
+ 2410 003d 06       		.uleb128 0x6
+ 2411 003e 0F       		.uleb128 0xf
+ 2412 003f 00       		.byte	0
+ 2413 0040 0B       		.uleb128 0xb
+ 2414 0041 0B       		.uleb128 0xb
+ 2415 0042 49       		.uleb128 0x49
+ 2416 0043 13       		.uleb128 0x13
+ 2417 0044 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 53
+
+
+ 2418 0045 00       		.byte	0
+ 2419 0046 07       		.uleb128 0x7
+ 2420 0047 26       		.uleb128 0x26
+ 2421 0048 00       		.byte	0
+ 2422 0049 49       		.uleb128 0x49
+ 2423 004a 13       		.uleb128 0x13
+ 2424 004b 00       		.byte	0
+ 2425 004c 00       		.byte	0
+ 2426 004d 08       		.uleb128 0x8
+ 2427 004e 01       		.uleb128 0x1
+ 2428 004f 01       		.byte	0x1
+ 2429 0050 49       		.uleb128 0x49
+ 2430 0051 13       		.uleb128 0x13
+ 2431 0052 01       		.uleb128 0x1
+ 2432 0053 13       		.uleb128 0x13
+ 2433 0054 00       		.byte	0
+ 2434 0055 00       		.byte	0
+ 2435 0056 09       		.uleb128 0x9
+ 2436 0057 21       		.uleb128 0x21
+ 2437 0058 00       		.byte	0
+ 2438 0059 49       		.uleb128 0x49
+ 2439 005a 13       		.uleb128 0x13
+ 2440 005b 2F       		.uleb128 0x2f
+ 2441 005c 0B       		.uleb128 0xb
+ 2442 005d 00       		.byte	0
+ 2443 005e 00       		.byte	0
+ 2444 005f 0A       		.uleb128 0xa
+ 2445 0060 04       		.uleb128 0x4
+ 2446 0061 01       		.byte	0x1
+ 2447 0062 0B       		.uleb128 0xb
+ 2448 0063 0B       		.uleb128 0xb
+ 2449 0064 49       		.uleb128 0x49
+ 2450 0065 13       		.uleb128 0x13
+ 2451 0066 3A       		.uleb128 0x3a
+ 2452 0067 0B       		.uleb128 0xb
+ 2453 0068 3B       		.uleb128 0x3b
+ 2454 0069 0B       		.uleb128 0xb
+ 2455 006a 01       		.uleb128 0x1
+ 2456 006b 13       		.uleb128 0x13
+ 2457 006c 00       		.byte	0
+ 2458 006d 00       		.byte	0
+ 2459 006e 0B       		.uleb128 0xb
+ 2460 006f 28       		.uleb128 0x28
+ 2461 0070 00       		.byte	0
+ 2462 0071 03       		.uleb128 0x3
+ 2463 0072 0E       		.uleb128 0xe
+ 2464 0073 1C       		.uleb128 0x1c
+ 2465 0074 0B       		.uleb128 0xb
+ 2466 0075 00       		.byte	0
+ 2467 0076 00       		.byte	0
+ 2468 0077 0C       		.uleb128 0xc
+ 2469 0078 13       		.uleb128 0x13
+ 2470 0079 01       		.byte	0x1
+ 2471 007a 03       		.uleb128 0x3
+ 2472 007b 0E       		.uleb128 0xe
+ 2473 007c 0B       		.uleb128 0xb
+ 2474 007d 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 54
+
+
+ 2475 007e 3A       		.uleb128 0x3a
+ 2476 007f 0B       		.uleb128 0xb
+ 2477 0080 3B       		.uleb128 0x3b
+ 2478 0081 0B       		.uleb128 0xb
+ 2479 0082 01       		.uleb128 0x1
+ 2480 0083 13       		.uleb128 0x13
+ 2481 0084 00       		.byte	0
+ 2482 0085 00       		.byte	0
+ 2483 0086 0D       		.uleb128 0xd
+ 2484 0087 0D       		.uleb128 0xd
+ 2485 0088 00       		.byte	0
+ 2486 0089 03       		.uleb128 0x3
+ 2487 008a 0E       		.uleb128 0xe
+ 2488 008b 3A       		.uleb128 0x3a
+ 2489 008c 0B       		.uleb128 0xb
+ 2490 008d 3B       		.uleb128 0x3b
+ 2491 008e 0B       		.uleb128 0xb
+ 2492 008f 49       		.uleb128 0x49
+ 2493 0090 13       		.uleb128 0x13
+ 2494 0091 38       		.uleb128 0x38
+ 2495 0092 0B       		.uleb128 0xb
+ 2496 0093 00       		.byte	0
+ 2497 0094 00       		.byte	0
+ 2498 0095 0E       		.uleb128 0xe
+ 2499 0096 28       		.uleb128 0x28
+ 2500 0097 00       		.byte	0
+ 2501 0098 03       		.uleb128 0x3
+ 2502 0099 0E       		.uleb128 0xe
+ 2503 009a 1C       		.uleb128 0x1c
+ 2504 009b 0D       		.uleb128 0xd
+ 2505 009c 00       		.byte	0
+ 2506 009d 00       		.byte	0
+ 2507 009e 0F       		.uleb128 0xf
+ 2508 009f 0D       		.uleb128 0xd
+ 2509 00a0 00       		.byte	0
+ 2510 00a1 03       		.uleb128 0x3
+ 2511 00a2 08       		.uleb128 0x8
+ 2512 00a3 3A       		.uleb128 0x3a
+ 2513 00a4 0B       		.uleb128 0xb
+ 2514 00a5 3B       		.uleb128 0x3b
+ 2515 00a6 0B       		.uleb128 0xb
+ 2516 00a7 49       		.uleb128 0x49
+ 2517 00a8 13       		.uleb128 0x13
+ 2518 00a9 38       		.uleb128 0x38
+ 2519 00aa 0B       		.uleb128 0xb
+ 2520 00ab 00       		.byte	0
+ 2521 00ac 00       		.byte	0
+ 2522 00ad 10       		.uleb128 0x10
+ 2523 00ae 04       		.uleb128 0x4
+ 2524 00af 01       		.byte	0x1
+ 2525 00b0 03       		.uleb128 0x3
+ 2526 00b1 0E       		.uleb128 0xe
+ 2527 00b2 0B       		.uleb128 0xb
+ 2528 00b3 0B       		.uleb128 0xb
+ 2529 00b4 49       		.uleb128 0x49
+ 2530 00b5 13       		.uleb128 0x13
+ 2531 00b6 3A       		.uleb128 0x3a
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 55
+
+
+ 2532 00b7 0B       		.uleb128 0xb
+ 2533 00b8 3B       		.uleb128 0x3b
+ 2534 00b9 0B       		.uleb128 0xb
+ 2535 00ba 01       		.uleb128 0x1
+ 2536 00bb 13       		.uleb128 0x13
+ 2537 00bc 00       		.byte	0
+ 2538 00bd 00       		.byte	0
+ 2539 00be 11       		.uleb128 0x11
+ 2540 00bf 0D       		.uleb128 0xd
+ 2541 00c0 00       		.byte	0
+ 2542 00c1 03       		.uleb128 0x3
+ 2543 00c2 0E       		.uleb128 0xe
+ 2544 00c3 3A       		.uleb128 0x3a
+ 2545 00c4 0B       		.uleb128 0xb
+ 2546 00c5 3B       		.uleb128 0x3b
+ 2547 00c6 05       		.uleb128 0x5
+ 2548 00c7 49       		.uleb128 0x49
+ 2549 00c8 13       		.uleb128 0x13
+ 2550 00c9 38       		.uleb128 0x38
+ 2551 00ca 0B       		.uleb128 0xb
+ 2552 00cb 00       		.byte	0
+ 2553 00cc 00       		.byte	0
+ 2554 00cd 12       		.uleb128 0x12
+ 2555 00ce 0D       		.uleb128 0xd
+ 2556 00cf 00       		.byte	0
+ 2557 00d0 03       		.uleb128 0x3
+ 2558 00d1 08       		.uleb128 0x8
+ 2559 00d2 3A       		.uleb128 0x3a
+ 2560 00d3 0B       		.uleb128 0xb
+ 2561 00d4 3B       		.uleb128 0x3b
+ 2562 00d5 05       		.uleb128 0x5
+ 2563 00d6 49       		.uleb128 0x49
+ 2564 00d7 13       		.uleb128 0x13
+ 2565 00d8 38       		.uleb128 0x38
+ 2566 00d9 0B       		.uleb128 0xb
+ 2567 00da 00       		.byte	0
+ 2568 00db 00       		.byte	0
+ 2569 00dc 13       		.uleb128 0x13
+ 2570 00dd 15       		.uleb128 0x15
+ 2571 00de 01       		.byte	0x1
+ 2572 00df 27       		.uleb128 0x27
+ 2573 00e0 19       		.uleb128 0x19
+ 2574 00e1 49       		.uleb128 0x49
+ 2575 00e2 13       		.uleb128 0x13
+ 2576 00e3 01       		.uleb128 0x1
+ 2577 00e4 13       		.uleb128 0x13
+ 2578 00e5 00       		.byte	0
+ 2579 00e6 00       		.byte	0
+ 2580 00e7 14       		.uleb128 0x14
+ 2581 00e8 05       		.uleb128 0x5
+ 2582 00e9 00       		.byte	0
+ 2583 00ea 49       		.uleb128 0x49
+ 2584 00eb 13       		.uleb128 0x13
+ 2585 00ec 00       		.byte	0
+ 2586 00ed 00       		.byte	0
+ 2587 00ee 15       		.uleb128 0x15
+ 2588 00ef 15       		.uleb128 0x15
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 56
+
+
+ 2589 00f0 01       		.byte	0x1
+ 2590 00f1 27       		.uleb128 0x27
+ 2591 00f2 19       		.uleb128 0x19
+ 2592 00f3 01       		.uleb128 0x1
+ 2593 00f4 13       		.uleb128 0x13
+ 2594 00f5 00       		.byte	0
+ 2595 00f6 00       		.byte	0
+ 2596 00f7 16       		.uleb128 0x16
+ 2597 00f8 2E       		.uleb128 0x2e
+ 2598 00f9 01       		.byte	0x1
+ 2599 00fa 03       		.uleb128 0x3
+ 2600 00fb 0E       		.uleb128 0xe
+ 2601 00fc 3A       		.uleb128 0x3a
+ 2602 00fd 0B       		.uleb128 0xb
+ 2603 00fe 3B       		.uleb128 0x3b
+ 2604 00ff 0B       		.uleb128 0xb
+ 2605 0100 27       		.uleb128 0x27
+ 2606 0101 19       		.uleb128 0x19
+ 2607 0102 49       		.uleb128 0x49
+ 2608 0103 13       		.uleb128 0x13
+ 2609 0104 11       		.uleb128 0x11
+ 2610 0105 01       		.uleb128 0x1
+ 2611 0106 12       		.uleb128 0x12
+ 2612 0107 06       		.uleb128 0x6
+ 2613 0108 40       		.uleb128 0x40
+ 2614 0109 18       		.uleb128 0x18
+ 2615 010a 9742     		.uleb128 0x2117
+ 2616 010c 19       		.uleb128 0x19
+ 2617 010d 01       		.uleb128 0x1
+ 2618 010e 13       		.uleb128 0x13
+ 2619 010f 00       		.byte	0
+ 2620 0110 00       		.byte	0
+ 2621 0111 17       		.uleb128 0x17
+ 2622 0112 05       		.uleb128 0x5
+ 2623 0113 00       		.byte	0
+ 2624 0114 03       		.uleb128 0x3
+ 2625 0115 08       		.uleb128 0x8
+ 2626 0116 3A       		.uleb128 0x3a
+ 2627 0117 0B       		.uleb128 0xb
+ 2628 0118 3B       		.uleb128 0x3b
+ 2629 0119 0B       		.uleb128 0xb
+ 2630 011a 49       		.uleb128 0x49
+ 2631 011b 13       		.uleb128 0x13
+ 2632 011c 02       		.uleb128 0x2
+ 2633 011d 17       		.uleb128 0x17
+ 2634 011e 00       		.byte	0
+ 2635 011f 00       		.byte	0
+ 2636 0120 18       		.uleb128 0x18
+ 2637 0121 05       		.uleb128 0x5
+ 2638 0122 00       		.byte	0
+ 2639 0123 03       		.uleb128 0x3
+ 2640 0124 0E       		.uleb128 0xe
+ 2641 0125 3A       		.uleb128 0x3a
+ 2642 0126 0B       		.uleb128 0xb
+ 2643 0127 3B       		.uleb128 0x3b
+ 2644 0128 0B       		.uleb128 0xb
+ 2645 0129 49       		.uleb128 0x49
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 57
+
+
+ 2646 012a 13       		.uleb128 0x13
+ 2647 012b 02       		.uleb128 0x2
+ 2648 012c 18       		.uleb128 0x18
+ 2649 012d 00       		.byte	0
+ 2650 012e 00       		.byte	0
+ 2651 012f 19       		.uleb128 0x19
+ 2652 0130 2E       		.uleb128 0x2e
+ 2653 0131 01       		.byte	0x1
+ 2654 0132 3F       		.uleb128 0x3f
+ 2655 0133 19       		.uleb128 0x19
+ 2656 0134 03       		.uleb128 0x3
+ 2657 0135 0E       		.uleb128 0xe
+ 2658 0136 3A       		.uleb128 0x3a
+ 2659 0137 0B       		.uleb128 0xb
+ 2660 0138 3B       		.uleb128 0x3b
+ 2661 0139 0B       		.uleb128 0xb
+ 2662 013a 27       		.uleb128 0x27
+ 2663 013b 19       		.uleb128 0x19
+ 2664 013c 49       		.uleb128 0x49
+ 2665 013d 13       		.uleb128 0x13
+ 2666 013e 11       		.uleb128 0x11
+ 2667 013f 01       		.uleb128 0x1
+ 2668 0140 12       		.uleb128 0x12
+ 2669 0141 06       		.uleb128 0x6
+ 2670 0142 40       		.uleb128 0x40
+ 2671 0143 18       		.uleb128 0x18
+ 2672 0144 9742     		.uleb128 0x2117
+ 2673 0146 19       		.uleb128 0x19
+ 2674 0147 01       		.uleb128 0x1
+ 2675 0148 13       		.uleb128 0x13
+ 2676 0149 00       		.byte	0
+ 2677 014a 00       		.byte	0
+ 2678 014b 1A       		.uleb128 0x1a
+ 2679 014c 34       		.uleb128 0x34
+ 2680 014d 00       		.byte	0
+ 2681 014e 03       		.uleb128 0x3
+ 2682 014f 08       		.uleb128 0x8
+ 2683 0150 3A       		.uleb128 0x3a
+ 2684 0151 0B       		.uleb128 0xb
+ 2685 0152 3B       		.uleb128 0x3b
+ 2686 0153 0B       		.uleb128 0xb
+ 2687 0154 49       		.uleb128 0x49
+ 2688 0155 13       		.uleb128 0x13
+ 2689 0156 02       		.uleb128 0x2
+ 2690 0157 17       		.uleb128 0x17
+ 2691 0158 00       		.byte	0
+ 2692 0159 00       		.byte	0
+ 2693 015a 1B       		.uleb128 0x1b
+ 2694 015b 34       		.uleb128 0x34
+ 2695 015c 00       		.byte	0
+ 2696 015d 03       		.uleb128 0x3
+ 2697 015e 0E       		.uleb128 0xe
+ 2698 015f 3A       		.uleb128 0x3a
+ 2699 0160 0B       		.uleb128 0xb
+ 2700 0161 3B       		.uleb128 0x3b
+ 2701 0162 0B       		.uleb128 0xb
+ 2702 0163 49       		.uleb128 0x49
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 58
+
+
+ 2703 0164 13       		.uleb128 0x13
+ 2704 0165 02       		.uleb128 0x2
+ 2705 0166 17       		.uleb128 0x17
+ 2706 0167 00       		.byte	0
+ 2707 0168 00       		.byte	0
+ 2708 0169 1C       		.uleb128 0x1c
+ 2709 016a 0B       		.uleb128 0xb
+ 2710 016b 01       		.byte	0x1
+ 2711 016c 11       		.uleb128 0x11
+ 2712 016d 01       		.uleb128 0x1
+ 2713 016e 12       		.uleb128 0x12
+ 2714 016f 06       		.uleb128 0x6
+ 2715 0170 01       		.uleb128 0x1
+ 2716 0171 13       		.uleb128 0x13
+ 2717 0172 00       		.byte	0
+ 2718 0173 00       		.byte	0
+ 2719 0174 1D       		.uleb128 0x1d
+ 2720 0175 898201   		.uleb128 0x4109
+ 2721 0178 01       		.byte	0x1
+ 2722 0179 11       		.uleb128 0x11
+ 2723 017a 01       		.uleb128 0x1
+ 2724 017b 9342     		.uleb128 0x2113
+ 2725 017d 18       		.uleb128 0x18
+ 2726 017e 00       		.byte	0
+ 2727 017f 00       		.byte	0
+ 2728 0180 1E       		.uleb128 0x1e
+ 2729 0181 8A8201   		.uleb128 0x410a
+ 2730 0184 00       		.byte	0
+ 2731 0185 02       		.uleb128 0x2
+ 2732 0186 18       		.uleb128 0x18
+ 2733 0187 9142     		.uleb128 0x2111
+ 2734 0189 18       		.uleb128 0x18
+ 2735 018a 00       		.byte	0
+ 2736 018b 00       		.byte	0
+ 2737 018c 1F       		.uleb128 0x1f
+ 2738 018d 898201   		.uleb128 0x4109
+ 2739 0190 00       		.byte	0
+ 2740 0191 11       		.uleb128 0x11
+ 2741 0192 01       		.uleb128 0x1
+ 2742 0193 31       		.uleb128 0x31
+ 2743 0194 13       		.uleb128 0x13
+ 2744 0195 00       		.byte	0
+ 2745 0196 00       		.byte	0
+ 2746 0197 20       		.uleb128 0x20
+ 2747 0198 898201   		.uleb128 0x4109
+ 2748 019b 01       		.byte	0x1
+ 2749 019c 11       		.uleb128 0x11
+ 2750 019d 01       		.uleb128 0x1
+ 2751 019e 31       		.uleb128 0x31
+ 2752 019f 13       		.uleb128 0x13
+ 2753 01a0 00       		.byte	0
+ 2754 01a1 00       		.byte	0
+ 2755 01a2 21       		.uleb128 0x21
+ 2756 01a3 2E       		.uleb128 0x2e
+ 2757 01a4 01       		.byte	0x1
+ 2758 01a5 3F       		.uleb128 0x3f
+ 2759 01a6 19       		.uleb128 0x19
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 59
+
+
+ 2760 01a7 03       		.uleb128 0x3
+ 2761 01a8 0E       		.uleb128 0xe
+ 2762 01a9 3A       		.uleb128 0x3a
+ 2763 01aa 0B       		.uleb128 0xb
+ 2764 01ab 3B       		.uleb128 0x3b
+ 2765 01ac 0B       		.uleb128 0xb
+ 2766 01ad 27       		.uleb128 0x27
+ 2767 01ae 19       		.uleb128 0x19
+ 2768 01af 11       		.uleb128 0x11
+ 2769 01b0 01       		.uleb128 0x1
+ 2770 01b1 12       		.uleb128 0x12
+ 2771 01b2 06       		.uleb128 0x6
+ 2772 01b3 40       		.uleb128 0x40
+ 2773 01b4 18       		.uleb128 0x18
+ 2774 01b5 9742     		.uleb128 0x2117
+ 2775 01b7 19       		.uleb128 0x19
+ 2776 01b8 01       		.uleb128 0x1
+ 2777 01b9 13       		.uleb128 0x13
+ 2778 01ba 00       		.byte	0
+ 2779 01bb 00       		.byte	0
+ 2780 01bc 22       		.uleb128 0x22
+ 2781 01bd 05       		.uleb128 0x5
+ 2782 01be 00       		.byte	0
+ 2783 01bf 03       		.uleb128 0x3
+ 2784 01c0 08       		.uleb128 0x8
+ 2785 01c1 3A       		.uleb128 0x3a
+ 2786 01c2 0B       		.uleb128 0xb
+ 2787 01c3 3B       		.uleb128 0x3b
+ 2788 01c4 0B       		.uleb128 0xb
+ 2789 01c5 49       		.uleb128 0x49
+ 2790 01c6 13       		.uleb128 0x13
+ 2791 01c7 02       		.uleb128 0x2
+ 2792 01c8 18       		.uleb128 0x18
+ 2793 01c9 00       		.byte	0
+ 2794 01ca 00       		.byte	0
+ 2795 01cb 23       		.uleb128 0x23
+ 2796 01cc 2E       		.uleb128 0x2e
+ 2797 01cd 01       		.byte	0x1
+ 2798 01ce 3F       		.uleb128 0x3f
+ 2799 01cf 19       		.uleb128 0x19
+ 2800 01d0 03       		.uleb128 0x3
+ 2801 01d1 0E       		.uleb128 0xe
+ 2802 01d2 3A       		.uleb128 0x3a
+ 2803 01d3 0B       		.uleb128 0xb
+ 2804 01d4 3B       		.uleb128 0x3b
+ 2805 01d5 05       		.uleb128 0x5
+ 2806 01d6 27       		.uleb128 0x27
+ 2807 01d7 19       		.uleb128 0x19
+ 2808 01d8 49       		.uleb128 0x49
+ 2809 01d9 13       		.uleb128 0x13
+ 2810 01da 11       		.uleb128 0x11
+ 2811 01db 01       		.uleb128 0x1
+ 2812 01dc 12       		.uleb128 0x12
+ 2813 01dd 06       		.uleb128 0x6
+ 2814 01de 40       		.uleb128 0x40
+ 2815 01df 18       		.uleb128 0x18
+ 2816 01e0 9742     		.uleb128 0x2117
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 60
+
+
+ 2817 01e2 19       		.uleb128 0x19
+ 2818 01e3 01       		.uleb128 0x1
+ 2819 01e4 13       		.uleb128 0x13
+ 2820 01e5 00       		.byte	0
+ 2821 01e6 00       		.byte	0
+ 2822 01e7 24       		.uleb128 0x24
+ 2823 01e8 05       		.uleb128 0x5
+ 2824 01e9 00       		.byte	0
+ 2825 01ea 03       		.uleb128 0x3
+ 2826 01eb 08       		.uleb128 0x8
+ 2827 01ec 3A       		.uleb128 0x3a
+ 2828 01ed 0B       		.uleb128 0xb
+ 2829 01ee 3B       		.uleb128 0x3b
+ 2830 01ef 05       		.uleb128 0x5
+ 2831 01f0 49       		.uleb128 0x49
+ 2832 01f1 13       		.uleb128 0x13
+ 2833 01f2 02       		.uleb128 0x2
+ 2834 01f3 17       		.uleb128 0x17
+ 2835 01f4 00       		.byte	0
+ 2836 01f5 00       		.byte	0
+ 2837 01f6 25       		.uleb128 0x25
+ 2838 01f7 05       		.uleb128 0x5
+ 2839 01f8 00       		.byte	0
+ 2840 01f9 03       		.uleb128 0x3
+ 2841 01fa 0E       		.uleb128 0xe
+ 2842 01fb 3A       		.uleb128 0x3a
+ 2843 01fc 0B       		.uleb128 0xb
+ 2844 01fd 3B       		.uleb128 0x3b
+ 2845 01fe 05       		.uleb128 0x5
+ 2846 01ff 49       		.uleb128 0x49
+ 2847 0200 13       		.uleb128 0x13
+ 2848 0201 02       		.uleb128 0x2
+ 2849 0202 17       		.uleb128 0x17
+ 2850 0203 00       		.byte	0
+ 2851 0204 00       		.byte	0
+ 2852 0205 26       		.uleb128 0x26
+ 2853 0206 34       		.uleb128 0x34
+ 2854 0207 00       		.byte	0
+ 2855 0208 03       		.uleb128 0x3
+ 2856 0209 08       		.uleb128 0x8
+ 2857 020a 3A       		.uleb128 0x3a
+ 2858 020b 0B       		.uleb128 0xb
+ 2859 020c 3B       		.uleb128 0x3b
+ 2860 020d 05       		.uleb128 0x5
+ 2861 020e 49       		.uleb128 0x49
+ 2862 020f 13       		.uleb128 0x13
+ 2863 0210 02       		.uleb128 0x2
+ 2864 0211 17       		.uleb128 0x17
+ 2865 0212 00       		.byte	0
+ 2866 0213 00       		.byte	0
+ 2867 0214 27       		.uleb128 0x27
+ 2868 0215 34       		.uleb128 0x34
+ 2869 0216 00       		.byte	0
+ 2870 0217 03       		.uleb128 0x3
+ 2871 0218 0E       		.uleb128 0xe
+ 2872 0219 3A       		.uleb128 0x3a
+ 2873 021a 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 61
+
+
+ 2874 021b 3B       		.uleb128 0x3b
+ 2875 021c 05       		.uleb128 0x5
+ 2876 021d 49       		.uleb128 0x49
+ 2877 021e 13       		.uleb128 0x13
+ 2878 021f 02       		.uleb128 0x2
+ 2879 0220 17       		.uleb128 0x17
+ 2880 0221 00       		.byte	0
+ 2881 0222 00       		.byte	0
+ 2882 0223 28       		.uleb128 0x28
+ 2883 0224 898201   		.uleb128 0x4109
+ 2884 0227 01       		.byte	0x1
+ 2885 0228 11       		.uleb128 0x11
+ 2886 0229 01       		.uleb128 0x1
+ 2887 022a 31       		.uleb128 0x31
+ 2888 022b 13       		.uleb128 0x13
+ 2889 022c 01       		.uleb128 0x1
+ 2890 022d 13       		.uleb128 0x13
+ 2891 022e 00       		.byte	0
+ 2892 022f 00       		.byte	0
+ 2893 0230 29       		.uleb128 0x29
+ 2894 0231 2E       		.uleb128 0x2e
+ 2895 0232 01       		.byte	0x1
+ 2896 0233 3F       		.uleb128 0x3f
+ 2897 0234 19       		.uleb128 0x19
+ 2898 0235 03       		.uleb128 0x3
+ 2899 0236 0E       		.uleb128 0xe
+ 2900 0237 3A       		.uleb128 0x3a
+ 2901 0238 0B       		.uleb128 0xb
+ 2902 0239 3B       		.uleb128 0x3b
+ 2903 023a 05       		.uleb128 0x5
+ 2904 023b 27       		.uleb128 0x27
+ 2905 023c 19       		.uleb128 0x19
+ 2906 023d 11       		.uleb128 0x11
+ 2907 023e 01       		.uleb128 0x1
+ 2908 023f 12       		.uleb128 0x12
+ 2909 0240 06       		.uleb128 0x6
+ 2910 0241 40       		.uleb128 0x40
+ 2911 0242 18       		.uleb128 0x18
+ 2912 0243 9742     		.uleb128 0x2117
+ 2913 0245 19       		.uleb128 0x19
+ 2914 0246 01       		.uleb128 0x1
+ 2915 0247 13       		.uleb128 0x13
+ 2916 0248 00       		.byte	0
+ 2917 0249 00       		.byte	0
+ 2918 024a 2A       		.uleb128 0x2a
+ 2919 024b 34       		.uleb128 0x34
+ 2920 024c 00       		.byte	0
+ 2921 024d 03       		.uleb128 0x3
+ 2922 024e 08       		.uleb128 0x8
+ 2923 024f 3A       		.uleb128 0x3a
+ 2924 0250 0B       		.uleb128 0xb
+ 2925 0251 3B       		.uleb128 0x3b
+ 2926 0252 05       		.uleb128 0x5
+ 2927 0253 49       		.uleb128 0x49
+ 2928 0254 13       		.uleb128 0x13
+ 2929 0255 02       		.uleb128 0x2
+ 2930 0256 18       		.uleb128 0x18
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 62
+
+
+ 2931 0257 00       		.byte	0
+ 2932 0258 00       		.byte	0
+ 2933 0259 2B       		.uleb128 0x2b
+ 2934 025a 05       		.uleb128 0x5
+ 2935 025b 00       		.byte	0
+ 2936 025c 03       		.uleb128 0x3
+ 2937 025d 0E       		.uleb128 0xe
+ 2938 025e 3A       		.uleb128 0x3a
+ 2939 025f 0B       		.uleb128 0xb
+ 2940 0260 3B       		.uleb128 0x3b
+ 2941 0261 05       		.uleb128 0x5
+ 2942 0262 49       		.uleb128 0x49
+ 2943 0263 13       		.uleb128 0x13
+ 2944 0264 02       		.uleb128 0x2
+ 2945 0265 18       		.uleb128 0x18
+ 2946 0266 00       		.byte	0
+ 2947 0267 00       		.byte	0
+ 2948 0268 2C       		.uleb128 0x2c
+ 2949 0269 34       		.uleb128 0x34
+ 2950 026a 00       		.byte	0
+ 2951 026b 03       		.uleb128 0x3
+ 2952 026c 0E       		.uleb128 0xe
+ 2953 026d 3A       		.uleb128 0x3a
+ 2954 026e 0B       		.uleb128 0xb
+ 2955 026f 3B       		.uleb128 0x3b
+ 2956 0270 0B       		.uleb128 0xb
+ 2957 0271 49       		.uleb128 0x49
+ 2958 0272 13       		.uleb128 0x13
+ 2959 0273 02       		.uleb128 0x2
+ 2960 0274 18       		.uleb128 0x18
+ 2961 0275 00       		.byte	0
+ 2962 0276 00       		.byte	0
+ 2963 0277 2D       		.uleb128 0x2d
+ 2964 0278 34       		.uleb128 0x34
+ 2965 0279 00       		.byte	0
+ 2966 027a 03       		.uleb128 0x3
+ 2967 027b 0E       		.uleb128 0xe
+ 2968 027c 3A       		.uleb128 0x3a
+ 2969 027d 0B       		.uleb128 0xb
+ 2970 027e 3B       		.uleb128 0x3b
+ 2971 027f 0B       		.uleb128 0xb
+ 2972 0280 49       		.uleb128 0x49
+ 2973 0281 13       		.uleb128 0x13
+ 2974 0282 3F       		.uleb128 0x3f
+ 2975 0283 19       		.uleb128 0x19
+ 2976 0284 3C       		.uleb128 0x3c
+ 2977 0285 19       		.uleb128 0x19
+ 2978 0286 00       		.byte	0
+ 2979 0287 00       		.byte	0
+ 2980 0288 2E       		.uleb128 0x2e
+ 2981 0289 2E       		.uleb128 0x2e
+ 2982 028a 00       		.byte	0
+ 2983 028b 3F       		.uleb128 0x3f
+ 2984 028c 19       		.uleb128 0x19
+ 2985 028d 3C       		.uleb128 0x3c
+ 2986 028e 19       		.uleb128 0x19
+ 2987 028f 6E       		.uleb128 0x6e
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 63
+
+
+ 2988 0290 0E       		.uleb128 0xe
+ 2989 0291 03       		.uleb128 0x3
+ 2990 0292 0E       		.uleb128 0xe
+ 2991 0293 3A       		.uleb128 0x3a
+ 2992 0294 0B       		.uleb128 0xb
+ 2993 0295 3B       		.uleb128 0x3b
+ 2994 0296 0B       		.uleb128 0xb
+ 2995 0297 00       		.byte	0
+ 2996 0298 00       		.byte	0
+ 2997 0299 2F       		.uleb128 0x2f
+ 2998 029a 2E       		.uleb128 0x2e
+ 2999 029b 00       		.byte	0
+ 3000 029c 3F       		.uleb128 0x3f
+ 3001 029d 19       		.uleb128 0x19
+ 3002 029e 3C       		.uleb128 0x3c
+ 3003 029f 19       		.uleb128 0x19
+ 3004 02a0 6E       		.uleb128 0x6e
+ 3005 02a1 0E       		.uleb128 0xe
+ 3006 02a2 03       		.uleb128 0x3
+ 3007 02a3 0E       		.uleb128 0xe
+ 3008 02a4 00       		.byte	0
+ 3009 02a5 00       		.byte	0
+ 3010 02a6 00       		.byte	0
+ 3011              		.section	.debug_loc,"",%progbits
+ 3012              	.Ldebug_loc0:
+ 3013              	.LLST0:
+ 3014 0000 00000000 		.4byte	.LVL0
+ 3015 0004 10000000 		.4byte	.LVL1
+ 3016 0008 0100     		.2byte	0x1
+ 3017 000a 50       		.byte	0x50
+ 3018 000b 10000000 		.4byte	.LVL1
+ 3019 000f 12000000 		.4byte	.LVL2
+ 3020 0013 0400     		.2byte	0x4
+ 3021 0015 F3       		.byte	0xf3
+ 3022 0016 01       		.uleb128 0x1
+ 3023 0017 50       		.byte	0x50
+ 3024 0018 9F       		.byte	0x9f
+ 3025 0019 12000000 		.4byte	.LVL2
+ 3026 001d 26000000 		.4byte	.LVL3
+ 3027 0021 0100     		.2byte	0x1
+ 3028 0023 50       		.byte	0x50
+ 3029 0024 26000000 		.4byte	.LVL3
+ 3030 0028 28000000 		.4byte	.LVL4
+ 3031 002c 0400     		.2byte	0x4
+ 3032 002e F3       		.byte	0xf3
+ 3033 002f 01       		.uleb128 0x1
+ 3034 0030 50       		.byte	0x50
+ 3035 0031 9F       		.byte	0x9f
+ 3036 0032 28000000 		.4byte	.LVL4
+ 3037 0036 2A000000 		.4byte	.LVL5
+ 3038 003a 0100     		.2byte	0x1
+ 3039 003c 50       		.byte	0x50
+ 3040 003d 2A000000 		.4byte	.LVL5
+ 3041 0041 2C000000 		.4byte	.LVL6
+ 3042 0045 0400     		.2byte	0x4
+ 3043 0047 F3       		.byte	0xf3
+ 3044 0048 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 64
+
+
+ 3045 0049 50       		.byte	0x50
+ 3046 004a 9F       		.byte	0x9f
+ 3047 004b 2C000000 		.4byte	.LVL6
+ 3048 004f 2E000000 		.4byte	.LVL7
+ 3049 0053 0100     		.2byte	0x1
+ 3050 0055 50       		.byte	0x50
+ 3051 0056 2E000000 		.4byte	.LVL7
+ 3052 005a 30000000 		.4byte	.LVL8
+ 3053 005e 0400     		.2byte	0x4
+ 3054 0060 F3       		.byte	0xf3
+ 3055 0061 01       		.uleb128 0x1
+ 3056 0062 50       		.byte	0x50
+ 3057 0063 9F       		.byte	0x9f
+ 3058 0064 30000000 		.4byte	.LVL8
+ 3059 0068 32000000 		.4byte	.LVL9
+ 3060 006c 0100     		.2byte	0x1
+ 3061 006e 50       		.byte	0x50
+ 3062 006f 32000000 		.4byte	.LVL9
+ 3063 0073 34000000 		.4byte	.LVL10
+ 3064 0077 0400     		.2byte	0x4
+ 3065 0079 F3       		.byte	0xf3
+ 3066 007a 01       		.uleb128 0x1
+ 3067 007b 50       		.byte	0x50
+ 3068 007c 9F       		.byte	0x9f
+ 3069 007d 34000000 		.4byte	.LVL10
+ 3070 0081 36000000 		.4byte	.LVL11
+ 3071 0085 0100     		.2byte	0x1
+ 3072 0087 50       		.byte	0x50
+ 3073 0088 36000000 		.4byte	.LVL11
+ 3074 008c 38000000 		.4byte	.LVL12
+ 3075 0090 0400     		.2byte	0x4
+ 3076 0092 F3       		.byte	0xf3
+ 3077 0093 01       		.uleb128 0x1
+ 3078 0094 50       		.byte	0x50
+ 3079 0095 9F       		.byte	0x9f
+ 3080 0096 38000000 		.4byte	.LVL12
+ 3081 009a 3A000000 		.4byte	.LVL13
+ 3082 009e 0100     		.2byte	0x1
+ 3083 00a0 50       		.byte	0x50
+ 3084 00a1 3A000000 		.4byte	.LVL13
+ 3085 00a5 40000000 		.4byte	.LFE53
+ 3086 00a9 0400     		.2byte	0x4
+ 3087 00ab F3       		.byte	0xf3
+ 3088 00ac 01       		.uleb128 0x1
+ 3089 00ad 50       		.byte	0x50
+ 3090 00ae 9F       		.byte	0x9f
+ 3091 00af 00000000 		.4byte	0
+ 3092 00b3 00000000 		.4byte	0
+ 3093              	.LLST1:
+ 3094 00b7 00000000 		.4byte	.LVL14
+ 3095 00bb 10000000 		.4byte	.LVL16
+ 3096 00bf 0100     		.2byte	0x1
+ 3097 00c1 50       		.byte	0x50
+ 3098 00c2 10000000 		.4byte	.LVL16
+ 3099 00c6 50000000 		.4byte	.LVL27
+ 3100 00ca 0100     		.2byte	0x1
+ 3101 00cc 59       		.byte	0x59
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 65
+
+
+ 3102 00cd 50000000 		.4byte	.LVL27
+ 3103 00d1 6E000000 		.4byte	.LVL28
+ 3104 00d5 0200     		.2byte	0x2
+ 3105 00d7 30       		.byte	0x30
+ 3106 00d8 9F       		.byte	0x9f
+ 3107 00d9 6E000000 		.4byte	.LVL28
+ 3108 00dd 7E000000 		.4byte	.LVL34
+ 3109 00e1 0100     		.2byte	0x1
+ 3110 00e3 59       		.byte	0x59
+ 3111 00e4 00000000 		.4byte	0
+ 3112 00e8 00000000 		.4byte	0
+ 3113              	.LLST2:
+ 3114 00ec 00000000 		.4byte	.LVL14
+ 3115 00f0 12000000 		.4byte	.LVL17
+ 3116 00f4 0100     		.2byte	0x1
+ 3117 00f6 51       		.byte	0x51
+ 3118 00f7 12000000 		.4byte	.LVL17
+ 3119 00fb 94000000 		.4byte	.LFE54
+ 3120 00ff 0400     		.2byte	0x4
+ 3121 0101 F3       		.byte	0xf3
+ 3122 0102 01       		.uleb128 0x1
+ 3123 0103 51       		.byte	0x51
+ 3124 0104 9F       		.byte	0x9f
+ 3125 0105 00000000 		.4byte	0
+ 3126 0109 00000000 		.4byte	0
+ 3127              	.LLST3:
+ 3128 010d 22000000 		.4byte	.LVL21
+ 3129 0111 6E000000 		.4byte	.LVL28
+ 3130 0115 0100     		.2byte	0x1
+ 3131 0117 54       		.byte	0x54
+ 3132 0118 6E000000 		.4byte	.LVL28
+ 3133 011c 72000000 		.4byte	.LVL29
+ 3134 0120 0200     		.2byte	0x2
+ 3135 0122 74       		.byte	0x74
+ 3136 0123 0C       		.sleb128 12
+ 3137 0124 72000000 		.4byte	.LVL29
+ 3138 0128 7E000000 		.4byte	.LVL30
+ 3139 012c 0100     		.2byte	0x1
+ 3140 012e 54       		.byte	0x54
+ 3141 012f 00000000 		.4byte	0
+ 3142 0133 00000000 		.4byte	0
+ 3143              	.LLST4:
+ 3144 0137 1E000000 		.4byte	.LVL20
+ 3145 013b 28000000 		.4byte	.LVL22
+ 3146 013f 0200     		.2byte	0x2
+ 3147 0141 30       		.byte	0x30
+ 3148 0142 9F       		.byte	0x9f
+ 3149 0143 28000000 		.4byte	.LVL22
+ 3150 0147 6E000000 		.4byte	.LVL28
+ 3151 014b 0100     		.2byte	0x1
+ 3152 014d 55       		.byte	0x55
+ 3153 014e 6E000000 		.4byte	.LVL28
+ 3154 0152 72000000 		.4byte	.LVL29
+ 3155 0156 0100     		.2byte	0x1
+ 3156 0158 54       		.byte	0x54
+ 3157 0159 72000000 		.4byte	.LVL29
+ 3158 015d 7E000000 		.4byte	.LVL31
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 66
+
+
+ 3159 0161 0100     		.2byte	0x1
+ 3160 0163 55       		.byte	0x55
+ 3161 0164 00000000 		.4byte	0
+ 3162 0168 00000000 		.4byte	0
+ 3163              	.LLST5:
+ 3164 016c 1E000000 		.4byte	.LVL20
+ 3165 0170 7E000000 		.4byte	.LVL32
+ 3166 0174 0600     		.2byte	0x6
+ 3167 0176 76       		.byte	0x76
+ 3168 0177 00       		.sleb128 0
+ 3169 0178 08       		.byte	0x8
+ 3170 0179 FF       		.byte	0xff
+ 3171 017a 1A       		.byte	0x1a
+ 3172 017b 9F       		.byte	0x9f
+ 3173 017c 00000000 		.4byte	0
+ 3174 0180 00000000 		.4byte	0
+ 3175              	.LLST6:
+ 3176 0184 0C000000 		.4byte	.LVL15
+ 3177 0188 28000000 		.4byte	.LVL22
+ 3178 018c 0200     		.2byte	0x2
+ 3179 018e 30       		.byte	0x30
+ 3180 018f 9F       		.byte	0x9f
+ 3181 0190 28000000 		.4byte	.LVL22
+ 3182 0194 4E000000 		.4byte	.LVL26
+ 3183 0198 0100     		.2byte	0x1
+ 3184 019a 57       		.byte	0x57
+ 3185 019b 4E000000 		.4byte	.LVL26
+ 3186 019f 50000000 		.4byte	.LVL27
+ 3187 01a3 0100     		.2byte	0x1
+ 3188 01a5 50       		.byte	0x50
+ 3189 01a6 50000000 		.4byte	.LVL27
+ 3190 01aa 6E000000 		.4byte	.LVL28
+ 3191 01ae 0200     		.2byte	0x2
+ 3192 01b0 31       		.byte	0x31
+ 3193 01b1 9F       		.byte	0x9f
+ 3194 01b2 6E000000 		.4byte	.LVL28
+ 3195 01b6 7E000000 		.4byte	.LVL33
+ 3196 01ba 0100     		.2byte	0x1
+ 3197 01bc 57       		.byte	0x57
+ 3198 01bd 00000000 		.4byte	0
+ 3199 01c1 00000000 		.4byte	0
+ 3200              	.LLST7:
+ 3201 01c5 18000000 		.4byte	.LVL19
+ 3202 01c9 28000000 		.4byte	.LVL22
+ 3203 01cd 0100     		.2byte	0x1
+ 3204 01cf 50       		.byte	0x50
+ 3205 01d0 28000000 		.4byte	.LVL22
+ 3206 01d4 94000000 		.4byte	.LFE54
+ 3207 01d8 0200     		.2byte	0x2
+ 3208 01da 91       		.byte	0x91
+ 3209 01db 5C       		.sleb128 -36
+ 3210 01dc 00000000 		.4byte	0
+ 3211 01e0 00000000 		.4byte	0
+ 3212              	.LLST8:
+ 3213 01e4 42000000 		.4byte	.LVL24
+ 3214 01e8 4B000000 		.4byte	.LVL25-1
+ 3215 01ec 0200     		.2byte	0x2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 67
+
+
+ 3216 01ee 79       		.byte	0x79
+ 3217 01ef 04       		.sleb128 4
+ 3218 01f0 00000000 		.4byte	0
+ 3219 01f4 00000000 		.4byte	0
+ 3220              	.LLST9:
+ 3221 01f8 00000000 		.4byte	.LVL35
+ 3222 01fc 14000000 		.4byte	.LVL36
+ 3223 0200 0100     		.2byte	0x1
+ 3224 0202 50       		.byte	0x50
+ 3225 0203 14000000 		.4byte	.LVL36
+ 3226 0207 16000000 		.4byte	.LVL37
+ 3227 020b 0400     		.2byte	0x4
+ 3228 020d F3       		.byte	0xf3
+ 3229 020e 01       		.uleb128 0x1
+ 3230 020f 50       		.byte	0x50
+ 3231 0210 9F       		.byte	0x9f
+ 3232 0211 16000000 		.4byte	.LVL37
+ 3233 0215 18000000 		.4byte	.LVL38
+ 3234 0219 0100     		.2byte	0x1
+ 3235 021b 50       		.byte	0x50
+ 3236 021c 18000000 		.4byte	.LVL38
+ 3237 0220 1C000000 		.4byte	.LVL39
+ 3238 0224 0400     		.2byte	0x4
+ 3239 0226 F3       		.byte	0xf3
+ 3240 0227 01       		.uleb128 0x1
+ 3241 0228 50       		.byte	0x50
+ 3242 0229 9F       		.byte	0x9f
+ 3243 022a 1C000000 		.4byte	.LVL39
+ 3244 022e 1E000000 		.4byte	.LVL40
+ 3245 0232 0100     		.2byte	0x1
+ 3246 0234 50       		.byte	0x50
+ 3247 0235 1E000000 		.4byte	.LVL40
+ 3248 0239 22000000 		.4byte	.LFE55
+ 3249 023d 0400     		.2byte	0x4
+ 3250 023f F3       		.byte	0xf3
+ 3251 0240 01       		.uleb128 0x1
+ 3252 0241 50       		.byte	0x50
+ 3253 0242 9F       		.byte	0x9f
+ 3254 0243 00000000 		.4byte	0
+ 3255 0247 00000000 		.4byte	0
+ 3256              	.LLST10:
+ 3257 024b 00000000 		.4byte	.LVL41
+ 3258 024f 14000000 		.4byte	.LVL42
+ 3259 0253 0100     		.2byte	0x1
+ 3260 0255 50       		.byte	0x50
+ 3261 0256 14000000 		.4byte	.LVL42
+ 3262 025a 16000000 		.4byte	.LVL43
+ 3263 025e 0400     		.2byte	0x4
+ 3264 0260 F3       		.byte	0xf3
+ 3265 0261 01       		.uleb128 0x1
+ 3266 0262 50       		.byte	0x50
+ 3267 0263 9F       		.byte	0x9f
+ 3268 0264 16000000 		.4byte	.LVL43
+ 3269 0268 18000000 		.4byte	.LVL44
+ 3270 026c 0100     		.2byte	0x1
+ 3271 026e 50       		.byte	0x50
+ 3272 026f 18000000 		.4byte	.LVL44
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 68
+
+
+ 3273 0273 1C000000 		.4byte	.LVL45
+ 3274 0277 0400     		.2byte	0x4
+ 3275 0279 F3       		.byte	0xf3
+ 3276 027a 01       		.uleb128 0x1
+ 3277 027b 50       		.byte	0x50
+ 3278 027c 9F       		.byte	0x9f
+ 3279 027d 1C000000 		.4byte	.LVL45
+ 3280 0281 1E000000 		.4byte	.LVL46
+ 3281 0285 0100     		.2byte	0x1
+ 3282 0287 50       		.byte	0x50
+ 3283 0288 1E000000 		.4byte	.LVL46
+ 3284 028c 22000000 		.4byte	.LFE56
+ 3285 0290 0400     		.2byte	0x4
+ 3286 0292 F3       		.byte	0xf3
+ 3287 0293 01       		.uleb128 0x1
+ 3288 0294 50       		.byte	0x50
+ 3289 0295 9F       		.byte	0x9f
+ 3290 0296 00000000 		.4byte	0
+ 3291 029a 00000000 		.4byte	0
+ 3292              	.LLST11:
+ 3293 029e 00000000 		.4byte	.LVL48
+ 3294 02a2 16000000 		.4byte	.LVL51
+ 3295 02a6 0100     		.2byte	0x1
+ 3296 02a8 50       		.byte	0x50
+ 3297 02a9 16000000 		.4byte	.LVL51
+ 3298 02ad 68000000 		.4byte	.LVL63
+ 3299 02b1 0100     		.2byte	0x1
+ 3300 02b3 54       		.byte	0x54
+ 3301 02b4 68000000 		.4byte	.LVL63
+ 3302 02b8 74000000 		.4byte	.LVL64
+ 3303 02bc 0100     		.2byte	0x1
+ 3304 02be 51       		.byte	0x51
+ 3305 02bf 74000000 		.4byte	.LVL64
+ 3306 02c3 76000000 		.4byte	.LVL65
+ 3307 02c7 0100     		.2byte	0x1
+ 3308 02c9 54       		.byte	0x54
+ 3309 02ca 76000000 		.4byte	.LVL65
+ 3310 02ce 78000000 		.4byte	.LVL66
+ 3311 02d2 0100     		.2byte	0x1
+ 3312 02d4 51       		.byte	0x51
+ 3313 02d5 78000000 		.4byte	.LVL66
+ 3314 02d9 7E000000 		.4byte	.LVL67
+ 3315 02dd 0100     		.2byte	0x1
+ 3316 02df 54       		.byte	0x54
+ 3317 02e0 7E000000 		.4byte	.LVL67
+ 3318 02e4 9C000000 		.4byte	.LVL73
+ 3319 02e8 0400     		.2byte	0x4
+ 3320 02ea F3       		.byte	0xf3
+ 3321 02eb 01       		.uleb128 0x1
+ 3322 02ec 50       		.byte	0x50
+ 3323 02ed 9F       		.byte	0x9f
+ 3324 02ee 9C000000 		.4byte	.LVL73
+ 3325 02f2 9E000000 		.4byte	.LVL74
+ 3326 02f6 0100     		.2byte	0x1
+ 3327 02f8 50       		.byte	0x50
+ 3328 02f9 9E000000 		.4byte	.LVL74
+ 3329 02fd A2000000 		.4byte	.LVL75
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 69
+
+
+ 3330 0301 0100     		.2byte	0x1
+ 3331 0303 54       		.byte	0x54
+ 3332 0304 A2000000 		.4byte	.LVL75
+ 3333 0308 A4000000 		.4byte	.LVL76
+ 3334 030c 0100     		.2byte	0x1
+ 3335 030e 50       		.byte	0x50
+ 3336 030f A4000000 		.4byte	.LVL76
+ 3337 0313 BA000000 		.4byte	.LVL82
+ 3338 0317 0100     		.2byte	0x1
+ 3339 0319 54       		.byte	0x54
+ 3340 031a BA000000 		.4byte	.LVL82
+ 3341 031e BE000000 		.4byte	.LFE58
+ 3342 0322 0400     		.2byte	0x4
+ 3343 0324 F3       		.byte	0xf3
+ 3344 0325 01       		.uleb128 0x1
+ 3345 0326 50       		.byte	0x50
+ 3346 0327 9F       		.byte	0x9f
+ 3347 0328 00000000 		.4byte	0
+ 3348 032c 00000000 		.4byte	0
+ 3349              	.LLST12:
+ 3350 0330 00000000 		.4byte	.LVL48
+ 3351 0334 14000000 		.4byte	.LVL50
+ 3352 0338 0100     		.2byte	0x1
+ 3353 033a 51       		.byte	0x51
+ 3354 033b 14000000 		.4byte	.LVL50
+ 3355 033f 9C000000 		.4byte	.LVL73
+ 3356 0343 0100     		.2byte	0x1
+ 3357 0345 55       		.byte	0x55
+ 3358 0346 9C000000 		.4byte	.LVL73
+ 3359 034a A8000000 		.4byte	.LVL77
+ 3360 034e 0100     		.2byte	0x1
+ 3361 0350 51       		.byte	0x51
+ 3362 0351 A8000000 		.4byte	.LVL77
+ 3363 0355 BC000000 		.4byte	.LVL83
+ 3364 0359 0100     		.2byte	0x1
+ 3365 035b 55       		.byte	0x55
+ 3366 035c BC000000 		.4byte	.LVL83
+ 3367 0360 BE000000 		.4byte	.LFE58
+ 3368 0364 0400     		.2byte	0x4
+ 3369 0366 F3       		.byte	0xf3
+ 3370 0367 01       		.uleb128 0x1
+ 3371 0368 51       		.byte	0x51
+ 3372 0369 9F       		.byte	0x9f
+ 3373 036a 00000000 		.4byte	0
+ 3374 036e 00000000 		.4byte	0
+ 3375              	.LLST13:
+ 3376 0372 00000000 		.4byte	.LVL48
+ 3377 0376 19000000 		.4byte	.LVL52-1
+ 3378 037a 0100     		.2byte	0x1
+ 3379 037c 52       		.byte	0x52
+ 3380 037d 19000000 		.4byte	.LVL52-1
+ 3381 0381 9C000000 		.4byte	.LVL73
+ 3382 0385 0100     		.2byte	0x1
+ 3383 0387 57       		.byte	0x57
+ 3384 0388 9C000000 		.4byte	.LVL73
+ 3385 038c A8000000 		.4byte	.LVL77
+ 3386 0390 0100     		.2byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 70
+
+
+ 3387 0392 52       		.byte	0x52
+ 3388 0393 A8000000 		.4byte	.LVL77
+ 3389 0397 BC000000 		.4byte	.LVL84
+ 3390 039b 0100     		.2byte	0x1
+ 3391 039d 57       		.byte	0x57
+ 3392 039e BC000000 		.4byte	.LVL84
+ 3393 03a2 BE000000 		.4byte	.LFE58
+ 3394 03a6 0400     		.2byte	0x4
+ 3395 03a8 F3       		.byte	0xf3
+ 3396 03a9 01       		.uleb128 0x1
+ 3397 03aa 52       		.byte	0x52
+ 3398 03ab 9F       		.byte	0x9f
+ 3399 03ac 00000000 		.4byte	0
+ 3400 03b0 00000000 		.4byte	0
+ 3401              	.LLST14:
+ 3402 03b4 8E000000 		.4byte	.LVL70
+ 3403 03b8 94000000 		.4byte	.LVL71
+ 3404 03bc 0100     		.2byte	0x1
+ 3405 03be 50       		.byte	0x50
+ 3406 03bf 00000000 		.4byte	0
+ 3407 03c3 00000000 		.4byte	0
+ 3408              	.LLST15:
+ 3409 03c7 50000000 		.4byte	.LVL59
+ 3410 03cb 5A000000 		.4byte	.LVL60
+ 3411 03cf 0100     		.2byte	0x1
+ 3412 03d1 50       		.byte	0x50
+ 3413 03d2 64000000 		.4byte	.LVL62
+ 3414 03d6 88000000 		.4byte	.LVL68
+ 3415 03da 0100     		.2byte	0x1
+ 3416 03dc 50       		.byte	0x50
+ 3417 03dd 88000000 		.4byte	.LVL68
+ 3418 03e1 8B000000 		.4byte	.LVL69-1
+ 3419 03e5 0200     		.2byte	0x2
+ 3420 03e7 91       		.byte	0x91
+ 3421 03e8 60       		.sleb128 -32
+ 3422 03e9 B4000000 		.4byte	.LVL80
+ 3423 03ed B6000000 		.4byte	.LVL81
+ 3424 03f1 0100     		.2byte	0x1
+ 3425 03f3 50       		.byte	0x50
+ 3426 03f4 00000000 		.4byte	0
+ 3427 03f8 00000000 		.4byte	0
+ 3428              	.LLST16:
+ 3429 03fc 78000000 		.4byte	.LVL66
+ 3430 0400 8B000000 		.4byte	.LVL69-1
+ 3431 0404 0100     		.2byte	0x1
+ 3432 0406 51       		.byte	0x51
+ 3433 0407 00000000 		.4byte	0
+ 3434 040b 00000000 		.4byte	0
+ 3435              	.LLST17:
+ 3436 040f 2A000000 		.4byte	.LVL54
+ 3437 0413 37000000 		.4byte	.LVL55-1
+ 3438 0417 0100     		.2byte	0x1
+ 3439 0419 50       		.byte	0x50
+ 3440 041a 37000000 		.4byte	.LVL55-1
+ 3441 041e 3A000000 		.4byte	.LVL56
+ 3442 0422 0100     		.2byte	0x1
+ 3443 0424 56       		.byte	0x56
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 71
+
+
+ 3444 0425 3A000000 		.4byte	.LVL56
+ 3445 0429 4A000000 		.4byte	.LVL58
+ 3446 042d 0100     		.2byte	0x1
+ 3447 042f 55       		.byte	0x55
+ 3448 0430 4A000000 		.4byte	.LVL58
+ 3449 0434 9C000000 		.4byte	.LVL73
+ 3450 0438 0100     		.2byte	0x1
+ 3451 043a 56       		.byte	0x56
+ 3452 043b A8000000 		.4byte	.LVL77
+ 3453 043f AA000000 		.4byte	.LVL78
+ 3454 0443 0100     		.2byte	0x1
+ 3455 0445 50       		.byte	0x50
+ 3456 0446 AA000000 		.4byte	.LVL78
+ 3457 044a AE000000 		.4byte	.LVL79
+ 3458 044e 0100     		.2byte	0x1
+ 3459 0450 56       		.byte	0x56
+ 3460 0451 AE000000 		.4byte	.LVL79
+ 3461 0455 B4000000 		.4byte	.LVL80
+ 3462 0459 0100     		.2byte	0x1
+ 3463 045b 55       		.byte	0x55
+ 3464 045c B4000000 		.4byte	.LVL80
+ 3465 0460 BA000000 		.4byte	.LVL82
+ 3466 0464 0100     		.2byte	0x1
+ 3467 0466 56       		.byte	0x56
+ 3468 0467 00000000 		.4byte	0
+ 3469 046b 00000000 		.4byte	0
+ 3470              	.LLST18:
+ 3471 046f 12000000 		.4byte	.LVL49
+ 3472 0473 9C000000 		.4byte	.LVL73
+ 3473 0477 0200     		.2byte	0x2
+ 3474 0479 44       		.byte	0x44
+ 3475 047a 9F       		.byte	0x9f
+ 3476 047b A8000000 		.4byte	.LVL77
+ 3477 047f BA000000 		.4byte	.LVL82
+ 3478 0483 0200     		.2byte	0x2
+ 3479 0485 44       		.byte	0x44
+ 3480 0486 9F       		.byte	0x9f
+ 3481 0487 00000000 		.4byte	0
+ 3482 048b 00000000 		.4byte	0
+ 3483              	.LLST19:
+ 3484 048f 00000000 		.4byte	.LVL85
+ 3485 0493 07000000 		.4byte	.LVL86-1
+ 3486 0497 0100     		.2byte	0x1
+ 3487 0499 50       		.byte	0x50
+ 3488 049a 07000000 		.4byte	.LVL86-1
+ 3489 049e 0A000000 		.4byte	.LFE59
+ 3490 04a2 0400     		.2byte	0x4
+ 3491 04a4 F3       		.byte	0xf3
+ 3492 04a5 01       		.uleb128 0x1
+ 3493 04a6 50       		.byte	0x50
+ 3494 04a7 9F       		.byte	0x9f
+ 3495 04a8 00000000 		.4byte	0
+ 3496 04ac 00000000 		.4byte	0
+ 3497              	.LLST20:
+ 3498 04b0 00000000 		.4byte	.LVL85
+ 3499 04b4 07000000 		.4byte	.LVL86-1
+ 3500 04b8 0100     		.2byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 72
+
+
+ 3501 04ba 51       		.byte	0x51
+ 3502 04bb 07000000 		.4byte	.LVL86-1
+ 3503 04bf 0A000000 		.4byte	.LFE59
+ 3504 04c3 0400     		.2byte	0x4
+ 3505 04c5 F3       		.byte	0xf3
+ 3506 04c6 01       		.uleb128 0x1
+ 3507 04c7 51       		.byte	0x51
+ 3508 04c8 9F       		.byte	0x9f
+ 3509 04c9 00000000 		.4byte	0
+ 3510 04cd 00000000 		.4byte	0
+ 3511              	.LLST21:
+ 3512 04d1 00000000 		.4byte	.LVL87
+ 3513 04d5 2E000000 		.4byte	.LVL93
+ 3514 04d9 0100     		.2byte	0x1
+ 3515 04db 50       		.byte	0x50
+ 3516 04dc 2E000000 		.4byte	.LVL93
+ 3517 04e0 31000000 		.4byte	.LVL94-1
+ 3518 04e4 0100     		.2byte	0x1
+ 3519 04e6 51       		.byte	0x51
+ 3520 04e7 31000000 		.4byte	.LVL94-1
+ 3521 04eb 38000000 		.4byte	.LFE60
+ 3522 04ef 0400     		.2byte	0x4
+ 3523 04f1 F3       		.byte	0xf3
+ 3524 04f2 01       		.uleb128 0x1
+ 3525 04f3 50       		.byte	0x50
+ 3526 04f4 9F       		.byte	0x9f
+ 3527 04f5 00000000 		.4byte	0
+ 3528 04f9 00000000 		.4byte	0
+ 3529              	.LLST22:
+ 3530 04fd 12000000 		.4byte	.LVL88
+ 3531 0501 24000000 		.4byte	.LVL89
+ 3532 0505 0100     		.2byte	0x1
+ 3533 0507 52       		.byte	0x52
+ 3534 0508 26000000 		.4byte	.LVL90
+ 3535 050c 2C000000 		.4byte	.LVL92
+ 3536 0510 0100     		.2byte	0x1
+ 3537 0512 52       		.byte	0x52
+ 3538 0513 00000000 		.4byte	0
+ 3539 0517 00000000 		.4byte	0
+ 3540              	.LLST23:
+ 3541 051b 00000000 		.4byte	.LVL95
+ 3542 051f 0C000000 		.4byte	.LVL96
+ 3543 0523 0100     		.2byte	0x1
+ 3544 0525 50       		.byte	0x50
+ 3545 0526 0C000000 		.4byte	.LVL96
+ 3546 052a 38000000 		.4byte	.LFE61
+ 3547 052e 0400     		.2byte	0x4
+ 3548 0530 F3       		.byte	0xf3
+ 3549 0531 01       		.uleb128 0x1
+ 3550 0532 50       		.byte	0x50
+ 3551 0533 9F       		.byte	0x9f
+ 3552 0534 00000000 		.4byte	0
+ 3553 0538 00000000 		.4byte	0
+ 3554              	.LLST24:
+ 3555 053c 12000000 		.4byte	.LVL98
+ 3556 0540 1B000000 		.4byte	.LVL99-1
+ 3557 0544 0100     		.2byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 73
+
+
+ 3558 0546 50       		.byte	0x50
+ 3559 0547 1B000000 		.4byte	.LVL99-1
+ 3560 054b 2C000000 		.4byte	.LVL100
+ 3561 054f 0100     		.2byte	0x1
+ 3562 0551 54       		.byte	0x54
+ 3563 0552 2C000000 		.4byte	.LVL100
+ 3564 0556 38000000 		.4byte	.LFE61
+ 3565 055a 0100     		.2byte	0x1
+ 3566 055c 50       		.byte	0x50
+ 3567 055d 00000000 		.4byte	0
+ 3568 0561 00000000 		.4byte	0
+ 3569              	.LLST25:
+ 3570 0565 00000000 		.4byte	.LVL101
+ 3571 0569 04000000 		.4byte	.LVL102
+ 3572 056d 0100     		.2byte	0x1
+ 3573 056f 50       		.byte	0x50
+ 3574 0570 04000000 		.4byte	.LVL102
+ 3575 0574 0A000000 		.4byte	.LFE62
+ 3576 0578 0400     		.2byte	0x4
+ 3577 057a F3       		.byte	0xf3
+ 3578 057b 01       		.uleb128 0x1
+ 3579 057c 50       		.byte	0x50
+ 3580 057d 9F       		.byte	0x9f
+ 3581 057e 00000000 		.4byte	0
+ 3582 0582 00000000 		.4byte	0
+ 3583              	.LLST26:
+ 3584 0586 00000000 		.4byte	.LVL101
+ 3585 058a 07000000 		.4byte	.LVL103-1
+ 3586 058e 0100     		.2byte	0x1
+ 3587 0590 51       		.byte	0x51
+ 3588 0591 07000000 		.4byte	.LVL103-1
+ 3589 0595 0A000000 		.4byte	.LFE62
+ 3590 0599 0400     		.2byte	0x4
+ 3591 059b F3       		.byte	0xf3
+ 3592 059c 01       		.uleb128 0x1
+ 3593 059d 51       		.byte	0x51
+ 3594 059e 9F       		.byte	0x9f
+ 3595 059f 00000000 		.4byte	0
+ 3596 05a3 00000000 		.4byte	0
+ 3597              	.LLST27:
+ 3598 05a7 1A000000 		.4byte	.LVL105
+ 3599 05ab 2E000000 		.4byte	.LVL107
+ 3600 05af 0100     		.2byte	0x1
+ 3601 05b1 53       		.byte	0x53
+ 3602 05b2 00000000 		.4byte	0
+ 3603 05b6 00000000 		.4byte	0
+ 3604              		.section	.debug_aranges,"",%progbits
+ 3605 0000 6C000000 		.4byte	0x6c
+ 3606 0004 0200     		.2byte	0x2
+ 3607 0006 00000000 		.4byte	.Ldebug_info0
+ 3608 000a 04       		.byte	0x4
+ 3609 000b 00       		.byte	0
+ 3610 000c 0000     		.2byte	0
+ 3611 000e 0000     		.2byte	0
+ 3612 0010 00000000 		.4byte	.LFB53
+ 3613 0014 40000000 		.4byte	.LFE53-.LFB53
+ 3614 0018 00000000 		.4byte	.LFB54
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 74
+
+
+ 3615 001c 94000000 		.4byte	.LFE54-.LFB54
+ 3616 0020 00000000 		.4byte	.LFB55
+ 3617 0024 22000000 		.4byte	.LFE55-.LFB55
+ 3618 0028 00000000 		.4byte	.LFB56
+ 3619 002c 22000000 		.4byte	.LFE56-.LFB56
+ 3620 0030 00000000 		.4byte	.LFB57
+ 3621 0034 06000000 		.4byte	.LFE57-.LFB57
+ 3622 0038 00000000 		.4byte	.LFB58
+ 3623 003c BE000000 		.4byte	.LFE58-.LFB58
+ 3624 0040 00000000 		.4byte	.LFB59
+ 3625 0044 0A000000 		.4byte	.LFE59-.LFB59
+ 3626 0048 00000000 		.4byte	.LFB60
+ 3627 004c 38000000 		.4byte	.LFE60-.LFB60
+ 3628 0050 00000000 		.4byte	.LFB61
+ 3629 0054 38000000 		.4byte	.LFE61-.LFB61
+ 3630 0058 00000000 		.4byte	.LFB62
+ 3631 005c 0A000000 		.4byte	.LFE62-.LFB62
+ 3632 0060 00000000 		.4byte	.LFB63
+ 3633 0064 34000000 		.4byte	.LFE63-.LFB63
+ 3634 0068 00000000 		.4byte	0
+ 3635 006c 00000000 		.4byte	0
+ 3636              		.section	.debug_ranges,"",%progbits
+ 3637              	.Ldebug_ranges0:
+ 3638 0000 00000000 		.4byte	.LFB53
+ 3639 0004 40000000 		.4byte	.LFE53
+ 3640 0008 00000000 		.4byte	.LFB54
+ 3641 000c 94000000 		.4byte	.LFE54
+ 3642 0010 00000000 		.4byte	.LFB55
+ 3643 0014 22000000 		.4byte	.LFE55
+ 3644 0018 00000000 		.4byte	.LFB56
+ 3645 001c 22000000 		.4byte	.LFE56
+ 3646 0020 00000000 		.4byte	.LFB57
+ 3647 0024 06000000 		.4byte	.LFE57
+ 3648 0028 00000000 		.4byte	.LFB58
+ 3649 002c BE000000 		.4byte	.LFE58
+ 3650 0030 00000000 		.4byte	.LFB59
+ 3651 0034 0A000000 		.4byte	.LFE59
+ 3652 0038 00000000 		.4byte	.LFB60
+ 3653 003c 38000000 		.4byte	.LFE60
+ 3654 0040 00000000 		.4byte	.LFB61
+ 3655 0044 38000000 		.4byte	.LFE61
+ 3656 0048 00000000 		.4byte	.LFB62
+ 3657 004c 0A000000 		.4byte	.LFE62
+ 3658 0050 00000000 		.4byte	.LFB63
+ 3659 0054 34000000 		.4byte	.LFE63
+ 3660 0058 00000000 		.4byte	0
+ 3661 005c 00000000 		.4byte	0
+ 3662              		.section	.debug_line,"",%progbits
+ 3663              	.Ldebug_line0:
+ 3664 0000 D3030000 		.section	.debug_str,"MS",%progbits,1
+ 3664      0200FE01 
+ 3664      00000201 
+ 3664      FB0E0D00 
+ 3664      01010101 
+ 3665              	.LASF101:
+ 3666 0000 6E657469 		.ascii	"netif_igmp_mac_filter_fn\000"
+ 3666      665F6967 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 75
+
+
+ 3666      6D705F6D 
+ 3666      61635F66 
+ 3666      696C7465 
+ 3667              	.LASF33:
+ 3668 0019 4D454D50 		.ascii	"MEMP_SYS_TIMEOUT\000"
+ 3668      5F535953 
+ 3668      5F54494D 
+ 3668      454F5554 
+ 3668      00
+ 3669              	.LASF147:
+ 3670 002a 6F6C645F 		.ascii	"old_addr\000"
+ 3670      61646472 
+ 3670      00
+ 3671              	.LASF68:
+ 3672 0033 70627566 		.ascii	"pbuf\000"
+ 3672      00
+ 3673              	.LASF91:
+ 3674 0038 72735F63 		.ascii	"rs_count\000"
+ 3674      6F756E74 
+ 3674      00
+ 3675              	.LASF41:
+ 3676 0041 4552525F 		.ascii	"ERR_OK\000"
+ 3676      4F4B00
+ 3677              	.LASF34:
+ 3678 0048 4D454D50 		.ascii	"MEMP_NETDB\000"
+ 3678      5F4E4554 
+ 3678      444200
+ 3679              	.LASF119:
+ 3680 0053 63757272 		.ascii	"current_iphdr_dest\000"
+ 3680      656E745F 
+ 3680      69706864 
+ 3680      725F6465 
+ 3680      737400
+ 3681              	.LASF0:
+ 3682 0066 7369676E 		.ascii	"signed char\000"
+ 3682      65642063 
+ 3682      68617200 
+ 3683              	.LASF158:
+ 3684 0072 6D656D70 		.ascii	"memp_free\000"
+ 3684      5F667265 
+ 3684      6500
+ 3685              	.LASF129:
+ 3686 007c 70726576 		.ascii	"prev\000"
+ 3686      00
+ 3687              	.LASF73:
+ 3688 0081 74797065 		.ascii	"type\000"
+ 3688      00
+ 3689              	.LASF93:
+ 3690 0086 68776164 		.ascii	"hwaddr_len\000"
+ 3690      64725F6C 
+ 3690      656E00
+ 3691              	.LASF7:
+ 3692 0091 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 3692      206C6F6E 
+ 3692      6720756E 
+ 3692      7369676E 
+ 3692      65642069 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 76
+
+
+ 3693              	.LASF69:
+ 3694 00a8 61646472 		.ascii	"addr\000"
+ 3694      00
+ 3695              	.LASF114:
+ 3696 00ad 63757272 		.ascii	"current_netif\000"
+ 3696      656E745F 
+ 3696      6E657469 
+ 3696      6600
+ 3697              	.LASF25:
+ 3698 00bb 4D454D50 		.ascii	"MEMP_TCP_SEG\000"
+ 3698      5F544350 
+ 3698      5F534547 
+ 3698      00
+ 3699              	.LASF121:
+ 3700 00c8 7261775F 		.ascii	"raw_pcb\000"
+ 3700      70636200 
+ 3701              	.LASF70:
+ 3702 00d0 6E657874 		.ascii	"next\000"
+ 3702      00
+ 3703              	.LASF145:
+ 3704 00d5 7261775F 		.ascii	"raw_new_ip_type\000"
+ 3704      6E65775F 
+ 3704      69705F74 
+ 3704      79706500 
+ 3705              	.LASF31:
+ 3706 00e5 4D454D50 		.ascii	"MEMP_ARP_QUEUE\000"
+ 3706      5F415250 
+ 3706      5F515545 
+ 3706      554500
+ 3707              	.LASF6:
+ 3708 00f4 6C6F6E67 		.ascii	"long long int\000"
+ 3708      206C6F6E 
+ 3708      6720696E 
+ 3708      7400
+ 3709              	.LASF148:
+ 3710 0102 6E65775F 		.ascii	"new_addr\000"
+ 3710      61646472 
+ 3710      00
+ 3711              	.LASF49:
+ 3712 010b 4552525F 		.ascii	"ERR_USE\000"
+ 3712      55534500 
+ 3713              	.LASF146:
+ 3714 0113 7261775F 		.ascii	"raw_netif_ip_addr_changed\000"
+ 3714      6E657469 
+ 3714      665F6970 
+ 3714      5F616464 
+ 3714      725F6368 
+ 3715              	.LASF94:
+ 3716 012d 68776164 		.ascii	"hwaddr\000"
+ 3716      647200
+ 3717              	.LASF72:
+ 3718 0134 746F745F 		.ascii	"tot_len\000"
+ 3718      6C656E00 
+ 3719              	.LASF89:
+ 3720 013c 73746174 		.ascii	"state\000"
+ 3720      6500
+ 3721              	.LASF128:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 77
+
+
+ 3722 0142 62726F61 		.ascii	"broadcast\000"
+ 3722      64636173 
+ 3722      7400
+ 3723              	.LASF4:
+ 3724 014c 6C6F6E67 		.ascii	"long int\000"
+ 3724      20696E74 
+ 3724      00
+ 3725              	.LASF59:
+ 3726 0155 50425546 		.ascii	"PBUF_IP\000"
+ 3726      5F495000 
+ 3727              	.LASF149:
+ 3728 015d 72706362 		.ascii	"rpcb\000"
+ 3728      00
+ 3729              	.LASF66:
+ 3730 0162 50425546 		.ascii	"PBUF_POOL\000"
+ 3730      5F504F4F 
+ 3730      4C00
+ 3731              	.LASF21:
+ 3732 016c 4D454D50 		.ascii	"MEMP_RAW_PCB\000"
+ 3732      5F524157 
+ 3732      5F504342 
+ 3732      00
+ 3733              	.LASF67:
+ 3734 0179 6970345F 		.ascii	"ip4_addr\000"
+ 3734      61646472 
+ 3734      00
+ 3735              	.LASF78:
+ 3736 0182 6C776970 		.ascii	"lwip_internal_netif_client_data_index\000"
+ 3736      5F696E74 
+ 3736      65726E61 
+ 3736      6C5F6E65 
+ 3736      7469665F 
+ 3737              	.LASF65:
+ 3738 01a8 50425546 		.ascii	"PBUF_REF\000"
+ 3738      5F524546 
+ 3738      00
+ 3739              	.LASF115:
+ 3740 01b1 63757272 		.ascii	"current_input_netif\000"
+ 3740      656E745F 
+ 3740      696E7075 
+ 3740      745F6E65 
+ 3740      74696600 
+ 3741              	.LASF126:
+ 3742 01c5 72656376 		.ascii	"recv\000"
+ 3742      00
+ 3743              	.LASF77:
+ 3744 01ca 4C574950 		.ascii	"LWIP_NETIF_CLIENT_DATA_INDEX_MAX\000"
+ 3744      5F4E4554 
+ 3744      49465F43 
+ 3744      4C49454E 
+ 3744      545F4441 
+ 3745              	.LASF53:
+ 3746 01eb 4552525F 		.ascii	"ERR_IF\000"
+ 3746      494600
+ 3747              	.LASF15:
+ 3748 01f2 646F7562 		.ascii	"double\000"
+ 3748      6C6500
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 78
+
+
+ 3749              	.LASF143:
+ 3750 01f9 70636232 		.ascii	"pcb2\000"
+ 3750      00
+ 3751              	.LASF108:
+ 3752 01fe 5F6F6666 		.ascii	"_offset\000"
+ 3752      73657400 
+ 3753              	.LASF22:
+ 3754 0206 4D454D50 		.ascii	"MEMP_UDP_PCB\000"
+ 3754      5F554450 
+ 3754      5F504342 
+ 3754      00
+ 3755              	.LASF84:
+ 3756 0213 6E65746D 		.ascii	"netmask\000"
+ 3756      61736B00 
+ 3757              	.LASF139:
+ 3758 021b 68656164 		.ascii	"header_size\000"
+ 3758      65725F73 
+ 3758      697A6500 
+ 3759              	.LASF12:
+ 3760 0227 5F5F7569 		.ascii	"__uint32_t\000"
+ 3760      6E743332 
+ 3760      5F7400
+ 3761              	.LASF24:
+ 3762 0232 4D454D50 		.ascii	"MEMP_TCP_PCB_LISTEN\000"
+ 3762      5F544350 
+ 3762      5F504342 
+ 3762      5F4C4953 
+ 3762      54454E00 
+ 3763              	.LASF161:
+ 3764 0246 536F7572 		.ascii	"Source\\LwIP\\src\\core\\raw.c\000"
+ 3764      63655C4C 
+ 3764      7749505C 
+ 3764      7372635C 
+ 3764      636F7265 
+ 3765              	.LASF141:
+ 3766 0261 7261775F 		.ascii	"raw_recv\000"
+ 3766      72656376 
+ 3766      00
+ 3767              	.LASF137:
+ 3768 026a 7261775F 		.ascii	"raw_sendto\000"
+ 3768      73656E64 
+ 3768      746F00
+ 3769              	.LASF27:
+ 3770 0275 4D454D50 		.ascii	"MEMP_NETBUF\000"
+ 3770      5F4E4554 
+ 3770      42554600 
+ 3771              	.LASF26:
+ 3772 0281 4D454D50 		.ascii	"MEMP_REASSDATA\000"
+ 3772      5F524541 
+ 3772      53534441 
+ 3772      544100
+ 3773              	.LASF44:
+ 3774 0290 4552525F 		.ascii	"ERR_TIMEOUT\000"
+ 3774      54494D45 
+ 3774      4F555400 
+ 3775              	.LASF16:
+ 3776 029c 75385F74 		.ascii	"u8_t\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 79
+
+
+ 3776      00
+ 3777              	.LASF32:
+ 3778 02a1 4D454D50 		.ascii	"MEMP_IGMP_GROUP\000"
+ 3778      5F49474D 
+ 3778      505F4752 
+ 3778      4F555000 
+ 3779              	.LASF142:
+ 3780 02b1 7261775F 		.ascii	"raw_remove\000"
+ 3780      72656D6F 
+ 3780      766500
+ 3781              	.LASF35:
+ 3782 02bc 4D454D50 		.ascii	"MEMP_PBUF\000"
+ 3782      5F504255 
+ 3782      4600
+ 3783              	.LASF5:
+ 3784 02c6 6C6F6E67 		.ascii	"long unsigned int\000"
+ 3784      20756E73 
+ 3784      69676E65 
+ 3784      6420696E 
+ 3784      7400
+ 3785              	.LASF50:
+ 3786 02d8 4552525F 		.ascii	"ERR_ALREADY\000"
+ 3786      414C5245 
+ 3786      41445900 
+ 3787              	.LASF20:
+ 3788 02e4 7533325F 		.ascii	"u32_t\000"
+ 3788      7400
+ 3789              	.LASF124:
+ 3790 02ea 736F5F6F 		.ascii	"so_options\000"
+ 3790      7074696F 
+ 3790      6E7300
+ 3791              	.LASF95:
+ 3792 02f5 6E616D65 		.ascii	"name\000"
+ 3792      00
+ 3793              	.LASF111:
+ 3794 02fa 5F63686B 		.ascii	"_chksum\000"
+ 3794      73756D00 
+ 3795              	.LASF23:
+ 3796 0302 4D454D50 		.ascii	"MEMP_TCP_PCB\000"
+ 3796      5F544350 
+ 3796      5F504342 
+ 3796      00
+ 3797              	.LASF110:
+ 3798 030f 5F70726F 		.ascii	"_proto\000"
+ 3798      746F00
+ 3799              	.LASF104:
+ 3800 0316 69705F68 		.ascii	"ip_hdr\000"
+ 3800      647200
+ 3801              	.LASF3:
+ 3802 031d 73686F72 		.ascii	"short unsigned int\000"
+ 3802      7420756E 
+ 3802      7369676E 
+ 3802      65642069 
+ 3802      6E7400
+ 3803              	.LASF103:
+ 3804 0330 6970345F 		.ascii	"ip4_addr_p_t\000"
+ 3804      61646472 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 80
+
+
+ 3804      5F705F74 
+ 3804      00
+ 3805              	.LASF118:
+ 3806 033d 63757272 		.ascii	"current_iphdr_src\000"
+ 3806      656E745F 
+ 3806      69706864 
+ 3806      725F7372 
+ 3806      6300
+ 3807              	.LASF156:
+ 3808 034f 70627566 		.ascii	"pbuf_free\000"
+ 3808      5F667265 
+ 3808      6500
+ 3809              	.LASF140:
+ 3810 0359 7261775F 		.ascii	"raw_send\000"
+ 3810      73656E64 
+ 3810      00
+ 3811              	.LASF29:
+ 3812 0362 4D454D50 		.ascii	"MEMP_TCPIP_MSG_API\000"
+ 3812      5F544350 
+ 3812      49505F4D 
+ 3812      53475F41 
+ 3812      504900
+ 3813              	.LASF80:
+ 3814 0375 4E455449 		.ascii	"NETIF_DEL_MAC_FILTER\000"
+ 3814      465F4445 
+ 3814      4C5F4D41 
+ 3814      435F4649 
+ 3814      4C544552 
+ 3815              	.LASF58:
+ 3816 038a 50425546 		.ascii	"PBUF_TRANSPORT\000"
+ 3816      5F545241 
+ 3816      4E53504F 
+ 3816      525400
+ 3817              	.LASF127:
+ 3818 0399 72656376 		.ascii	"recv_arg\000"
+ 3818      5F617267 
+ 3818      00
+ 3819              	.LASF102:
+ 3820 03a2 6970345F 		.ascii	"ip4_addr_packed\000"
+ 3820      61646472 
+ 3820      5F706163 
+ 3820      6B656400 
+ 3821              	.LASF136:
+ 3822 03b2 7261775F 		.ascii	"raw_connect\000"
+ 3822      636F6E6E 
+ 3822      65637400 
+ 3823              	.LASF79:
+ 3824 03be 6E657469 		.ascii	"netif_mac_filter_action\000"
+ 3824      665F6D61 
+ 3824      635F6669 
+ 3824      6C746572 
+ 3824      5F616374 
+ 3825              	.LASF133:
+ 3826 03d6 7261775F 		.ascii	"raw_input\000"
+ 3826      696E7075 
+ 3826      7400
+ 3827              	.LASF37:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 81
+
+
+ 3828 03e0 4D454D50 		.ascii	"MEMP_MAX\000"
+ 3828      5F4D4158 
+ 3828      00
+ 3829              	.LASF157:
+ 3830 03e9 6970345F 		.ascii	"ip4_output_if\000"
+ 3830      6F757470 
+ 3830      75745F69 
+ 3830      6600
+ 3831              	.LASF39:
+ 3832 03f7 69705F61 		.ascii	"ip_addr_t\000"
+ 3832      6464725F 
+ 3832      7400
+ 3833              	.LASF40:
+ 3834 0401 6572725F 		.ascii	"err_t\000"
+ 3834      7400
+ 3835              	.LASF10:
+ 3836 0407 73697A65 		.ascii	"sizetype\000"
+ 3836      74797065 
+ 3836      00
+ 3837              	.LASF99:
+ 3838 0410 6E657469 		.ascii	"netif_linkoutput_fn\000"
+ 3838      665F6C69 
+ 3838      6E6B6F75 
+ 3838      74707574 
+ 3838      5F666E00 
+ 3839              	.LASF132:
+ 3840 0424 6F6C645F 		.ascii	"old_payload\000"
+ 3840      7061796C 
+ 3840      6F616400 
+ 3841              	.LASF109:
+ 3842 0430 5F74746C 		.ascii	"_ttl\000"
+ 3842      00
+ 3843              	.LASF162:
+ 3844 0435 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 3844      73657273 
+ 3844      5C506875 
+ 3844      6F6E675C 
+ 3844      446F6375 
+ 3845 0463 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 3845      6F742D73 
+ 3845      646B2D69 
+ 3845      6F742D64 
+ 3845      65765C50 
+ 3846 0494 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 3846      494F542D 
+ 3846      4875622D 
+ 3846      44656D6F 
+ 3846      5C50534F 
+ 3847 04c6 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 3847      2D487562 
+ 3847      2D44656D 
+ 3847      6F2E6379 
+ 3847      64736E00 
+ 3848              	.LASF96:
+ 3849 04da 69676D70 		.ascii	"igmp_mac_filter\000"
+ 3849      5F6D6163 
+ 3849      5F66696C 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 82
+
+
+ 3849      74657200 
+ 3850              	.LASF71:
+ 3851 04ea 7061796C 		.ascii	"payload\000"
+ 3851      6F616400 
+ 3852              	.LASF152:
+ 3853 04f2 70627566 		.ascii	"pbuf_header\000"
+ 3853      5F686561 
+ 3853      64657200 
+ 3854              	.LASF83:
+ 3855 04fe 69705F61 		.ascii	"ip_addr\000"
+ 3855      64647200 
+ 3856              	.LASF64:
+ 3857 0506 50425546 		.ascii	"PBUF_ROM\000"
+ 3857      5F524F4D 
+ 3857      00
+ 3858              	.LASF150:
+ 3859 050f 7261775F 		.ascii	"raw_pcbs\000"
+ 3859      70636273 
+ 3859      00
+ 3860              	.LASF134:
+ 3861 0518 7261775F 		.ascii	"raw_bind\000"
+ 3861      62696E64 
+ 3861      00
+ 3862              	.LASF112:
+ 3863 0521 64657374 		.ascii	"dest\000"
+ 3863      00
+ 3864              	.LASF97:
+ 3865 0526 6E657469 		.ascii	"netif_input_fn\000"
+ 3865      665F696E 
+ 3865      7075745F 
+ 3865      666E00
+ 3866              	.LASF60:
+ 3867 0535 50425546 		.ascii	"PBUF_LINK\000"
+ 3867      5F4C494E 
+ 3867      4B00
+ 3868              	.LASF46:
+ 3869 053f 4552525F 		.ascii	"ERR_INPROGRESS\000"
+ 3869      494E5052 
+ 3869      4F475245 
+ 3869      535300
+ 3870              	.LASF19:
+ 3871 054e 7331365F 		.ascii	"s16_t\000"
+ 3871      7400
+ 3872              	.LASF138:
+ 3873 0554 7372635F 		.ascii	"src_ip\000"
+ 3873      697000
+ 3874              	.LASF86:
+ 3875 055b 6F757470 		.ascii	"output\000"
+ 3875      757400
+ 3876              	.LASF47:
+ 3877 0562 4552525F 		.ascii	"ERR_VAL\000"
+ 3877      56414C00 
+ 3878              	.LASF125:
+ 3879 056a 70726F74 		.ascii	"protocol\000"
+ 3879      6F636F6C 
+ 3879      00
+ 3880              	.LASF1:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 83
+
+
+ 3881 0573 756E7369 		.ascii	"unsigned char\000"
+ 3881      676E6564 
+ 3881      20636861 
+ 3881      7200
+ 3882              	.LASF57:
+ 3883 0581 4552525F 		.ascii	"ERR_ARG\000"
+ 3883      41524700 
+ 3884              	.LASF151:
+ 3885 0589 6970345F 		.ascii	"ip4_addr_isbroadcast_u32\000"
+ 3885      61646472 
+ 3885      5F697362 
+ 3885      726F6164 
+ 3885      63617374 
+ 3886              	.LASF52:
+ 3887 05a2 4552525F 		.ascii	"ERR_CONN\000"
+ 3887      434F4E4E 
+ 3887      00
+ 3888              	.LASF122:
+ 3889 05ab 6C6F6361 		.ascii	"local_ip\000"
+ 3889      6C5F6970 
+ 3889      00
+ 3890              	.LASF76:
+ 3891 05b4 4C574950 		.ascii	"LWIP_NETIF_CLIENT_DATA_INDEX_IGMP\000"
+ 3891      5F4E4554 
+ 3891      49465F43 
+ 3891      4C49454E 
+ 3891      545F4441 
+ 3892              	.LASF2:
+ 3893 05d6 73686F72 		.ascii	"short int\000"
+ 3893      7420696E 
+ 3893      7400
+ 3894              	.LASF98:
+ 3895 05e0 6E657469 		.ascii	"netif_output_fn\000"
+ 3895      665F6F75 
+ 3895      74707574 
+ 3895      5F666E00 
+ 3896              	.LASF100:
+ 3897 05f0 6E657469 		.ascii	"netif_status_callback_fn\000"
+ 3897      665F7374 
+ 3897      61747573 
+ 3897      5F63616C 
+ 3897      6C626163 
+ 3898              	.LASF88:
+ 3899 0609 73746174 		.ascii	"status_callback\000"
+ 3899      75735F63 
+ 3899      616C6C62 
+ 3899      61636B00 
+ 3900              	.LASF63:
+ 3901 0619 50425546 		.ascii	"PBUF_RAM\000"
+ 3901      5F52414D 
+ 3901      00
+ 3902              	.LASF130:
+ 3903 0622 70726F74 		.ascii	"proto\000"
+ 3903      6F00
+ 3904              	.LASF85:
+ 3905 0628 696E7075 		.ascii	"input\000"
+ 3905      7400
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 84
+
+
+ 3906              	.LASF75:
+ 3907 062e 4C574950 		.ascii	"LWIP_NETIF_CLIENT_DATA_INDEX_DHCP\000"
+ 3907      5F4E4554 
+ 3907      49465F43 
+ 3907      4C49454E 
+ 3907      545F4441 
+ 3908              	.LASF120:
+ 3909 0650 7261775F 		.ascii	"raw_recv_fn\000"
+ 3909      72656376 
+ 3909      5F666E00 
+ 3910              	.LASF117:
+ 3911 065c 63757272 		.ascii	"current_ip_header_tot_len\000"
+ 3911      656E745F 
+ 3911      69705F68 
+ 3911      65616465 
+ 3911      725F746F 
+ 3912              	.LASF17:
+ 3913 0676 73385F74 		.ascii	"s8_t\000"
+ 3913      00
+ 3914              	.LASF62:
+ 3915 067b 50425546 		.ascii	"PBUF_RAW\000"
+ 3915      5F524157 
+ 3915      00
+ 3916              	.LASF163:
+ 3917 0684 7261775F 		.ascii	"raw_input_match\000"
+ 3917      696E7075 
+ 3917      745F6D61 
+ 3917      74636800 
+ 3918              	.LASF81:
+ 3919 0694 4E455449 		.ascii	"NETIF_ADD_MAC_FILTER\000"
+ 3919      465F4144 
+ 3919      445F4D41 
+ 3919      435F4649 
+ 3919      4C544552 
+ 3920              	.LASF55:
+ 3921 06a9 4552525F 		.ascii	"ERR_RST\000"
+ 3921      52535400 
+ 3922              	.LASF13:
+ 3923 06b1 75696E74 		.ascii	"uint32_t\000"
+ 3923      33325F74 
+ 3923      00
+ 3924              	.LASF54:
+ 3925 06ba 4552525F 		.ascii	"ERR_ABRT\000"
+ 3925      41425254 
+ 3925      00
+ 3926              	.LASF160:
+ 3927 06c3 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 3927      43313120 
+ 3927      352E342E 
+ 3927      31203230 
+ 3927      31363036 
+ 3928 06f6 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 3928      20726576 
+ 3928      6973696F 
+ 3928      6E203233 
+ 3928      37373135 
+ 3929 0729 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 85
+
+
+ 3929      67202D66 
+ 3929      66756E63 
+ 3929      74696F6E 
+ 3929      2D736563 
+ 3930              	.LASF9:
+ 3931 0755 6C6F6E67 		.ascii	"long double\000"
+ 3931      20646F75 
+ 3931      626C6500 
+ 3932              	.LASF11:
+ 3933 0761 63686172 		.ascii	"char\000"
+ 3933      00
+ 3934              	.LASF8:
+ 3935 0766 756E7369 		.ascii	"unsigned int\000"
+ 3935      676E6564 
+ 3935      20696E74 
+ 3935      00
+ 3936              	.LASF42:
+ 3937 0773 4552525F 		.ascii	"ERR_MEM\000"
+ 3937      4D454D00 
+ 3938              	.LASF144:
+ 3939 077b 7261775F 		.ascii	"raw_new\000"
+ 3939      6E657700 
+ 3940              	.LASF131:
+ 3941 0783 65617465 		.ascii	"eaten\000"
+ 3941      6E00
+ 3942              	.LASF36:
+ 3943 0789 4D454D50 		.ascii	"MEMP_PBUF_POOL\000"
+ 3943      5F504255 
+ 3943      465F504F 
+ 3943      4F4C00
+ 3944              	.LASF116:
+ 3945 0798 63757272 		.ascii	"current_ip4_header\000"
+ 3945      656E745F 
+ 3945      6970345F 
+ 3945      68656164 
+ 3945      657200
+ 3946              	.LASF30:
+ 3947 07ab 4D454D50 		.ascii	"MEMP_TCPIP_MSG_INPKT\000"
+ 3947      5F544350 
+ 3947      49505F4D 
+ 3947      53475F49 
+ 3947      4E504B54 
+ 3948              	.LASF90:
+ 3949 07c0 636C6965 		.ascii	"client_data\000"
+ 3949      6E745F64 
+ 3949      61746100 
+ 3950              	.LASF164:
+ 3951 07cc 69705F64 		.ascii	"ip_data\000"
+ 3951      61746100 
+ 3952              	.LASF56:
+ 3953 07d4 4552525F 		.ascii	"ERR_CLSD\000"
+ 3953      434C5344 
+ 3953      00
+ 3954              	.LASF45:
+ 3955 07dd 4552525F 		.ascii	"ERR_RTE\000"
+ 3955      52544500 
+ 3956              	.LASF82:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 86
+
+
+ 3957 07e5 6E657469 		.ascii	"netif\000"
+ 3957      6600
+ 3958              	.LASF38:
+ 3959 07eb 6970345F 		.ascii	"ip4_addr_t\000"
+ 3959      61646472 
+ 3959      5F7400
+ 3960              	.LASF18:
+ 3961 07f6 7531365F 		.ascii	"u16_t\000"
+ 3961      7400
+ 3962              	.LASF43:
+ 3963 07fc 4552525F 		.ascii	"ERR_BUF\000"
+ 3963      42554600 
+ 3964              	.LASF165:
+ 3965 0804 6D656D73 		.ascii	"memset\000"
+ 3965      657400
+ 3966              	.LASF51:
+ 3967 080b 4552525F 		.ascii	"ERR_ISCONN\000"
+ 3967      4953434F 
+ 3967      4E4E00
+ 3968              	.LASF106:
+ 3969 0816 5F746F73 		.ascii	"_tos\000"
+ 3969      00
+ 3970              	.LASF28:
+ 3971 081b 4D454D50 		.ascii	"MEMP_NETCONN\000"
+ 3971      5F4E4554 
+ 3971      434F4E4E 
+ 3971      00
+ 3972              	.LASF135:
+ 3973 0828 69706164 		.ascii	"ipaddr\000"
+ 3973      647200
+ 3974              	.LASF154:
+ 3975 082f 70627566 		.ascii	"pbuf_chain\000"
+ 3975      5F636861 
+ 3975      696E00
+ 3976              	.LASF105:
+ 3977 083a 5F765F68 		.ascii	"_v_hl\000"
+ 3977      6C00
+ 3978              	.LASF74:
+ 3979 0840 666C6167 		.ascii	"flags\000"
+ 3979      7300
+ 3980              	.LASF14:
+ 3981 0846 666C6F61 		.ascii	"float\000"
+ 3981      7400
+ 3982              	.LASF113:
+ 3983 084c 69705F67 		.ascii	"ip_globals\000"
+ 3983      6C6F6261 
+ 3983      6C7300
+ 3984              	.LASF48:
+ 3985 0857 4552525F 		.ascii	"ERR_WOULDBLOCK\000"
+ 3985      574F554C 
+ 3985      44424C4F 
+ 3985      434B00
+ 3986              	.LASF61:
+ 3987 0866 50425546 		.ascii	"PBUF_RAW_TX\000"
+ 3987      5F524157 
+ 3987      5F545800 
+ 3988              	.LASF92:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccGaiFxI.s 			page 87
+
+
+ 3989 0872 686F7374 		.ascii	"hostname\000"
+ 3989      6E616D65 
+ 3989      00
+ 3990              	.LASF87:
+ 3991 087b 6C696E6B 		.ascii	"linkoutput\000"
+ 3991      6F757470 
+ 3991      757400
+ 3992              	.LASF123:
+ 3993 0886 72656D6F 		.ascii	"remote_ip\000"
+ 3993      74655F69 
+ 3993      7000
+ 3994              	.LASF153:
+ 3995 0890 70627566 		.ascii	"pbuf_alloc\000"
+ 3995      5F616C6C 
+ 3995      6F6300
+ 3996              	.LASF155:
+ 3997 089b 6970345F 		.ascii	"ip4_route\000"
+ 3997      726F7574 
+ 3997      6500
+ 3998              	.LASF159:
+ 3999 08a5 6D656D70 		.ascii	"memp_malloc_fn\000"
+ 3999      5F6D616C 
+ 3999      6C6F635F 
+ 3999      666E00
+ 4000              	.LASF107:
+ 4001 08b4 5F6C656E 		.ascii	"_len\000"
+ 4001      00
+ 4002              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

@@ -1,0 +1,2985 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"netifapi.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.netifapi_do_netif_common,"ax",%progbits
+  20              		.align	2
+  21              		.code	16
+  22              		.thumb_func
+  23              		.type	netifapi_do_netif_common, %function
+  24              	netifapi_do_netif_common:
+  25              	.LFB55:
+  26              		.file 1 "Source\\LwIP\\src\\api\\netifapi.c"
+   1:Source\LwIP\src\api/netifapi.c **** /**
+   2:Source\LwIP\src\api/netifapi.c ****  * @file
+   3:Source\LwIP\src\api/netifapi.c ****  * Network Interface Sequential API module
+   4:Source\LwIP\src\api/netifapi.c ****  *
+   5:Source\LwIP\src\api/netifapi.c ****  * @defgroup netifapi NETIF API
+   6:Source\LwIP\src\api/netifapi.c ****  * @ingroup sequential_api
+   7:Source\LwIP\src\api/netifapi.c ****  * Thread-safe functions to be called from non-TCPIP threads
+   8:Source\LwIP\src\api/netifapi.c ****  * 
+   9:Source\LwIP\src\api/netifapi.c ****  * @defgroup netifapi_netif NETIF related
+  10:Source\LwIP\src\api/netifapi.c ****  * @ingroup netifapi
+  11:Source\LwIP\src\api/netifapi.c ****  * To be called from non-TCPIP threads 
+  12:Source\LwIP\src\api/netifapi.c ****  */
+  13:Source\LwIP\src\api/netifapi.c **** 
+  14:Source\LwIP\src\api/netifapi.c **** /*
+  15:Source\LwIP\src\api/netifapi.c ****  * Redistribution and use in source and binary forms, with or without modification,
+  16:Source\LwIP\src\api/netifapi.c ****  * are permitted provided that the following conditions are met:
+  17:Source\LwIP\src\api/netifapi.c ****  *
+  18:Source\LwIP\src\api/netifapi.c ****  * 1. Redistributions of source code must retain the above copyright notice,
+  19:Source\LwIP\src\api/netifapi.c ****  *    this list of conditions and the following disclaimer.
+  20:Source\LwIP\src\api/netifapi.c ****  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  21:Source\LwIP\src\api/netifapi.c ****  *    this list of conditions and the following disclaimer in the documentation
+  22:Source\LwIP\src\api/netifapi.c ****  *    and/or other materials provided with the distribution.
+  23:Source\LwIP\src\api/netifapi.c ****  * 3. The name of the author may not be used to endorse or promote products
+  24:Source\LwIP\src\api/netifapi.c ****  *    derived from this software without specific prior written permission.
+  25:Source\LwIP\src\api/netifapi.c ****  *
+  26:Source\LwIP\src\api/netifapi.c ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+  27:Source\LwIP\src\api/netifapi.c ****  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+  28:Source\LwIP\src\api/netifapi.c ****  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+  29:Source\LwIP\src\api/netifapi.c ****  * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  30:Source\LwIP\src\api/netifapi.c ****  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+  31:Source\LwIP\src\api/netifapi.c ****  * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 2
+
+
+  32:Source\LwIP\src\api/netifapi.c ****  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  33:Source\LwIP\src\api/netifapi.c ****  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+  34:Source\LwIP\src\api/netifapi.c ****  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+  35:Source\LwIP\src\api/netifapi.c ****  * OF SUCH DAMAGE.
+  36:Source\LwIP\src\api/netifapi.c ****  *
+  37:Source\LwIP\src\api/netifapi.c ****  * This file is part of the lwIP TCP/IP stack.
+  38:Source\LwIP\src\api/netifapi.c ****  *
+  39:Source\LwIP\src\api/netifapi.c ****  */
+  40:Source\LwIP\src\api/netifapi.c **** 
+  41:Source\LwIP\src\api/netifapi.c **** #include "lwip/opt.h"
+  42:Source\LwIP\src\api/netifapi.c **** 
+  43:Source\LwIP\src\api/netifapi.c **** #if LWIP_NETIF_API /* don't build if not configured for use in lwipopts.h */
+  44:Source\LwIP\src\api/netifapi.c **** 
+  45:Source\LwIP\src\api/netifapi.c **** #include "lwip/netifapi.h"
+  46:Source\LwIP\src\api/netifapi.c **** #include "lwip/memp.h"
+  47:Source\LwIP\src\api/netifapi.c **** #include "lwip/priv/tcpip_priv.h"
+  48:Source\LwIP\src\api/netifapi.c **** 
+  49:Source\LwIP\src\api/netifapi.c **** #define NETIFAPI_VAR_REF(name)      API_VAR_REF(name)
+  50:Source\LwIP\src\api/netifapi.c **** #define NETIFAPI_VAR_DECLARE(name)  API_VAR_DECLARE(struct netifapi_msg, name)
+  51:Source\LwIP\src\api/netifapi.c **** #define NETIFAPI_VAR_ALLOC(name)    API_VAR_ALLOC(struct netifapi_msg, MEMP_NETIFAPI_MSG, name, ERR
+  52:Source\LwIP\src\api/netifapi.c **** #define NETIFAPI_VAR_FREE(name)     API_VAR_FREE(MEMP_NETIFAPI_MSG, name)
+  53:Source\LwIP\src\api/netifapi.c **** 
+  54:Source\LwIP\src\api/netifapi.c **** /**
+  55:Source\LwIP\src\api/netifapi.c ****  * Call netif_add() inside the tcpip_thread context.
+  56:Source\LwIP\src\api/netifapi.c ****  */
+  57:Source\LwIP\src\api/netifapi.c **** static err_t
+  58:Source\LwIP\src\api/netifapi.c **** netifapi_do_netif_add(struct tcpip_api_call_data *m)
+  59:Source\LwIP\src\api/netifapi.c **** {
+  60:Source\LwIP\src\api/netifapi.c ****   /* cast through void* to silence alignment warnings. 
+  61:Source\LwIP\src\api/netifapi.c ****    * We know it works because the structs have been instantiated as struct netifapi_msg */
+  62:Source\LwIP\src\api/netifapi.c ****   struct netifapi_msg *msg = (struct netifapi_msg*)(void*)m;
+  63:Source\LwIP\src\api/netifapi.c ****   
+  64:Source\LwIP\src\api/netifapi.c ****   if (!netif_add( msg->netif,
+  65:Source\LwIP\src\api/netifapi.c **** #if LWIP_IPV4
+  66:Source\LwIP\src\api/netifapi.c ****                   API_EXPR_REF(msg->msg.add.ipaddr),
+  67:Source\LwIP\src\api/netifapi.c ****                   API_EXPR_REF(msg->msg.add.netmask),
+  68:Source\LwIP\src\api/netifapi.c ****                   API_EXPR_REF(msg->msg.add.gw),
+  69:Source\LwIP\src\api/netifapi.c **** #endif /* LWIP_IPV4 */
+  70:Source\LwIP\src\api/netifapi.c ****                   msg->msg.add.state,
+  71:Source\LwIP\src\api/netifapi.c ****                   msg->msg.add.init,
+  72:Source\LwIP\src\api/netifapi.c ****                   msg->msg.add.input)) {
+  73:Source\LwIP\src\api/netifapi.c ****     return ERR_IF;
+  74:Source\LwIP\src\api/netifapi.c ****   } else {
+  75:Source\LwIP\src\api/netifapi.c ****     return ERR_OK;
+  76:Source\LwIP\src\api/netifapi.c ****   }
+  77:Source\LwIP\src\api/netifapi.c **** }
+  78:Source\LwIP\src\api/netifapi.c **** 
+  79:Source\LwIP\src\api/netifapi.c **** #if LWIP_IPV4
+  80:Source\LwIP\src\api/netifapi.c **** /**
+  81:Source\LwIP\src\api/netifapi.c ****  * Call netif_set_addr() inside the tcpip_thread context.
+  82:Source\LwIP\src\api/netifapi.c ****  */
+  83:Source\LwIP\src\api/netifapi.c **** static err_t
+  84:Source\LwIP\src\api/netifapi.c **** netifapi_do_netif_set_addr(struct tcpip_api_call_data *m)
+  85:Source\LwIP\src\api/netifapi.c **** {
+  86:Source\LwIP\src\api/netifapi.c ****   /* cast through void* to silence alignment warnings. 
+  87:Source\LwIP\src\api/netifapi.c ****    * We know it works because the structs have been instantiated as struct netifapi_msg */
+  88:Source\LwIP\src\api/netifapi.c ****   struct netifapi_msg *msg = (struct netifapi_msg*)(void*)m;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 3
+
+
+  89:Source\LwIP\src\api/netifapi.c **** 
+  90:Source\LwIP\src\api/netifapi.c ****   netif_set_addr( msg->netif,
+  91:Source\LwIP\src\api/netifapi.c ****                   API_EXPR_REF(msg->msg.add.ipaddr),
+  92:Source\LwIP\src\api/netifapi.c ****                   API_EXPR_REF(msg->msg.add.netmask),
+  93:Source\LwIP\src\api/netifapi.c ****                   API_EXPR_REF(msg->msg.add.gw));
+  94:Source\LwIP\src\api/netifapi.c ****   return ERR_OK;
+  95:Source\LwIP\src\api/netifapi.c **** }
+  96:Source\LwIP\src\api/netifapi.c **** #endif /* LWIP_IPV4 */
+  97:Source\LwIP\src\api/netifapi.c **** 
+  98:Source\LwIP\src\api/netifapi.c **** /**
+  99:Source\LwIP\src\api/netifapi.c ****  * Call the "errtfunc" (or the "voidfunc" if "errtfunc" is NULL) inside the
+ 100:Source\LwIP\src\api/netifapi.c ****  * tcpip_thread context.
+ 101:Source\LwIP\src\api/netifapi.c ****  */
+ 102:Source\LwIP\src\api/netifapi.c **** static err_t
+ 103:Source\LwIP\src\api/netifapi.c **** netifapi_do_netif_common(struct tcpip_api_call_data *m)
+ 104:Source\LwIP\src\api/netifapi.c **** {
+  27              		.loc 1 104 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              	.LVL0:
+  32 0000 10B5     		push	{r4, lr}
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 4, -8
+  35              		.cfi_offset 14, -4
+  36              	.LVL1:
+ 105:Source\LwIP\src\api/netifapi.c ****   /* cast through void* to silence alignment warnings. 
+ 106:Source\LwIP\src\api/netifapi.c ****    * We know it works because the structs have been instantiated as struct netifapi_msg */
+ 107:Source\LwIP\src\api/netifapi.c ****   struct netifapi_msg *msg = (struct netifapi_msg*)(void*)m;
+ 108:Source\LwIP\src\api/netifapi.c **** 
+ 109:Source\LwIP\src\api/netifapi.c ****   if (msg->msg.common.errtfunc != NULL) {
+  37              		.loc 1 109 0
+  38 0002 0369     		ldr	r3, [r0, #16]
+  39 0004 002B     		cmp	r3, #0
+  40 0006 02D0     		beq	.L2
+ 110:Source\LwIP\src\api/netifapi.c ****     return msg->msg.common.errtfunc(msg->netif);
+  41              		.loc 1 110 0
+  42 0008 8068     		ldr	r0, [r0, #8]
+  43              	.LVL2:
+  44 000a 9847     		blx	r3
+  45              	.LVL3:
+  46 000c 03E0     		b	.L3
+  47              	.LVL4:
+  48              	.L2:
+ 111:Source\LwIP\src\api/netifapi.c ****   } else {
+ 112:Source\LwIP\src\api/netifapi.c ****     msg->msg.common.voidfunc(msg->netif);
+  49              		.loc 1 112 0
+  50 000e C368     		ldr	r3, [r0, #12]
+  51 0010 8068     		ldr	r0, [r0, #8]
+  52              	.LVL5:
+  53 0012 9847     		blx	r3
+  54              	.LVL6:
+ 113:Source\LwIP\src\api/netifapi.c ****     return ERR_OK;
+  55              		.loc 1 113 0
+  56 0014 0020     		movs	r0, #0
+  57              	.L3:
+ 114:Source\LwIP\src\api/netifapi.c ****   }
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 4
+
+
+ 115:Source\LwIP\src\api/netifapi.c **** }
+  58              		.loc 1 115 0
+  59              		@ sp needed
+  60 0016 10BD     		pop	{r4, pc}
+  61              		.cfi_endproc
+  62              	.LFE55:
+  63              		.size	netifapi_do_netif_common, .-netifapi_do_netif_common
+  64              		.section	.text.netifapi_do_netif_add,"ax",%progbits
+  65              		.align	2
+  66              		.code	16
+  67              		.thumb_func
+  68              		.type	netifapi_do_netif_add, %function
+  69              	netifapi_do_netif_add:
+  70              	.LFB53:
+  59:Source\LwIP\src\api/netifapi.c ****   /* cast through void* to silence alignment warnings. 
+  71              		.loc 1 59 0
+  72              		.cfi_startproc
+  73              		@ args = 0, pretend = 0, frame = 0
+  74              		@ frame_needed = 0, uses_anonymous_args = 0
+  75              	.LVL7:
+  76 0000 30B5     		push	{r4, r5, lr}
+  77              		.cfi_def_cfa_offset 12
+  78              		.cfi_offset 4, -12
+  79              		.cfi_offset 5, -8
+  80              		.cfi_offset 14, -4
+  81 0002 85B0     		sub	sp, sp, #20
+  82              		.cfi_def_cfa_offset 32
+  83              	.LVL8:
+  64:Source\LwIP\src\api/netifapi.c **** #if LWIP_IPV4
+  84              		.loc 1 64 0
+  85 0004 4369     		ldr	r3, [r0, #20]
+  86 0006 0269     		ldr	r2, [r0, #16]
+  87 0008 C168     		ldr	r1, [r0, #12]
+  88 000a 8468     		ldr	r4, [r0, #8]
+  89 000c 056A     		ldr	r5, [r0, #32]
+  90 000e 0295     		str	r5, [sp, #8]
+  91 0010 C569     		ldr	r5, [r0, #28]
+  92 0012 0195     		str	r5, [sp, #4]
+  93 0014 8069     		ldr	r0, [r0, #24]
+  94              	.LVL9:
+  95 0016 0090     		str	r0, [sp]
+  96 0018 2000     		movs	r0, r4
+  97 001a FFF7FEFF 		bl	netif_add
+  98              	.LVL10:
+  99 001e 0028     		cmp	r0, #0
+ 100 0020 01D1     		bne	.L6
+  73:Source\LwIP\src\api/netifapi.c ****   } else {
+ 101              		.loc 1 73 0
+ 102 0022 0C38     		subs	r0, r0, #12
+ 103 0024 00E0     		b	.L5
+ 104              	.L6:
+  75:Source\LwIP\src\api/netifapi.c ****   }
+ 105              		.loc 1 75 0
+ 106 0026 0020     		movs	r0, #0
+ 107              	.L5:
+  77:Source\LwIP\src\api/netifapi.c **** 
+ 108              		.loc 1 77 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 5
+
+
+ 109 0028 05B0     		add	sp, sp, #20
+ 110              		@ sp needed
+ 111 002a 30BD     		pop	{r4, r5, pc}
+ 112              		.cfi_endproc
+ 113              	.LFE53:
+ 114              		.size	netifapi_do_netif_add, .-netifapi_do_netif_add
+ 115              		.section	.text.netifapi_do_netif_set_addr,"ax",%progbits
+ 116              		.align	2
+ 117              		.code	16
+ 118              		.thumb_func
+ 119              		.type	netifapi_do_netif_set_addr, %function
+ 120              	netifapi_do_netif_set_addr:
+ 121              	.LFB54:
+  85:Source\LwIP\src\api/netifapi.c ****   /* cast through void* to silence alignment warnings. 
+ 122              		.loc 1 85 0
+ 123              		.cfi_startproc
+ 124              		@ args = 0, pretend = 0, frame = 0
+ 125              		@ frame_needed = 0, uses_anonymous_args = 0
+ 126              	.LVL11:
+ 127 0000 10B5     		push	{r4, lr}
+ 128              		.cfi_def_cfa_offset 8
+ 129              		.cfi_offset 4, -8
+ 130              		.cfi_offset 14, -4
+ 131              	.LVL12:
+  90:Source\LwIP\src\api/netifapi.c ****                   API_EXPR_REF(msg->msg.add.ipaddr),
+ 132              		.loc 1 90 0
+ 133 0002 4369     		ldr	r3, [r0, #20]
+ 134 0004 0269     		ldr	r2, [r0, #16]
+ 135 0006 C168     		ldr	r1, [r0, #12]
+ 136 0008 8068     		ldr	r0, [r0, #8]
+ 137              	.LVL13:
+ 138 000a FFF7FEFF 		bl	netif_set_addr
+ 139              	.LVL14:
+  95:Source\LwIP\src\api/netifapi.c **** #endif /* LWIP_IPV4 */
+ 140              		.loc 1 95 0
+ 141 000e 0020     		movs	r0, #0
+ 142              		@ sp needed
+ 143 0010 10BD     		pop	{r4, pc}
+ 144              		.cfi_endproc
+ 145              	.LFE54:
+ 146              		.size	netifapi_do_netif_set_addr, .-netifapi_do_netif_set_addr
+ 147 0012 C046     		.section	.text.netifapi_netif_add,"ax",%progbits
+ 148              		.align	2
+ 149              		.global	netifapi_netif_add
+ 150              		.code	16
+ 151              		.thumb_func
+ 152              		.type	netifapi_netif_add, %function
+ 153              	netifapi_netif_add:
+ 154              	.LFB56:
+ 116:Source\LwIP\src\api/netifapi.c **** 
+ 117:Source\LwIP\src\api/netifapi.c **** /**
+ 118:Source\LwIP\src\api/netifapi.c ****  * @ingroup netifapi_netif
+ 119:Source\LwIP\src\api/netifapi.c ****  * Call netif_add() in a thread-safe way by running that function inside the
+ 120:Source\LwIP\src\api/netifapi.c ****  * tcpip_thread context.
+ 121:Source\LwIP\src\api/netifapi.c ****  *
+ 122:Source\LwIP\src\api/netifapi.c ****  * @note for params @see netif_add()
+ 123:Source\LwIP\src\api/netifapi.c ****  */
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 6
+
+
+ 124:Source\LwIP\src\api/netifapi.c **** err_t
+ 125:Source\LwIP\src\api/netifapi.c **** netifapi_netif_add(struct netif *netif,
+ 126:Source\LwIP\src\api/netifapi.c **** #if LWIP_IPV4
+ 127:Source\LwIP\src\api/netifapi.c ****                    const ip4_addr_t *ipaddr, const ip4_addr_t *netmask, const ip4_addr_t *gw,
+ 128:Source\LwIP\src\api/netifapi.c **** #endif /* LWIP_IPV4 */
+ 129:Source\LwIP\src\api/netifapi.c ****                    void *state, netif_init_fn init, netif_input_fn input)
+ 130:Source\LwIP\src\api/netifapi.c **** {
+ 155              		.loc 1 130 0
+ 156              		.cfi_startproc
+ 157              		@ args = 12, pretend = 0, frame = 40
+ 158              		@ frame_needed = 0, uses_anonymous_args = 0
+ 159              	.LVL15:
+ 160 0000 00B5     		push	{lr}
+ 161              		.cfi_def_cfa_offset 4
+ 162              		.cfi_offset 14, -4
+ 163 0002 8BB0     		sub	sp, sp, #44
+ 164              		.cfi_def_cfa_offset 48
+ 131:Source\LwIP\src\api/netifapi.c ****   err_t err;
+ 132:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_DECLARE(msg);
+ 133:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_ALLOC(msg);
+ 134:Source\LwIP\src\api/netifapi.c **** 
+ 135:Source\LwIP\src\api/netifapi.c **** #if LWIP_IPV4
+ 136:Source\LwIP\src\api/netifapi.c ****   if (ipaddr == NULL) {
+ 165              		.loc 1 136 0
+ 166 0004 0029     		cmp	r1, #0
+ 167 0006 00D1     		bne	.L9
+ 137:Source\LwIP\src\api/netifapi.c ****     ipaddr = IP4_ADDR_ANY4;
+ 168              		.loc 1 137 0
+ 169 0008 0B49     		ldr	r1, .L15
+ 170              	.LVL16:
+ 171              	.L9:
+ 138:Source\LwIP\src\api/netifapi.c ****   }
+ 139:Source\LwIP\src\api/netifapi.c ****   if (netmask == NULL) {
+ 172              		.loc 1 139 0
+ 173 000a 002A     		cmp	r2, #0
+ 174 000c 00D1     		bne	.L10
+ 140:Source\LwIP\src\api/netifapi.c ****     netmask = IP4_ADDR_ANY4;
+ 175              		.loc 1 140 0
+ 176 000e 0A4A     		ldr	r2, .L15
+ 177              	.LVL17:
+ 178              	.L10:
+ 141:Source\LwIP\src\api/netifapi.c ****   }
+ 142:Source\LwIP\src\api/netifapi.c ****   if (gw == NULL) {
+ 179              		.loc 1 142 0
+ 180 0010 002B     		cmp	r3, #0
+ 181 0012 00D1     		bne	.L11
+ 143:Source\LwIP\src\api/netifapi.c ****     gw = IP4_ADDR_ANY4;
+ 182              		.loc 1 143 0
+ 183 0014 084B     		ldr	r3, .L15
+ 184              	.LVL18:
+ 185              	.L11:
+ 144:Source\LwIP\src\api/netifapi.c ****   }
+ 145:Source\LwIP\src\api/netifapi.c **** #endif /* LWIP_IPV4 */
+ 146:Source\LwIP\src\api/netifapi.c **** 
+ 147:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).netif = netif;
+ 186              		.loc 1 147 0
+ 187 0016 0390     		str	r0, [sp, #12]
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 7
+
+
+ 148:Source\LwIP\src\api/netifapi.c **** #if LWIP_IPV4
+ 149:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).msg.add.ipaddr  = NETIFAPI_VAR_REF(ipaddr);
+ 188              		.loc 1 149 0
+ 189 0018 0491     		str	r1, [sp, #16]
+ 150:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).msg.add.netmask = NETIFAPI_VAR_REF(netmask);
+ 190              		.loc 1 150 0
+ 191 001a 0592     		str	r2, [sp, #20]
+ 151:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).msg.add.gw      = NETIFAPI_VAR_REF(gw);
+ 192              		.loc 1 151 0
+ 193 001c 0693     		str	r3, [sp, #24]
+ 152:Source\LwIP\src\api/netifapi.c **** #endif /* LWIP_IPV4 */
+ 153:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).msg.add.state   = state;
+ 194              		.loc 1 153 0
+ 195 001e 0C9B     		ldr	r3, [sp, #48]
+ 196              	.LVL19:
+ 197 0020 0793     		str	r3, [sp, #28]
+ 154:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).msg.add.init    = init;
+ 198              		.loc 1 154 0
+ 199 0022 0D9B     		ldr	r3, [sp, #52]
+ 200 0024 0893     		str	r3, [sp, #32]
+ 155:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).msg.add.input   = input;
+ 201              		.loc 1 155 0
+ 202 0026 0E9B     		ldr	r3, [sp, #56]
+ 203 0028 0993     		str	r3, [sp, #36]
+ 156:Source\LwIP\src\api/netifapi.c ****   err = tcpip_api_call(netifapi_do_netif_add, &API_VAR_REF(msg).call);
+ 204              		.loc 1 156 0
+ 205 002a 01A9     		add	r1, sp, #4
+ 206              	.LVL20:
+ 207 002c 0348     		ldr	r0, .L15+4
+ 208              	.LVL21:
+ 209 002e FFF7FEFF 		bl	tcpip_api_call
+ 210              	.LVL22:
+ 157:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_FREE(msg);
+ 158:Source\LwIP\src\api/netifapi.c ****   return err;
+ 159:Source\LwIP\src\api/netifapi.c **** }
+ 211              		.loc 1 159 0
+ 212 0032 0BB0     		add	sp, sp, #44
+ 213              		@ sp needed
+ 214 0034 00BD     		pop	{pc}
+ 215              	.L16:
+ 216 0036 C046     		.align	2
+ 217              	.L15:
+ 218 0038 00000000 		.word	ip_addr_any
+ 219 003c 00000000 		.word	netifapi_do_netif_add
+ 220              		.cfi_endproc
+ 221              	.LFE56:
+ 222              		.size	netifapi_netif_add, .-netifapi_netif_add
+ 223              		.section	.text.netifapi_netif_set_addr,"ax",%progbits
+ 224              		.align	2
+ 225              		.global	netifapi_netif_set_addr
+ 226              		.code	16
+ 227              		.thumb_func
+ 228              		.type	netifapi_netif_set_addr, %function
+ 229              	netifapi_netif_set_addr:
+ 230              	.LFB57:
+ 160:Source\LwIP\src\api/netifapi.c **** 
+ 161:Source\LwIP\src\api/netifapi.c **** #if LWIP_IPV4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 8
+
+
+ 162:Source\LwIP\src\api/netifapi.c **** /**
+ 163:Source\LwIP\src\api/netifapi.c ****  * @ingroup netifapi_netif
+ 164:Source\LwIP\src\api/netifapi.c ****  * Call netif_set_addr() in a thread-safe way by running that function inside the
+ 165:Source\LwIP\src\api/netifapi.c ****  * tcpip_thread context.
+ 166:Source\LwIP\src\api/netifapi.c ****  *
+ 167:Source\LwIP\src\api/netifapi.c ****  * @note for params @see netif_set_addr()
+ 168:Source\LwIP\src\api/netifapi.c ****  */
+ 169:Source\LwIP\src\api/netifapi.c **** err_t
+ 170:Source\LwIP\src\api/netifapi.c **** netifapi_netif_set_addr(struct netif *netif,
+ 171:Source\LwIP\src\api/netifapi.c ****                         const ip4_addr_t *ipaddr,
+ 172:Source\LwIP\src\api/netifapi.c ****                         const ip4_addr_t *netmask,
+ 173:Source\LwIP\src\api/netifapi.c ****                         const ip4_addr_t *gw)
+ 174:Source\LwIP\src\api/netifapi.c **** {
+ 231              		.loc 1 174 0
+ 232              		.cfi_startproc
+ 233              		@ args = 0, pretend = 0, frame = 40
+ 234              		@ frame_needed = 0, uses_anonymous_args = 0
+ 235              	.LVL23:
+ 236 0000 00B5     		push	{lr}
+ 237              		.cfi_def_cfa_offset 4
+ 238              		.cfi_offset 14, -4
+ 239 0002 8BB0     		sub	sp, sp, #44
+ 240              		.cfi_def_cfa_offset 48
+ 175:Source\LwIP\src\api/netifapi.c ****   err_t err;
+ 176:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_DECLARE(msg);
+ 177:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_ALLOC(msg);
+ 178:Source\LwIP\src\api/netifapi.c **** 
+ 179:Source\LwIP\src\api/netifapi.c ****   if (ipaddr == NULL) {
+ 241              		.loc 1 179 0
+ 242 0004 0029     		cmp	r1, #0
+ 243 0006 00D1     		bne	.L18
+ 180:Source\LwIP\src\api/netifapi.c ****     ipaddr = IP4_ADDR_ANY4;
+ 244              		.loc 1 180 0
+ 245 0008 0849     		ldr	r1, .L24
+ 246              	.LVL24:
+ 247              	.L18:
+ 181:Source\LwIP\src\api/netifapi.c ****   }
+ 182:Source\LwIP\src\api/netifapi.c ****   if (netmask == NULL) {
+ 248              		.loc 1 182 0
+ 249 000a 002A     		cmp	r2, #0
+ 250 000c 00D1     		bne	.L19
+ 183:Source\LwIP\src\api/netifapi.c ****     netmask = IP4_ADDR_ANY4;
+ 251              		.loc 1 183 0
+ 252 000e 074A     		ldr	r2, .L24
+ 253              	.LVL25:
+ 254              	.L19:
+ 184:Source\LwIP\src\api/netifapi.c ****   }
+ 185:Source\LwIP\src\api/netifapi.c ****   if (gw == NULL) {
+ 255              		.loc 1 185 0
+ 256 0010 002B     		cmp	r3, #0
+ 257 0012 00D1     		bne	.L20
+ 186:Source\LwIP\src\api/netifapi.c ****     gw = IP4_ADDR_ANY4;
+ 258              		.loc 1 186 0
+ 259 0014 054B     		ldr	r3, .L24
+ 260              	.LVL26:
+ 261              	.L20:
+ 187:Source\LwIP\src\api/netifapi.c ****   }
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 9
+
+
+ 188:Source\LwIP\src\api/netifapi.c **** 
+ 189:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).netif = netif;
+ 262              		.loc 1 189 0
+ 263 0016 0390     		str	r0, [sp, #12]
+ 190:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).msg.add.ipaddr  = NETIFAPI_VAR_REF(ipaddr);
+ 264              		.loc 1 190 0
+ 265 0018 0491     		str	r1, [sp, #16]
+ 191:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).msg.add.netmask = NETIFAPI_VAR_REF(netmask);
+ 266              		.loc 1 191 0
+ 267 001a 0592     		str	r2, [sp, #20]
+ 192:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).msg.add.gw      = NETIFAPI_VAR_REF(gw);
+ 268              		.loc 1 192 0
+ 269 001c 0693     		str	r3, [sp, #24]
+ 193:Source\LwIP\src\api/netifapi.c ****   err = tcpip_api_call(netifapi_do_netif_set_addr, &API_VAR_REF(msg).call);
+ 270              		.loc 1 193 0
+ 271 001e 01A9     		add	r1, sp, #4
+ 272              	.LVL27:
+ 273 0020 0348     		ldr	r0, .L24+4
+ 274              	.LVL28:
+ 275 0022 FFF7FEFF 		bl	tcpip_api_call
+ 276              	.LVL29:
+ 194:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_FREE(msg);
+ 195:Source\LwIP\src\api/netifapi.c ****   return err;
+ 196:Source\LwIP\src\api/netifapi.c **** }
+ 277              		.loc 1 196 0
+ 278 0026 0BB0     		add	sp, sp, #44
+ 279              		@ sp needed
+ 280 0028 00BD     		pop	{pc}
+ 281              	.L25:
+ 282 002a C046     		.align	2
+ 283              	.L24:
+ 284 002c 00000000 		.word	ip_addr_any
+ 285 0030 00000000 		.word	netifapi_do_netif_set_addr
+ 286              		.cfi_endproc
+ 287              	.LFE57:
+ 288              		.size	netifapi_netif_set_addr, .-netifapi_netif_set_addr
+ 289              		.section	.text.netifapi_netif_common,"ax",%progbits
+ 290              		.align	2
+ 291              		.global	netifapi_netif_common
+ 292              		.code	16
+ 293              		.thumb_func
+ 294              		.type	netifapi_netif_common, %function
+ 295              	netifapi_netif_common:
+ 296              	.LFB58:
+ 197:Source\LwIP\src\api/netifapi.c **** #endif /* LWIP_IPV4 */
+ 198:Source\LwIP\src\api/netifapi.c **** 
+ 199:Source\LwIP\src\api/netifapi.c **** /**
+ 200:Source\LwIP\src\api/netifapi.c ****  * call the "errtfunc" (or the "voidfunc" if "errtfunc" is NULL) in a thread-safe
+ 201:Source\LwIP\src\api/netifapi.c ****  * way by running that function inside the tcpip_thread context.
+ 202:Source\LwIP\src\api/netifapi.c ****  *
+ 203:Source\LwIP\src\api/netifapi.c ****  * @note use only for functions where there is only "netif" parameter.
+ 204:Source\LwIP\src\api/netifapi.c ****  */
+ 205:Source\LwIP\src\api/netifapi.c **** err_t
+ 206:Source\LwIP\src\api/netifapi.c **** netifapi_netif_common(struct netif *netif, netifapi_void_fn voidfunc,
+ 207:Source\LwIP\src\api/netifapi.c ****                        netifapi_errt_fn errtfunc)
+ 208:Source\LwIP\src\api/netifapi.c **** {
+ 297              		.loc 1 208 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 10
+
+
+ 298              		.cfi_startproc
+ 299              		@ args = 0, pretend = 0, frame = 40
+ 300              		@ frame_needed = 0, uses_anonymous_args = 0
+ 301              	.LVL30:
+ 302 0000 00B5     		push	{lr}
+ 303              		.cfi_def_cfa_offset 4
+ 304              		.cfi_offset 14, -4
+ 305 0002 8BB0     		sub	sp, sp, #44
+ 306              		.cfi_def_cfa_offset 48
+ 209:Source\LwIP\src\api/netifapi.c ****   err_t err;
+ 210:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_DECLARE(msg);
+ 211:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_ALLOC(msg);
+ 212:Source\LwIP\src\api/netifapi.c **** 
+ 213:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).netif = netif;
+ 307              		.loc 1 213 0
+ 308 0004 0390     		str	r0, [sp, #12]
+ 214:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).msg.common.voidfunc = voidfunc;
+ 309              		.loc 1 214 0
+ 310 0006 0491     		str	r1, [sp, #16]
+ 215:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_REF(msg).msg.common.errtfunc = errtfunc;
+ 311              		.loc 1 215 0
+ 312 0008 0592     		str	r2, [sp, #20]
+ 216:Source\LwIP\src\api/netifapi.c ****   err = tcpip_api_call(netifapi_do_netif_common, &API_VAR_REF(msg).call);
+ 313              		.loc 1 216 0
+ 314 000a 01A9     		add	r1, sp, #4
+ 315              	.LVL31:
+ 316 000c 0248     		ldr	r0, .L27
+ 317              	.LVL32:
+ 318 000e FFF7FEFF 		bl	tcpip_api_call
+ 319              	.LVL33:
+ 217:Source\LwIP\src\api/netifapi.c ****   NETIFAPI_VAR_FREE(msg);
+ 218:Source\LwIP\src\api/netifapi.c ****   return err;
+ 219:Source\LwIP\src\api/netifapi.c **** }
+ 320              		.loc 1 219 0
+ 321 0012 0BB0     		add	sp, sp, #44
+ 322              		@ sp needed
+ 323 0014 00BD     		pop	{pc}
+ 324              	.L28:
+ 325 0016 C046     		.align	2
+ 326              	.L27:
+ 327 0018 00000000 		.word	netifapi_do_netif_common
+ 328              		.cfi_endproc
+ 329              	.LFE58:
+ 330              		.size	netifapi_netif_common, .-netifapi_netif_common
+ 331              		.text
+ 332              	.Letext0:
+ 333              		.file 2 ".\\Source\\FreeRTOS\\10.0.1\\Source\\include/queue.h"
+ 334              		.file 3 ".\\Source\\FreeRTOS\\10.0.1\\Source\\include/semphr.h"
+ 335              		.file 4 ".\\Source\\LwIP\\src\\include/arch/sys_arch.h"
+ 336              		.file 5 ".\\Source\\LwIP\\src\\include/arch/cc.h"
+ 337              		.file 6 ".\\Source\\LwIP\\src\\include/lwip/err.h"
+ 338              		.file 7 ".\\Source\\LwIP\\src\\include/lwip/ip4_addr.h"
+ 339              		.file 8 ".\\Source\\LwIP\\src\\include/lwip/ip_addr.h"
+ 340              		.file 9 ".\\Source\\LwIP\\src\\include/lwip/pbuf.h"
+ 341              		.file 10 ".\\Source\\LwIP\\src\\include/lwip/netif.h"
+ 342              		.file 11 ".\\Source\\LwIP\\src\\include/lwip/priv/tcpip_priv.h"
+ 343              		.file 12 ".\\Source\\LwIP\\src\\include/lwip/netifapi.h"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 11
+
+
+ 344              		.section	.debug_info,"",%progbits
+ 345              	.Ldebug_info0:
+ 346 0000 E2070000 		.4byte	0x7e2
+ 347 0004 0400     		.2byte	0x4
+ 348 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 349 000a 04       		.byte	0x4
+ 350 000b 01       		.uleb128 0x1
+ 351 000c 9C010000 		.4byte	.LASF91
+ 352 0010 0C       		.byte	0xc
+ 353 0011 05040000 		.4byte	.LASF92
+ 354 0015 DD020000 		.4byte	.LASF93
+ 355 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 356 001d 00000000 		.4byte	0
+ 357 0021 00000000 		.4byte	.Ldebug_line0
+ 358 0025 02       		.uleb128 0x2
+ 359 0026 01       		.byte	0x1
+ 360 0027 06       		.byte	0x6
+ 361 0028 2D010000 		.4byte	.LASF0
+ 362 002c 02       		.uleb128 0x2
+ 363 002d 01       		.byte	0x1
+ 364 002e 08       		.byte	0x8
+ 365 002f AD020000 		.4byte	.LASF1
+ 366 0033 02       		.uleb128 0x2
+ 367 0034 02       		.byte	0x2
+ 368 0035 05       		.byte	0x5
+ 369 0036 4D000000 		.4byte	.LASF2
+ 370 003a 02       		.uleb128 0x2
+ 371 003b 02       		.byte	0x2
+ 372 003c 07       		.byte	0x7
+ 373 003d F2030000 		.4byte	.LASF3
+ 374 0041 02       		.uleb128 0x2
+ 375 0042 04       		.byte	0x4
+ 376 0043 05       		.byte	0x5
+ 377 0044 41040000 		.4byte	.LASF4
+ 378 0048 02       		.uleb128 0x2
+ 379 0049 04       		.byte	0x4
+ 380 004a 07       		.byte	0x7
+ 381 004b A0040000 		.4byte	.LASF5
+ 382 004f 02       		.uleb128 0x2
+ 383 0050 08       		.byte	0x8
+ 384 0051 05       		.byte	0x5
+ 385 0052 49010000 		.4byte	.LASF6
+ 386 0056 02       		.uleb128 0x2
+ 387 0057 08       		.byte	0x8
+ 388 0058 07       		.byte	0x7
+ 389 0059 94030000 		.4byte	.LASF7
+ 390 005d 03       		.uleb128 0x3
+ 391 005e 04       		.byte	0x4
+ 392 005f 05       		.byte	0x5
+ 393 0060 696E7400 		.ascii	"int\000"
+ 394 0064 02       		.uleb128 0x2
+ 395 0065 04       		.byte	0x4
+ 396 0066 07       		.byte	0x7
+ 397 0067 B0030000 		.4byte	.LASF8
+ 398 006b 02       		.uleb128 0x2
+ 399 006c 08       		.byte	0x8
+ 400 006d 04       		.byte	0x4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 12
+
+
+ 401 006e 77020000 		.4byte	.LASF9
+ 402 0072 04       		.uleb128 0x4
+ 403 0073 04       		.byte	0x4
+ 404 0074 02       		.uleb128 0x2
+ 405 0075 04       		.byte	0x4
+ 406 0076 07       		.byte	0x7
+ 407 0077 5D000000 		.4byte	.LASF10
+ 408 007b 02       		.uleb128 0x2
+ 409 007c 01       		.byte	0x1
+ 410 007d 08       		.byte	0x8
+ 411 007e 57010000 		.4byte	.LASF11
+ 412 0082 05       		.uleb128 0x5
+ 413 0083 04       		.byte	0x4
+ 414 0084 88000000 		.4byte	0x88
+ 415 0088 06       		.uleb128 0x6
+ 416 0089 7B000000 		.4byte	0x7b
+ 417 008d 02       		.uleb128 0x2
+ 418 008e 04       		.byte	0x4
+ 419 008f 04       		.byte	0x4
+ 420 0090 0D000000 		.4byte	.LASF12
+ 421 0094 02       		.uleb128 0x2
+ 422 0095 08       		.byte	0x8
+ 423 0096 04       		.byte	0x4
+ 424 0097 B2040000 		.4byte	.LASF13
+ 425 009b 07       		.uleb128 0x7
+ 426 009c 72000000 		.4byte	0x72
+ 427 00a0 AB000000 		.4byte	0xab
+ 428 00a4 08       		.uleb128 0x8
+ 429 00a5 74000000 		.4byte	0x74
+ 430 00a9 01       		.byte	0x1
+ 431 00aa 00       		.byte	0
+ 432 00ab 09       		.uleb128 0x9
+ 433 00ac 3C020000 		.4byte	.LASF14
+ 434 00b0 02       		.byte	0x2
+ 435 00b1 2E       		.byte	0x2e
+ 436 00b2 72000000 		.4byte	0x72
+ 437 00b6 09       		.uleb128 0x9
+ 438 00b7 83020000 		.4byte	.LASF15
+ 439 00bb 03       		.byte	0x3
+ 440 00bc 25       		.byte	0x25
+ 441 00bd AB000000 		.4byte	0xab
+ 442 00c1 09       		.uleb128 0x9
+ 443 00c2 77000000 		.4byte	.LASF16
+ 444 00c6 04       		.byte	0x4
+ 445 00c7 32       		.byte	0x32
+ 446 00c8 B6000000 		.4byte	0xb6
+ 447 00cc 09       		.uleb128 0x9
+ 448 00cd 31050000 		.4byte	.LASF17
+ 449 00d1 05       		.byte	0x5
+ 450 00d2 31       		.byte	0x31
+ 451 00d3 2C000000 		.4byte	0x2c
+ 452 00d7 09       		.uleb128 0x9
+ 453 00d8 44010000 		.4byte	.LASF18
+ 454 00dc 05       		.byte	0x5
+ 455 00dd 32       		.byte	0x32
+ 456 00de 25000000 		.4byte	0x25
+ 457 00e2 09       		.uleb128 0x9
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 13
+
+
+ 458 00e3 01050000 		.4byte	.LASF19
+ 459 00e7 05       		.byte	0x5
+ 460 00e8 33       		.byte	0x33
+ 461 00e9 3A000000 		.4byte	0x3a
+ 462 00ed 09       		.uleb128 0x9
+ 463 00ee FB040000 		.4byte	.LASF20
+ 464 00f2 05       		.byte	0x5
+ 465 00f3 35       		.byte	0x35
+ 466 00f4 48000000 		.4byte	0x48
+ 467 00f8 09       		.uleb128 0x9
+ 468 00f9 95050000 		.4byte	.LASF21
+ 469 00fd 06       		.byte	0x6
+ 470 00fe 39       		.byte	0x39
+ 471 00ff D7000000 		.4byte	0xd7
+ 472 0103 0A       		.uleb128 0xa
+ 473 0104 01       		.byte	0x1
+ 474 0105 25000000 		.4byte	0x25
+ 475 0109 06       		.byte	0x6
+ 476 010a 3D       		.byte	0x3d
+ 477 010b 76010000 		.4byte	0x176
+ 478 010f 0B       		.uleb128 0xb
+ 479 0110 EC000000 		.4byte	.LASF22
+ 480 0114 00       		.byte	0
+ 481 0115 0C       		.uleb128 0xc
+ 482 0116 F3040000 		.4byte	.LASF23
+ 483 011a 7F       		.sleb128 -1
+ 484 011b 0C       		.uleb128 0xc
+ 485 011c D5030000 		.4byte	.LASF24
+ 486 0120 7E       		.sleb128 -2
+ 487 0121 0C       		.uleb128 0xc
+ 488 0122 68040000 		.4byte	.LASF25
+ 489 0126 7D       		.sleb128 -3
+ 490 0127 0C       		.uleb128 0xc
+ 491 0128 61010000 		.4byte	.LASF26
+ 492 012c 7C       		.sleb128 -4
+ 493 012d 0C       		.uleb128 0xc
+ 494 012e FB000000 		.4byte	.LASF27
+ 495 0132 7B       		.sleb128 -5
+ 496 0133 0C       		.uleb128 0xc
+ 497 0134 6C050000 		.4byte	.LASF28
+ 498 0138 7A       		.sleb128 -6
+ 499 0139 0C       		.uleb128 0xc
+ 500 013a 91040000 		.4byte	.LASF29
+ 501 013e 79       		.sleb128 -7
+ 502 013f 0C       		.uleb128 0xc
+ 503 0140 07050000 		.4byte	.LASF30
+ 504 0144 78       		.sleb128 -8
+ 505 0145 0C       		.uleb128 0xc
+ 506 0146 78010000 		.4byte	.LASF31
+ 507 014a 77       		.sleb128 -9
+ 508 014b 0C       		.uleb128 0xc
+ 509 014c 2B000000 		.4byte	.LASF32
+ 510 0150 76       		.sleb128 -10
+ 511 0151 0C       		.uleb128 0xc
+ 512 0152 BB020000 		.4byte	.LASF33
+ 513 0156 75       		.sleb128 -11
+ 514 0157 0C       		.uleb128 0xc
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 14
+
+
+ 515 0158 24040000 		.4byte	.LASF34
+ 516 015c 74       		.sleb128 -12
+ 517 015d 0C       		.uleb128 0xc
+ 518 015e BD030000 		.4byte	.LASF35
+ 519 0162 73       		.sleb128 -13
+ 520 0163 0C       		.uleb128 0xc
+ 521 0164 F3000000 		.4byte	.LASF36
+ 522 0168 72       		.sleb128 -14
+ 523 0169 0C       		.uleb128 0xc
+ 524 016a 6E000000 		.4byte	.LASF37
+ 525 016e 71       		.sleb128 -15
+ 526 016f 0C       		.uleb128 0xc
+ 527 0170 29050000 		.4byte	.LASF38
+ 528 0174 70       		.sleb128 -16
+ 529 0175 00       		.byte	0
+ 530 0176 0D       		.uleb128 0xd
+ 531 0177 88040000 		.4byte	.LASF41
+ 532 017b 04       		.byte	0x4
+ 533 017c 07       		.byte	0x7
+ 534 017d 33       		.byte	0x33
+ 535 017e 8F010000 		.4byte	0x18f
+ 536 0182 0E       		.uleb128 0xe
+ 537 0183 73010000 		.4byte	.LASF43
+ 538 0187 07       		.byte	0x7
+ 539 0188 34       		.byte	0x34
+ 540 0189 ED000000 		.4byte	0xed
+ 541 018d 00       		.byte	0
+ 542 018e 00       		.byte	0
+ 543 018f 09       		.uleb128 0x9
+ 544 0190 C9040000 		.4byte	.LASF39
+ 545 0194 07       		.byte	0x7
+ 546 0195 39       		.byte	0x39
+ 547 0196 76010000 		.4byte	0x176
+ 548 019a 09       		.uleb128 0x9
+ 549 019b 69010000 		.4byte	.LASF40
+ 550 019f 08       		.byte	0x8
+ 551 01a0 F4       		.byte	0xf4
+ 552 01a1 8F010000 		.4byte	0x18f
+ 553 01a5 0D       		.uleb128 0xd
+ 554 01a6 90050000 		.4byte	.LASF42
+ 555 01aa 10       		.byte	0x10
+ 556 01ab 09       		.byte	0x9
+ 557 01ac 8E       		.byte	0x8e
+ 558 01ad 06020000 		.4byte	0x206
+ 559 01b1 0E       		.uleb128 0xe
+ 560 01b2 8B050000 		.4byte	.LASF44
+ 561 01b6 09       		.byte	0x9
+ 562 01b7 90       		.byte	0x90
+ 563 01b8 06020000 		.4byte	0x206
+ 564 01bc 00       		.byte	0
+ 565 01bd 0E       		.uleb128 0xe
+ 566 01be 83050000 		.4byte	.LASF45
+ 567 01c2 09       		.byte	0x9
+ 568 01c3 93       		.byte	0x93
+ 569 01c4 72000000 		.4byte	0x72
+ 570 01c8 04       		.byte	0x4
+ 571 01c9 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 15
+
+
+ 572 01ca 66000000 		.4byte	.LASF46
+ 573 01ce 09       		.byte	0x9
+ 574 01cf 9C       		.byte	0x9c
+ 575 01d0 E2000000 		.4byte	0xe2
+ 576 01d4 08       		.byte	0x8
+ 577 01d5 0F       		.uleb128 0xf
+ 578 01d6 6C656E00 		.ascii	"len\000"
+ 579 01da 09       		.byte	0x9
+ 580 01db 9F       		.byte	0x9f
+ 581 01dc E2000000 		.4byte	0xe2
+ 582 01e0 0A       		.byte	0xa
+ 583 01e1 0E       		.uleb128 0xe
+ 584 01e2 AB030000 		.4byte	.LASF47
+ 585 01e6 09       		.byte	0x9
+ 586 01e7 A2       		.byte	0xa2
+ 587 01e8 CC000000 		.4byte	0xcc
+ 588 01ec 0C       		.byte	0xc
+ 589 01ed 0E       		.uleb128 0xe
+ 590 01ee 8E030000 		.4byte	.LASF48
+ 591 01f2 09       		.byte	0x9
+ 592 01f3 A5       		.byte	0xa5
+ 593 01f4 CC000000 		.4byte	0xcc
+ 594 01f8 0D       		.byte	0xd
+ 595 01f9 0F       		.uleb128 0xf
+ 596 01fa 72656600 		.ascii	"ref\000"
+ 597 01fe 09       		.byte	0x9
+ 598 01ff AC       		.byte	0xac
+ 599 0200 E2000000 		.4byte	0xe2
+ 600 0204 0E       		.byte	0xe
+ 601 0205 00       		.byte	0
+ 602 0206 05       		.uleb128 0x5
+ 603 0207 04       		.byte	0x4
+ 604 0208 A5010000 		.4byte	0x1a5
+ 605 020c 10       		.uleb128 0x10
+ 606 020d 95020000 		.4byte	.LASF94
+ 607 0211 01       		.byte	0x1
+ 608 0212 2C000000 		.4byte	0x2c
+ 609 0216 0A       		.byte	0xa
+ 610 0217 8F       		.byte	0x8f
+ 611 0218 29020000 		.4byte	0x229
+ 612 021c 0B       		.uleb128 0xb
+ 613 021d A8000000 		.4byte	.LASF49
+ 614 0221 00       		.byte	0
+ 615 0222 0B       		.uleb128 0xb
+ 616 0223 DD030000 		.4byte	.LASF50
+ 617 0227 01       		.byte	0x1
+ 618 0228 00       		.byte	0
+ 619 0229 09       		.uleb128 0x9
+ 620 022a 2E020000 		.4byte	.LASF51
+ 621 022e 0A       		.byte	0xa
+ 622 022f 9B       		.byte	0x9b
+ 623 0230 34020000 		.4byte	0x234
+ 624 0234 05       		.uleb128 0x5
+ 625 0235 04       		.byte	0x4
+ 626 0236 3A020000 		.4byte	0x23a
+ 627 023a 11       		.uleb128 0x11
+ 628 023b F8000000 		.4byte	0xf8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 16
+
+
+ 629 023f 49020000 		.4byte	0x249
+ 630 0243 12       		.uleb128 0x12
+ 631 0244 49020000 		.4byte	0x249
+ 632 0248 00       		.byte	0
+ 633 0249 05       		.uleb128 0x5
+ 634 024a 04       		.byte	0x4
+ 635 024b 4F020000 		.4byte	0x24f
+ 636 024f 0D       		.uleb128 0xd
+ 637 0250 D4040000 		.4byte	.LASF52
+ 638 0254 48       		.byte	0x48
+ 639 0255 0A       		.byte	0xa
+ 640 0256 E1       		.byte	0xe1
+ 641 0257 4B030000 		.4byte	0x34b
+ 642 025b 0E       		.uleb128 0xe
+ 643 025c 8B050000 		.4byte	.LASF44
+ 644 0260 0A       		.byte	0xa
+ 645 0261 E3       		.byte	0xe3
+ 646 0262 49020000 		.4byte	0x249
+ 647 0266 00       		.byte	0
+ 648 0267 0E       		.uleb128 0xe
+ 649 0268 51050000 		.4byte	.LASF53
+ 650 026c 0A       		.byte	0xa
+ 651 026d E7       		.byte	0xe7
+ 652 026e 9A010000 		.4byte	0x19a
+ 653 0272 04       		.byte	0x4
+ 654 0273 0E       		.uleb128 0xe
+ 655 0274 4A040000 		.4byte	.LASF54
+ 656 0278 0A       		.byte	0xa
+ 657 0279 E8       		.byte	0xe8
+ 658 027a 9A010000 		.4byte	0x19a
+ 659 027e 08       		.byte	0x8
+ 660 027f 0F       		.uleb128 0xf
+ 661 0280 677700   		.ascii	"gw\000"
+ 662 0283 0A       		.byte	0xa
+ 663 0284 E9       		.byte	0xe9
+ 664 0285 9A010000 		.4byte	0x19a
+ 665 0289 0C       		.byte	0xc
+ 666 028a 0E       		.uleb128 0xe
+ 667 028b 57000000 		.4byte	.LASF55
+ 668 028f 0A       		.byte	0xa
+ 669 0290 F4       		.byte	0xf4
+ 670 0291 4B030000 		.4byte	0x34b
+ 671 0295 10       		.byte	0x10
+ 672 0296 0E       		.uleb128 0xe
+ 673 0297 18050000 		.4byte	.LASF56
+ 674 029b 0A       		.byte	0xa
+ 675 029c FA       		.byte	0xfa
+ 676 029d 70030000 		.4byte	0x370
+ 677 02a1 14       		.byte	0x14
+ 678 02a2 0E       		.uleb128 0xe
+ 679 02a3 39010000 		.4byte	.LASF57
+ 680 02a7 0A       		.byte	0xa
+ 681 02a8 FF       		.byte	0xff
+ 682 02a9 A5030000 		.4byte	0x3a5
+ 683 02ad 18       		.byte	0x18
+ 684 02ae 13       		.uleb128 0x13
+ 685 02af 81000000 		.4byte	.LASF58
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 17
+
+
+ 686 02b3 0A       		.byte	0xa
+ 687 02b4 0A01     		.2byte	0x10a
+ 688 02b6 CA030000 		.4byte	0x3ca
+ 689 02ba 1C       		.byte	0x1c
+ 690 02bb 13       		.uleb128 0x13
+ 691 02bc 63020000 		.4byte	.LASF59
+ 692 02c0 0A       		.byte	0xa
+ 693 02c1 1701     		.2byte	0x117
+ 694 02c3 72000000 		.4byte	0x72
+ 695 02c7 20       		.byte	0x20
+ 696 02c8 13       		.uleb128 0x13
+ 697 02c9 9C000000 		.4byte	.LASF60
+ 698 02cd 0A       		.byte	0xa
+ 699 02ce 1901     		.2byte	0x119
+ 700 02d0 9B000000 		.4byte	0x9b
+ 701 02d4 24       		.byte	0x24
+ 702 02d5 13       		.uleb128 0x13
+ 703 02d6 0F050000 		.4byte	.LASF61
+ 704 02da 0A       		.byte	0xa
+ 705 02db 2101     		.2byte	0x121
+ 706 02dd CC000000 		.4byte	0xcc
+ 707 02e1 2C       		.byte	0x2c
+ 708 02e2 13       		.uleb128 0x13
+ 709 02e3 E3000000 		.4byte	.LASF62
+ 710 02e7 0A       		.byte	0xa
+ 711 02e8 2501     		.2byte	0x125
+ 712 02ea 82000000 		.4byte	0x82
+ 713 02ee 30       		.byte	0x30
+ 714 02ef 14       		.uleb128 0x14
+ 715 02f0 6D747500 		.ascii	"mtu\000"
+ 716 02f4 0A       		.byte	0xa
+ 717 02f5 2B01     		.2byte	0x12b
+ 718 02f7 E2000000 		.4byte	0xe2
+ 719 02fb 34       		.byte	0x34
+ 720 02fc 13       		.uleb128 0x13
+ 721 02fd 91000000 		.4byte	.LASF63
+ 722 0301 0A       		.byte	0xa
+ 723 0302 2D01     		.2byte	0x12d
+ 724 0304 CC000000 		.4byte	0xcc
+ 725 0308 36       		.byte	0x36
+ 726 0309 13       		.uleb128 0x13
+ 727 030a 13000000 		.4byte	.LASF64
+ 728 030e 0A       		.byte	0xa
+ 729 030f 2F01     		.2byte	0x12f
+ 730 0311 10040000 		.4byte	0x410
+ 731 0315 37       		.byte	0x37
+ 732 0316 13       		.uleb128 0x13
+ 733 0317 8E030000 		.4byte	.LASF48
+ 734 031b 0A       		.byte	0xa
+ 735 031c 3101     		.2byte	0x131
+ 736 031e CC000000 		.4byte	0xcc
+ 737 0322 3D       		.byte	0x3d
+ 738 0323 13       		.uleb128 0x13
+ 739 0324 69020000 		.4byte	.LASF65
+ 740 0328 0A       		.byte	0xa
+ 741 0329 3301     		.2byte	0x133
+ 742 032b 20040000 		.4byte	0x420
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 18
+
+
+ 743 032f 3E       		.byte	0x3e
+ 744 0330 14       		.uleb128 0x14
+ 745 0331 6E756D00 		.ascii	"num\000"
+ 746 0335 0A       		.byte	0xa
+ 747 0336 3501     		.2byte	0x135
+ 748 0338 CC000000 		.4byte	0xcc
+ 749 033c 40       		.byte	0x40
+ 750 033d 13       		.uleb128 0x13
+ 751 033e BD000000 		.4byte	.LASF66
+ 752 0342 0A       		.byte	0xa
+ 753 0343 4301     		.2byte	0x143
+ 754 0345 E6030000 		.4byte	0x3e6
+ 755 0349 44       		.byte	0x44
+ 756 034a 00       		.byte	0
+ 757 034b 09       		.uleb128 0x9
+ 758 034c 74050000 		.4byte	.LASF67
+ 759 0350 0A       		.byte	0xa
+ 760 0351 A2       		.byte	0xa2
+ 761 0352 56030000 		.4byte	0x356
+ 762 0356 05       		.uleb128 0x5
+ 763 0357 04       		.byte	0x4
+ 764 0358 5C030000 		.4byte	0x35c
+ 765 035c 11       		.uleb128 0x11
+ 766 035d F8000000 		.4byte	0xf8
+ 767 0361 70030000 		.4byte	0x370
+ 768 0365 12       		.uleb128 0x12
+ 769 0366 06020000 		.4byte	0x206
+ 770 036a 12       		.uleb128 0x12
+ 771 036b 49020000 		.4byte	0x249
+ 772 036f 00       		.byte	0
+ 773 0370 09       		.uleb128 0x9
+ 774 0371 36000000 		.4byte	.LASF68
+ 775 0375 0A       		.byte	0xa
+ 776 0376 AD       		.byte	0xad
+ 777 0377 7B030000 		.4byte	0x37b
+ 778 037b 05       		.uleb128 0x5
+ 779 037c 04       		.byte	0x4
+ 780 037d 81030000 		.4byte	0x381
+ 781 0381 11       		.uleb128 0x11
+ 782 0382 F8000000 		.4byte	0xf8
+ 783 0386 9A030000 		.4byte	0x39a
+ 784 038a 12       		.uleb128 0x12
+ 785 038b 49020000 		.4byte	0x249
+ 786 038f 12       		.uleb128 0x12
+ 787 0390 06020000 		.4byte	0x206
+ 788 0394 12       		.uleb128 0x12
+ 789 0395 9A030000 		.4byte	0x39a
+ 790 0399 00       		.byte	0
+ 791 039a 05       		.uleb128 0x5
+ 792 039b 04       		.byte	0x4
+ 793 039c A0030000 		.4byte	0x3a0
+ 794 03a0 06       		.uleb128 0x6
+ 795 03a1 8F010000 		.4byte	0x18f
+ 796 03a5 09       		.uleb128 0x9
+ 797 03a6 74040000 		.4byte	.LASF69
+ 798 03aa 0A       		.byte	0xa
+ 799 03ab C4       		.byte	0xc4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 19
+
+
+ 800 03ac B0030000 		.4byte	0x3b0
+ 801 03b0 05       		.uleb128 0x5
+ 802 03b1 04       		.byte	0x4
+ 803 03b2 B6030000 		.4byte	0x3b6
+ 804 03b6 11       		.uleb128 0x11
+ 805 03b7 F8000000 		.4byte	0xf8
+ 806 03bb CA030000 		.4byte	0x3ca
+ 807 03bf 12       		.uleb128 0x12
+ 808 03c0 49020000 		.4byte	0x249
+ 809 03c4 12       		.uleb128 0x12
+ 810 03c5 06020000 		.4byte	0x206
+ 811 03c9 00       		.byte	0
+ 812 03ca 09       		.uleb128 0x9
+ 813 03cb C4020000 		.4byte	.LASF70
+ 814 03cf 0A       		.byte	0xa
+ 815 03d0 C6       		.byte	0xc6
+ 816 03d1 D5030000 		.4byte	0x3d5
+ 817 03d5 05       		.uleb128 0x5
+ 818 03d6 04       		.byte	0x4
+ 819 03d7 DB030000 		.4byte	0x3db
+ 820 03db 15       		.uleb128 0x15
+ 821 03dc E6030000 		.4byte	0x3e6
+ 822 03e0 12       		.uleb128 0x12
+ 823 03e1 49020000 		.4byte	0x249
+ 824 03e5 00       		.byte	0
+ 825 03e6 09       		.uleb128 0x9
+ 826 03e7 4A020000 		.4byte	.LASF71
+ 827 03eb 0A       		.byte	0xa
+ 828 03ec C9       		.byte	0xc9
+ 829 03ed F1030000 		.4byte	0x3f1
+ 830 03f1 05       		.uleb128 0x5
+ 831 03f2 04       		.byte	0x4
+ 832 03f3 F7030000 		.4byte	0x3f7
+ 833 03f7 11       		.uleb128 0x11
+ 834 03f8 F8000000 		.4byte	0xf8
+ 835 03fc 10040000 		.4byte	0x410
+ 836 0400 12       		.uleb128 0x12
+ 837 0401 49020000 		.4byte	0x249
+ 838 0405 12       		.uleb128 0x12
+ 839 0406 9A030000 		.4byte	0x39a
+ 840 040a 12       		.uleb128 0x12
+ 841 040b 0C020000 		.4byte	0x20c
+ 842 040f 00       		.byte	0
+ 843 0410 07       		.uleb128 0x7
+ 844 0411 CC000000 		.4byte	0xcc
+ 845 0415 20040000 		.4byte	0x420
+ 846 0419 08       		.uleb128 0x8
+ 847 041a 74000000 		.4byte	0x74
+ 848 041e 05       		.byte	0x5
+ 849 041f 00       		.byte	0
+ 850 0420 07       		.uleb128 0x7
+ 851 0421 7B000000 		.4byte	0x7b
+ 852 0425 30040000 		.4byte	0x430
+ 853 0429 08       		.uleb128 0x8
+ 854 042a 74000000 		.4byte	0x74
+ 855 042e 01       		.byte	0x1
+ 856 042f 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 20
+
+
+ 857 0430 06       		.uleb128 0x6
+ 858 0431 9A010000 		.4byte	0x19a
+ 859 0435 0D       		.uleb128 0xd
+ 860 0436 19010000 		.4byte	.LASF72
+ 861 043a 08       		.byte	0x8
+ 862 043b 0B       		.byte	0xb
+ 863 043c 61       		.byte	0x61
+ 864 043d 5A040000 		.4byte	0x45a
+ 865 0441 0F       		.uleb128 0xf
+ 866 0442 65727200 		.ascii	"err\000"
+ 867 0446 0B       		.byte	0xb
+ 868 0447 64       		.byte	0x64
+ 869 0448 F8000000 		.4byte	0xf8
+ 870 044c 00       		.byte	0
+ 871 044d 0F       		.uleb128 0xf
+ 872 044e 73656D00 		.ascii	"sem\000"
+ 873 0452 0B       		.byte	0xb
+ 874 0453 66       		.byte	0x66
+ 875 0454 C1000000 		.4byte	0xc1
+ 876 0458 04       		.byte	0x4
+ 877 0459 00       		.byte	0
+ 878 045a 05       		.uleb128 0x5
+ 879 045b 04       		.byte	0x4
+ 880 045c 35040000 		.4byte	0x435
+ 881 0460 09       		.uleb128 0x9
+ 882 0461 1A000000 		.4byte	.LASF73
+ 883 0465 0C       		.byte	0xc
+ 884 0466 37       		.byte	0x37
+ 885 0467 D5030000 		.4byte	0x3d5
+ 886 046b 09       		.uleb128 0x9
+ 887 046c 2B040000 		.4byte	.LASF74
+ 888 0470 0C       		.byte	0xc
+ 889 0471 38       		.byte	0x38
+ 890 0472 34020000 		.4byte	0x234
+ 891 0476 16       		.uleb128 0x16
+ 892 0477 18       		.byte	0x18
+ 893 0478 0C       		.byte	0xc
+ 894 0479 3E       		.byte	0x3e
+ 895 047a C6040000 		.4byte	0x4c6
+ 896 047e 0E       		.uleb128 0xe
+ 897 047f 46000000 		.4byte	.LASF75
+ 898 0483 0C       		.byte	0xc
+ 899 0484 40       		.byte	0x40
+ 900 0485 9A030000 		.4byte	0x39a
+ 901 0489 00       		.byte	0
+ 902 048a 0E       		.uleb128 0xe
+ 903 048b 4A040000 		.4byte	.LASF54
+ 904 048f 0C       		.byte	0xc
+ 905 0490 41       		.byte	0x41
+ 906 0491 9A030000 		.4byte	0x39a
+ 907 0495 04       		.byte	0x4
+ 908 0496 0F       		.uleb128 0xf
+ 909 0497 677700   		.ascii	"gw\000"
+ 910 049a 0C       		.byte	0xc
+ 911 049b 42       		.byte	0x42
+ 912 049c 9A030000 		.4byte	0x39a
+ 913 04a0 08       		.byte	0x8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 21
+
+
+ 914 04a1 0E       		.uleb128 0xe
+ 915 04a2 63020000 		.4byte	.LASF59
+ 916 04a6 0C       		.byte	0xc
+ 917 04a7 44       		.byte	0x44
+ 918 04a8 72000000 		.4byte	0x72
+ 919 04ac 0C       		.byte	0xc
+ 920 04ad 0E       		.uleb128 0xe
+ 921 04ae 3C040000 		.4byte	.LASF76
+ 922 04b2 0C       		.byte	0xc
+ 923 04b3 45       		.byte	0x45
+ 924 04b4 29020000 		.4byte	0x229
+ 925 04b8 10       		.byte	0x10
+ 926 04b9 0E       		.uleb128 0xe
+ 927 04ba 57000000 		.4byte	.LASF55
+ 928 04be 0C       		.byte	0xc
+ 929 04bf 46       		.byte	0x46
+ 930 04c0 4B030000 		.4byte	0x34b
+ 931 04c4 14       		.byte	0x14
+ 932 04c5 00       		.byte	0
+ 933 04c6 16       		.uleb128 0x16
+ 934 04c7 08       		.byte	0x8
+ 935 04c8 0C       		.byte	0xc
+ 936 04c9 48       		.byte	0x48
+ 937 04ca E7040000 		.4byte	0x4e7
+ 938 04ce 0E       		.uleb128 0xe
+ 939 04cf 6E020000 		.4byte	.LASF77
+ 940 04d3 0C       		.byte	0xc
+ 941 04d4 49       		.byte	0x49
+ 942 04d5 60040000 		.4byte	0x460
+ 943 04d9 00       		.byte	0
+ 944 04da 0E       		.uleb128 0xe
+ 945 04db C0040000 		.4byte	.LASF78
+ 946 04df 0C       		.byte	0xc
+ 947 04e0 4A       		.byte	0x4a
+ 948 04e1 6B040000 		.4byte	0x46b
+ 949 04e5 04       		.byte	0x4
+ 950 04e6 00       		.byte	0
+ 951 04e7 17       		.uleb128 0x17
+ 952 04e8 18       		.byte	0x18
+ 953 04e9 0C       		.byte	0xc
+ 954 04ea 3D       		.byte	0x3d
+ 955 04eb 06050000 		.4byte	0x506
+ 956 04ef 18       		.uleb128 0x18
+ 957 04f0 61646400 		.ascii	"add\000"
+ 958 04f4 0C       		.byte	0xc
+ 959 04f5 47       		.byte	0x47
+ 960 04f6 76040000 		.4byte	0x476
+ 961 04fa 19       		.uleb128 0x19
+ 962 04fb B9040000 		.4byte	.LASF79
+ 963 04ff 0C       		.byte	0xc
+ 964 0500 4B       		.byte	0x4b
+ 965 0501 C6040000 		.4byte	0x4c6
+ 966 0505 00       		.byte	0
+ 967 0506 0D       		.uleb128 0xd
+ 968 0507 00000000 		.4byte	.LASF80
+ 969 050b 24       		.byte	0x24
+ 970 050c 0C       		.byte	0xc
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 22
+
+
+ 971 050d 3A       		.byte	0x3a
+ 972 050e 37050000 		.4byte	0x537
+ 973 0512 0E       		.uleb128 0xe
+ 974 0513 5C010000 		.4byte	.LASF81
+ 975 0517 0C       		.byte	0xc
+ 976 0518 3B       		.byte	0x3b
+ 977 0519 35040000 		.4byte	0x435
+ 978 051d 00       		.byte	0
+ 979 051e 0E       		.uleb128 0xe
+ 980 051f D4040000 		.4byte	.LASF52
+ 981 0523 0C       		.byte	0xc
+ 982 0524 3C       		.byte	0x3c
+ 983 0525 49020000 		.4byte	0x249
+ 984 0529 08       		.byte	0x8
+ 985 052a 0F       		.uleb128 0xf
+ 986 052b 6D736700 		.ascii	"msg\000"
+ 987 052f 0C       		.byte	0xc
+ 988 0530 4C       		.byte	0x4c
+ 989 0531 E7040000 		.4byte	0x4e7
+ 990 0535 0C       		.byte	0xc
+ 991 0536 00       		.byte	0
+ 992 0537 1A       		.uleb128 0x1a
+ 993 0538 DA040000 		.4byte	.LASF82
+ 994 053c 01       		.byte	0x1
+ 995 053d 67       		.byte	0x67
+ 996 053e F8000000 		.4byte	0xf8
+ 997 0542 00000000 		.4byte	.LFB55
+ 998 0546 18000000 		.4byte	.LFE55-.LFB55
+ 999 054a 01       		.uleb128 0x1
+ 1000 054b 9C       		.byte	0x9c
+ 1001 054c 6D050000 		.4byte	0x56d
+ 1002 0550 1B       		.uleb128 0x1b
+ 1003 0551 6D00     		.ascii	"m\000"
+ 1004 0553 01       		.byte	0x1
+ 1005 0554 67       		.byte	0x67
+ 1006 0555 5A040000 		.4byte	0x45a
+ 1007 0559 00000000 		.4byte	.LLST0
+ 1008 055d 1C       		.uleb128 0x1c
+ 1009 055e 6D736700 		.ascii	"msg\000"
+ 1010 0562 01       		.byte	0x1
+ 1011 0563 6B       		.byte	0x6b
+ 1012 0564 6D050000 		.4byte	0x56d
+ 1013 0568 3A000000 		.4byte	.LLST1
+ 1014 056c 00       		.byte	0
+ 1015 056d 05       		.uleb128 0x5
+ 1016 056e 04       		.byte	0x4
+ 1017 056f 06050000 		.4byte	0x506
+ 1018 0573 1D       		.uleb128 0x1d
+ 1019 0574 CD000000 		.4byte	.LASF83
+ 1020 0578 01       		.byte	0x1
+ 1021 0579 3A       		.byte	0x3a
+ 1022 057a F8000000 		.4byte	0xf8
+ 1023 057e 00000000 		.4byte	.LFB53
+ 1024 0582 2C000000 		.4byte	.LFE53-.LFB53
+ 1025 0586 01       		.uleb128 0x1
+ 1026 0587 9C       		.byte	0x9c
+ 1027 0588 C0050000 		.4byte	0x5c0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 23
+
+
+ 1028 058c 1B       		.uleb128 0x1b
+ 1029 058d 6D00     		.ascii	"m\000"
+ 1030 058f 01       		.byte	0x1
+ 1031 0590 3A       		.byte	0x3a
+ 1032 0591 5A040000 		.4byte	0x45a
+ 1033 0595 74000000 		.4byte	.LLST2
+ 1034 0599 1C       		.uleb128 0x1c
+ 1035 059a 6D736700 		.ascii	"msg\000"
+ 1036 059e 01       		.byte	0x1
+ 1037 059f 3E       		.byte	0x3e
+ 1038 05a0 6D050000 		.4byte	0x56d
+ 1039 05a4 95000000 		.4byte	.LLST3
+ 1040 05a8 1E       		.uleb128 0x1e
+ 1041 05a9 1E000000 		.4byte	.LVL10
+ 1042 05ad C2070000 		.4byte	0x7c2
+ 1043 05b1 1F       		.uleb128 0x1f
+ 1044 05b2 01       		.uleb128 0x1
+ 1045 05b3 50       		.byte	0x50
+ 1046 05b4 02       		.uleb128 0x2
+ 1047 05b5 74       		.byte	0x74
+ 1048 05b6 00       		.sleb128 0
+ 1049 05b7 1F       		.uleb128 0x1f
+ 1050 05b8 02       		.uleb128 0x2
+ 1051 05b9 7D       		.byte	0x7d
+ 1052 05ba 04       		.sleb128 4
+ 1053 05bb 02       		.uleb128 0x2
+ 1054 05bc 75       		.byte	0x75
+ 1055 05bd 00       		.sleb128 0
+ 1056 05be 00       		.byte	0
+ 1057 05bf 00       		.byte	0
+ 1058 05c0 1D       		.uleb128 0x1d
+ 1059 05c1 36050000 		.4byte	.LASF84
+ 1060 05c5 01       		.byte	0x1
+ 1061 05c6 54       		.byte	0x54
+ 1062 05c7 F8000000 		.4byte	0xf8
+ 1063 05cb 00000000 		.4byte	.LFB54
+ 1064 05cf 12000000 		.4byte	.LFE54-.LFB54
+ 1065 05d3 01       		.uleb128 0x1
+ 1066 05d4 9C       		.byte	0x9c
+ 1067 05d5 FF050000 		.4byte	0x5ff
+ 1068 05d9 1B       		.uleb128 0x1b
+ 1069 05da 6D00     		.ascii	"m\000"
+ 1070 05dc 01       		.byte	0x1
+ 1071 05dd 54       		.byte	0x54
+ 1072 05de 5A040000 		.4byte	0x45a
+ 1073 05e2 B6000000 		.4byte	.LLST4
+ 1074 05e6 1C       		.uleb128 0x1c
+ 1075 05e7 6D736700 		.ascii	"msg\000"
+ 1076 05eb 01       		.byte	0x1
+ 1077 05ec 58       		.byte	0x58
+ 1078 05ed 6D050000 		.4byte	0x56d
+ 1079 05f1 D7000000 		.4byte	.LLST5
+ 1080 05f5 20       		.uleb128 0x20
+ 1081 05f6 0E000000 		.4byte	.LVL14
+ 1082 05fa CE070000 		.4byte	0x7ce
+ 1083 05fe 00       		.byte	0
+ 1084 05ff 21       		.uleb128 0x21
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 24
+
+
+ 1085 0600 59050000 		.4byte	.LASF85
+ 1086 0604 01       		.byte	0x1
+ 1087 0605 7D       		.byte	0x7d
+ 1088 0606 F8000000 		.4byte	0xf8
+ 1089 060a 00000000 		.4byte	.LFB56
+ 1090 060e 40000000 		.4byte	.LFE56-.LFB56
+ 1091 0612 01       		.uleb128 0x1
+ 1092 0613 9C       		.byte	0x9c
+ 1093 0614 B2060000 		.4byte	0x6b2
+ 1094 0618 22       		.uleb128 0x22
+ 1095 0619 D4040000 		.4byte	.LASF52
+ 1096 061d 01       		.byte	0x1
+ 1097 061e 7D       		.byte	0x7d
+ 1098 061f 49020000 		.4byte	0x249
+ 1099 0623 F8000000 		.4byte	.LLST6
+ 1100 0627 22       		.uleb128 0x22
+ 1101 0628 46000000 		.4byte	.LASF75
+ 1102 062c 01       		.byte	0x1
+ 1103 062d 7F       		.byte	0x7f
+ 1104 062e 9A030000 		.4byte	0x39a
+ 1105 0632 25010000 		.4byte	.LLST7
+ 1106 0636 22       		.uleb128 0x22
+ 1107 0637 4A040000 		.4byte	.LASF54
+ 1108 063b 01       		.byte	0x1
+ 1109 063c 7F       		.byte	0x7f
+ 1110 063d 9A030000 		.4byte	0x39a
+ 1111 0641 4F010000 		.4byte	.LLST8
+ 1112 0645 1B       		.uleb128 0x1b
+ 1113 0646 677700   		.ascii	"gw\000"
+ 1114 0649 01       		.byte	0x1
+ 1115 064a 7F       		.byte	0x7f
+ 1116 064b 9A030000 		.4byte	0x39a
+ 1117 064f 6D010000 		.4byte	.LLST9
+ 1118 0653 23       		.uleb128 0x23
+ 1119 0654 63020000 		.4byte	.LASF59
+ 1120 0658 01       		.byte	0x1
+ 1121 0659 81       		.byte	0x81
+ 1122 065a 72000000 		.4byte	0x72
+ 1123 065e 02       		.uleb128 0x2
+ 1124 065f 91       		.byte	0x91
+ 1125 0660 00       		.sleb128 0
+ 1126 0661 23       		.uleb128 0x23
+ 1127 0662 3C040000 		.4byte	.LASF76
+ 1128 0666 01       		.byte	0x1
+ 1129 0667 81       		.byte	0x81
+ 1130 0668 29020000 		.4byte	0x229
+ 1131 066c 02       		.uleb128 0x2
+ 1132 066d 91       		.byte	0x91
+ 1133 066e 04       		.sleb128 4
+ 1134 066f 23       		.uleb128 0x23
+ 1135 0670 57000000 		.4byte	.LASF55
+ 1136 0674 01       		.byte	0x1
+ 1137 0675 81       		.byte	0x81
+ 1138 0676 4B030000 		.4byte	0x34b
+ 1139 067a 02       		.uleb128 0x2
+ 1140 067b 91       		.byte	0x91
+ 1141 067c 08       		.sleb128 8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 25
+
+
+ 1142 067d 24       		.uleb128 0x24
+ 1143 067e 65727200 		.ascii	"err\000"
+ 1144 0682 01       		.byte	0x1
+ 1145 0683 83       		.byte	0x83
+ 1146 0684 F8000000 		.4byte	0xf8
+ 1147 0688 01       		.uleb128 0x1
+ 1148 0689 50       		.byte	0x50
+ 1149 068a 24       		.uleb128 0x24
+ 1150 068b 6D736700 		.ascii	"msg\000"
+ 1151 068f 01       		.byte	0x1
+ 1152 0690 84       		.byte	0x84
+ 1153 0691 06050000 		.4byte	0x506
+ 1154 0695 02       		.uleb128 0x2
+ 1155 0696 91       		.byte	0x91
+ 1156 0697 54       		.sleb128 -44
+ 1157 0698 1E       		.uleb128 0x1e
+ 1158 0699 32000000 		.4byte	.LVL22
+ 1159 069d DA070000 		.4byte	0x7da
+ 1160 06a1 1F       		.uleb128 0x1f
+ 1161 06a2 01       		.uleb128 0x1
+ 1162 06a3 50       		.byte	0x50
+ 1163 06a4 05       		.uleb128 0x5
+ 1164 06a5 03       		.byte	0x3
+ 1165 06a6 00000000 		.4byte	netifapi_do_netif_add
+ 1166 06aa 1F       		.uleb128 0x1f
+ 1167 06ab 01       		.uleb128 0x1
+ 1168 06ac 51       		.byte	0x51
+ 1169 06ad 02       		.uleb128 0x2
+ 1170 06ae 91       		.byte	0x91
+ 1171 06af 54       		.sleb128 -44
+ 1172 06b0 00       		.byte	0
+ 1173 06b1 00       		.byte	0
+ 1174 06b2 21       		.uleb128 0x21
+ 1175 06b3 84010000 		.4byte	.LASF86
+ 1176 06b7 01       		.byte	0x1
+ 1177 06b8 AA       		.byte	0xaa
+ 1178 06b9 F8000000 		.4byte	0xf8
+ 1179 06bd 00000000 		.4byte	.LFB57
+ 1180 06c1 34000000 		.4byte	.LFE57-.LFB57
+ 1181 06c5 01       		.uleb128 0x1
+ 1182 06c6 9C       		.byte	0x9c
+ 1183 06c7 3B070000 		.4byte	0x73b
+ 1184 06cb 22       		.uleb128 0x22
+ 1185 06cc D4040000 		.4byte	.LASF52
+ 1186 06d0 01       		.byte	0x1
+ 1187 06d1 AA       		.byte	0xaa
+ 1188 06d2 49020000 		.4byte	0x249
+ 1189 06d6 97010000 		.4byte	.LLST10
+ 1190 06da 22       		.uleb128 0x22
+ 1191 06db 46000000 		.4byte	.LASF75
+ 1192 06df 01       		.byte	0x1
+ 1193 06e0 AB       		.byte	0xab
+ 1194 06e1 9A030000 		.4byte	0x39a
+ 1195 06e5 C4010000 		.4byte	.LLST11
+ 1196 06e9 22       		.uleb128 0x22
+ 1197 06ea 4A040000 		.4byte	.LASF54
+ 1198 06ee 01       		.byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 26
+
+
+ 1199 06ef AC       		.byte	0xac
+ 1200 06f0 9A030000 		.4byte	0x39a
+ 1201 06f4 EE010000 		.4byte	.LLST12
+ 1202 06f8 1B       		.uleb128 0x1b
+ 1203 06f9 677700   		.ascii	"gw\000"
+ 1204 06fc 01       		.byte	0x1
+ 1205 06fd AD       		.byte	0xad
+ 1206 06fe 9A030000 		.4byte	0x39a
+ 1207 0702 0C020000 		.4byte	.LLST13
+ 1208 0706 24       		.uleb128 0x24
+ 1209 0707 65727200 		.ascii	"err\000"
+ 1210 070b 01       		.byte	0x1
+ 1211 070c AF       		.byte	0xaf
+ 1212 070d F8000000 		.4byte	0xf8
+ 1213 0711 01       		.uleb128 0x1
+ 1214 0712 50       		.byte	0x50
+ 1215 0713 24       		.uleb128 0x24
+ 1216 0714 6D736700 		.ascii	"msg\000"
+ 1217 0718 01       		.byte	0x1
+ 1218 0719 B0       		.byte	0xb0
+ 1219 071a 06050000 		.4byte	0x506
+ 1220 071e 02       		.uleb128 0x2
+ 1221 071f 91       		.byte	0x91
+ 1222 0720 54       		.sleb128 -44
+ 1223 0721 1E       		.uleb128 0x1e
+ 1224 0722 26000000 		.4byte	.LVL29
+ 1225 0726 DA070000 		.4byte	0x7da
+ 1226 072a 1F       		.uleb128 0x1f
+ 1227 072b 01       		.uleb128 0x1
+ 1228 072c 50       		.byte	0x50
+ 1229 072d 05       		.uleb128 0x5
+ 1230 072e 03       		.byte	0x3
+ 1231 072f 00000000 		.4byte	netifapi_do_netif_set_addr
+ 1232 0733 1F       		.uleb128 0x1f
+ 1233 0734 01       		.uleb128 0x1
+ 1234 0735 51       		.byte	0x51
+ 1235 0736 02       		.uleb128 0x2
+ 1236 0737 91       		.byte	0x91
+ 1237 0738 54       		.sleb128 -44
+ 1238 0739 00       		.byte	0
+ 1239 073a 00       		.byte	0
+ 1240 073b 21       		.uleb128 0x21
+ 1241 073c 52040000 		.4byte	.LASF87
+ 1242 0740 01       		.byte	0x1
+ 1243 0741 CE       		.byte	0xce
+ 1244 0742 F8000000 		.4byte	0xf8
+ 1245 0746 00000000 		.4byte	.LFB58
+ 1246 074a 1C000000 		.4byte	.LFE58-.LFB58
+ 1247 074e 01       		.uleb128 0x1
+ 1248 074f 9C       		.byte	0x9c
+ 1249 0750 B6070000 		.4byte	0x7b6
+ 1250 0754 22       		.uleb128 0x22
+ 1251 0755 D4040000 		.4byte	.LASF52
+ 1252 0759 01       		.byte	0x1
+ 1253 075a CE       		.byte	0xce
+ 1254 075b 49020000 		.4byte	0x249
+ 1255 075f 2A020000 		.4byte	.LLST14
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 27
+
+
+ 1256 0763 22       		.uleb128 0x22
+ 1257 0764 6E020000 		.4byte	.LASF77
+ 1258 0768 01       		.byte	0x1
+ 1259 0769 CE       		.byte	0xce
+ 1260 076a 60040000 		.4byte	0x460
+ 1261 076e 57020000 		.4byte	.LLST15
+ 1262 0772 22       		.uleb128 0x22
+ 1263 0773 C0040000 		.4byte	.LASF78
+ 1264 0777 01       		.byte	0x1
+ 1265 0778 CF       		.byte	0xcf
+ 1266 0779 6B040000 		.4byte	0x46b
+ 1267 077d 84020000 		.4byte	.LLST16
+ 1268 0781 24       		.uleb128 0x24
+ 1269 0782 65727200 		.ascii	"err\000"
+ 1270 0786 01       		.byte	0x1
+ 1271 0787 D1       		.byte	0xd1
+ 1272 0788 F8000000 		.4byte	0xf8
+ 1273 078c 01       		.uleb128 0x1
+ 1274 078d 50       		.byte	0x50
+ 1275 078e 24       		.uleb128 0x24
+ 1276 078f 6D736700 		.ascii	"msg\000"
+ 1277 0793 01       		.byte	0x1
+ 1278 0794 D2       		.byte	0xd2
+ 1279 0795 06050000 		.4byte	0x506
+ 1280 0799 02       		.uleb128 0x2
+ 1281 079a 91       		.byte	0x91
+ 1282 079b 54       		.sleb128 -44
+ 1283 079c 1E       		.uleb128 0x1e
+ 1284 079d 12000000 		.4byte	.LVL33
+ 1285 07a1 DA070000 		.4byte	0x7da
+ 1286 07a5 1F       		.uleb128 0x1f
+ 1287 07a6 01       		.uleb128 0x1
+ 1288 07a7 50       		.byte	0x50
+ 1289 07a8 05       		.uleb128 0x5
+ 1290 07a9 03       		.byte	0x3
+ 1291 07aa 00000000 		.4byte	netifapi_do_netif_common
+ 1292 07ae 1F       		.uleb128 0x1f
+ 1293 07af 01       		.uleb128 0x1
+ 1294 07b0 51       		.byte	0x51
+ 1295 07b1 02       		.uleb128 0x2
+ 1296 07b2 91       		.byte	0x91
+ 1297 07b3 54       		.sleb128 -44
+ 1298 07b4 00       		.byte	0
+ 1299 07b5 00       		.byte	0
+ 1300 07b6 25       		.uleb128 0x25
+ 1301 07b7 82030000 		.4byte	.LASF95
+ 1302 07bb 08       		.byte	0x8
+ 1303 07bc 5201     		.2byte	0x152
+ 1304 07be 30040000 		.4byte	0x430
+ 1305 07c2 26       		.uleb128 0x26
+ 1306 07c3 1F050000 		.4byte	.LASF88
+ 1307 07c7 1F050000 		.4byte	.LASF88
+ 1308 07cb 0A       		.byte	0xa
+ 1309 07cc 6701     		.2byte	0x167
+ 1310 07ce 26       		.uleb128 0x26
+ 1311 07cf 0A010000 		.4byte	.LASF89
+ 1312 07d3 0A010000 		.4byte	.LASF89
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 28
+
+
+ 1313 07d7 0A       		.byte	0xa
+ 1314 07d8 6D01     		.2byte	0x16d
+ 1315 07da 27       		.uleb128 0x27
+ 1316 07db C6030000 		.4byte	.LASF90
+ 1317 07df C6030000 		.4byte	.LASF90
+ 1318 07e3 0B       		.byte	0xb
+ 1319 07e4 6D       		.byte	0x6d
+ 1320 07e5 00       		.byte	0
+ 1321              		.section	.debug_abbrev,"",%progbits
+ 1322              	.Ldebug_abbrev0:
+ 1323 0000 01       		.uleb128 0x1
+ 1324 0001 11       		.uleb128 0x11
+ 1325 0002 01       		.byte	0x1
+ 1326 0003 25       		.uleb128 0x25
+ 1327 0004 0E       		.uleb128 0xe
+ 1328 0005 13       		.uleb128 0x13
+ 1329 0006 0B       		.uleb128 0xb
+ 1330 0007 03       		.uleb128 0x3
+ 1331 0008 0E       		.uleb128 0xe
+ 1332 0009 1B       		.uleb128 0x1b
+ 1333 000a 0E       		.uleb128 0xe
+ 1334 000b 55       		.uleb128 0x55
+ 1335 000c 17       		.uleb128 0x17
+ 1336 000d 11       		.uleb128 0x11
+ 1337 000e 01       		.uleb128 0x1
+ 1338 000f 10       		.uleb128 0x10
+ 1339 0010 17       		.uleb128 0x17
+ 1340 0011 00       		.byte	0
+ 1341 0012 00       		.byte	0
+ 1342 0013 02       		.uleb128 0x2
+ 1343 0014 24       		.uleb128 0x24
+ 1344 0015 00       		.byte	0
+ 1345 0016 0B       		.uleb128 0xb
+ 1346 0017 0B       		.uleb128 0xb
+ 1347 0018 3E       		.uleb128 0x3e
+ 1348 0019 0B       		.uleb128 0xb
+ 1349 001a 03       		.uleb128 0x3
+ 1350 001b 0E       		.uleb128 0xe
+ 1351 001c 00       		.byte	0
+ 1352 001d 00       		.byte	0
+ 1353 001e 03       		.uleb128 0x3
+ 1354 001f 24       		.uleb128 0x24
+ 1355 0020 00       		.byte	0
+ 1356 0021 0B       		.uleb128 0xb
+ 1357 0022 0B       		.uleb128 0xb
+ 1358 0023 3E       		.uleb128 0x3e
+ 1359 0024 0B       		.uleb128 0xb
+ 1360 0025 03       		.uleb128 0x3
+ 1361 0026 08       		.uleb128 0x8
+ 1362 0027 00       		.byte	0
+ 1363 0028 00       		.byte	0
+ 1364 0029 04       		.uleb128 0x4
+ 1365 002a 0F       		.uleb128 0xf
+ 1366 002b 00       		.byte	0
+ 1367 002c 0B       		.uleb128 0xb
+ 1368 002d 0B       		.uleb128 0xb
+ 1369 002e 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 29
+
+
+ 1370 002f 00       		.byte	0
+ 1371 0030 05       		.uleb128 0x5
+ 1372 0031 0F       		.uleb128 0xf
+ 1373 0032 00       		.byte	0
+ 1374 0033 0B       		.uleb128 0xb
+ 1375 0034 0B       		.uleb128 0xb
+ 1376 0035 49       		.uleb128 0x49
+ 1377 0036 13       		.uleb128 0x13
+ 1378 0037 00       		.byte	0
+ 1379 0038 00       		.byte	0
+ 1380 0039 06       		.uleb128 0x6
+ 1381 003a 26       		.uleb128 0x26
+ 1382 003b 00       		.byte	0
+ 1383 003c 49       		.uleb128 0x49
+ 1384 003d 13       		.uleb128 0x13
+ 1385 003e 00       		.byte	0
+ 1386 003f 00       		.byte	0
+ 1387 0040 07       		.uleb128 0x7
+ 1388 0041 01       		.uleb128 0x1
+ 1389 0042 01       		.byte	0x1
+ 1390 0043 49       		.uleb128 0x49
+ 1391 0044 13       		.uleb128 0x13
+ 1392 0045 01       		.uleb128 0x1
+ 1393 0046 13       		.uleb128 0x13
+ 1394 0047 00       		.byte	0
+ 1395 0048 00       		.byte	0
+ 1396 0049 08       		.uleb128 0x8
+ 1397 004a 21       		.uleb128 0x21
+ 1398 004b 00       		.byte	0
+ 1399 004c 49       		.uleb128 0x49
+ 1400 004d 13       		.uleb128 0x13
+ 1401 004e 2F       		.uleb128 0x2f
+ 1402 004f 0B       		.uleb128 0xb
+ 1403 0050 00       		.byte	0
+ 1404 0051 00       		.byte	0
+ 1405 0052 09       		.uleb128 0x9
+ 1406 0053 16       		.uleb128 0x16
+ 1407 0054 00       		.byte	0
+ 1408 0055 03       		.uleb128 0x3
+ 1409 0056 0E       		.uleb128 0xe
+ 1410 0057 3A       		.uleb128 0x3a
+ 1411 0058 0B       		.uleb128 0xb
+ 1412 0059 3B       		.uleb128 0x3b
+ 1413 005a 0B       		.uleb128 0xb
+ 1414 005b 49       		.uleb128 0x49
+ 1415 005c 13       		.uleb128 0x13
+ 1416 005d 00       		.byte	0
+ 1417 005e 00       		.byte	0
+ 1418 005f 0A       		.uleb128 0xa
+ 1419 0060 04       		.uleb128 0x4
+ 1420 0061 01       		.byte	0x1
+ 1421 0062 0B       		.uleb128 0xb
+ 1422 0063 0B       		.uleb128 0xb
+ 1423 0064 49       		.uleb128 0x49
+ 1424 0065 13       		.uleb128 0x13
+ 1425 0066 3A       		.uleb128 0x3a
+ 1426 0067 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 30
+
+
+ 1427 0068 3B       		.uleb128 0x3b
+ 1428 0069 0B       		.uleb128 0xb
+ 1429 006a 01       		.uleb128 0x1
+ 1430 006b 13       		.uleb128 0x13
+ 1431 006c 00       		.byte	0
+ 1432 006d 00       		.byte	0
+ 1433 006e 0B       		.uleb128 0xb
+ 1434 006f 28       		.uleb128 0x28
+ 1435 0070 00       		.byte	0
+ 1436 0071 03       		.uleb128 0x3
+ 1437 0072 0E       		.uleb128 0xe
+ 1438 0073 1C       		.uleb128 0x1c
+ 1439 0074 0B       		.uleb128 0xb
+ 1440 0075 00       		.byte	0
+ 1441 0076 00       		.byte	0
+ 1442 0077 0C       		.uleb128 0xc
+ 1443 0078 28       		.uleb128 0x28
+ 1444 0079 00       		.byte	0
+ 1445 007a 03       		.uleb128 0x3
+ 1446 007b 0E       		.uleb128 0xe
+ 1447 007c 1C       		.uleb128 0x1c
+ 1448 007d 0D       		.uleb128 0xd
+ 1449 007e 00       		.byte	0
+ 1450 007f 00       		.byte	0
+ 1451 0080 0D       		.uleb128 0xd
+ 1452 0081 13       		.uleb128 0x13
+ 1453 0082 01       		.byte	0x1
+ 1454 0083 03       		.uleb128 0x3
+ 1455 0084 0E       		.uleb128 0xe
+ 1456 0085 0B       		.uleb128 0xb
+ 1457 0086 0B       		.uleb128 0xb
+ 1458 0087 3A       		.uleb128 0x3a
+ 1459 0088 0B       		.uleb128 0xb
+ 1460 0089 3B       		.uleb128 0x3b
+ 1461 008a 0B       		.uleb128 0xb
+ 1462 008b 01       		.uleb128 0x1
+ 1463 008c 13       		.uleb128 0x13
+ 1464 008d 00       		.byte	0
+ 1465 008e 00       		.byte	0
+ 1466 008f 0E       		.uleb128 0xe
+ 1467 0090 0D       		.uleb128 0xd
+ 1468 0091 00       		.byte	0
+ 1469 0092 03       		.uleb128 0x3
+ 1470 0093 0E       		.uleb128 0xe
+ 1471 0094 3A       		.uleb128 0x3a
+ 1472 0095 0B       		.uleb128 0xb
+ 1473 0096 3B       		.uleb128 0x3b
+ 1474 0097 0B       		.uleb128 0xb
+ 1475 0098 49       		.uleb128 0x49
+ 1476 0099 13       		.uleb128 0x13
+ 1477 009a 38       		.uleb128 0x38
+ 1478 009b 0B       		.uleb128 0xb
+ 1479 009c 00       		.byte	0
+ 1480 009d 00       		.byte	0
+ 1481 009e 0F       		.uleb128 0xf
+ 1482 009f 0D       		.uleb128 0xd
+ 1483 00a0 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 31
+
+
+ 1484 00a1 03       		.uleb128 0x3
+ 1485 00a2 08       		.uleb128 0x8
+ 1486 00a3 3A       		.uleb128 0x3a
+ 1487 00a4 0B       		.uleb128 0xb
+ 1488 00a5 3B       		.uleb128 0x3b
+ 1489 00a6 0B       		.uleb128 0xb
+ 1490 00a7 49       		.uleb128 0x49
+ 1491 00a8 13       		.uleb128 0x13
+ 1492 00a9 38       		.uleb128 0x38
+ 1493 00aa 0B       		.uleb128 0xb
+ 1494 00ab 00       		.byte	0
+ 1495 00ac 00       		.byte	0
+ 1496 00ad 10       		.uleb128 0x10
+ 1497 00ae 04       		.uleb128 0x4
+ 1498 00af 01       		.byte	0x1
+ 1499 00b0 03       		.uleb128 0x3
+ 1500 00b1 0E       		.uleb128 0xe
+ 1501 00b2 0B       		.uleb128 0xb
+ 1502 00b3 0B       		.uleb128 0xb
+ 1503 00b4 49       		.uleb128 0x49
+ 1504 00b5 13       		.uleb128 0x13
+ 1505 00b6 3A       		.uleb128 0x3a
+ 1506 00b7 0B       		.uleb128 0xb
+ 1507 00b8 3B       		.uleb128 0x3b
+ 1508 00b9 0B       		.uleb128 0xb
+ 1509 00ba 01       		.uleb128 0x1
+ 1510 00bb 13       		.uleb128 0x13
+ 1511 00bc 00       		.byte	0
+ 1512 00bd 00       		.byte	0
+ 1513 00be 11       		.uleb128 0x11
+ 1514 00bf 15       		.uleb128 0x15
+ 1515 00c0 01       		.byte	0x1
+ 1516 00c1 27       		.uleb128 0x27
+ 1517 00c2 19       		.uleb128 0x19
+ 1518 00c3 49       		.uleb128 0x49
+ 1519 00c4 13       		.uleb128 0x13
+ 1520 00c5 01       		.uleb128 0x1
+ 1521 00c6 13       		.uleb128 0x13
+ 1522 00c7 00       		.byte	0
+ 1523 00c8 00       		.byte	0
+ 1524 00c9 12       		.uleb128 0x12
+ 1525 00ca 05       		.uleb128 0x5
+ 1526 00cb 00       		.byte	0
+ 1527 00cc 49       		.uleb128 0x49
+ 1528 00cd 13       		.uleb128 0x13
+ 1529 00ce 00       		.byte	0
+ 1530 00cf 00       		.byte	0
+ 1531 00d0 13       		.uleb128 0x13
+ 1532 00d1 0D       		.uleb128 0xd
+ 1533 00d2 00       		.byte	0
+ 1534 00d3 03       		.uleb128 0x3
+ 1535 00d4 0E       		.uleb128 0xe
+ 1536 00d5 3A       		.uleb128 0x3a
+ 1537 00d6 0B       		.uleb128 0xb
+ 1538 00d7 3B       		.uleb128 0x3b
+ 1539 00d8 05       		.uleb128 0x5
+ 1540 00d9 49       		.uleb128 0x49
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 32
+
+
+ 1541 00da 13       		.uleb128 0x13
+ 1542 00db 38       		.uleb128 0x38
+ 1543 00dc 0B       		.uleb128 0xb
+ 1544 00dd 00       		.byte	0
+ 1545 00de 00       		.byte	0
+ 1546 00df 14       		.uleb128 0x14
+ 1547 00e0 0D       		.uleb128 0xd
+ 1548 00e1 00       		.byte	0
+ 1549 00e2 03       		.uleb128 0x3
+ 1550 00e3 08       		.uleb128 0x8
+ 1551 00e4 3A       		.uleb128 0x3a
+ 1552 00e5 0B       		.uleb128 0xb
+ 1553 00e6 3B       		.uleb128 0x3b
+ 1554 00e7 05       		.uleb128 0x5
+ 1555 00e8 49       		.uleb128 0x49
+ 1556 00e9 13       		.uleb128 0x13
+ 1557 00ea 38       		.uleb128 0x38
+ 1558 00eb 0B       		.uleb128 0xb
+ 1559 00ec 00       		.byte	0
+ 1560 00ed 00       		.byte	0
+ 1561 00ee 15       		.uleb128 0x15
+ 1562 00ef 15       		.uleb128 0x15
+ 1563 00f0 01       		.byte	0x1
+ 1564 00f1 27       		.uleb128 0x27
+ 1565 00f2 19       		.uleb128 0x19
+ 1566 00f3 01       		.uleb128 0x1
+ 1567 00f4 13       		.uleb128 0x13
+ 1568 00f5 00       		.byte	0
+ 1569 00f6 00       		.byte	0
+ 1570 00f7 16       		.uleb128 0x16
+ 1571 00f8 13       		.uleb128 0x13
+ 1572 00f9 01       		.byte	0x1
+ 1573 00fa 0B       		.uleb128 0xb
+ 1574 00fb 0B       		.uleb128 0xb
+ 1575 00fc 3A       		.uleb128 0x3a
+ 1576 00fd 0B       		.uleb128 0xb
+ 1577 00fe 3B       		.uleb128 0x3b
+ 1578 00ff 0B       		.uleb128 0xb
+ 1579 0100 01       		.uleb128 0x1
+ 1580 0101 13       		.uleb128 0x13
+ 1581 0102 00       		.byte	0
+ 1582 0103 00       		.byte	0
+ 1583 0104 17       		.uleb128 0x17
+ 1584 0105 17       		.uleb128 0x17
+ 1585 0106 01       		.byte	0x1
+ 1586 0107 0B       		.uleb128 0xb
+ 1587 0108 0B       		.uleb128 0xb
+ 1588 0109 3A       		.uleb128 0x3a
+ 1589 010a 0B       		.uleb128 0xb
+ 1590 010b 3B       		.uleb128 0x3b
+ 1591 010c 0B       		.uleb128 0xb
+ 1592 010d 01       		.uleb128 0x1
+ 1593 010e 13       		.uleb128 0x13
+ 1594 010f 00       		.byte	0
+ 1595 0110 00       		.byte	0
+ 1596 0111 18       		.uleb128 0x18
+ 1597 0112 0D       		.uleb128 0xd
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 33
+
+
+ 1598 0113 00       		.byte	0
+ 1599 0114 03       		.uleb128 0x3
+ 1600 0115 08       		.uleb128 0x8
+ 1601 0116 3A       		.uleb128 0x3a
+ 1602 0117 0B       		.uleb128 0xb
+ 1603 0118 3B       		.uleb128 0x3b
+ 1604 0119 0B       		.uleb128 0xb
+ 1605 011a 49       		.uleb128 0x49
+ 1606 011b 13       		.uleb128 0x13
+ 1607 011c 00       		.byte	0
+ 1608 011d 00       		.byte	0
+ 1609 011e 19       		.uleb128 0x19
+ 1610 011f 0D       		.uleb128 0xd
+ 1611 0120 00       		.byte	0
+ 1612 0121 03       		.uleb128 0x3
+ 1613 0122 0E       		.uleb128 0xe
+ 1614 0123 3A       		.uleb128 0x3a
+ 1615 0124 0B       		.uleb128 0xb
+ 1616 0125 3B       		.uleb128 0x3b
+ 1617 0126 0B       		.uleb128 0xb
+ 1618 0127 49       		.uleb128 0x49
+ 1619 0128 13       		.uleb128 0x13
+ 1620 0129 00       		.byte	0
+ 1621 012a 00       		.byte	0
+ 1622 012b 1A       		.uleb128 0x1a
+ 1623 012c 2E       		.uleb128 0x2e
+ 1624 012d 01       		.byte	0x1
+ 1625 012e 03       		.uleb128 0x3
+ 1626 012f 0E       		.uleb128 0xe
+ 1627 0130 3A       		.uleb128 0x3a
+ 1628 0131 0B       		.uleb128 0xb
+ 1629 0132 3B       		.uleb128 0x3b
+ 1630 0133 0B       		.uleb128 0xb
+ 1631 0134 27       		.uleb128 0x27
+ 1632 0135 19       		.uleb128 0x19
+ 1633 0136 49       		.uleb128 0x49
+ 1634 0137 13       		.uleb128 0x13
+ 1635 0138 11       		.uleb128 0x11
+ 1636 0139 01       		.uleb128 0x1
+ 1637 013a 12       		.uleb128 0x12
+ 1638 013b 06       		.uleb128 0x6
+ 1639 013c 40       		.uleb128 0x40
+ 1640 013d 18       		.uleb128 0x18
+ 1641 013e 9642     		.uleb128 0x2116
+ 1642 0140 19       		.uleb128 0x19
+ 1643 0141 01       		.uleb128 0x1
+ 1644 0142 13       		.uleb128 0x13
+ 1645 0143 00       		.byte	0
+ 1646 0144 00       		.byte	0
+ 1647 0145 1B       		.uleb128 0x1b
+ 1648 0146 05       		.uleb128 0x5
+ 1649 0147 00       		.byte	0
+ 1650 0148 03       		.uleb128 0x3
+ 1651 0149 08       		.uleb128 0x8
+ 1652 014a 3A       		.uleb128 0x3a
+ 1653 014b 0B       		.uleb128 0xb
+ 1654 014c 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 34
+
+
+ 1655 014d 0B       		.uleb128 0xb
+ 1656 014e 49       		.uleb128 0x49
+ 1657 014f 13       		.uleb128 0x13
+ 1658 0150 02       		.uleb128 0x2
+ 1659 0151 17       		.uleb128 0x17
+ 1660 0152 00       		.byte	0
+ 1661 0153 00       		.byte	0
+ 1662 0154 1C       		.uleb128 0x1c
+ 1663 0155 34       		.uleb128 0x34
+ 1664 0156 00       		.byte	0
+ 1665 0157 03       		.uleb128 0x3
+ 1666 0158 08       		.uleb128 0x8
+ 1667 0159 3A       		.uleb128 0x3a
+ 1668 015a 0B       		.uleb128 0xb
+ 1669 015b 3B       		.uleb128 0x3b
+ 1670 015c 0B       		.uleb128 0xb
+ 1671 015d 49       		.uleb128 0x49
+ 1672 015e 13       		.uleb128 0x13
+ 1673 015f 02       		.uleb128 0x2
+ 1674 0160 17       		.uleb128 0x17
+ 1675 0161 00       		.byte	0
+ 1676 0162 00       		.byte	0
+ 1677 0163 1D       		.uleb128 0x1d
+ 1678 0164 2E       		.uleb128 0x2e
+ 1679 0165 01       		.byte	0x1
+ 1680 0166 03       		.uleb128 0x3
+ 1681 0167 0E       		.uleb128 0xe
+ 1682 0168 3A       		.uleb128 0x3a
+ 1683 0169 0B       		.uleb128 0xb
+ 1684 016a 3B       		.uleb128 0x3b
+ 1685 016b 0B       		.uleb128 0xb
+ 1686 016c 27       		.uleb128 0x27
+ 1687 016d 19       		.uleb128 0x19
+ 1688 016e 49       		.uleb128 0x49
+ 1689 016f 13       		.uleb128 0x13
+ 1690 0170 11       		.uleb128 0x11
+ 1691 0171 01       		.uleb128 0x1
+ 1692 0172 12       		.uleb128 0x12
+ 1693 0173 06       		.uleb128 0x6
+ 1694 0174 40       		.uleb128 0x40
+ 1695 0175 18       		.uleb128 0x18
+ 1696 0176 9742     		.uleb128 0x2117
+ 1697 0178 19       		.uleb128 0x19
+ 1698 0179 01       		.uleb128 0x1
+ 1699 017a 13       		.uleb128 0x13
+ 1700 017b 00       		.byte	0
+ 1701 017c 00       		.byte	0
+ 1702 017d 1E       		.uleb128 0x1e
+ 1703 017e 898201   		.uleb128 0x4109
+ 1704 0181 01       		.byte	0x1
+ 1705 0182 11       		.uleb128 0x11
+ 1706 0183 01       		.uleb128 0x1
+ 1707 0184 31       		.uleb128 0x31
+ 1708 0185 13       		.uleb128 0x13
+ 1709 0186 00       		.byte	0
+ 1710 0187 00       		.byte	0
+ 1711 0188 1F       		.uleb128 0x1f
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 35
+
+
+ 1712 0189 8A8201   		.uleb128 0x410a
+ 1713 018c 00       		.byte	0
+ 1714 018d 02       		.uleb128 0x2
+ 1715 018e 18       		.uleb128 0x18
+ 1716 018f 9142     		.uleb128 0x2111
+ 1717 0191 18       		.uleb128 0x18
+ 1718 0192 00       		.byte	0
+ 1719 0193 00       		.byte	0
+ 1720 0194 20       		.uleb128 0x20
+ 1721 0195 898201   		.uleb128 0x4109
+ 1722 0198 00       		.byte	0
+ 1723 0199 11       		.uleb128 0x11
+ 1724 019a 01       		.uleb128 0x1
+ 1725 019b 31       		.uleb128 0x31
+ 1726 019c 13       		.uleb128 0x13
+ 1727 019d 00       		.byte	0
+ 1728 019e 00       		.byte	0
+ 1729 019f 21       		.uleb128 0x21
+ 1730 01a0 2E       		.uleb128 0x2e
+ 1731 01a1 01       		.byte	0x1
+ 1732 01a2 3F       		.uleb128 0x3f
+ 1733 01a3 19       		.uleb128 0x19
+ 1734 01a4 03       		.uleb128 0x3
+ 1735 01a5 0E       		.uleb128 0xe
+ 1736 01a6 3A       		.uleb128 0x3a
+ 1737 01a7 0B       		.uleb128 0xb
+ 1738 01a8 3B       		.uleb128 0x3b
+ 1739 01a9 0B       		.uleb128 0xb
+ 1740 01aa 27       		.uleb128 0x27
+ 1741 01ab 19       		.uleb128 0x19
+ 1742 01ac 49       		.uleb128 0x49
+ 1743 01ad 13       		.uleb128 0x13
+ 1744 01ae 11       		.uleb128 0x11
+ 1745 01af 01       		.uleb128 0x1
+ 1746 01b0 12       		.uleb128 0x12
+ 1747 01b1 06       		.uleb128 0x6
+ 1748 01b2 40       		.uleb128 0x40
+ 1749 01b3 18       		.uleb128 0x18
+ 1750 01b4 9742     		.uleb128 0x2117
+ 1751 01b6 19       		.uleb128 0x19
+ 1752 01b7 01       		.uleb128 0x1
+ 1753 01b8 13       		.uleb128 0x13
+ 1754 01b9 00       		.byte	0
+ 1755 01ba 00       		.byte	0
+ 1756 01bb 22       		.uleb128 0x22
+ 1757 01bc 05       		.uleb128 0x5
+ 1758 01bd 00       		.byte	0
+ 1759 01be 03       		.uleb128 0x3
+ 1760 01bf 0E       		.uleb128 0xe
+ 1761 01c0 3A       		.uleb128 0x3a
+ 1762 01c1 0B       		.uleb128 0xb
+ 1763 01c2 3B       		.uleb128 0x3b
+ 1764 01c3 0B       		.uleb128 0xb
+ 1765 01c4 49       		.uleb128 0x49
+ 1766 01c5 13       		.uleb128 0x13
+ 1767 01c6 02       		.uleb128 0x2
+ 1768 01c7 17       		.uleb128 0x17
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 36
+
+
+ 1769 01c8 00       		.byte	0
+ 1770 01c9 00       		.byte	0
+ 1771 01ca 23       		.uleb128 0x23
+ 1772 01cb 05       		.uleb128 0x5
+ 1773 01cc 00       		.byte	0
+ 1774 01cd 03       		.uleb128 0x3
+ 1775 01ce 0E       		.uleb128 0xe
+ 1776 01cf 3A       		.uleb128 0x3a
+ 1777 01d0 0B       		.uleb128 0xb
+ 1778 01d1 3B       		.uleb128 0x3b
+ 1779 01d2 0B       		.uleb128 0xb
+ 1780 01d3 49       		.uleb128 0x49
+ 1781 01d4 13       		.uleb128 0x13
+ 1782 01d5 02       		.uleb128 0x2
+ 1783 01d6 18       		.uleb128 0x18
+ 1784 01d7 00       		.byte	0
+ 1785 01d8 00       		.byte	0
+ 1786 01d9 24       		.uleb128 0x24
+ 1787 01da 34       		.uleb128 0x34
+ 1788 01db 00       		.byte	0
+ 1789 01dc 03       		.uleb128 0x3
+ 1790 01dd 08       		.uleb128 0x8
+ 1791 01de 3A       		.uleb128 0x3a
+ 1792 01df 0B       		.uleb128 0xb
+ 1793 01e0 3B       		.uleb128 0x3b
+ 1794 01e1 0B       		.uleb128 0xb
+ 1795 01e2 49       		.uleb128 0x49
+ 1796 01e3 13       		.uleb128 0x13
+ 1797 01e4 02       		.uleb128 0x2
+ 1798 01e5 18       		.uleb128 0x18
+ 1799 01e6 00       		.byte	0
+ 1800 01e7 00       		.byte	0
+ 1801 01e8 25       		.uleb128 0x25
+ 1802 01e9 34       		.uleb128 0x34
+ 1803 01ea 00       		.byte	0
+ 1804 01eb 03       		.uleb128 0x3
+ 1805 01ec 0E       		.uleb128 0xe
+ 1806 01ed 3A       		.uleb128 0x3a
+ 1807 01ee 0B       		.uleb128 0xb
+ 1808 01ef 3B       		.uleb128 0x3b
+ 1809 01f0 05       		.uleb128 0x5
+ 1810 01f1 49       		.uleb128 0x49
+ 1811 01f2 13       		.uleb128 0x13
+ 1812 01f3 3F       		.uleb128 0x3f
+ 1813 01f4 19       		.uleb128 0x19
+ 1814 01f5 3C       		.uleb128 0x3c
+ 1815 01f6 19       		.uleb128 0x19
+ 1816 01f7 00       		.byte	0
+ 1817 01f8 00       		.byte	0
+ 1818 01f9 26       		.uleb128 0x26
+ 1819 01fa 2E       		.uleb128 0x2e
+ 1820 01fb 00       		.byte	0
+ 1821 01fc 3F       		.uleb128 0x3f
+ 1822 01fd 19       		.uleb128 0x19
+ 1823 01fe 3C       		.uleb128 0x3c
+ 1824 01ff 19       		.uleb128 0x19
+ 1825 0200 6E       		.uleb128 0x6e
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 37
+
+
+ 1826 0201 0E       		.uleb128 0xe
+ 1827 0202 03       		.uleb128 0x3
+ 1828 0203 0E       		.uleb128 0xe
+ 1829 0204 3A       		.uleb128 0x3a
+ 1830 0205 0B       		.uleb128 0xb
+ 1831 0206 3B       		.uleb128 0x3b
+ 1832 0207 05       		.uleb128 0x5
+ 1833 0208 00       		.byte	0
+ 1834 0209 00       		.byte	0
+ 1835 020a 27       		.uleb128 0x27
+ 1836 020b 2E       		.uleb128 0x2e
+ 1837 020c 00       		.byte	0
+ 1838 020d 3F       		.uleb128 0x3f
+ 1839 020e 19       		.uleb128 0x19
+ 1840 020f 3C       		.uleb128 0x3c
+ 1841 0210 19       		.uleb128 0x19
+ 1842 0211 6E       		.uleb128 0x6e
+ 1843 0212 0E       		.uleb128 0xe
+ 1844 0213 03       		.uleb128 0x3
+ 1845 0214 0E       		.uleb128 0xe
+ 1846 0215 3A       		.uleb128 0x3a
+ 1847 0216 0B       		.uleb128 0xb
+ 1848 0217 3B       		.uleb128 0x3b
+ 1849 0218 0B       		.uleb128 0xb
+ 1850 0219 00       		.byte	0
+ 1851 021a 00       		.byte	0
+ 1852 021b 00       		.byte	0
+ 1853              		.section	.debug_loc,"",%progbits
+ 1854              	.Ldebug_loc0:
+ 1855              	.LLST0:
+ 1856 0000 00000000 		.4byte	.LVL0
+ 1857 0004 0A000000 		.4byte	.LVL2
+ 1858 0008 0100     		.2byte	0x1
+ 1859 000a 50       		.byte	0x50
+ 1860 000b 0A000000 		.4byte	.LVL2
+ 1861 000f 0E000000 		.4byte	.LVL4
+ 1862 0013 0400     		.2byte	0x4
+ 1863 0015 F3       		.byte	0xf3
+ 1864 0016 01       		.uleb128 0x1
+ 1865 0017 50       		.byte	0x50
+ 1866 0018 9F       		.byte	0x9f
+ 1867 0019 0E000000 		.4byte	.LVL4
+ 1868 001d 12000000 		.4byte	.LVL5
+ 1869 0021 0100     		.2byte	0x1
+ 1870 0023 50       		.byte	0x50
+ 1871 0024 12000000 		.4byte	.LVL5
+ 1872 0028 18000000 		.4byte	.LFE55
+ 1873 002c 0400     		.2byte	0x4
+ 1874 002e F3       		.byte	0xf3
+ 1875 002f 01       		.uleb128 0x1
+ 1876 0030 50       		.byte	0x50
+ 1877 0031 9F       		.byte	0x9f
+ 1878 0032 00000000 		.4byte	0
+ 1879 0036 00000000 		.4byte	0
+ 1880              	.LLST1:
+ 1881 003a 02000000 		.4byte	.LVL1
+ 1882 003e 0A000000 		.4byte	.LVL2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 38
+
+
+ 1883 0042 0100     		.2byte	0x1
+ 1884 0044 50       		.byte	0x50
+ 1885 0045 0A000000 		.4byte	.LVL2
+ 1886 0049 0E000000 		.4byte	.LVL4
+ 1887 004d 0400     		.2byte	0x4
+ 1888 004f F3       		.byte	0xf3
+ 1889 0050 01       		.uleb128 0x1
+ 1890 0051 50       		.byte	0x50
+ 1891 0052 9F       		.byte	0x9f
+ 1892 0053 0E000000 		.4byte	.LVL4
+ 1893 0057 12000000 		.4byte	.LVL5
+ 1894 005b 0100     		.2byte	0x1
+ 1895 005d 50       		.byte	0x50
+ 1896 005e 12000000 		.4byte	.LVL5
+ 1897 0062 18000000 		.4byte	.LFE55
+ 1898 0066 0400     		.2byte	0x4
+ 1899 0068 F3       		.byte	0xf3
+ 1900 0069 01       		.uleb128 0x1
+ 1901 006a 50       		.byte	0x50
+ 1902 006b 9F       		.byte	0x9f
+ 1903 006c 00000000 		.4byte	0
+ 1904 0070 00000000 		.4byte	0
+ 1905              	.LLST2:
+ 1906 0074 00000000 		.4byte	.LVL7
+ 1907 0078 16000000 		.4byte	.LVL9
+ 1908 007c 0100     		.2byte	0x1
+ 1909 007e 50       		.byte	0x50
+ 1910 007f 16000000 		.4byte	.LVL9
+ 1911 0083 2C000000 		.4byte	.LFE53
+ 1912 0087 0400     		.2byte	0x4
+ 1913 0089 F3       		.byte	0xf3
+ 1914 008a 01       		.uleb128 0x1
+ 1915 008b 50       		.byte	0x50
+ 1916 008c 9F       		.byte	0x9f
+ 1917 008d 00000000 		.4byte	0
+ 1918 0091 00000000 		.4byte	0
+ 1919              	.LLST3:
+ 1920 0095 04000000 		.4byte	.LVL8
+ 1921 0099 16000000 		.4byte	.LVL9
+ 1922 009d 0100     		.2byte	0x1
+ 1923 009f 50       		.byte	0x50
+ 1924 00a0 16000000 		.4byte	.LVL9
+ 1925 00a4 2C000000 		.4byte	.LFE53
+ 1926 00a8 0400     		.2byte	0x4
+ 1927 00aa F3       		.byte	0xf3
+ 1928 00ab 01       		.uleb128 0x1
+ 1929 00ac 50       		.byte	0x50
+ 1930 00ad 9F       		.byte	0x9f
+ 1931 00ae 00000000 		.4byte	0
+ 1932 00b2 00000000 		.4byte	0
+ 1933              	.LLST4:
+ 1934 00b6 00000000 		.4byte	.LVL11
+ 1935 00ba 0A000000 		.4byte	.LVL13
+ 1936 00be 0100     		.2byte	0x1
+ 1937 00c0 50       		.byte	0x50
+ 1938 00c1 0A000000 		.4byte	.LVL13
+ 1939 00c5 12000000 		.4byte	.LFE54
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 39
+
+
+ 1940 00c9 0400     		.2byte	0x4
+ 1941 00cb F3       		.byte	0xf3
+ 1942 00cc 01       		.uleb128 0x1
+ 1943 00cd 50       		.byte	0x50
+ 1944 00ce 9F       		.byte	0x9f
+ 1945 00cf 00000000 		.4byte	0
+ 1946 00d3 00000000 		.4byte	0
+ 1947              	.LLST5:
+ 1948 00d7 02000000 		.4byte	.LVL12
+ 1949 00db 0A000000 		.4byte	.LVL13
+ 1950 00df 0100     		.2byte	0x1
+ 1951 00e1 50       		.byte	0x50
+ 1952 00e2 0A000000 		.4byte	.LVL13
+ 1953 00e6 12000000 		.4byte	.LFE54
+ 1954 00ea 0400     		.2byte	0x4
+ 1955 00ec F3       		.byte	0xf3
+ 1956 00ed 01       		.uleb128 0x1
+ 1957 00ee 50       		.byte	0x50
+ 1958 00ef 9F       		.byte	0x9f
+ 1959 00f0 00000000 		.4byte	0
+ 1960 00f4 00000000 		.4byte	0
+ 1961              	.LLST6:
+ 1962 00f8 00000000 		.4byte	.LVL15
+ 1963 00fc 2E000000 		.4byte	.LVL21
+ 1964 0100 0100     		.2byte	0x1
+ 1965 0102 50       		.byte	0x50
+ 1966 0103 2E000000 		.4byte	.LVL21
+ 1967 0107 31000000 		.4byte	.LVL22-1
+ 1968 010b 0200     		.2byte	0x2
+ 1969 010d 91       		.byte	0x91
+ 1970 010e 5C       		.sleb128 -36
+ 1971 010f 31000000 		.4byte	.LVL22-1
+ 1972 0113 40000000 		.4byte	.LFE56
+ 1973 0117 0400     		.2byte	0x4
+ 1974 0119 F3       		.byte	0xf3
+ 1975 011a 01       		.uleb128 0x1
+ 1976 011b 50       		.byte	0x50
+ 1977 011c 9F       		.byte	0x9f
+ 1978 011d 00000000 		.4byte	0
+ 1979 0121 00000000 		.4byte	0
+ 1980              	.LLST7:
+ 1981 0125 00000000 		.4byte	.LVL15
+ 1982 0129 0A000000 		.4byte	.LVL16
+ 1983 012d 0100     		.2byte	0x1
+ 1984 012f 51       		.byte	0x51
+ 1985 0130 0A000000 		.4byte	.LVL16
+ 1986 0134 2C000000 		.4byte	.LVL20
+ 1987 0138 0100     		.2byte	0x1
+ 1988 013a 51       		.byte	0x51
+ 1989 013b 2C000000 		.4byte	.LVL20
+ 1990 013f 31000000 		.4byte	.LVL22-1
+ 1991 0143 0200     		.2byte	0x2
+ 1992 0145 91       		.byte	0x91
+ 1993 0146 60       		.sleb128 -32
+ 1994 0147 00000000 		.4byte	0
+ 1995 014b 00000000 		.4byte	0
+ 1996              	.LLST8:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 40
+
+
+ 1997 014f 00000000 		.4byte	.LVL15
+ 1998 0153 10000000 		.4byte	.LVL17
+ 1999 0157 0100     		.2byte	0x1
+ 2000 0159 52       		.byte	0x52
+ 2001 015a 10000000 		.4byte	.LVL17
+ 2002 015e 31000000 		.4byte	.LVL22-1
+ 2003 0162 0100     		.2byte	0x1
+ 2004 0164 52       		.byte	0x52
+ 2005 0165 00000000 		.4byte	0
+ 2006 0169 00000000 		.4byte	0
+ 2007              	.LLST9:
+ 2008 016d 00000000 		.4byte	.LVL15
+ 2009 0171 16000000 		.4byte	.LVL18
+ 2010 0175 0100     		.2byte	0x1
+ 2011 0177 53       		.byte	0x53
+ 2012 0178 16000000 		.4byte	.LVL18
+ 2013 017c 20000000 		.4byte	.LVL19
+ 2014 0180 0100     		.2byte	0x1
+ 2015 0182 53       		.byte	0x53
+ 2016 0183 20000000 		.4byte	.LVL19
+ 2017 0187 31000000 		.4byte	.LVL22-1
+ 2018 018b 0200     		.2byte	0x2
+ 2019 018d 91       		.byte	0x91
+ 2020 018e 68       		.sleb128 -24
+ 2021 018f 00000000 		.4byte	0
+ 2022 0193 00000000 		.4byte	0
+ 2023              	.LLST10:
+ 2024 0197 00000000 		.4byte	.LVL23
+ 2025 019b 22000000 		.4byte	.LVL28
+ 2026 019f 0100     		.2byte	0x1
+ 2027 01a1 50       		.byte	0x50
+ 2028 01a2 22000000 		.4byte	.LVL28
+ 2029 01a6 25000000 		.4byte	.LVL29-1
+ 2030 01aa 0200     		.2byte	0x2
+ 2031 01ac 91       		.byte	0x91
+ 2032 01ad 5C       		.sleb128 -36
+ 2033 01ae 25000000 		.4byte	.LVL29-1
+ 2034 01b2 34000000 		.4byte	.LFE57
+ 2035 01b6 0400     		.2byte	0x4
+ 2036 01b8 F3       		.byte	0xf3
+ 2037 01b9 01       		.uleb128 0x1
+ 2038 01ba 50       		.byte	0x50
+ 2039 01bb 9F       		.byte	0x9f
+ 2040 01bc 00000000 		.4byte	0
+ 2041 01c0 00000000 		.4byte	0
+ 2042              	.LLST11:
+ 2043 01c4 00000000 		.4byte	.LVL23
+ 2044 01c8 0A000000 		.4byte	.LVL24
+ 2045 01cc 0100     		.2byte	0x1
+ 2046 01ce 51       		.byte	0x51
+ 2047 01cf 0A000000 		.4byte	.LVL24
+ 2048 01d3 20000000 		.4byte	.LVL27
+ 2049 01d7 0100     		.2byte	0x1
+ 2050 01d9 51       		.byte	0x51
+ 2051 01da 20000000 		.4byte	.LVL27
+ 2052 01de 25000000 		.4byte	.LVL29-1
+ 2053 01e2 0200     		.2byte	0x2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 41
+
+
+ 2054 01e4 91       		.byte	0x91
+ 2055 01e5 60       		.sleb128 -32
+ 2056 01e6 00000000 		.4byte	0
+ 2057 01ea 00000000 		.4byte	0
+ 2058              	.LLST12:
+ 2059 01ee 00000000 		.4byte	.LVL23
+ 2060 01f2 10000000 		.4byte	.LVL25
+ 2061 01f6 0100     		.2byte	0x1
+ 2062 01f8 52       		.byte	0x52
+ 2063 01f9 10000000 		.4byte	.LVL25
+ 2064 01fd 25000000 		.4byte	.LVL29-1
+ 2065 0201 0100     		.2byte	0x1
+ 2066 0203 52       		.byte	0x52
+ 2067 0204 00000000 		.4byte	0
+ 2068 0208 00000000 		.4byte	0
+ 2069              	.LLST13:
+ 2070 020c 00000000 		.4byte	.LVL23
+ 2071 0210 16000000 		.4byte	.LVL26
+ 2072 0214 0100     		.2byte	0x1
+ 2073 0216 53       		.byte	0x53
+ 2074 0217 16000000 		.4byte	.LVL26
+ 2075 021b 25000000 		.4byte	.LVL29-1
+ 2076 021f 0100     		.2byte	0x1
+ 2077 0221 53       		.byte	0x53
+ 2078 0222 00000000 		.4byte	0
+ 2079 0226 00000000 		.4byte	0
+ 2080              	.LLST14:
+ 2081 022a 00000000 		.4byte	.LVL30
+ 2082 022e 0E000000 		.4byte	.LVL32
+ 2083 0232 0100     		.2byte	0x1
+ 2084 0234 50       		.byte	0x50
+ 2085 0235 0E000000 		.4byte	.LVL32
+ 2086 0239 11000000 		.4byte	.LVL33-1
+ 2087 023d 0200     		.2byte	0x2
+ 2088 023f 91       		.byte	0x91
+ 2089 0240 5C       		.sleb128 -36
+ 2090 0241 11000000 		.4byte	.LVL33-1
+ 2091 0245 1C000000 		.4byte	.LFE58
+ 2092 0249 0400     		.2byte	0x4
+ 2093 024b F3       		.byte	0xf3
+ 2094 024c 01       		.uleb128 0x1
+ 2095 024d 50       		.byte	0x50
+ 2096 024e 9F       		.byte	0x9f
+ 2097 024f 00000000 		.4byte	0
+ 2098 0253 00000000 		.4byte	0
+ 2099              	.LLST15:
+ 2100 0257 00000000 		.4byte	.LVL30
+ 2101 025b 0C000000 		.4byte	.LVL31
+ 2102 025f 0100     		.2byte	0x1
+ 2103 0261 51       		.byte	0x51
+ 2104 0262 0C000000 		.4byte	.LVL31
+ 2105 0266 11000000 		.4byte	.LVL33-1
+ 2106 026a 0200     		.2byte	0x2
+ 2107 026c 91       		.byte	0x91
+ 2108 026d 60       		.sleb128 -32
+ 2109 026e 11000000 		.4byte	.LVL33-1
+ 2110 0272 1C000000 		.4byte	.LFE58
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 42
+
+
+ 2111 0276 0400     		.2byte	0x4
+ 2112 0278 F3       		.byte	0xf3
+ 2113 0279 01       		.uleb128 0x1
+ 2114 027a 51       		.byte	0x51
+ 2115 027b 9F       		.byte	0x9f
+ 2116 027c 00000000 		.4byte	0
+ 2117 0280 00000000 		.4byte	0
+ 2118              	.LLST16:
+ 2119 0284 00000000 		.4byte	.LVL30
+ 2120 0288 11000000 		.4byte	.LVL33-1
+ 2121 028c 0100     		.2byte	0x1
+ 2122 028e 52       		.byte	0x52
+ 2123 028f 11000000 		.4byte	.LVL33-1
+ 2124 0293 1C000000 		.4byte	.LFE58
+ 2125 0297 0400     		.2byte	0x4
+ 2126 0299 F3       		.byte	0xf3
+ 2127 029a 01       		.uleb128 0x1
+ 2128 029b 52       		.byte	0x52
+ 2129 029c 9F       		.byte	0x9f
+ 2130 029d 00000000 		.4byte	0
+ 2131 02a1 00000000 		.4byte	0
+ 2132              		.section	.debug_aranges,"",%progbits
+ 2133 0000 44000000 		.4byte	0x44
+ 2134 0004 0200     		.2byte	0x2
+ 2135 0006 00000000 		.4byte	.Ldebug_info0
+ 2136 000a 04       		.byte	0x4
+ 2137 000b 00       		.byte	0
+ 2138 000c 0000     		.2byte	0
+ 2139 000e 0000     		.2byte	0
+ 2140 0010 00000000 		.4byte	.LFB55
+ 2141 0014 18000000 		.4byte	.LFE55-.LFB55
+ 2142 0018 00000000 		.4byte	.LFB53
+ 2143 001c 2C000000 		.4byte	.LFE53-.LFB53
+ 2144 0020 00000000 		.4byte	.LFB54
+ 2145 0024 12000000 		.4byte	.LFE54-.LFB54
+ 2146 0028 00000000 		.4byte	.LFB56
+ 2147 002c 40000000 		.4byte	.LFE56-.LFB56
+ 2148 0030 00000000 		.4byte	.LFB57
+ 2149 0034 34000000 		.4byte	.LFE57-.LFB57
+ 2150 0038 00000000 		.4byte	.LFB58
+ 2151 003c 1C000000 		.4byte	.LFE58-.LFB58
+ 2152 0040 00000000 		.4byte	0
+ 2153 0044 00000000 		.4byte	0
+ 2154              		.section	.debug_ranges,"",%progbits
+ 2155              	.Ldebug_ranges0:
+ 2156 0000 00000000 		.4byte	.LFB55
+ 2157 0004 18000000 		.4byte	.LFE55
+ 2158 0008 00000000 		.4byte	.LFB53
+ 2159 000c 2C000000 		.4byte	.LFE53
+ 2160 0010 00000000 		.4byte	.LFB54
+ 2161 0014 12000000 		.4byte	.LFE54
+ 2162 0018 00000000 		.4byte	.LFB56
+ 2163 001c 40000000 		.4byte	.LFE56
+ 2164 0020 00000000 		.4byte	.LFB57
+ 2165 0024 34000000 		.4byte	.LFE57
+ 2166 0028 00000000 		.4byte	.LFB58
+ 2167 002c 1C000000 		.4byte	.LFE58
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 43
+
+
+ 2168 0030 00000000 		.4byte	0
+ 2169 0034 00000000 		.4byte	0
+ 2170              		.section	.debug_line,"",%progbits
+ 2171              	.Ldebug_line0:
+ 2172 0000 D5010000 		.section	.debug_str,"MS",%progbits,1
+ 2172      02004301 
+ 2172      00000201 
+ 2172      FB0E0D00 
+ 2172      01010101 
+ 2173              	.LASF80:
+ 2174 0000 6E657469 		.ascii	"netifapi_msg\000"
+ 2174      66617069 
+ 2174      5F6D7367 
+ 2174      00
+ 2175              	.LASF12:
+ 2176 000d 666C6F61 		.ascii	"float\000"
+ 2176      7400
+ 2177              	.LASF64:
+ 2178 0013 68776164 		.ascii	"hwaddr\000"
+ 2178      647200
+ 2179              	.LASF73:
+ 2180 001a 6E657469 		.ascii	"netifapi_void_fn\000"
+ 2180      66617069 
+ 2180      5F766F69 
+ 2180      645F666E 
+ 2180      00
+ 2181              	.LASF32:
+ 2182 002b 4552525F 		.ascii	"ERR_ISCONN\000"
+ 2182      4953434F 
+ 2182      4E4E00
+ 2183              	.LASF68:
+ 2184 0036 6E657469 		.ascii	"netif_output_fn\000"
+ 2184      665F6F75 
+ 2184      74707574 
+ 2184      5F666E00 
+ 2185              	.LASF75:
+ 2186 0046 69706164 		.ascii	"ipaddr\000"
+ 2186      647200
+ 2187              	.LASF2:
+ 2188 004d 73686F72 		.ascii	"short int\000"
+ 2188      7420696E 
+ 2188      7400
+ 2189              	.LASF55:
+ 2190 0057 696E7075 		.ascii	"input\000"
+ 2190      7400
+ 2191              	.LASF10:
+ 2192 005d 73697A65 		.ascii	"sizetype\000"
+ 2192      74797065 
+ 2192      00
+ 2193              	.LASF46:
+ 2194 0066 746F745F 		.ascii	"tot_len\000"
+ 2194      6C656E00 
+ 2195              	.LASF37:
+ 2196 006e 4552525F 		.ascii	"ERR_CLSD\000"
+ 2196      434C5344 
+ 2196      00
+ 2197              	.LASF16:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 44
+
+
+ 2198 0077 7379735F 		.ascii	"sys_sem_t\000"
+ 2198      73656D5F 
+ 2198      7400
+ 2199              	.LASF58:
+ 2200 0081 73746174 		.ascii	"status_callback\000"
+ 2200      75735F63 
+ 2200      616C6C62 
+ 2200      61636B00 
+ 2201              	.LASF63:
+ 2202 0091 68776164 		.ascii	"hwaddr_len\000"
+ 2202      64725F6C 
+ 2202      656E00
+ 2203              	.LASF60:
+ 2204 009c 636C6965 		.ascii	"client_data\000"
+ 2204      6E745F64 
+ 2204      61746100 
+ 2205              	.LASF49:
+ 2206 00a8 4E455449 		.ascii	"NETIF_DEL_MAC_FILTER\000"
+ 2206      465F4445 
+ 2206      4C5F4D41 
+ 2206      435F4649 
+ 2206      4C544552 
+ 2207              	.LASF66:
+ 2208 00bd 69676D70 		.ascii	"igmp_mac_filter\000"
+ 2208      5F6D6163 
+ 2208      5F66696C 
+ 2208      74657200 
+ 2209              	.LASF83:
+ 2210 00cd 6E657469 		.ascii	"netifapi_do_netif_add\000"
+ 2210      66617069 
+ 2210      5F646F5F 
+ 2210      6E657469 
+ 2210      665F6164 
+ 2211              	.LASF62:
+ 2212 00e3 686F7374 		.ascii	"hostname\000"
+ 2212      6E616D65 
+ 2212      00
+ 2213              	.LASF22:
+ 2214 00ec 4552525F 		.ascii	"ERR_OK\000"
+ 2214      4F4B00
+ 2215              	.LASF36:
+ 2216 00f3 4552525F 		.ascii	"ERR_RST\000"
+ 2216      52535400 
+ 2217              	.LASF27:
+ 2218 00fb 4552525F 		.ascii	"ERR_INPROGRESS\000"
+ 2218      494E5052 
+ 2218      4F475245 
+ 2218      535300
+ 2219              	.LASF89:
+ 2220 010a 6E657469 		.ascii	"netif_set_addr\000"
+ 2220      665F7365 
+ 2220      745F6164 
+ 2220      647200
+ 2221              	.LASF72:
+ 2222 0119 74637069 		.ascii	"tcpip_api_call_data\000"
+ 2222      705F6170 
+ 2222      695F6361 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 45
+
+
+ 2222      6C6C5F64 
+ 2222      61746100 
+ 2223              	.LASF0:
+ 2224 012d 7369676E 		.ascii	"signed char\000"
+ 2224      65642063 
+ 2224      68617200 
+ 2225              	.LASF57:
+ 2226 0139 6C696E6B 		.ascii	"linkoutput\000"
+ 2226      6F757470 
+ 2226      757400
+ 2227              	.LASF18:
+ 2228 0144 73385F74 		.ascii	"s8_t\000"
+ 2228      00
+ 2229              	.LASF6:
+ 2230 0149 6C6F6E67 		.ascii	"long long int\000"
+ 2230      206C6F6E 
+ 2230      6720696E 
+ 2230      7400
+ 2231              	.LASF11:
+ 2232 0157 63686172 		.ascii	"char\000"
+ 2232      00
+ 2233              	.LASF81:
+ 2234 015c 63616C6C 		.ascii	"call\000"
+ 2234      00
+ 2235              	.LASF26:
+ 2236 0161 4552525F 		.ascii	"ERR_RTE\000"
+ 2236      52544500 
+ 2237              	.LASF40:
+ 2238 0169 69705F61 		.ascii	"ip_addr_t\000"
+ 2238      6464725F 
+ 2238      7400
+ 2239              	.LASF43:
+ 2240 0173 61646472 		.ascii	"addr\000"
+ 2240      00
+ 2241              	.LASF31:
+ 2242 0178 4552525F 		.ascii	"ERR_ALREADY\000"
+ 2242      414C5245 
+ 2242      41445900 
+ 2243              	.LASF86:
+ 2244 0184 6E657469 		.ascii	"netifapi_netif_set_addr\000"
+ 2244      66617069 
+ 2244      5F6E6574 
+ 2244      69665F73 
+ 2244      65745F61 
+ 2245              	.LASF91:
+ 2246 019c 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 2246      43313120 
+ 2246      352E342E 
+ 2246      31203230 
+ 2246      31363036 
+ 2247 01cf 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 2247      20726576 
+ 2247      6973696F 
+ 2247      6E203233 
+ 2247      37373135 
+ 2248 0202 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 2248      67202D66 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 46
+
+
+ 2248      66756E63 
+ 2248      74696F6E 
+ 2248      2D736563 
+ 2249              	.LASF51:
+ 2250 022e 6E657469 		.ascii	"netif_init_fn\000"
+ 2250      665F696E 
+ 2250      69745F66 
+ 2250      6E00
+ 2251              	.LASF14:
+ 2252 023c 51756575 		.ascii	"QueueHandle_t\000"
+ 2252      6548616E 
+ 2252      646C655F 
+ 2252      7400
+ 2253              	.LASF71:
+ 2254 024a 6E657469 		.ascii	"netif_igmp_mac_filter_fn\000"
+ 2254      665F6967 
+ 2254      6D705F6D 
+ 2254      61635F66 
+ 2254      696C7465 
+ 2255              	.LASF59:
+ 2256 0263 73746174 		.ascii	"state\000"
+ 2256      6500
+ 2257              	.LASF65:
+ 2258 0269 6E616D65 		.ascii	"name\000"
+ 2258      00
+ 2259              	.LASF77:
+ 2260 026e 766F6964 		.ascii	"voidfunc\000"
+ 2260      66756E63 
+ 2260      00
+ 2261              	.LASF9:
+ 2262 0277 6C6F6E67 		.ascii	"long double\000"
+ 2262      20646F75 
+ 2262      626C6500 
+ 2263              	.LASF15:
+ 2264 0283 53656D61 		.ascii	"SemaphoreHandle_t\000"
+ 2264      70686F72 
+ 2264      6548616E 
+ 2264      646C655F 
+ 2264      7400
+ 2265              	.LASF94:
+ 2266 0295 6E657469 		.ascii	"netif_mac_filter_action\000"
+ 2266      665F6D61 
+ 2266      635F6669 
+ 2266      6C746572 
+ 2266      5F616374 
+ 2267              	.LASF1:
+ 2268 02ad 756E7369 		.ascii	"unsigned char\000"
+ 2268      676E6564 
+ 2268      20636861 
+ 2268      7200
+ 2269              	.LASF33:
+ 2270 02bb 4552525F 		.ascii	"ERR_CONN\000"
+ 2270      434F4E4E 
+ 2270      00
+ 2271              	.LASF70:
+ 2272 02c4 6E657469 		.ascii	"netif_status_callback_fn\000"
+ 2272      665F7374 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 47
+
+
+ 2272      61747573 
+ 2272      5F63616C 
+ 2272      6C626163 
+ 2273              	.LASF93:
+ 2274 02dd 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 2274      73657273 
+ 2274      5C506875 
+ 2274      6F6E675C 
+ 2274      446F6375 
+ 2275 030b 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 2275      6F742D73 
+ 2275      646B2D69 
+ 2275      6F742D64 
+ 2275      65765C50 
+ 2276 033c 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 2276      494F542D 
+ 2276      4875622D 
+ 2276      44656D6F 
+ 2276      5C50534F 
+ 2277 036e 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 2277      2D487562 
+ 2277      2D44656D 
+ 2277      6F2E6379 
+ 2277      64736E00 
+ 2278              	.LASF95:
+ 2279 0382 69705F61 		.ascii	"ip_addr_any\000"
+ 2279      6464725F 
+ 2279      616E7900 
+ 2280              	.LASF48:
+ 2281 038e 666C6167 		.ascii	"flags\000"
+ 2281      7300
+ 2282              	.LASF7:
+ 2283 0394 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 2283      206C6F6E 
+ 2283      6720756E 
+ 2283      7369676E 
+ 2283      65642069 
+ 2284              	.LASF47:
+ 2285 03ab 74797065 		.ascii	"type\000"
+ 2285      00
+ 2286              	.LASF8:
+ 2287 03b0 756E7369 		.ascii	"unsigned int\000"
+ 2287      676E6564 
+ 2287      20696E74 
+ 2287      00
+ 2288              	.LASF35:
+ 2289 03bd 4552525F 		.ascii	"ERR_ABRT\000"
+ 2289      41425254 
+ 2289      00
+ 2290              	.LASF90:
+ 2291 03c6 74637069 		.ascii	"tcpip_api_call\000"
+ 2291      705F6170 
+ 2291      695F6361 
+ 2291      6C6C00
+ 2292              	.LASF24:
+ 2293 03d5 4552525F 		.ascii	"ERR_BUF\000"
+ 2293      42554600 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 48
+
+
+ 2294              	.LASF50:
+ 2295 03dd 4E455449 		.ascii	"NETIF_ADD_MAC_FILTER\000"
+ 2295      465F4144 
+ 2295      445F4D41 
+ 2295      435F4649 
+ 2295      4C544552 
+ 2296              	.LASF3:
+ 2297 03f2 73686F72 		.ascii	"short unsigned int\000"
+ 2297      7420756E 
+ 2297      7369676E 
+ 2297      65642069 
+ 2297      6E7400
+ 2298              	.LASF92:
+ 2299 0405 536F7572 		.ascii	"Source\\LwIP\\src\\api\\netifapi.c\000"
+ 2299      63655C4C 
+ 2299      7749505C 
+ 2299      7372635C 
+ 2299      6170695C 
+ 2300              	.LASF34:
+ 2301 0424 4552525F 		.ascii	"ERR_IF\000"
+ 2301      494600
+ 2302              	.LASF74:
+ 2303 042b 6E657469 		.ascii	"netifapi_errt_fn\000"
+ 2303      66617069 
+ 2303      5F657272 
+ 2303      745F666E 
+ 2303      00
+ 2304              	.LASF76:
+ 2305 043c 696E6974 		.ascii	"init\000"
+ 2305      00
+ 2306              	.LASF4:
+ 2307 0441 6C6F6E67 		.ascii	"long int\000"
+ 2307      20696E74 
+ 2307      00
+ 2308              	.LASF54:
+ 2309 044a 6E65746D 		.ascii	"netmask\000"
+ 2309      61736B00 
+ 2310              	.LASF87:
+ 2311 0452 6E657469 		.ascii	"netifapi_netif_common\000"
+ 2311      66617069 
+ 2311      5F6E6574 
+ 2311      69665F63 
+ 2311      6F6D6D6F 
+ 2312              	.LASF25:
+ 2313 0468 4552525F 		.ascii	"ERR_TIMEOUT\000"
+ 2313      54494D45 
+ 2313      4F555400 
+ 2314              	.LASF69:
+ 2315 0474 6E657469 		.ascii	"netif_linkoutput_fn\000"
+ 2315      665F6C69 
+ 2315      6E6B6F75 
+ 2315      74707574 
+ 2315      5F666E00 
+ 2316              	.LASF41:
+ 2317 0488 6970345F 		.ascii	"ip4_addr\000"
+ 2317      61646472 
+ 2317      00
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 49
+
+
+ 2318              	.LASF29:
+ 2319 0491 4552525F 		.ascii	"ERR_WOULDBLOCK\000"
+ 2319      574F554C 
+ 2319      44424C4F 
+ 2319      434B00
+ 2320              	.LASF5:
+ 2321 04a0 6C6F6E67 		.ascii	"long unsigned int\000"
+ 2321      20756E73 
+ 2321      69676E65 
+ 2321      6420696E 
+ 2321      7400
+ 2322              	.LASF13:
+ 2323 04b2 646F7562 		.ascii	"double\000"
+ 2323      6C6500
+ 2324              	.LASF79:
+ 2325 04b9 636F6D6D 		.ascii	"common\000"
+ 2325      6F6E00
+ 2326              	.LASF78:
+ 2327 04c0 65727274 		.ascii	"errtfunc\000"
+ 2327      66756E63 
+ 2327      00
+ 2328              	.LASF39:
+ 2329 04c9 6970345F 		.ascii	"ip4_addr_t\000"
+ 2329      61646472 
+ 2329      5F7400
+ 2330              	.LASF52:
+ 2331 04d4 6E657469 		.ascii	"netif\000"
+ 2331      6600
+ 2332              	.LASF82:
+ 2333 04da 6E657469 		.ascii	"netifapi_do_netif_common\000"
+ 2333      66617069 
+ 2333      5F646F5F 
+ 2333      6E657469 
+ 2333      665F636F 
+ 2334              	.LASF23:
+ 2335 04f3 4552525F 		.ascii	"ERR_MEM\000"
+ 2335      4D454D00 
+ 2336              	.LASF20:
+ 2337 04fb 7533325F 		.ascii	"u32_t\000"
+ 2337      7400
+ 2338              	.LASF19:
+ 2339 0501 7531365F 		.ascii	"u16_t\000"
+ 2339      7400
+ 2340              	.LASF30:
+ 2341 0507 4552525F 		.ascii	"ERR_USE\000"
+ 2341      55534500 
+ 2342              	.LASF61:
+ 2343 050f 72735F63 		.ascii	"rs_count\000"
+ 2343      6F756E74 
+ 2343      00
+ 2344              	.LASF56:
+ 2345 0518 6F757470 		.ascii	"output\000"
+ 2345      757400
+ 2346              	.LASF88:
+ 2347 051f 6E657469 		.ascii	"netif_add\000"
+ 2347      665F6164 
+ 2347      6400
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccjifsDG.s 			page 50
+
+
+ 2348              	.LASF38:
+ 2349 0529 4552525F 		.ascii	"ERR_ARG\000"
+ 2349      41524700 
+ 2350              	.LASF17:
+ 2351 0531 75385F74 		.ascii	"u8_t\000"
+ 2351      00
+ 2352              	.LASF84:
+ 2353 0536 6E657469 		.ascii	"netifapi_do_netif_set_addr\000"
+ 2353      66617069 
+ 2353      5F646F5F 
+ 2353      6E657469 
+ 2353      665F7365 
+ 2354              	.LASF53:
+ 2355 0551 69705F61 		.ascii	"ip_addr\000"
+ 2355      64647200 
+ 2356              	.LASF85:
+ 2357 0559 6E657469 		.ascii	"netifapi_netif_add\000"
+ 2357      66617069 
+ 2357      5F6E6574 
+ 2357      69665F61 
+ 2357      646400
+ 2358              	.LASF28:
+ 2359 056c 4552525F 		.ascii	"ERR_VAL\000"
+ 2359      56414C00 
+ 2360              	.LASF67:
+ 2361 0574 6E657469 		.ascii	"netif_input_fn\000"
+ 2361      665F696E 
+ 2361      7075745F 
+ 2361      666E00
+ 2362              	.LASF45:
+ 2363 0583 7061796C 		.ascii	"payload\000"
+ 2363      6F616400 
+ 2364              	.LASF44:
+ 2365 058b 6E657874 		.ascii	"next\000"
+ 2365      00
+ 2366              	.LASF42:
+ 2367 0590 70627566 		.ascii	"pbuf\000"
+ 2367      00
+ 2368              	.LASF21:
+ 2369 0595 6572725F 		.ascii	"err_t\000"
+ 2369      7400
+ 2370              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

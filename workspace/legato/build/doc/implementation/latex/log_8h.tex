@@ -1,0 +1,192 @@
+\hypertarget{log_8h}{}\section{framework/liblegato/log.h File Reference}
+\label{log_8h}\index{framework/liblegato/log.\+h@{framework/liblegato/log.\+h}}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{log_8h_ae6fb4d01996f76196c9e4b32b097d09d}{L\+O\+G\+\_\+\+D\+E\+F\+A\+U\+L\+T\+\_\+\+L\+O\+G\+\_\+\+F\+I\+L\+T\+ER}~\hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0aa83ea376539849ee701096fdb022e74b3}{L\+E\+\_\+\+L\+O\+G\+\_\+\+I\+N\+FO}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8h_a205a0a93bd202923978f0738e1aaeac8}{log\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8h_a91f69de1c84b361bbdfe0d8ac5039fea}{log\+\_\+\+Re\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8h_ac933de0abfd72e6455c7bc1346041f36}{log\+\_\+\+Connect\+To\+Control\+Daemon} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__log_8h_ae74f60cb8aba8cc6344a906a4db623f9}{le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_8h_a87eadac770827a5143143ce2c3fff5cd}{log\+\_\+\+Reg\+Component} (const char $\ast$component\+Name\+Ptr, \hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$$\ast$level\+Filter\+Ptr\+Ptr)
+\item 
+\hyperlink{le__log_8h_a055e29785e8d1c5bf1b3a230df8d65b7}{le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} \hyperlink{log_8h_ae42b5387eeea465f6f624a990758c6bf}{log\+\_\+\+Reg\+Trace\+Keyword} (const char $\ast$keyword\+Ptr, bool $\ast$$\ast$is\+Enabled\+Ptr\+Ptr)
+\item 
+\hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} \hyperlink{log_8h_a86ff9857ae1bfd526e709ec3e75e8715}{log\+\_\+\+Str\+To\+Severity\+Level} (const char $\ast$level\+Str)
+\item 
+const char $\ast$ \hyperlink{log_8h_a5fbd7fa6820a90e95c1f6255b8d8d297}{log\+\_\+\+Severity\+Level\+To\+Str} (\hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} level)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8h_aaaa2b1f3d1d8197ac528e3b3cd75a624}{log\+\_\+\+Test\+Framework\+Msgs} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{log_8h_afce531c9bd8e7b3c772c15a7063145aa}{log\+\_\+\+Log\+Generic\+Msg} (\hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0a}{le\+\_\+log\+\_\+\+Level\+\_\+t} level, const char $\ast$proc\+Name\+Ptr, pid\+\_\+t pid, const char $\ast$msg\+Ptr)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Log module\textquotesingle{}s intra-\/framework header file. This file exposes type definitions and function interfaces to other modules inside the framework implementation.
+
+The Log Control Daemon is a server process that everyone else connects to. The log control tool sends commands to the Log Control Daemon who validates them and keeps track of log settings that last longer than the lifetime of a given process. When another process opens a log session with the Log Control Daemon, the Daemon updates that process with any settings that were previously set for processes that have that name.
+
+In the current implementation, the Log Control Daemon sends settings to processes using the I\+PC session. These get applied by a message receive handler running in the process\textquotesingle{}s main thread.\hypertarget{log_8h_log_future}{}\subsection{Future Enhancement}\label{log_8h_log_future}
+In the future, the Log Control Daemon will write log settings (filter level and keyword enable/disable) directly into the client process\textquotesingle{}s address space using shared memory. The shared memory file is created by the log client who passes the shared memory file fd to the Log Control Daemon over the \hyperlink{c_messaging}{Low-\/level Messaging A\+PI} when the client starts up.
+
+When a process starts, it must create its shared memory file and define the layout of the settings within it before it talks to the Log Control Daemon. Once it has notified the Log Control Daemon of the file\textquotesingle{}s location and layout, the size and layout of the file must not change for the lifetime of the process.
+
+The shared memory file layout is a list of log sessions, identified by component name. For each session, there exists a level, a set of output location flags, and a list of trace keywords, each of which has an \char`\"{}is enabled\char`\"{} flag.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{log.\+h@{log.\+h}!L\+O\+G\+\_\+\+D\+E\+F\+A\+U\+L\+T\+\_\+\+L\+O\+G\+\_\+\+F\+I\+L\+T\+ER@{L\+O\+G\+\_\+\+D\+E\+F\+A\+U\+L\+T\+\_\+\+L\+O\+G\+\_\+\+F\+I\+L\+T\+ER}}
+\index{L\+O\+G\+\_\+\+D\+E\+F\+A\+U\+L\+T\+\_\+\+L\+O\+G\+\_\+\+F\+I\+L\+T\+ER@{L\+O\+G\+\_\+\+D\+E\+F\+A\+U\+L\+T\+\_\+\+L\+O\+G\+\_\+\+F\+I\+L\+T\+ER}!log.\+h@{log.\+h}}
+\subsubsection[{\texorpdfstring{L\+O\+G\+\_\+\+D\+E\+F\+A\+U\+L\+T\+\_\+\+L\+O\+G\+\_\+\+F\+I\+L\+T\+ER}{LOG_DEFAULT_LOG_FILTER}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+G\+\_\+\+D\+E\+F\+A\+U\+L\+T\+\_\+\+L\+O\+G\+\_\+\+F\+I\+L\+T\+ER~{\bf L\+E\+\_\+\+L\+O\+G\+\_\+\+I\+N\+FO}}\hypertarget{log_8h_ae6fb4d01996f76196c9e4b32b097d09d}{}\label{log_8h_ae6fb4d01996f76196c9e4b32b097d09d}
+Default logging level for sessions when they are first created. 
+
+\subsection{Function Documentation}
+\index{log.\+h@{log.\+h}!log\+\_\+\+Connect\+To\+Control\+Daemon@{log\+\_\+\+Connect\+To\+Control\+Daemon}}
+\index{log\+\_\+\+Connect\+To\+Control\+Daemon@{log\+\_\+\+Connect\+To\+Control\+Daemon}!log.\+h@{log.\+h}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Connect\+To\+Control\+Daemon(void)}{log_ConnectToControlDaemon(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+\_\+\+Connect\+To\+Control\+Daemon (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8h_ac933de0abfd72e6455c7bc1346041f36}{}\label{log_8h_ac933de0abfd72e6455c7bc1346041f36}
+Connects to the Log Control Daemon. This must not be done until after the Messaging system is initialized, but must be done before the main thread\textquotesingle{}s Event Loop starts to ensure that all log settings are received from the Log Control Daemon and applied to sessions in the local process before any component initialization functions are run.
+
+Connects to the Log Control Daemon. This must not be done until after the Messaging system is initialized, but should be done as soon as possible. Anything that gets logged before this is called may get logged with settings that don\textquotesingle{}t match what has been set using the log control tool. \index{log.\+h@{log.\+h}!log\+\_\+\+Init@{log\+\_\+\+Init}}
+\index{log\+\_\+\+Init@{log\+\_\+\+Init}!log.\+h@{log.\+h}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Init(void)}{log_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8h_a205a0a93bd202923978f0738e1aaeac8}{}\label{log_8h_a205a0a93bd202923978f0738e1aaeac8}
+Initialize the logging system. This must be called V\+E\+RY early in the process initialization. Anything that is logged prior to this call will be logged with the wrong component name.
+
+Initialize the logging system. \begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000043}{Todo}]Make this configurable. \end{DoxyRefDesc}
+
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000044}{Todo}]Make this configurable. \end{DoxyRefDesc}
+\index{log.\+h@{log.\+h}!log\+\_\+\+Log\+Generic\+Msg@{log\+\_\+\+Log\+Generic\+Msg}}
+\index{log\+\_\+\+Log\+Generic\+Msg@{log\+\_\+\+Log\+Generic\+Msg}!log.\+h@{log.\+h}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Log\+Generic\+Msg(le\+\_\+log\+\_\+\+Level\+\_\+t level, const char $\ast$proc\+Name\+Ptr, pid\+\_\+t pid, const char $\ast$msg\+Ptr)}{log_LogGenericMsg(le_log_Level_t level, const char *procNamePtr, pid_t pid, const char *msgPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+\_\+\+Log\+Generic\+Msg (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t}}]{level, }
+\item[{const char $\ast$}]{proc\+Name\+Ptr, }
+\item[{pid\+\_\+t}]{pid, }
+\item[{const char $\ast$}]{msg\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8h_afce531c9bd8e7b3c772c15a7063145aa}{}\label{log_8h_afce531c9bd8e7b3c772c15a7063145aa}
+Logs a generic message with the given information. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em level} & Severity level. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name\+Ptr} & Process name. \\
+\hline
+\mbox{\tt in}  & {\em pid} & P\+ID of the process. \\
+\hline
+\mbox{\tt in}  & {\em msg\+Ptr} & Message. \\
+\hline
+\end{DoxyParams}
+\index{log.\+h@{log.\+h}!log\+\_\+\+Reg\+Component@{log\+\_\+\+Reg\+Component}}
+\index{log\+\_\+\+Reg\+Component@{log\+\_\+\+Reg\+Component}!log.\+h@{log.\+h}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Reg\+Component(const char $\ast$component\+Name\+Ptr, le\+\_\+log\+\_\+\+Level\+\_\+t $\ast$$\ast$level\+Filter\+Ptr\+Ptr)}{log_RegComponent(const char *componentNamePtr, le_log_Level_t **levelFilterPtrPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+log\+\_\+\+Session\+Ref\+\_\+t} log\+\_\+\+Reg\+Component (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{component\+Name\+Ptr, }
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t} $\ast$$\ast$}]{level\+Filter\+Ptr\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8h_a87eadac770827a5143143ce2c3fff5cd}{}\label{log_8h_a87eadac770827a5143143ce2c3fff5cd}
+Registers a named component with the logging system.
+
+\begin{DoxyReturn}{Returns}
+A log session reference. This reference must be kept by the component and accessible through a local macro with the name L\+E\+\_\+\+L\+O\+G\+\_\+\+S\+E\+S\+S\+I\+ON. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em component\+Name\+Ptr} & A pointer to the component\textquotesingle{}s name. \\
+\hline
+\mbox{\tt out}  & {\em level\+Filter\+Ptr\+Ptr} & Set to point to the component\textquotesingle{}s level filter. \\
+\hline
+\end{DoxyParams}
+\index{log.\+h@{log.\+h}!log\+\_\+\+Reg\+Trace\+Keyword@{log\+\_\+\+Reg\+Trace\+Keyword}}
+\index{log\+\_\+\+Reg\+Trace\+Keyword@{log\+\_\+\+Reg\+Trace\+Keyword}!log.\+h@{log.\+h}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Reg\+Trace\+Keyword(const char $\ast$keyword\+Ptr, bool $\ast$$\ast$is\+Enabled\+Ptr\+Ptr)}{log_RegTraceKeyword(const char *keywordPtr, bool **isEnabledPtrPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} log\+\_\+\+Reg\+Trace\+Keyword (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{keyword\+Ptr, }
+\item[{bool $\ast$$\ast$}]{is\+Enabled\+Ptr\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8h_ae42b5387eeea465f6f624a990758c6bf}{}\label{log_8h_ae42b5387eeea465f6f624a990758c6bf}
+Registers a trace keyword with the logging system.
+
+\begin{DoxyReturn}{Returns}
+A log keyword reference. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em keyword\+Ptr} & A pointer to the keyword string. \\
+\hline
+\mbox{\tt out}  & {\em is\+Enabled\+Ptr\+Ptr} & Set to point to the enabled/disabled flag variable. \\
+\hline
+\end{DoxyParams}
+\index{log.\+h@{log.\+h}!log\+\_\+\+Re\+Init@{log\+\_\+\+Re\+Init}}
+\index{log\+\_\+\+Re\+Init@{log\+\_\+\+Re\+Init}!log.\+h@{log.\+h}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Re\+Init(void)}{log_ReInit(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+\_\+\+Re\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8h_a91f69de1c84b361bbdfe0d8ac5039fea}{}\label{log_8h_a91f69de1c84b361bbdfe0d8ac5039fea}
+Re-\/\+Initialize the logging system. This must be called in case the underlying log fd has been closed.
+
+Re-\/\+Initialize the logging system. \index{log.\+h@{log.\+h}!log\+\_\+\+Severity\+Level\+To\+Str@{log\+\_\+\+Severity\+Level\+To\+Str}}
+\index{log\+\_\+\+Severity\+Level\+To\+Str@{log\+\_\+\+Severity\+Level\+To\+Str}!log.\+h@{log.\+h}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Severity\+Level\+To\+Str(le\+\_\+log\+\_\+\+Level\+\_\+t level)}{log_SeverityLevelToStr(le_log_Level_t level)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ log\+\_\+\+Severity\+Level\+To\+Str (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+log\+\_\+\+Level\+\_\+t}}]{level}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8h_a5fbd7fa6820a90e95c1f6255b8d8d297}{}\label{log_8h_a5fbd7fa6820a90e95c1f6255b8d8d297}
+Translates a severity level value to a severity level string.
+
+\begin{DoxyReturn}{Returns}
+Pointer to a string constant containing the severity level string. N\+U\+LL if the value is out of range. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em level} & Severity level. \\
+\hline
+\end{DoxyParams}
+\index{log.\+h@{log.\+h}!log\+\_\+\+Str\+To\+Severity\+Level@{log\+\_\+\+Str\+To\+Severity\+Level}}
+\index{log\+\_\+\+Str\+To\+Severity\+Level@{log\+\_\+\+Str\+To\+Severity\+Level}!log.\+h@{log.\+h}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Str\+To\+Severity\+Level(const char $\ast$level\+Str)}{log_StrToSeverityLevel(const char *levelStr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+log\+\_\+\+Level\+\_\+t} log\+\_\+\+Str\+To\+Severity\+Level (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{level\+Str}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8h_a86ff9857ae1bfd526e709ec3e75e8715}{}\label{log_8h_a86ff9857ae1bfd526e709ec3e75e8715}
+Translates a severity level string to a severity level value.
+
+\begin{DoxyReturn}{Returns}
+The severity level if successful. -\/1 if the string is an invalid log level.
+\end{DoxyReturn}
+Translates a severity level string to the severity level value. These strings are received from the log control tool and are different from the strings that are used in the actual log messages.
+
+\begin{DoxyReturn}{Returns}
+The severity level if successful. -\/1 if the string is an invalid log level. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em level\+Str} & The severity level string. \\
+\hline
+\end{DoxyParams}
+\index{log.\+h@{log.\+h}!log\+\_\+\+Test\+Framework\+Msgs@{log\+\_\+\+Test\+Framework\+Msgs}}
+\index{log\+\_\+\+Test\+Framework\+Msgs@{log\+\_\+\+Test\+Framework\+Msgs}!log.\+h@{log.\+h}}
+\subsubsection[{\texorpdfstring{log\+\_\+\+Test\+Framework\+Msgs(void)}{log_TestFrameworkMsgs(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} log\+\_\+\+Test\+Framework\+Msgs (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{log_8h_aaaa2b1f3d1d8197ac528e3b3cd75a624}{}\label{log_8h_aaaa2b1f3d1d8197ac528e3b3cd75a624}
+Log messages from the framework. Used for testing only. 

@@ -1,0 +1,1134 @@
+\hypertarget{service_directory_8c}{}\section{framework/daemons/linux/service\+Directory/service\+Directory.c File Reference}
+\label{service_directory_8c}\index{framework/daemons/linux/service\+Directory/service\+Directory.\+c@{framework/daemons/linux/service\+Directory/service\+Directory.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}service\+Directory\+Protocol.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sdir\+Tool\+Protocol.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}unix\+Socket.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}user.\+h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_user__t}{User\+\_\+t}
+\item 
+struct \hyperlink{struct_server_connection__t}{Server\+Connection\+\_\+t}
+\item 
+struct \hyperlink{struct_binding__t}{Binding\+\_\+t}
+\item 
+struct \hyperlink{struct_client_connection__t}{Client\+Connection\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{service_directory_8c_a574b8dc03d0b72d470082bbb9c7ada84}{M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+OG}~100
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6}{Client\+Connection\+State\+\_\+t} \{ \hyperlink{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6a9357e72ae8cc486bbdf899fdad645928}{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+I\+D\+\_\+\+U\+N\+K\+N\+O\+WN}, 
+\hyperlink{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6a5485f37d7a5b66ef9cd868c284984743}{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+U\+N\+B\+O\+U\+ND}, 
+\hyperlink{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6ade7a412fc00984cd75bb313cf75079d4}{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+W\+A\+I\+T\+I\+NG}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{struct_user__t}{User\+\_\+t} $\ast$ \hyperlink{service_directory_8c_a3b25ba8063188eb1587ae31500b3d0c8}{Create\+User} (uid\+\_\+t uid)
+\item 
+static \hyperlink{struct_user__t}{User\+\_\+t} $\ast$ \hyperlink{service_directory_8c_ad8b8f496929c360fca46b29e0ad39f98}{Get\+User} (uid\+\_\+t uid)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_ab1bf87d940a0ef1a8d9036d17e814392}{User\+Destructor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$obj\+Ptr)
+\item 
+static \hyperlink{struct_binding__t}{Binding\+\_\+t} $\ast$ \hyperlink{service_directory_8c_a7ff9a1b8aa979d4aa6393679aef42499}{Find\+Binding} (\hyperlink{struct_user__t}{User\+\_\+t} $\ast$user\+Ptr, const char $\ast$interface\+Name)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a50bb784bdd849600871c08d6a42ac982}{Close\+Client\+Connection} (\hyperlink{struct_client_connection__t}{Client\+Connection\+\_\+t} $\ast$connection\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a5988586ab86bd5883e1f6e57c6873613}{Reject\+Client} (\hyperlink{struct_client_connection__t}{Client\+Connection\+\_\+t} $\ast$connection\+Ptr, \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} reject\+Reason)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_ac825aa7a14892acbc13d846815dfc167}{Close\+Server\+Connection} (\hyperlink{struct_server_connection__t}{Server\+Connection\+\_\+t} $\ast$connection\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{service_directory_8c_ac8acaca99752ef883865fb07fe713cdc}{Receive\+Message} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$msg\+Ptr, size\+\_\+t msg\+Size)
+\item 
+static \hyperlink{struct_server_connection__t}{Server\+Connection\+\_\+t} $\ast$ \hyperlink{service_directory_8c_ae99769b960649860f350b1de3ecb317b}{Find\+Service} (const \hyperlink{struct_user__t}{User\+\_\+t} $\ast$user\+Ptr, const char $\ast$service\+Name)
+\item 
+static bool \hyperlink{service_directory_8c_a5ee3c21d5fa6aa911eb3d78285f9c3e9}{Is\+Duplicate\+Service} (\hyperlink{struct_server_connection__t}{Server\+Connection\+\_\+t} $\ast$new\+Connection\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{service_directory_8c_aa4252a52b68e28d5ccacfec6827558ef}{Dispatch\+To\+Server} (\hyperlink{struct_client_connection__t}{Client\+Connection\+\_\+t} $\ast$client\+Connection\+Ptr, \hyperlink{struct_server_connection__t}{Server\+Connection\+\_\+t} $\ast$server\+Connection\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a34090a5c03bc41db32840dee5a4f58fb}{Follow\+Binding} (\hyperlink{struct_binding__t}{Binding\+\_\+t} $\ast$binding\+Ptr, \hyperlink{struct_client_connection__t}{Client\+Connection\+\_\+t} $\ast$client\+Connection\+Ptr, bool should\+Wait)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_aff2b1b692a23ce0f36ace578fd331835}{Create\+Binding} (uid\+\_\+t client\+User\+Id, const char $\ast$client\+Interface\+Name, uid\+\_\+t server\+User\+Id, const char $\ast$server\+Interface\+Name)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_ac47933a68fccdf1ff4e8e80c001d532d}{Create\+Hard\+Coded\+Bindings} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a8a1bff1184ab1a15e1a46842538c1c66}{Resolve\+Bindings\+To\+Server} (\hyperlink{struct_server_connection__t}{Server\+Connection\+\_\+t} $\ast$connection\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_ad2f87b7b180dab9dc9fc6819186b54a9}{Process\+Advertisement\+From\+Server} (\hyperlink{struct_server_connection__t}{Server\+Connection\+\_\+t} $\ast$connection\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_ad927b54f9f20e4bebbcb7823d6796514}{Client\+Error\+Handler} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a21b5e698e8b5b0e21bb5373a2a8ba37b}{Client\+Hang\+Up\+Handler} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a28453e6e43db6aa93228806de2a22492}{Process\+Open\+Request\+From\+Client} (\hyperlink{struct_client_connection__t}{Client\+Connection\+\_\+t} $\ast$connection\+Ptr, bool should\+Wait)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_ac7e8043e665a83699b5943aaf5c36d46}{Client\+Read\+Handler} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_ad65e61490f10c1a54e5608a49b7d4788}{Client\+Socket\+Handler} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, short events)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a16b7d33a6ae807b24ecbdebf9bb96a84}{Create\+Client\+Connection} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, uid\+\_\+t uid, pid\+\_\+t pid)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a43f5a8a5bf110f34bfceb43f6ecaa493}{Client\+Connection\+Destructor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$obj\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a8a9a62fee37388118df63889e90cc1bb}{Client\+Connect\+Handler} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, short events)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a7392611f63d8c0fb98278cf9ce9fe1a1}{Server\+Error\+Handler} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_acd3c55d96becd3fc24666185793e19f9}{Server\+Hang\+Up\+Handler} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_ad198195db02b0ffb707a08ada15dd64f}{Server\+Read\+Handler} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a2bb97a4d2c5d5c4b8f891c8117959c89}{Server\+Socket\+Handler} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, short events)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a85c862b7bca5caa37f1d91cf0bf50e6e}{Create\+Server\+Connection} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, uid\+\_\+t uid, pid\+\_\+t pid)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_aab1990e660e34d5162c31f7479cf1c86}{Server\+Connection\+Destructor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$obj\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a46f1aa4d82a3f513920b094f5621d73a}{Server\+Connect\+Handler} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, short events)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a14f3005f8b6a78d4a1383fb707232cc8}{Binding\+Destructor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$obj\+Ptr)
+\item 
+static int \hyperlink{service_directory_8c_a42426794612f2e7613b11d5483d66701}{Open\+Socket} (const char $\ast$socket\+Path\+Str)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_acefa16a5126d9985158c83febedbf8b0}{Sdir\+Tool\+List\+Services} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a6c97e1534011880eeee87fa8d01db4dc}{Sdir\+Tool\+List\+Waiting\+Clients} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a84735713115864868b1f1c7db2efbf85}{Sdir\+Tool\+List\+Bindings} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_aadaa8a6e4538862e5f8a324e68948fa5}{Sdir\+Tool\+List} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a4b4447512992b0a22db119dc22e71251}{Sdir\+Tool\+List\+Services\+Json} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a6adb1e66a56c390eb97412510a14e09e}{Sdir\+Tool\+List\+Waiting\+Clients\+Json} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_ad35398f37dc6747682b493575eb5d569}{Sdir\+Tool\+List\+Bindings\+Json} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a4d23ad93dff10c9c4ba9de84d32fdb4d}{Sdir\+Tool\+List\+Json} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a1f186506f172da3e32f6641e1184c73f}{Sdir\+Tool\+Unbind\+All} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a9fc598091e78dc933b175cd2f7d2e326}{Sdir\+Tool\+Bind} (const \hyperlink{structle__sdtp___msg__t}{le\+\_\+sdtp\+\_\+\+Msg\+\_\+t} $\ast$msg\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_ab9cf7ddfed7812daa6311252b0831fa0}{Sdir\+Tool\+Recv} (\hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{service_directory_8c_a4b4cb41db1158cbbd5fdcc5032c9d1f6}{Start\+Sdir\+Tool\+Service} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{service_directory_8c_a9fb1b1c82a533eefe22075ebcb47d3c4}{le\+\_\+mem\+\_\+\+Expand\+Pool} (\hyperlink{service_directory_8c_afdae530ed7b1262924fb9e7553156f8f}{Client\+Connection\+Pool\+Ref}, 100)
+\item 
+\hyperlink{service_directory_8c_aff4e1c1aac3fb9b8dc2e9ea10cb3a9d2}{le\+\_\+mem\+\_\+\+Expand\+Pool} (\hyperlink{service_directory_8c_a6f4b5b0c57e56bca01db9115fa333ff4}{Server\+Connection\+Pool\+Ref}, 30)
+\item 
+\hyperlink{service_directory_8c_a774ee136489d05b05285afc7d74e00ce}{le\+\_\+mem\+\_\+\+Expand\+Pool} (\hyperlink{service_directory_8c_a8839f8ed05c9041a03567b1e65922d9b}{User\+Pool\+Ref}, 30)
+\item 
+\hyperlink{service_directory_8c_ab1c0d0accf25cd6ff3516dacc1e39e6a}{le\+\_\+mem\+\_\+\+Expand\+Pool} (\hyperlink{service_directory_8c_a1efcd34fd044ca9d28296d1f486ca04a}{Binding\+Pool\+Ref}, 30)
+\item 
+\hyperlink{service_directory_8c_afdeeeb36b4227bdc632925967bba44ef}{le\+\_\+mem\+\_\+\+Set\+Destructor} (\hyperlink{service_directory_8c_afdae530ed7b1262924fb9e7553156f8f}{Client\+Connection\+Pool\+Ref}, \hyperlink{service_directory_8c_a43f5a8a5bf110f34bfceb43f6ecaa493}{Client\+Connection\+Destructor})
+\item 
+\hyperlink{service_directory_8c_a9f5e752b44698cbf9acaa4bb4e64d2d9}{le\+\_\+mem\+\_\+\+Set\+Destructor} (\hyperlink{service_directory_8c_a6f4b5b0c57e56bca01db9115fa333ff4}{Server\+Connection\+Pool\+Ref}, \hyperlink{service_directory_8c_aab1990e660e34d5162c31f7479cf1c86}{Server\+Connection\+Destructor})
+\item 
+\hyperlink{service_directory_8c_a079054ba427aaf5490ddb775f9e8087e}{le\+\_\+mem\+\_\+\+Set\+Destructor} (\hyperlink{service_directory_8c_a8839f8ed05c9041a03567b1e65922d9b}{User\+Pool\+Ref}, \hyperlink{service_directory_8c_ab1bf87d940a0ef1a8d9036d17e814392}{User\+Destructor})
+\item 
+\hyperlink{service_directory_8c_a13ec98a73741643df68abd2979361b78}{le\+\_\+mem\+\_\+\+Set\+Destructor} (\hyperlink{service_directory_8c_a1efcd34fd044ca9d28296d1f486ca04a}{Binding\+Pool\+Ref}, \hyperlink{service_directory_8c_a14f3005f8b6a78d4a1383fb707232cc8}{Binding\+Destructor})
+\item 
+\hyperlink{service_directory_8c_a27dedd1fac9e13c893261a34a0fc21a7}{L\+E\+\_\+\+A\+S\+S\+E\+RT} (\hyperlink{dir_8c_a7ac7d25b67f2e47127084677626d5344}{le\+\_\+dir\+\_\+\+Make}(\hyperlink{le__basics_8h_a3428692efe6051ef30016ffde1a9f7bb}{S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+D\+IR), S\+\_\+\+I\+R\+W\+XU$\vert$S\+\_\+\+I\+X\+O\+TH)!=\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{L\+E\+\_\+\+F\+A\+U\+LT})
+\item 
+\hyperlink{service_directory_8c_a1d84aa99c70d8cb8f479b606b96ae7e0}{if} (listen(\hyperlink{service_directory_8c_ae3332aebea89372dcc9eec8fbd864de0}{Client\+Socket\+Fd}, \hyperlink{service_directory_8c_a574b8dc03d0b72d470082bbb9c7ada84}{M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+OG})!=0)
+\item 
+\hyperlink{service_directory_8c_a7093de9795897ad95940820c6779d45f}{if} (listen(\hyperlink{service_directory_8c_a19db9b70008749136d19f1afbb58d99c}{Server\+Socket\+Fd}, \hyperlink{service_directory_8c_a574b8dc03d0b72d470082bbb9c7ada84}{M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+OG})!=0)
+\item 
+\hyperlink{service_directory_8c_a4bd1f0df024da0cb002930fa9363c47e}{while} ((\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}==N\+U\+LL)\&\&(\hyperlink{supervisor_8c_a0a4ccfdbe1cf7b37afc60d34e748b066}{errno}==E\+I\+N\+TR))
+\item 
+\hyperlink{service_directory_8c_acfa472e3c36c727898efff38ab002862}{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF} (\hyperlink{update_daemon_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}==N\+U\+LL,\char`\"{}Failed to redirect standard in to /dev/null.  \%m.\char`\"{})
+\item 
+\hyperlink{service_directory_8c_aa4b549827d4077b0eb4d873508a6041e}{L\+E\+\_\+\+I\+N\+FO} (\char`\"{}Service Directory is ready.\char`\"{})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{service_directory_8c_a8839f8ed05c9041a03567b1e65922d9b}{User\+Pool\+Ref} = \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}User\char`\"{}, sizeof(\hyperlink{struct_user__t}{User\+\_\+t}))
+\begin{DoxyCompactList}\small\item\em Pool from which User objects are allocated. \end{DoxyCompactList}\item 
+static \hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} \hyperlink{service_directory_8c_a3a4d9f18721ec091907185fc2985dd39}{User\+List} = \hyperlink{le__doubly_linked_list_8h_a68f28b61cdfd004591f24730b4d5a740}{L\+E\+\_\+\+D\+L\+S\+\_\+\+L\+I\+S\+T\+\_\+\+I\+N\+IT}
+\begin{DoxyCompactList}\small\item\em The User List, in which all User objects are kept. \end{DoxyCompactList}\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{service_directory_8c_a6f4b5b0c57e56bca01db9115fa333ff4}{Server\+Connection\+Pool\+Ref} = \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Server Connection\char`\"{}, sizeof(\hyperlink{struct_server_connection__t}{Server\+Connection\+\_\+t}))
+\begin{DoxyCompactList}\small\item\em Pool from which Server Connection objects are allocated. \end{DoxyCompactList}\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{service_directory_8c_a1efcd34fd044ca9d28296d1f486ca04a}{Binding\+Pool\+Ref} = \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Binding\char`\"{}, sizeof(\hyperlink{struct_binding__t}{Binding\+\_\+t}))
+\begin{DoxyCompactList}\small\item\em Pool from which Binding objects are allocated. \end{DoxyCompactList}\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{service_directory_8c_afdae530ed7b1262924fb9e7553156f8f}{Client\+Connection\+Pool\+Ref} = \hyperlink{le__mem_8h_ab91efaa2978c9c1c7b2427d25b33241c}{le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Client Connection\char`\"{}, sizeof(\hyperlink{struct_client_connection__t}{Client\+Connection\+\_\+t}))
+\begin{DoxyCompactList}\small\item\em Pool from which Client Connection objects are allocated. \end{DoxyCompactList}\item 
+static int \hyperlink{service_directory_8c_ae3332aebea89372dcc9eec8fbd864de0}{Client\+Socket\+Fd} = \hyperlink{service_directory_8c_a42426794612f2e7613b11d5483d66701}{Open\+Socket}(\hyperlink{le__basics_8h_a3428692efe6051ef30016ffde1a9f7bb}{S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+S\+V\+C\+D\+I\+R\+\_\+\+C\+L\+I\+E\+N\+T\+\_\+\+S\+O\+C\+K\+E\+T\+\_\+\+N\+A\+ME))
+\begin{DoxyCompactList}\small\item\em File descriptor for the Client Socket (which I\+PC clients connect to). \end{DoxyCompactList}\item 
+static int \hyperlink{service_directory_8c_a19db9b70008749136d19f1afbb58d99c}{Server\+Socket\+Fd} = \hyperlink{service_directory_8c_a42426794612f2e7613b11d5483d66701}{Open\+Socket}(\hyperlink{le__basics_8h_a3428692efe6051ef30016ffde1a9f7bb}{S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+S\+V\+C\+D\+I\+R\+\_\+\+S\+E\+R\+V\+E\+R\+\_\+\+S\+O\+C\+K\+E\+T\+\_\+\+N\+A\+ME))
+\begin{DoxyCompactList}\small\item\em File descriptor for the Server Socket (which I\+PC servers connect to). \end{DoxyCompactList}\item 
+static \hyperlink{le__fd_monitor_8h_a85048556f0b95147af81e76907895d42}{le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} \hyperlink{service_directory_8c_a4392aad202e701507722f50af503f9ff}{Client\+Socket\+Monitor\+Ref}
+\begin{DoxyCompactList}\small\item\em FD Monitor for the Client Socket. Used to detect when clients connect to the Client Socket. \end{DoxyCompactList}\item 
+static \hyperlink{le__fd_monitor_8h_a85048556f0b95147af81e76907895d42}{le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} \hyperlink{service_directory_8c_a8983156de14140f9d5e24d5e5a65bbb1}{Server\+Socket\+Monitor\+Ref}
+\begin{DoxyCompactList}\small\item\em FD Monitor for the Server Socket. Used to detect when servers connect to the Server Socket. \end{DoxyCompactList}\item 
+\hyperlink{service_directory_8c_a0392d452f926ce36c4852de26b5eca12}{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}
+\item 
+F\+I\+LE $\ast$ \hyperlink{service_directory_8c_acf1f3d914b42896a64e8683abe22ae7a}{file\+Ptr}
+\item 
+\hyperlink{service_directory_8c_a721c6ff80a6d3e4ad4ffa52a04c60085}{do}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hyperlink{service_directory_8c_sd_intro}{Introduction} ~\newline
+ \hyperlink{service_directory_8c_sd_accessControl}{Binding and Access Control} ~\newline
+ \hyperlink{service_directory_8c_sd_toolService}{\char`\"{}sdir\char`\"{} Tool} ~\newline
+ \hyperlink{service_directory_8c_sd_data}{Data Structures} ~\newline
+ \hyperlink{service_directory_8c_sd_theoryOfOperation}{Theory of Operation} ~\newline
+ \hyperlink{service_directory_8c_sd_deathDetection}{Detection of Client or Server Death} ~\newline
+ \hyperlink{service_directory_8c_sd_threading}{Threading} ~\newline
+ \hyperlink{service_directory_8c_sd_startUpSync}{Start-\/\+Up Synchronization\+:} ~\newline
+ \hyperlink{service_directory_8c_sd_DesignNotes}{Design Notes} ~\newline
+\hypertarget{service_directory_8c_sd_intro}{}\subsection{Introduction}\label{service_directory_8c_sd_intro}
+Implementation of the Service Directory daemon. This daemon keeps track of what messaging services exist in the system, what clients are currently waiting for services that don\textquotesingle{}t yet exist, and what bindings exist between clients and services.
+
+The Service Directory implements \hyperlink{service_directory_protocol_8h}{service\+Directory\+Protocol.\+h} and \hyperlink{sdir_tool_protocol_8h}{sdir\+Tool\+Protocol.\+h}.\hypertarget{service_directory_8c_sd_accessControl}{}\subsection{Binding and Access Control}\label{service_directory_8c_sd_accessControl}
+The Service Directory is a key component in the implementation of security within the Legato framework. No two sandboxed applications can access each others files, sockets, shared memory, etc. directly until they have connected to each other through the Service Directory.
+
+The Service Directory will never connect a client to a server unless a binding exists between the client interface and the server interface.\hypertarget{service_directory_8c_sd_toolService}{}\subsection{\char`\"{}sdir\char`\"{} Tool}\label{service_directory_8c_sd_toolService}
+The {\ttfamily sdir} command-\/line tool is used to\+:
+\begin{DoxyItemize}
+\item configure bindings and
+\item view the internal workings of the Service Directory at run-\/time for diagnostic purposes.
+\end{DoxyItemize}
+
+The {\ttfamily sdir} tool interfaces with the Service Directory using the I\+PC services of the Service Directory. From the point-\/of-\/view of the {\ttfamily sdir} tool, it is a regular Legato I\+PC client connecting to a regular I\+PC server.\hypertarget{service_directory_8c_sd_data}{}\subsection{Data Structures}\label{service_directory_8c_sd_data}
+The Service Directory\textquotesingle{}s internal (R\+AM) data structures look like this\+:
+
+\begin{DoxyVerb}                    +-----------------------------+--------+--------+
+                    |                             |        |        |
+                    v                             |        |        |
+User List ------> User --+---> Name               |        |        |
+            [0..n]       |                        |        |        |
+                         |                        |        |        |
+                         +---> Service --*---> Server      |        |
+                         |     List            Connection  |        |
+                         |                        ^        |        |
+                         |                        |        |        |
+                         +---> Binding --*---> Binding ----+        |
+                         |     List               |                 |
+                         |                        v                 |
+                         |                     Waiting              |
+                         |                     Clients              |
+                         |                     List                 |
+                         |                        |                 |
+                         |                        *                 |
+                         |                        |                 |
+                         |                        v                 |
+                         +---> Unbound ---*--> Client --------------+
+                               Clients         Connection
+                               List
+\end{DoxyVerb}
+
+
+The User object represents a single user account. It has a unique ID which is used as the key to find it in the User List. Each User also has
+\begin{DoxyItemize}
+\item list of bindings from a client-\/side interface name to a server\textquotesingle{}s user name and service name.
+\item list of services that it offers, and
+\item list of client connections that are waiting for a binding to be created for them.
+\end{DoxyItemize}
+
+Binding objects are created for bindings that appear in the configuration data. The \textquotesingle{}sdir\textquotesingle{} tool is in charge of reading the configuration data and pushing updates to the Service Directory. The Service Directory creates and deletes Binding objects in response to messages received from the \textquotesingle{}sdir\textquotesingle{} tool. Each Binding object has a list of client connections that match that binding but are waiting for the server to advertise the service.
+
+Connection objects are used to keep track of the details of socket connections (e.\+g., the file descriptor, File Descriptor Monitor object, etc.) and the interface name, protocol ID, and maximum message size advertised or requested. Server Connections keep track of connections to servers. Client Connections keep track of connections to clients.
+
+Client Connection objects and Server Connection objects are created when clients and servers connect to the Service Directory.
+
+Client Connection objects are deleted when the client disconnects or its connection is passed to a server.
+
+Server Connection objects are deleted when the server disconnects or is disconnected by the Service Directory.
+
+Each Binding object and Connection object holds a reference count on a User object. A User object will be deleted when all associated Binding objects and Connection objects are deleted.\hypertarget{service_directory_8c_sd_theoryOfOperation}{}\subsection{Theory of Operation}\label{service_directory_8c_sd_theoryOfOperation}
+When a client connects and makes a request to open a service, the client\textquotesingle{}s U\+ID is looked up in the User List. The client User\textquotesingle{}s Binding List is searched for the interface name provided by the client. If a matching Binding object is not found, the Client Connection object is added to the User object\textquotesingle{}s Unbound Clients List. If a matching Binding object is found, it will specify the server User object and service name. The server\textquotesingle{}s User\textquotesingle{}s Service List will be searched for a matching Server Connection object. If no matching Server Connection can be found, the Client Connection is added to the Binding object\textquotesingle{}s Waiting Clients List.
+
+When a server connects and advertises a service, the server U\+ID is looked-\/up in the User List. The service name is then searched for in the Service List for that User. If a Server Connection object is not found for that service name on that User, the new one is is added to the list. Otherwise, the new server connection is dropped.
+
+When a new Server Connection is added to a Service List, all users\textquotesingle{} Binding Lists are searched for matching bindings, and if any that match have non-\/empty Waiting Clients Lists, all those Client Connections are removed from those lists and dispatched to the new Server Connection.
+
+When a Binding is added, it is added to the client\textquotesingle{}s User object\textquotesingle{}s Binding List. That user\textquotesingle{}s Unbound Clients List will then be checked for matches to the new binding, and if any are found, they will be removed from the Unbound Clients List and processed as though they are new client connections (see above).
+
+Likewise, if a Binding is deleted while it has Client Connections on its Waiting Clients List, those Client Connections will be removed from that list and processed as though they are new client connections (see above).
+
+N\+O\+TE\+: It is outside the Service Directory\textquotesingle{}s scope to terminate client I\+PC connections that were established through bindings that have been changed. The Service Directory does not keep track of client-\/server connections after they have been established. (However, this could be changed.)\hypertarget{service_directory_8c_sd_deathDetection}{}\subsection{Detection of Client or Server Death}\label{service_directory_8c_sd_deathDetection}
+When a client or server process dies while it is connected to the Service Directory, the OS will automatically close the the connection to that process. The Service Directory will detect this using an FD Monitor object (see \hyperlink{c_eventLoop}{Event Loop A\+PI}) and update the data structures accordingly.\hypertarget{service_directory_8c_sd_threading}{}\subsection{Threading}\label{service_directory_8c_sd_threading}
+There is only one thread running in this process. Please keep it that way.\hypertarget{service_directory_8c_sd_startUpSync}{}\subsection{Start-\/\+Up Synchronization\+:}\label{service_directory_8c_sd_startUpSync}
+The Service Directory is a very special process in the Legato framework. It must be started before every other process, except for the Supervisor itself. Furthermore, other processes must not start before the Service Directory has opened its named I\+PC sockets, so that those other processes don\textquotesingle{}t fail because they can\textquotesingle{}t find the Service Directory. So, after the Supervisor starts the Service Directory, it waits for the Service Directory to signal that it is ready. This is done as follows\+:
+
+
+\begin{DoxyEnumerate}
+\item Before the Supervisor starts the Service Directory, it creates a pipe and moves one end of that pipe to fd 0 (stdin).
+\item After forking, the Supervisor\textquotesingle{}s child process closes the Supervisor\textquotesingle{}s end of that pipe and leaves the fd 0 end open before execing the Service Directory.
+\item The Supervisor (parent) process closes its copy of the child\textquotesingle{}s end of the pipe and waits for the child to close its copy of its end of the pipe.
+\item After the Service Directory has initialized itself and opened its I\+PC sockets (when it is ready to talk to service clients and servers), the Service Directory closes fd 0 and reopens it to \char`\"{}/dev/null\char`\"{}.
+\end{DoxyEnumerate}\hypertarget{service_directory_8c_sd_DesignNotes}{}\subsection{Design Notes}\label{service_directory_8c_sd_DesignNotes}
+\hypertarget{service_directory_8c_sd_DesignNotesConfig}{}\subsubsection{Binding Configuration}\label{service_directory_8c_sd_DesignNotesConfig}
+We considered making the Service Directory a client of the Config Tree and having the Service Directory register \char`\"{}handler\char`\"{} call-\/backs to notify it when binding configuration changes. While this complicates the start-\/up sequence considerably, the real problem is that it creates a race condition\+:
+
+
+\begin{DoxyEnumerate}
+\item App Installer commits configuration changes to the Config Tree.
+\item App Installer asks the Supervisor to start apps.
+\item Supervisor starts apps.
+\item Apps open I\+PC services.
+\item Config Tree notifies Service Directory of configuration changes.
+\item Service Directory loads new binding configuration.
+\end{DoxyEnumerate}
+
+The race occurs because steps 2, 3 and 4 run in parallel with steps 5 and 6.
+
+So, instead, we created the \char`\"{}sdir load\char`\"{} tool and made the Supervisor run it before starting any applications and made the installer run it after installing/removing any apps.\hypertarget{service_directory_8c_sd_DesignNotesLateBind}{}\subsubsection{Late Binding Updates}\label{service_directory_8c_sd_DesignNotesLateBind}
+Note that bindings can be updated after the client and/or server have already been started. Therefore, we must check the waiting clients list of a user whenever a binding of one of that user\textquotesingle{}s client-\/side interfaces is added or removed, to see if the waiting client can now be connected to a server.
+
+
+
+
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+OG@{M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+OG}}
+\index{M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+OG@{M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+OG}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+OG}{MAX_CONNECT_REQUEST_BACKLOG}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+OG~100}\hypertarget{service_directory_8c_a574b8dc03d0b72d470082bbb9c7ada84}{}\label{service_directory_8c_a574b8dc03d0b72d470082bbb9c7ada84}
+The maximum number of backlogged connection requests that will be queued up for either the Client Socket or the Server Socket. If the Service Directory gets this far behind in accepting connections, then the next client or server that attempts to connect will get a failure indication from the OS. 
+
+\subsection{Enumeration Type Documentation}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Client\+Connection\+State\+\_\+t@{Client\+Connection\+State\+\_\+t}}
+\index{Client\+Connection\+State\+\_\+t@{Client\+Connection\+State\+\_\+t}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Connection\+State\+\_\+t}{ClientConnectionState_t}}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf Client\+Connection\+State\+\_\+t}}\hypertarget{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6}{}\label{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6}
+Enumeration of the different states that a client connection can be in. \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+I\+D\+\_\+\+U\+N\+K\+N\+O\+WN@{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+I\+D\+\_\+\+U\+N\+K\+N\+O\+WN}!service\+Directory.\+c@{service\+Directory.\+c}}\index{service\+Directory.\+c@{service\+Directory.\+c}!C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+I\+D\+\_\+\+U\+N\+K\+N\+O\+WN@{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+I\+D\+\_\+\+U\+N\+K\+N\+O\+WN}}\item[{\em 
+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+I\+D\+\_\+\+U\+N\+K\+N\+O\+WN\hypertarget{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6a9357e72ae8cc486bbdf899fdad645928}{}\label{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6a9357e72ae8cc486bbdf899fdad645928}
+}]\char`\"{}\+Open\char`\"{} request not yet received from client. (S\+T\+A\+RT S\+T\+A\+TE) \index{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+U\+N\+B\+O\+U\+ND@{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+U\+N\+B\+O\+U\+ND}!service\+Directory.\+c@{service\+Directory.\+c}}\index{service\+Directory.\+c@{service\+Directory.\+c}!C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+U\+N\+B\+O\+U\+ND@{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+U\+N\+B\+O\+U\+ND}}\item[{\em 
+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+U\+N\+B\+O\+U\+ND\hypertarget{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6a5485f37d7a5b66ef9cd868c284984743}{}\label{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6a5485f37d7a5b66ef9cd868c284984743}
+}]On user\textquotesingle{}s Unbound Clients List. \index{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+W\+A\+I\+T\+I\+NG@{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+W\+A\+I\+T\+I\+NG}!service\+Directory.\+c@{service\+Directory.\+c}}\index{service\+Directory.\+c@{service\+Directory.\+c}!C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+W\+A\+I\+T\+I\+NG@{C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+W\+A\+I\+T\+I\+NG}}\item[{\em 
+C\+L\+I\+E\+N\+T\+\_\+\+S\+T\+A\+T\+E\+\_\+\+W\+A\+I\+T\+I\+NG\hypertarget{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6ade7a412fc00984cd75bb313cf75079d4}{}\label{service_directory_8c_afb9b37b212e053a5ed2cfc964efbf5e6ade7a412fc00984cd75bb313cf75079d4}
+}]On a binding\textquotesingle{}s Waiting Clients List. \end{description}
+\end{Desc}
+
+
+\subsection{Function Documentation}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Binding\+Destructor@{Binding\+Destructor}}
+\index{Binding\+Destructor@{Binding\+Destructor}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Binding\+Destructor(void $\ast$obj\+Ptr)}{BindingDestructor(void *objPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Binding\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{obj\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a14f3005f8b6a78d4a1383fb707232cc8}{}\label{service_directory_8c_a14f3005f8b6a78d4a1383fb707232cc8}
+Destructor function that runs when a Binding object\textquotesingle{}s reference count reaches zero and it is about to be released back into its Pool. \index{service\+Directory.\+c@{service\+Directory.\+c}!Client\+Connect\+Handler@{Client\+Connect\+Handler}}
+\index{Client\+Connect\+Handler@{Client\+Connect\+Handler}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Connect\+Handler(int fd, short events)}{ClientConnectHandler(int fd, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Connect\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a8a9a62fee37388118df63889e90cc1bb}{}\label{service_directory_8c_a8a9a62fee37388118df63889e90cc1bb}
+Handler function that gets called when a client connects to the Client socket. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor of the socket that has received a connection request. \\
+\hline
+\mbox{\tt in}  & {\em events} & Event set (bit map). Should be only P\+O\+L\+L\+IN. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Client\+Connection\+Destructor@{Client\+Connection\+Destructor}}
+\index{Client\+Connection\+Destructor@{Client\+Connection\+Destructor}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Connection\+Destructor(void $\ast$obj\+Ptr)}{ClientConnectionDestructor(void *objPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Connection\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{obj\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a43f5a8a5bf110f34bfceb43f6ecaa493}{}\label{service_directory_8c_a43f5a8a5bf110f34bfceb43f6ecaa493}
+Destructor function that runs when a Client Connection object\textquotesingle{}s reference count reaches zero and it is about to be released back into its Pool. \index{service\+Directory.\+c@{service\+Directory.\+c}!Client\+Error\+Handler@{Client\+Error\+Handler}}
+\index{Client\+Error\+Handler@{Client\+Error\+Handler}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Error\+Handler(void)}{ClientErrorHandler(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Error\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ad927b54f9f20e4bebbcb7823d6796514}{}\label{service_directory_8c_ad927b54f9f20e4bebbcb7823d6796514}
+Handler function that gets called when a connection to a client experiences an error.
+
+\begin{DoxyNote}{Note}
+The Context Pointer is a pointer to a Client Connection object. 
+\end{DoxyNote}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Client\+Hang\+Up\+Handler@{Client\+Hang\+Up\+Handler}}
+\index{Client\+Hang\+Up\+Handler@{Client\+Hang\+Up\+Handler}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Hang\+Up\+Handler(void)}{ClientHangUpHandler(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Hang\+Up\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a21b5e698e8b5b0e21bb5373a2a8ba37b}{}\label{service_directory_8c_a21b5e698e8b5b0e21bb5373a2a8ba37b}
+Handler function that gets called when the client closes its end of a connection.
+
+\begin{DoxyNote}{Note}
+The Context Pointer is a pointer to a Client Connection object. 
+\end{DoxyNote}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Client\+Read\+Handler@{Client\+Read\+Handler}}
+\index{Client\+Read\+Handler@{Client\+Read\+Handler}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Read\+Handler(int fd)}{ClientReadHandler(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Read\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ac7e8043e665a83699b5943aaf5c36d46}{}\label{service_directory_8c_ac7e8043e665a83699b5943aaf5c36d46}
+Handler function that gets called when the client sends us data.
+
+\begin{DoxyNote}{Note}
+The Context Pointer is a pointer to a Client Connection object. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor for the connection. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Client\+Socket\+Handler@{Client\+Socket\+Handler}}
+\index{Client\+Socket\+Handler@{Client\+Socket\+Handler}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Socket\+Handler(int fd, short events)}{ClientSocketHandler(int fd, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Socket\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ad65e61490f10c1a54e5608a49b7d4788}{}\label{service_directory_8c_ad65e61490f10c1a54e5608a49b7d4788}
+File descriptor event handler for sockets connected to clients. \index{service\+Directory.\+c@{service\+Directory.\+c}!Close\+Client\+Connection@{Close\+Client\+Connection}}
+\index{Close\+Client\+Connection@{Close\+Client\+Connection}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Close\+Client\+Connection(\+Client\+Connection\+\_\+t $\ast$connection\+Ptr)}{CloseClientConnection(ClientConnection_t *connectionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Close\+Client\+Connection (
+\begin{DoxyParamCaption}
+\item[{{\bf Client\+Connection\+\_\+t} $\ast$}]{connection\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a50bb784bdd849600871c08d6a42ac982}{}\label{service_directory_8c_a50bb784bdd849600871c08d6a42ac982}
+Closes a connection with a client process. \index{service\+Directory.\+c@{service\+Directory.\+c}!Close\+Server\+Connection@{Close\+Server\+Connection}}
+\index{Close\+Server\+Connection@{Close\+Server\+Connection}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Close\+Server\+Connection(\+Server\+Connection\+\_\+t $\ast$connection\+Ptr)}{CloseServerConnection(ServerConnection_t *connectionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Close\+Server\+Connection (
+\begin{DoxyParamCaption}
+\item[{{\bf Server\+Connection\+\_\+t} $\ast$}]{connection\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ac825aa7a14892acbc13d846815dfc167}{}\label{service_directory_8c_ac825aa7a14892acbc13d846815dfc167}
+Closes a connection with a server process. \index{service\+Directory.\+c@{service\+Directory.\+c}!Create\+Binding@{Create\+Binding}}
+\index{Create\+Binding@{Create\+Binding}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Binding(uid\+\_\+t client\+User\+Id, const char $\ast$client\+Interface\+Name, uid\+\_\+t server\+User\+Id, const char $\ast$server\+Interface\+Name)}{CreateBinding(uid_t clientUserId, const char *clientInterfaceName, uid_t serverUserId, const char *serverInterfaceName)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Create\+Binding (
+\begin{DoxyParamCaption}
+\item[{uid\+\_\+t}]{client\+User\+Id, }
+\item[{const char $\ast$}]{client\+Interface\+Name, }
+\item[{uid\+\_\+t}]{server\+User\+Id, }
+\item[{const char $\ast$}]{server\+Interface\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_aff2b1b692a23ce0f36ace578fd331835}{}\label{service_directory_8c_aff2b1b692a23ce0f36ace578fd331835}
+Creates a Binding object for a given binding between a client user\textquotesingle{}s interface name and a Service. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em client\+User\+Id} & Client\textquotesingle{}s user ID. \\
+\hline
+\mbox{\tt in}  & {\em client\+Interface\+Name} & Client\textquotesingle{}s interface name. \\
+\hline
+\mbox{\tt in}  & {\em server\+User\+Id} & Server\textquotesingle{}s user ID. \\
+\hline
+\mbox{\tt in}  & {\em server\+Interface\+Name} & Server\textquotesingle{}s interface (service) name. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Create\+Client\+Connection@{Create\+Client\+Connection}}
+\index{Create\+Client\+Connection@{Create\+Client\+Connection}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Client\+Connection(int fd, uid\+\_\+t uid, pid\+\_\+t pid)}{CreateClientConnection(int fd, uid_t uid, pid_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Create\+Client\+Connection (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{uid\+\_\+t}]{uid, }
+\item[{pid\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a16b7d33a6ae807b24ecbdebf9bb96a84}{}\label{service_directory_8c_a16b7d33a6ae807b24ecbdebf9bb96a84}
+Create a Client Connection object to track a given connection to a given client process. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor for the connection. \\
+\hline
+\mbox{\tt in}  & {\em uid} & Unix user ID of the connected process. \\
+\hline
+\mbox{\tt in}  & {\em pid} & Unix process ID of the connected process. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Create\+Hard\+Coded\+Bindings@{Create\+Hard\+Coded\+Bindings}}
+\index{Create\+Hard\+Coded\+Bindings@{Create\+Hard\+Coded\+Bindings}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Hard\+Coded\+Bindings(void)}{CreateHardCodedBindings(void)}}]{\setlength{\rightskip}{0pt plus 5cm}Create\+Hard\+Coded\+Bindings (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ac47933a68fccdf1ff4e8e80c001d532d}{}\label{service_directory_8c_ac47933a68fccdf1ff4e8e80c001d532d}
+Create built-\/in, hard-\/coded bindings. \index{service\+Directory.\+c@{service\+Directory.\+c}!Create\+Server\+Connection@{Create\+Server\+Connection}}
+\index{Create\+Server\+Connection@{Create\+Server\+Connection}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Server\+Connection(int fd, uid\+\_\+t uid, pid\+\_\+t pid)}{CreateServerConnection(int fd, uid_t uid, pid_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Create\+Server\+Connection (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{uid\+\_\+t}]{uid, }
+\item[{pid\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a85c862b7bca5caa37f1d91cf0bf50e6e}{}\label{service_directory_8c_a85c862b7bca5caa37f1d91cf0bf50e6e}
+Create a Server Connection object to track a given connection to a given server process. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor for the connection. \\
+\hline
+\mbox{\tt in}  & {\em uid} & Unix user ID of the connected process. \\
+\hline
+\mbox{\tt in}  & {\em pid} & Unix process ID of the connected process. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Create\+User@{Create\+User}}
+\index{Create\+User@{Create\+User}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Create\+User(uid\+\_\+t uid)}{CreateUser(uid_t uid)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf User\+\_\+t}$\ast$ Create\+User (
+\begin{DoxyParamCaption}
+\item[{uid\+\_\+t}]{uid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a3b25ba8063188eb1587ae31500b3d0c8}{}\label{service_directory_8c_a3b25ba8063188eb1587ae31500b3d0c8}
+Creates a User object for a given Unix user ID.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the new User object. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em uid} & The user ID. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Dispatch\+To\+Server@{Dispatch\+To\+Server}}
+\index{Dispatch\+To\+Server@{Dispatch\+To\+Server}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Dispatch\+To\+Server(\+Client\+Connection\+\_\+t $\ast$client\+Connection\+Ptr, Server\+Connection\+\_\+t $\ast$server\+Connection\+Ptr)}{DispatchToServer(ClientConnection_t *clientConnectionPtr, ServerConnection_t *serverConnectionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Dispatch\+To\+Server (
+\begin{DoxyParamCaption}
+\item[{{\bf Client\+Connection\+\_\+t} $\ast$}]{client\+Connection\+Ptr, }
+\item[{{\bf Server\+Connection\+\_\+t} $\ast$}]{server\+Connection\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_aa4252a52b68e28d5ccacfec6827558ef}{}\label{service_directory_8c_aa4252a52b68e28d5ccacfec6827558ef}
+Dispatch a client connection to a server connection.
+
+\begin{DoxyWarning}{Warning}
+In some error cases, the client or server connection may be closed by this function. To prevent possible loss of the Client Connection object, it should be on a Binding object\textquotesingle{}s Waiting Clients List when it is dispatched. Then, if the dispatch fails, due to server failure, the Client Connection will remain on the Waiting Clients List. On the other hand, if the Client Connection is deleted, its destructor will remove it from the Binding object\textquotesingle{}s Waiting Clients List.
+\end{DoxyWarning}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+C\+L\+O\+S\+ED if the server connection went down and the Server Connection was deleted. L\+E\+\_\+\+OK otherwise. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em client\+Connection\+Ptr} & Client connection to be dispatched. \\
+\hline
+\mbox{\tt in}  & {\em server\+Connection\+Ptr} & Server connection to dispatch client to. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Find\+Binding@{Find\+Binding}}
+\index{Find\+Binding@{Find\+Binding}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Binding(\+User\+\_\+t $\ast$user\+Ptr, const char $\ast$interface\+Name)}{FindBinding(User_t *userPtr, const char *interfaceName)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Binding\+\_\+t}$\ast$ Find\+Binding (
+\begin{DoxyParamCaption}
+\item[{{\bf User\+\_\+t} $\ast$}]{user\+Ptr, }
+\item[{const char $\ast$}]{interface\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a7ff9a1b8aa979d4aa6393679aef42499}{}\label{service_directory_8c_a7ff9a1b8aa979d4aa6393679aef42499}
+Searches a (client) User\textquotesingle{}s Binding List for a particular client-\/side interface name.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the Binding object or N\+U\+LL if not found. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em user\+Ptr} & Pointer to the client\textquotesingle{}s User object. \\
+\hline
+\mbox{\tt in}  & {\em interface\+Name} & Client\textquotesingle{}s interface name. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Find\+Service@{Find\+Service}}
+\index{Find\+Service@{Find\+Service}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Service(const User\+\_\+t $\ast$user\+Ptr, const char $\ast$service\+Name)}{FindService(const User_t *userPtr, const char *serviceName)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Server\+Connection\+\_\+t}$\ast$ Find\+Service (
+\begin{DoxyParamCaption}
+\item[{const {\bf User\+\_\+t} $\ast$}]{user\+Ptr, }
+\item[{const char $\ast$}]{service\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ae99769b960649860f350b1de3ecb317b}{}\label{service_directory_8c_ae99769b960649860f350b1de3ecb317b}
+Searches a User\textquotesingle{}s Service List for a particular service name.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the Server Connection object for the matching service. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em user\+Ptr} & Ptr to the User object to search. \\
+\hline
+\mbox{\tt in}  & {\em service\+Name} & Service name string. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Follow\+Binding@{Follow\+Binding}}
+\index{Follow\+Binding@{Follow\+Binding}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Follow\+Binding(\+Binding\+\_\+t $\ast$binding\+Ptr, Client\+Connection\+\_\+t $\ast$client\+Connection\+Ptr, bool should\+Wait)}{FollowBinding(Binding_t *bindingPtr, ClientConnection_t *clientConnectionPtr, bool shouldWait)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Follow\+Binding (
+\begin{DoxyParamCaption}
+\item[{{\bf Binding\+\_\+t} $\ast$}]{binding\+Ptr, }
+\item[{{\bf Client\+Connection\+\_\+t} $\ast$}]{client\+Connection\+Ptr, }
+\item[{bool}]{should\+Wait}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a34090a5c03bc41db32840dee5a4f58fb}{}\label{service_directory_8c_a34090a5c03bc41db32840dee5a4f58fb}
+Processes a client connection by following a binding that matches that client connection.
+
+Either dispatches to a server or queues to the binding\textquotesingle{}s list of waiting clients. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em should\+Wait} & true = wait for the service, if it can\textquotesingle{}t be opened immediately. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Get\+User@{Get\+User}}
+\index{Get\+User@{Get\+User}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Get\+User(uid\+\_\+t uid)}{GetUser(uid_t uid)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf User\+\_\+t}$\ast$ Get\+User (
+\begin{DoxyParamCaption}
+\item[{uid\+\_\+t}]{uid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ad8b8f496929c360fca46b29e0ad39f98}{}\label{service_directory_8c_ad8b8f496929c360fca46b29e0ad39f98}
+Searches the User List for a particular Unix user ID. If found, increments the reference count on that object. If not found, creates a new User object.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the User object. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em uid} & The user ID. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!if@{if}}
+\index{if@{if}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{if(listen(\+Client\+Socket\+Fd, M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+O\+G)"!=0)}{if(listen(ClientSocketFd, MAX_CONNECT_REQUEST_BACKLOG)!=0)}}]{\setlength{\rightskip}{0pt plus 5cm}if (
+\begin{DoxyParamCaption}
+\item[{listen({\bf Client\+Socket\+Fd}, {\bf M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+OG})!}]{ = {\ttfamily 0}}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_a1d84aa99c70d8cb8f479b606b96ae7e0}{}\label{service_directory_8c_a1d84aa99c70d8cb8f479b606b96ae7e0}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!if@{if}}
+\index{if@{if}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{if(listen(\+Server\+Socket\+Fd, M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+O\+G)"!=0)}{if(listen(ServerSocketFd, MAX_CONNECT_REQUEST_BACKLOG)!=0)}}]{\setlength{\rightskip}{0pt plus 5cm}if (
+\begin{DoxyParamCaption}
+\item[{listen({\bf Server\+Socket\+Fd}, {\bf M\+A\+X\+\_\+\+C\+O\+N\+N\+E\+C\+T\+\_\+\+R\+E\+Q\+U\+E\+S\+T\+\_\+\+B\+A\+C\+K\+L\+OG})!}]{ = {\ttfamily 0}}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_a7093de9795897ad95940820c6779d45f}{}\label{service_directory_8c_a7093de9795897ad95940820c6779d45f}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Is\+Duplicate\+Service@{Is\+Duplicate\+Service}}
+\index{Is\+Duplicate\+Service@{Is\+Duplicate\+Service}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Duplicate\+Service(\+Server\+Connection\+\_\+t $\ast$new\+Connection\+Ptr)}{IsDuplicateService(ServerConnection_t *newConnectionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Duplicate\+Service (
+\begin{DoxyParamCaption}
+\item[{{\bf Server\+Connection\+\_\+t} $\ast$}]{new\+Connection\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a5ee3c21d5fa6aa911eb3d78285f9c3e9}{}\label{service_directory_8c_a5ee3c21d5fa6aa911eb3d78285f9c3e9}
+Checks whether a given server connection is offering a service that is already being offered by an older server connection.
+
+\begin{DoxyReturn}{Returns}
+true if the service already exists. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em new\+Connection\+Ptr} & Ptr to the newer server connection object. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!L\+E\+\_\+\+A\+S\+S\+E\+RT@{L\+E\+\_\+\+A\+S\+S\+E\+RT}}
+\index{L\+E\+\_\+\+A\+S\+S\+E\+RT@{L\+E\+\_\+\+A\+S\+S\+E\+RT}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+A\+S\+S\+E\+R\+T(le\+\_\+dir\+\_\+\+Make(\+S\+T\+R\+I\+N\+G\+I\+Z\+E(\+L\+E\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+D\+I\+R), S\+\_\+\+I\+R\+W\+XU\texttt{"|}S\+\_\+\+I\+X\+O\+T\+H)"!=\+L\+E\+\_\+\+F\+A\+U\+L\+T)}{LE_ASSERT(le_dir_Make(STRINGIZE(LE_RUNTIME_DIR), S_IRWXU|S_IXOTH)!=LE_FAULT)}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+A\+S\+S\+E\+RT (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dir\+\_\+\+Make}({\bf S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+D\+IR), S\+\_\+\+I\+R\+W\+XU$\vert$S\+\_\+\+I\+X\+O\+TH)!}]{ = {\ttfamily {\bf L\+E\+\_\+\+F\+A\+U\+LT}}}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_a27dedd1fac9e13c893261a34a0fc21a7}{}\label{service_directory_8c_a27dedd1fac9e13c893261a34a0fc21a7}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF@{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF}}
+\index{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF@{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+I\+F(file\+Ptr==\+N\+U\+L\+L,""Failed to redirect standard in to /dev/null.  \%m."")}{LE_FATAL_IF(filePtr==NULL,"Failed to redirect standard in to /dev/null.  %m.")}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF (
+\begin{DoxyParamCaption}
+\item[{{\bf file\+Ptr}}]{ = {\ttfamily =NULL}, }
+\item[{\char`\"{}Failed to redirect standard in to /dev/null. \%m.\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_acfa472e3c36c727898efff38ab002862}{}\label{service_directory_8c_acfa472e3c36c727898efff38ab002862}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!L\+E\+\_\+\+I\+N\+FO@{L\+E\+\_\+\+I\+N\+FO}}
+\index{L\+E\+\_\+\+I\+N\+FO@{L\+E\+\_\+\+I\+N\+FO}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+I\+N\+F\+O(""Service Directory is ready."")}{LE_INFO("Service Directory is ready.")}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+I\+N\+FO (
+\begin{DoxyParamCaption}
+\item[{\char`\"{}Service Directory is ready.\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_aa4b549827d4077b0eb4d873508a6041e}{}\label{service_directory_8c_aa4b549827d4077b0eb4d873508a6041e}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}}
+\index{le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Expand\+Pool(\+Client\+Connection\+Pool\+Ref, 100)}{le_mem_ExpandPool(ClientConnectionPoolRef, 100)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Expand\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Client\+Connection\+Pool\+Ref}}]{, }
+\item[{100}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_a9fb1b1c82a533eefe22075ebcb47d3c4}{}\label{service_directory_8c_a9fb1b1c82a533eefe22075ebcb47d3c4}
+Expand the pools to their expected maximum sizes. \begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000006}{Todo}]Make this configurable. \end{DoxyRefDesc}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}}
+\index{le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Expand\+Pool(\+Server\+Connection\+Pool\+Ref, 30)}{le_mem_ExpandPool(ServerConnectionPoolRef, 30)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Expand\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Server\+Connection\+Pool\+Ref}}]{, }
+\item[{30}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_aff4e1c1aac3fb9b8dc2e9ea10cb3a9d2}{}\label{service_directory_8c_aff4e1c1aac3fb9b8dc2e9ea10cb3a9d2}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}}
+\index{le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Expand\+Pool(\+User\+Pool\+Ref, 30)}{le_mem_ExpandPool(UserPoolRef, 30)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Expand\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf User\+Pool\+Ref}}]{, }
+\item[{30}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_a774ee136489d05b05285afc7d74e00ce}{}\label{service_directory_8c_a774ee136489d05b05285afc7d74e00ce}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}}
+\index{le\+\_\+mem\+\_\+\+Expand\+Pool@{le\+\_\+mem\+\_\+\+Expand\+Pool}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Expand\+Pool(\+Binding\+Pool\+Ref, 30)}{le_mem_ExpandPool(BindingPoolRef, 30)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Expand\+Pool (
+\begin{DoxyParamCaption}
+\item[{{\bf Binding\+Pool\+Ref}}]{, }
+\item[{30}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_ab1c0d0accf25cd6ff3516dacc1e39e6a}{}\label{service_directory_8c_ab1c0d0accf25cd6ff3516dacc1e39e6a}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!le\+\_\+mem\+\_\+\+Set\+Destructor@{le\+\_\+mem\+\_\+\+Set\+Destructor}}
+\index{le\+\_\+mem\+\_\+\+Set\+Destructor@{le\+\_\+mem\+\_\+\+Set\+Destructor}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Set\+Destructor(\+Client\+Connection\+Pool\+Ref, Client\+Connection\+Destructor)}{le_mem_SetDestructor(ClientConnectionPoolRef, ClientConnectionDestructor)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Set\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf Client\+Connection\+Pool\+Ref}}]{, }
+\item[{{\bf Client\+Connection\+Destructor}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_afdeeeb36b4227bdc632925967bba44ef}{}\label{service_directory_8c_afdeeeb36b4227bdc632925967bba44ef}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!le\+\_\+mem\+\_\+\+Set\+Destructor@{le\+\_\+mem\+\_\+\+Set\+Destructor}}
+\index{le\+\_\+mem\+\_\+\+Set\+Destructor@{le\+\_\+mem\+\_\+\+Set\+Destructor}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Set\+Destructor(\+Server\+Connection\+Pool\+Ref, Server\+Connection\+Destructor)}{le_mem_SetDestructor(ServerConnectionPoolRef, ServerConnectionDestructor)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Set\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf Server\+Connection\+Pool\+Ref}}]{, }
+\item[{{\bf Server\+Connection\+Destructor}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_a9f5e752b44698cbf9acaa4bb4e64d2d9}{}\label{service_directory_8c_a9f5e752b44698cbf9acaa4bb4e64d2d9}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!le\+\_\+mem\+\_\+\+Set\+Destructor@{le\+\_\+mem\+\_\+\+Set\+Destructor}}
+\index{le\+\_\+mem\+\_\+\+Set\+Destructor@{le\+\_\+mem\+\_\+\+Set\+Destructor}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Set\+Destructor(\+User\+Pool\+Ref, User\+Destructor)}{le_mem_SetDestructor(UserPoolRef, UserDestructor)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Set\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf User\+Pool\+Ref}}]{, }
+\item[{{\bf User\+Destructor}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_a079054ba427aaf5490ddb775f9e8087e}{}\label{service_directory_8c_a079054ba427aaf5490ddb775f9e8087e}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!le\+\_\+mem\+\_\+\+Set\+Destructor@{le\+\_\+mem\+\_\+\+Set\+Destructor}}
+\index{le\+\_\+mem\+\_\+\+Set\+Destructor@{le\+\_\+mem\+\_\+\+Set\+Destructor}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+mem\+\_\+\+Set\+Destructor(\+Binding\+Pool\+Ref, Binding\+Destructor)}{le_mem_SetDestructor(BindingPoolRef, BindingDestructor)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+mem\+\_\+\+Set\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf Binding\+Pool\+Ref}}]{, }
+\item[{{\bf Binding\+Destructor}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_a13ec98a73741643df68abd2979361b78}{}\label{service_directory_8c_a13ec98a73741643df68abd2979361b78}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Open\+Socket@{Open\+Socket}}
+\index{Open\+Socket@{Open\+Socket}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Open\+Socket(const char $\ast$socket\+Path\+Str)}{OpenSocket(const char *socketPathStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Open\+Socket (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{socket\+Path\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a42426794612f2e7613b11d5483d66701}{}\label{service_directory_8c_a42426794612f2e7613b11d5483d66701}
+Opens a named S\+O\+C\+K\+\_\+\+S\+E\+Q\+P\+A\+C\+K\+ET unix domain socket, using a given file system path as the address.
+
+If something already exists in the file system at the path given, this function will try to unlink it to make way for the socket it is trying to create.
+
+\begin{DoxyReturn}{Returns}
+File descriptor of the socket.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Logs a message and terminates the process on failure. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em socket\+Path\+Str} & File system path. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Process\+Advertisement\+From\+Server@{Process\+Advertisement\+From\+Server}}
+\index{Process\+Advertisement\+From\+Server@{Process\+Advertisement\+From\+Server}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Advertisement\+From\+Server(\+Server\+Connection\+\_\+t $\ast$connection\+Ptr)}{ProcessAdvertisementFromServer(ServerConnection_t *connectionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Process\+Advertisement\+From\+Server (
+\begin{DoxyParamCaption}
+\item[{{\bf Server\+Connection\+\_\+t} $\ast$}]{connection\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ad2f87b7b180dab9dc9fc6819186b54a9}{}\label{service_directory_8c_ad2f87b7b180dab9dc9fc6819186b54a9}
+Process an advertisement by a server of a service.
+
+\begin{DoxyNote}{Note}
+This will dispatch waiting clients to the service\textquotesingle{}s new server, if there are any. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em connection\+Ptr} & Ptr to Connection to advertising server. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Process\+Open\+Request\+From\+Client@{Process\+Open\+Request\+From\+Client}}
+\index{Process\+Open\+Request\+From\+Client@{Process\+Open\+Request\+From\+Client}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Open\+Request\+From\+Client(\+Client\+Connection\+\_\+t $\ast$connection\+Ptr, bool should\+Wait)}{ProcessOpenRequestFromClient(ClientConnection_t *connectionPtr, bool shouldWait)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Process\+Open\+Request\+From\+Client (
+\begin{DoxyParamCaption}
+\item[{{\bf Client\+Connection\+\_\+t} $\ast$}]{connection\+Ptr, }
+\item[{bool}]{should\+Wait}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a28453e6e43db6aa93228806de2a22492}{}\label{service_directory_8c_a28453e6e43db6aa93228806de2a22492}
+Processes an \char`\"{}\+Open\char`\"{} request received from a client. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em connection\+Ptr} & Pointer to the Client Connection object. \\
+\hline
+\mbox{\tt in}  & {\em should\+Wait} & true = wait for the service, if it can\textquotesingle{}t be opened immediately. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Receive\+Message@{Receive\+Message}}
+\index{Receive\+Message@{Receive\+Message}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Receive\+Message(int fd, void $\ast$msg\+Ptr, size\+\_\+t msg\+Size)}{ReceiveMessage(int fd, void *msgPtr, size_t msgSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Receive\+Message (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{{\bf void} $\ast$}]{msg\+Ptr, }
+\item[{size\+\_\+t}]{msg\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ac8acaca99752ef883865fb07fe713cdc}{}\label{service_directory_8c_ac8acaca99752ef883865fb07fe713cdc}
+Receive a message from a socket.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if successful.
+\item L\+E\+\_\+\+W\+O\+U\+L\+D\+\_\+\+B\+L\+O\+CK if there\textquotesingle{}s nothing to be received.
+\item L\+E\+\_\+\+C\+L\+O\+S\+ED if the connection closed.
+\item L\+E\+\_\+\+F\+A\+U\+LT if failed. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor to receive the message from. \\
+\hline
+\mbox{\tt out}  & {\em msg\+Ptr} & Ptr to where the message will be stored if successful. \\
+\hline
+\mbox{\tt in}  & {\em msg\+Size} & Size of the message to be received. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Reject\+Client@{Reject\+Client}}
+\index{Reject\+Client@{Reject\+Client}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Reject\+Client(\+Client\+Connection\+\_\+t $\ast$connection\+Ptr, le\+\_\+result\+\_\+t reject\+Reason)}{RejectClient(ClientConnection_t *connectionPtr, le_result_t rejectReason)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Reject\+Client (
+\begin{DoxyParamCaption}
+\item[{{\bf Client\+Connection\+\_\+t} $\ast$}]{connection\+Ptr, }
+\item[{{\bf le\+\_\+result\+\_\+t}}]{reject\+Reason}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a5988586ab86bd5883e1f6e57c6873613}{}\label{service_directory_8c_a5988586ab86bd5883e1f6e57c6873613}
+Rejects a connection with a client process.
+
+Sends a rejection code to the client and closes the client connection. \index{service\+Directory.\+c@{service\+Directory.\+c}!Resolve\+Bindings\+To\+Server@{Resolve\+Bindings\+To\+Server}}
+\index{Resolve\+Bindings\+To\+Server@{Resolve\+Bindings\+To\+Server}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Resolve\+Bindings\+To\+Server(\+Server\+Connection\+\_\+t $\ast$connection\+Ptr)}{ResolveBindingsToServer(ServerConnection_t *connectionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Resolve\+Bindings\+To\+Server (
+\begin{DoxyParamCaption}
+\item[{{\bf Server\+Connection\+\_\+t} $\ast$}]{connection\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a8a1bff1184ab1a15e1a46842538c1c66}{}\label{service_directory_8c_a8a1bff1184ab1a15e1a46842538c1c66}
+Search for and associate bindings that refer to this service and dispatch any waiting clients to the new server. \index{service\+Directory.\+c@{service\+Directory.\+c}!Sdir\+Tool\+Bind@{Sdir\+Tool\+Bind}}
+\index{Sdir\+Tool\+Bind@{Sdir\+Tool\+Bind}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Sdir\+Tool\+Bind(const le\+\_\+sdtp\+\_\+\+Msg\+\_\+t $\ast$msg\+Ptr)}{SdirToolBind(const le_sdtp_Msg_t *msgPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sdir\+Tool\+Bind (
+\begin{DoxyParamCaption}
+\item[{const {\bf le\+\_\+sdtp\+\_\+\+Msg\+\_\+t} $\ast$}]{msg\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a9fc598091e78dc933b175cd2f7d2e326}{}\label{service_directory_8c_a9fc598091e78dc933b175cd2f7d2e326}
+Handles a \char`\"{}\+Bind\char`\"{} request from the \textquotesingle{}sdir\textquotesingle{} tool. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em msg\+Ptr} & Pointer to the request message payload. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Sdir\+Tool\+List@{Sdir\+Tool\+List}}
+\index{Sdir\+Tool\+List@{Sdir\+Tool\+List}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Sdir\+Tool\+List(int fd)}{SdirToolList(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sdir\+Tool\+List (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_aadaa8a6e4538862e5f8a324e68948fa5}{}\label{service_directory_8c_aadaa8a6e4538862e5f8a324e68948fa5}
+Handles the \char`\"{}\+List\char`\"{} request from the \textquotesingle{}sdir\textquotesingle{} tool. Dumps output in human readable format. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & The file descriptor to write the output to. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Sdir\+Tool\+List\+Bindings@{Sdir\+Tool\+List\+Bindings}}
+\index{Sdir\+Tool\+List\+Bindings@{Sdir\+Tool\+List\+Bindings}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Sdir\+Tool\+List\+Bindings(int fd)}{SdirToolListBindings(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sdir\+Tool\+List\+Bindings (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a84735713115864868b1f1c7db2efbf85}{}\label{service_directory_8c_a84735713115864868b1f1c7db2efbf85}
+Handles the \char`\"{}\+List Bindings\char`\"{} request from the \textquotesingle{}sdir\textquotesingle{} tool. Dumps output in human readable format. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & The file descriptor to write the output to. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Sdir\+Tool\+List\+Bindings\+Json@{Sdir\+Tool\+List\+Bindings\+Json}}
+\index{Sdir\+Tool\+List\+Bindings\+Json@{Sdir\+Tool\+List\+Bindings\+Json}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Sdir\+Tool\+List\+Bindings\+Json(int fd)}{SdirToolListBindingsJson(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sdir\+Tool\+List\+Bindings\+Json (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ad35398f37dc6747682b493575eb5d569}{}\label{service_directory_8c_ad35398f37dc6747682b493575eb5d569}
+Handles the \char`\"{}\+List Bindings\char`\"{} request from the \textquotesingle{}sdir\textquotesingle{} tool. Dumps output in json format. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & The file descriptor to write the output to. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Sdir\+Tool\+List\+Json@{Sdir\+Tool\+List\+Json}}
+\index{Sdir\+Tool\+List\+Json@{Sdir\+Tool\+List\+Json}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Sdir\+Tool\+List\+Json(int fd)}{SdirToolListJson(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sdir\+Tool\+List\+Json (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a4d23ad93dff10c9c4ba9de84d32fdb4d}{}\label{service_directory_8c_a4d23ad93dff10c9c4ba9de84d32fdb4d}
+Handles the \char`\"{}\+List\char`\"{} request from the \textquotesingle{}sdir\textquotesingle{} tool. Dumps output in json format. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & The file descriptor to write the output to. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Sdir\+Tool\+List\+Services@{Sdir\+Tool\+List\+Services}}
+\index{Sdir\+Tool\+List\+Services@{Sdir\+Tool\+List\+Services}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Sdir\+Tool\+List\+Services(int fd)}{SdirToolListServices(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sdir\+Tool\+List\+Services (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_acefa16a5126d9985158c83febedbf8b0}{}\label{service_directory_8c_acefa16a5126d9985158c83febedbf8b0}
+Handles the \char`\"{}\+List Services\char`\"{} request from the \textquotesingle{}sdir\textquotesingle{} tool. Dump output in human readable format 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & The file descriptor to write the output to. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Sdir\+Tool\+List\+Services\+Json@{Sdir\+Tool\+List\+Services\+Json}}
+\index{Sdir\+Tool\+List\+Services\+Json@{Sdir\+Tool\+List\+Services\+Json}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Sdir\+Tool\+List\+Services\+Json(int fd)}{SdirToolListServicesJson(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sdir\+Tool\+List\+Services\+Json (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a4b4447512992b0a22db119dc22e71251}{}\label{service_directory_8c_a4b4447512992b0a22db119dc22e71251}
+Handles the \char`\"{}\+List Services\char`\"{} request from the \textquotesingle{}sdir\textquotesingle{} tool. Dumps output in json format. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & The file descriptor to write the output to. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Sdir\+Tool\+List\+Waiting\+Clients@{Sdir\+Tool\+List\+Waiting\+Clients}}
+\index{Sdir\+Tool\+List\+Waiting\+Clients@{Sdir\+Tool\+List\+Waiting\+Clients}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Sdir\+Tool\+List\+Waiting\+Clients(int fd)}{SdirToolListWaitingClients(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sdir\+Tool\+List\+Waiting\+Clients (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a6c97e1534011880eeee87fa8d01db4dc}{}\label{service_directory_8c_a6c97e1534011880eeee87fa8d01db4dc}
+Handles the \char`\"{}\+List Waiting Clients\char`\"{} request from the \textquotesingle{}sdir\textquotesingle{} tool. Dumps output in human readable format. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & The file descriptor to write the output to. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Sdir\+Tool\+List\+Waiting\+Clients\+Json@{Sdir\+Tool\+List\+Waiting\+Clients\+Json}}
+\index{Sdir\+Tool\+List\+Waiting\+Clients\+Json@{Sdir\+Tool\+List\+Waiting\+Clients\+Json}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Sdir\+Tool\+List\+Waiting\+Clients\+Json(int fd)}{SdirToolListWaitingClientsJson(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sdir\+Tool\+List\+Waiting\+Clients\+Json (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a6adb1e66a56c390eb97412510a14e09e}{}\label{service_directory_8c_a6adb1e66a56c390eb97412510a14e09e}
+Handles the \char`\"{}\+List Waiting Clients\char`\"{} request from the \textquotesingle{}sdir\textquotesingle{} tool. Dumps output in json format. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & The file descriptor to write the output to. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Sdir\+Tool\+Recv@{Sdir\+Tool\+Recv}}
+\index{Sdir\+Tool\+Recv@{Sdir\+Tool\+Recv}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Sdir\+Tool\+Recv(le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref, void $\ast$context\+Ptr)}{SdirToolRecv(le_msg_MessageRef_t msgRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sdir\+Tool\+Recv (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ab9cf7ddfed7812daa6311252b0831fa0}{}\label{service_directory_8c_ab9cf7ddfed7812daa6311252b0831fa0}
+Process a message received from the \char`\"{}sdir\char`\"{} tool. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em msg\+Ref} & Reference to the received message. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Not used. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Sdir\+Tool\+Unbind\+All@{Sdir\+Tool\+Unbind\+All}}
+\index{Sdir\+Tool\+Unbind\+All@{Sdir\+Tool\+Unbind\+All}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Sdir\+Tool\+Unbind\+All(void)}{SdirToolUnbindAll(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sdir\+Tool\+Unbind\+All (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a1f186506f172da3e32f6641e1184c73f}{}\label{service_directory_8c_a1f186506f172da3e32f6641e1184c73f}
+Handles an \char`\"{}\+Unbind All\char`\"{} request from the \textquotesingle{}sdir\textquotesingle{} tool. \index{service\+Directory.\+c@{service\+Directory.\+c}!Server\+Connect\+Handler@{Server\+Connect\+Handler}}
+\index{Server\+Connect\+Handler@{Server\+Connect\+Handler}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Connect\+Handler(int fd, short events)}{ServerConnectHandler(int fd, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Server\+Connect\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a46f1aa4d82a3f513920b094f5621d73a}{}\label{service_directory_8c_a46f1aa4d82a3f513920b094f5621d73a}
+Handler function that gets called when a server connects to the Server socket. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor of the socket that has received a connection request. \\
+\hline
+\mbox{\tt in}  & {\em events} & Event set (bit map). Should be only P\+O\+L\+L\+IN. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Server\+Connection\+Destructor@{Server\+Connection\+Destructor}}
+\index{Server\+Connection\+Destructor@{Server\+Connection\+Destructor}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Connection\+Destructor(void $\ast$obj\+Ptr)}{ServerConnectionDestructor(void *objPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Server\+Connection\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{obj\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_aab1990e660e34d5162c31f7479cf1c86}{}\label{service_directory_8c_aab1990e660e34d5162c31f7479cf1c86}
+Destructor function that runs when a Server Connection object\textquotesingle{}s reference count reaches zero and it is about to be released back into its Pool. \index{service\+Directory.\+c@{service\+Directory.\+c}!Server\+Error\+Handler@{Server\+Error\+Handler}}
+\index{Server\+Error\+Handler@{Server\+Error\+Handler}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Error\+Handler(void)}{ServerErrorHandler(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Server\+Error\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a7392611f63d8c0fb98278cf9ce9fe1a1}{}\label{service_directory_8c_a7392611f63d8c0fb98278cf9ce9fe1a1}
+Handler function that gets called when a connection to a server experiences an error.
+
+\begin{DoxyNote}{Note}
+The Context Pointer is a pointer to a Server Connection object. 
+\end{DoxyNote}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Server\+Hang\+Up\+Handler@{Server\+Hang\+Up\+Handler}}
+\index{Server\+Hang\+Up\+Handler@{Server\+Hang\+Up\+Handler}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Hang\+Up\+Handler(void)}{ServerHangUpHandler(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Server\+Hang\+Up\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_acd3c55d96becd3fc24666185793e19f9}{}\label{service_directory_8c_acd3c55d96becd3fc24666185793e19f9}
+Handler function that gets called when the server closes its end of a connection.
+
+\begin{DoxyNote}{Note}
+The Context Pointer is a pointer to a Server Connection object. 
+\end{DoxyNote}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Server\+Read\+Handler@{Server\+Read\+Handler}}
+\index{Server\+Read\+Handler@{Server\+Read\+Handler}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Read\+Handler(int fd)}{ServerReadHandler(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Server\+Read\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ad198195db02b0ffb707a08ada15dd64f}{}\label{service_directory_8c_ad198195db02b0ffb707a08ada15dd64f}
+Handler function that gets called when the server sends us data.
+
+\begin{DoxyNote}{Note}
+The Context Pointer is a pointer to a Server Connection object. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor for the connection. \\
+\hline
+\end{DoxyParams}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Server\+Socket\+Handler@{Server\+Socket\+Handler}}
+\index{Server\+Socket\+Handler@{Server\+Socket\+Handler}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Socket\+Handler(int fd, short events)}{ServerSocketHandler(int fd, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Server\+Socket\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a2bb97a4d2c5d5c4b8f891c8117959c89}{}\label{service_directory_8c_a2bb97a4d2c5d5c4b8f891c8117959c89}
+File descriptor event handler for sockets connected to servers. \index{service\+Directory.\+c@{service\+Directory.\+c}!Start\+Sdir\+Tool\+Service@{Start\+Sdir\+Tool\+Service}}
+\index{Start\+Sdir\+Tool\+Service@{Start\+Sdir\+Tool\+Service}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Start\+Sdir\+Tool\+Service(void)}{StartSdirToolService(void)}}]{\setlength{\rightskip}{0pt plus 5cm}Start\+Sdir\+Tool\+Service (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a4b4cb41db1158cbbd5fdcc5032c9d1f6}{}\label{service_directory_8c_a4b4cb41db1158cbbd5fdcc5032c9d1f6}
+Start the \char`\"{}sdir\char`\"{} tool service. \index{service\+Directory.\+c@{service\+Directory.\+c}!User\+Destructor@{User\+Destructor}}
+\index{User\+Destructor@{User\+Destructor}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{User\+Destructor(void $\ast$obj\+Ptr)}{UserDestructor(void *objPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} User\+Destructor (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{obj\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ab1bf87d940a0ef1a8d9036d17e814392}{}\label{service_directory_8c_ab1bf87d940a0ef1a8d9036d17e814392}
+Destructor function that runs when a User object\textquotesingle{}s reference count reaches zero and the object is about to be released back into its pool. \index{service\+Directory.\+c@{service\+Directory.\+c}!while@{while}}
+\index{while@{while}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{while((file\+Ptr==\+N\+U\+L\+L)\&\&(errno==\+E\+I\+N\+T\+R))}{while((filePtr==NULL)&&(errno==EINTR))}}]{\setlength{\rightskip}{0pt plus 5cm}while (
+\begin{DoxyParamCaption}
+\item[{({\bf file\+Ptr}==N\+U\+LL)\&\&({\bf errno}==E\+I\+N\+TR)}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{service_directory_8c_a4bd1f0df024da0cb002930fa9363c47e}{}\label{service_directory_8c_a4bd1f0df024da0cb002930fa9363c47e}
+
+
+\subsection{Variable Documentation}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Binding\+Pool\+Ref@{Binding\+Pool\+Ref}}
+\index{Binding\+Pool\+Ref@{Binding\+Pool\+Ref}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Binding\+Pool\+Ref}{BindingPoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}Binding\+Pool\+Ref = {\bf le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Binding\char`\"{}, sizeof({\bf Binding\+\_\+t}))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a1efcd34fd044ca9d28296d1f486ca04a}{}\label{service_directory_8c_a1efcd34fd044ca9d28296d1f486ca04a}
+
+
+Pool from which Binding objects are allocated. 
+
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Client\+Connection\+Pool\+Ref@{Client\+Connection\+Pool\+Ref}}
+\index{Client\+Connection\+Pool\+Ref@{Client\+Connection\+Pool\+Ref}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Connection\+Pool\+Ref}{ClientConnectionPoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}Client\+Connection\+Pool\+Ref = {\bf le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Client Connection\char`\"{}, sizeof({\bf Client\+Connection\+\_\+t}))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_afdae530ed7b1262924fb9e7553156f8f}{}\label{service_directory_8c_afdae530ed7b1262924fb9e7553156f8f}
+
+
+Pool from which Client Connection objects are allocated. 
+
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Client\+Socket\+Fd@{Client\+Socket\+Fd}}
+\index{Client\+Socket\+Fd@{Client\+Socket\+Fd}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Socket\+Fd}{ClientSocketFd}}]{\setlength{\rightskip}{0pt plus 5cm}Client\+Socket\+Fd = {\bf Open\+Socket}({\bf S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+S\+V\+C\+D\+I\+R\+\_\+\+C\+L\+I\+E\+N\+T\+\_\+\+S\+O\+C\+K\+E\+T\+\_\+\+N\+A\+ME))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_ae3332aebea89372dcc9eec8fbd864de0}{}\label{service_directory_8c_ae3332aebea89372dcc9eec8fbd864de0}
+
+
+File descriptor for the Client Socket (which I\+PC clients connect to). 
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000007}{Todo}]Check permissions of directory containing client and server socket addresses. Only the current user or root should be allowed write access. Warn if it is found to be otherwise. \end{DoxyRefDesc}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Client\+Socket\+Monitor\+Ref@{Client\+Socket\+Monitor\+Ref}}
+\index{Client\+Socket\+Monitor\+Ref@{Client\+Socket\+Monitor\+Ref}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Socket\+Monitor\+Ref}{ClientSocketMonitorRef}}]{\setlength{\rightskip}{0pt plus 5cm}Client\+Socket\+Monitor\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a4392aad202e701507722f50af503f9ff}{}\label{service_directory_8c_a4392aad202e701507722f50af503f9ff}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+= \hyperlink{le__fd_monitor_8h_a52902d634d810f9b7a23c53c9c5164f0}{le\_fdMonitor\_Create}(\textcolor{stringliteral}{"Client Socket"},
+                                                 \hyperlink{service_directory_8c_ae3332aebea89372dcc9eec8fbd864de0}{ClientSocketFd},
+                                                 \hyperlink{service_directory_8c_a8a9a62fee37388118df63889e90cc1bb}{ClientConnectHandler},
+                                                 POLLIN)
+\end{DoxyCode}
+
+
+FD Monitor for the Client Socket. Used to detect when clients connect to the Client Socket. 
+
+\index{service\+Directory.\+c@{service\+Directory.\+c}!C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}}
+\index{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}{COMPONENT_INIT}}]{\setlength{\rightskip}{0pt plus 5cm}C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}\hypertarget{service_directory_8c_a0392d452f926ce36c4852de26b5eca12}{}\label{service_directory_8c_a0392d452f926ce36c4852de26b5eca12}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+    \hyperlink{supervisor_8c_a3e9284a065fbe4f65aad310617e311a4}{user\_Init}()
+\end{DoxyCode}
+Initialization function. This is called at start-\/up. When it returns, the process\textquotesingle{}s main event loop will run. \index{service\+Directory.\+c@{service\+Directory.\+c}!do@{do}}
+\index{do@{do}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{do}{do}}]{\setlength{\rightskip}{0pt plus 5cm}do}\hypertarget{service_directory_8c_a721c6ff80a6d3e4ad4ffa52a04c60085}{}\label{service_directory_8c_a721c6ff80a6d3e4ad4ffa52a04c60085}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+        \hyperlink{service_directory_8c_acf1f3d914b42896a64e8683abe22ae7a}{filePtr} = freopen(\textcolor{stringliteral}{"/dev/null"}, \textcolor{stringliteral}{"r"}, stdin)
+\end{DoxyCode}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!file\+Ptr@{file\+Ptr}}
+\index{file\+Ptr@{file\+Ptr}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{file\+Ptr}{filePtr}}]{\setlength{\rightskip}{0pt plus 5cm}F\+I\+LE$\ast$ file\+Ptr}\hypertarget{service_directory_8c_acf1f3d914b42896a64e8683abe22ae7a}{}\label{service_directory_8c_acf1f3d914b42896a64e8683abe22ae7a}
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Server\+Connection\+Pool\+Ref@{Server\+Connection\+Pool\+Ref}}
+\index{Server\+Connection\+Pool\+Ref@{Server\+Connection\+Pool\+Ref}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Connection\+Pool\+Ref}{ServerConnectionPoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}Server\+Connection\+Pool\+Ref = {\bf le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}Server Connection\char`\"{}, sizeof({\bf Server\+Connection\+\_\+t}))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a6f4b5b0c57e56bca01db9115fa333ff4}{}\label{service_directory_8c_a6f4b5b0c57e56bca01db9115fa333ff4}
+
+
+Pool from which Server Connection objects are allocated. 
+
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Server\+Socket\+Fd@{Server\+Socket\+Fd}}
+\index{Server\+Socket\+Fd@{Server\+Socket\+Fd}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Socket\+Fd}{ServerSocketFd}}]{\setlength{\rightskip}{0pt plus 5cm}Server\+Socket\+Fd = {\bf Open\+Socket}({\bf S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+S\+V\+C\+D\+I\+R\+\_\+\+S\+E\+R\+V\+E\+R\+\_\+\+S\+O\+C\+K\+E\+T\+\_\+\+N\+A\+ME))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a19db9b70008749136d19f1afbb58d99c}{}\label{service_directory_8c_a19db9b70008749136d19f1afbb58d99c}
+
+
+File descriptor for the Server Socket (which I\+PC servers connect to). 
+
+\index{service\+Directory.\+c@{service\+Directory.\+c}!Server\+Socket\+Monitor\+Ref@{Server\+Socket\+Monitor\+Ref}}
+\index{Server\+Socket\+Monitor\+Ref@{Server\+Socket\+Monitor\+Ref}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Socket\+Monitor\+Ref}{ServerSocketMonitorRef}}]{\setlength{\rightskip}{0pt plus 5cm}Server\+Socket\+Monitor\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a8983156de14140f9d5e24d5e5a65bbb1}{}\label{service_directory_8c_a8983156de14140f9d5e24d5e5a65bbb1}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+= \hyperlink{le__fd_monitor_8h_a52902d634d810f9b7a23c53c9c5164f0}{le\_fdMonitor\_Create}(\textcolor{stringliteral}{"Server Socket"},
+                                                 \hyperlink{service_directory_8c_a19db9b70008749136d19f1afbb58d99c}{ServerSocketFd},
+                                                 \hyperlink{service_directory_8c_a46f1aa4d82a3f513920b094f5621d73a}{ServerConnectHandler},
+                                                 POLLIN)
+\end{DoxyCode}
+
+
+FD Monitor for the Server Socket. Used to detect when servers connect to the Server Socket. 
+
+\index{service\+Directory.\+c@{service\+Directory.\+c}!User\+List@{User\+List}}
+\index{User\+List@{User\+List}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{User\+List}{UserList}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+dls\+\_\+\+List\+\_\+t} User\+List = {\bf L\+E\+\_\+\+D\+L\+S\+\_\+\+L\+I\+S\+T\+\_\+\+I\+N\+IT}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a3a4d9f18721ec091907185fc2985dd39}{}\label{service_directory_8c_a3a4d9f18721ec091907185fc2985dd39}
+
+
+The User List, in which all User objects are kept. 
+
+\index{service\+Directory.\+c@{service\+Directory.\+c}!User\+Pool\+Ref@{User\+Pool\+Ref}}
+\index{User\+Pool\+Ref@{User\+Pool\+Ref}!service\+Directory.\+c@{service\+Directory.\+c}}
+\subsubsection[{\texorpdfstring{User\+Pool\+Ref}{UserPoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}User\+Pool\+Ref = {\bf le\+\_\+mem\+\_\+\+Create\+Pool}(\char`\"{}User\char`\"{}, sizeof({\bf User\+\_\+t}))\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{service_directory_8c_a8839f8ed05c9041a03567b1e65922d9b}{}\label{service_directory_8c_a8839f8ed05c9041a03567b1e65922d9b}
+
+
+Pool from which User objects are allocated. 
+

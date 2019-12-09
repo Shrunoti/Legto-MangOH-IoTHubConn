@@ -1,0 +1,28 @@
+var dynamic_string_8c =
+[
+    [ "HeadNode_t", "struct_head_node__t.html", "struct_head_node__t" ],
+    [ "BodyNode_t", "struct_body_node__t.html", "struct_body_node__t" ],
+    [ "Dstr_t", "struct_dstr__t.html", "struct_dstr__t" ],
+    [ "CFG_DSTR_POOL_NAME", "dynamic_string_8c.html#a2acd94449fe0bbc31cf9f7228ccb104f", null ],
+    [ "HEADER_MAGIC", "dynamic_string_8c.html#ae218e4314a5cdf2d32d77d2a4f52dc79", null ],
+    [ "SEGMENT_SIZE", "dynamic_string_8c.html#acbe07a3c3fe2056125230c357f85b870", null ],
+    [ "VALIDATE_HEADER", "dynamic_string_8c.html#aa32f37d71b75244b6eca872892f86f7a", null ],
+    [ "dstr_Copy", "dynamic_string_8c.html#a0e5d255c38aa629a531f90e228f093cf", null ],
+    [ "dstr_CopyFromCstr", "dynamic_string_8c.html#a5c62e2534c68e5a79d4c2b340185c3f9", null ],
+    [ "dstr_CopyToCstr", "dynamic_string_8c.html#adceed8f757747b5a6558010fb8137536", null ],
+    [ "dstr_Init", "dynamic_string_8c.html#ab7fc70f21887375ad071d37a5c8981b5", null ],
+    [ "dstr_IsNullOrEmpty", "dynamic_string_8c.html#ab27df832a82c91993b3eb3161ed0dbf5", null ],
+    [ "dstr_New", "dynamic_string_8c.html#a946bff252cffab054745449e51ffd781", null ],
+    [ "dstr_NewFromCstr", "dynamic_string_8c.html#a4fc9190eee88ca0e675b95460c147c1f", null ],
+    [ "dstr_NewFromDstr", "dynamic_string_8c.html#af1b082ab096a11558d3174944dfb8896", null ],
+    [ "dstr_NumBytes", "dynamic_string_8c.html#acb8f5b39a83fe0a738c1aa99dca23876", null ],
+    [ "dstr_NumChars", "dynamic_string_8c.html#ab019932497d0977c2663a181715b0238", null ],
+    [ "dstr_Release", "dynamic_string_8c.html#a07ba9d8b5cb5d133ff5df72fd83135fc", null ],
+    [ "FirstSegmentRef", "dynamic_string_8c.html#ac43afaecec6ec909e125a2defdd97888", null ],
+    [ "FreeAnyAfter", "dynamic_string_8c.html#ad7e377d83e7e633374c808a28137590e", null ],
+    [ "NewOrFirstSegmentRef", "dynamic_string_8c.html#a6f7dd145fda8ad9ee1dbd9e214d4100d", null ],
+    [ "NewOrNextSegmentRef", "dynamic_string_8c.html#a136f88e8b5eab4962105b6288062c2f8", null ],
+    [ "NewSegment", "dynamic_string_8c.html#a9aa1940a9a4527606262c337b2535c4b", null ],
+    [ "NextSegmentRef", "dynamic_string_8c.html#a2f50a214d00883032089fbeb932acaaf", null ],
+    [ "DynamicStringPoolRef", "dynamic_string_8c.html#a9fc14106ad2960cb52afb1380be3aef5", null ]
+];

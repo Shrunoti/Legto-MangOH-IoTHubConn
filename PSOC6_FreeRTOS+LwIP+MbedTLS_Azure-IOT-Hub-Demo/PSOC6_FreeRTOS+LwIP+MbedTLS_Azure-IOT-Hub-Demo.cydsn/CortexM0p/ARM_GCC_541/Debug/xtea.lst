@@ -1,0 +1,3190 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"xtea.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.mbedtls_xtea_init,"ax",%progbits
+  20              		.align	2
+  21              		.global	mbedtls_xtea_init
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	mbedtls_xtea_init, %function
+  25              	mbedtls_xtea_init:
+  26              	.LFB1:
+  27              		.file 1 "Source\\mbedtls_open\\library\\xtea.c"
+   1:Source\mbedtls_open\library/xtea.c **** /*
+   2:Source\mbedtls_open\library/xtea.c ****  *  An 32-bit implementation of the XTEA algorithm
+   3:Source\mbedtls_open\library/xtea.c ****  *
+   4:Source\mbedtls_open\library/xtea.c ****  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+   5:Source\mbedtls_open\library/xtea.c ****  *  SPDX-License-Identifier: Apache-2.0
+   6:Source\mbedtls_open\library/xtea.c ****  *
+   7:Source\mbedtls_open\library/xtea.c ****  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+   8:Source\mbedtls_open\library/xtea.c ****  *  not use this file except in compliance with the License.
+   9:Source\mbedtls_open\library/xtea.c ****  *  You may obtain a copy of the License at
+  10:Source\mbedtls_open\library/xtea.c ****  *
+  11:Source\mbedtls_open\library/xtea.c ****  *  http://www.apache.org/licenses/LICENSE-2.0
+  12:Source\mbedtls_open\library/xtea.c ****  *
+  13:Source\mbedtls_open\library/xtea.c ****  *  Unless required by applicable law or agreed to in writing, software
+  14:Source\mbedtls_open\library/xtea.c ****  *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  15:Source\mbedtls_open\library/xtea.c ****  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  16:Source\mbedtls_open\library/xtea.c ****  *  See the License for the specific language governing permissions and
+  17:Source\mbedtls_open\library/xtea.c ****  *  limitations under the License.
+  18:Source\mbedtls_open\library/xtea.c ****  *
+  19:Source\mbedtls_open\library/xtea.c ****  *  This file is part of mbed TLS (https://tls.mbed.org)
+  20:Source\mbedtls_open\library/xtea.c ****  */
+  21:Source\mbedtls_open\library/xtea.c **** 
+  22:Source\mbedtls_open\library/xtea.c **** #if !defined(MBEDTLS_CONFIG_FILE)
+  23:Source\mbedtls_open\library/xtea.c **** #include "mbedtls/config.h"
+  24:Source\mbedtls_open\library/xtea.c **** #else
+  25:Source\mbedtls_open\library/xtea.c **** #include MBEDTLS_CONFIG_FILE
+  26:Source\mbedtls_open\library/xtea.c **** #endif
+  27:Source\mbedtls_open\library/xtea.c **** 
+  28:Source\mbedtls_open\library/xtea.c **** #if defined(MBEDTLS_XTEA_C)
+  29:Source\mbedtls_open\library/xtea.c **** 
+  30:Source\mbedtls_open\library/xtea.c **** #include "mbedtls/xtea.h"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 2
+
+
+  31:Source\mbedtls_open\library/xtea.c **** #include "mbedtls/platform_util.h"
+  32:Source\mbedtls_open\library/xtea.c **** 
+  33:Source\mbedtls_open\library/xtea.c **** #include <string.h>
+  34:Source\mbedtls_open\library/xtea.c **** 
+  35:Source\mbedtls_open\library/xtea.c **** #if defined(MBEDTLS_SELF_TEST)
+  36:Source\mbedtls_open\library/xtea.c **** #if defined(MBEDTLS_PLATFORM_C)
+  37:Source\mbedtls_open\library/xtea.c **** #include "mbedtls/platform.h"
+  38:Source\mbedtls_open\library/xtea.c **** #else
+  39:Source\mbedtls_open\library/xtea.c **** #include <stdio.h>
+  40:Source\mbedtls_open\library/xtea.c **** #define mbedtls_printf printf
+  41:Source\mbedtls_open\library/xtea.c **** #endif /* MBEDTLS_PLATFORM_C */
+  42:Source\mbedtls_open\library/xtea.c **** #endif /* MBEDTLS_SELF_TEST */
+  43:Source\mbedtls_open\library/xtea.c **** 
+  44:Source\mbedtls_open\library/xtea.c **** #if !defined(MBEDTLS_XTEA_ALT)
+  45:Source\mbedtls_open\library/xtea.c **** 
+  46:Source\mbedtls_open\library/xtea.c **** /*
+  47:Source\mbedtls_open\library/xtea.c ****  * 32-bit integer manipulation macros (big endian)
+  48:Source\mbedtls_open\library/xtea.c ****  */
+  49:Source\mbedtls_open\library/xtea.c **** #ifndef GET_UINT32_BE
+  50:Source\mbedtls_open\library/xtea.c **** #define GET_UINT32_BE(n,b,i)                            \
+  51:Source\mbedtls_open\library/xtea.c **** {                                                       \
+  52:Source\mbedtls_open\library/xtea.c ****     (n) = ( (uint32_t) (b)[(i)    ] << 24 )             \
+  53:Source\mbedtls_open\library/xtea.c ****         | ( (uint32_t) (b)[(i) + 1] << 16 )             \
+  54:Source\mbedtls_open\library/xtea.c ****         | ( (uint32_t) (b)[(i) + 2] <<  8 )             \
+  55:Source\mbedtls_open\library/xtea.c ****         | ( (uint32_t) (b)[(i) + 3]       );            \
+  56:Source\mbedtls_open\library/xtea.c **** }
+  57:Source\mbedtls_open\library/xtea.c **** #endif
+  58:Source\mbedtls_open\library/xtea.c **** 
+  59:Source\mbedtls_open\library/xtea.c **** #ifndef PUT_UINT32_BE
+  60:Source\mbedtls_open\library/xtea.c **** #define PUT_UINT32_BE(n,b,i)                            \
+  61:Source\mbedtls_open\library/xtea.c **** {                                                       \
+  62:Source\mbedtls_open\library/xtea.c ****     (b)[(i)    ] = (unsigned char) ( (n) >> 24 );       \
+  63:Source\mbedtls_open\library/xtea.c ****     (b)[(i) + 1] = (unsigned char) ( (n) >> 16 );       \
+  64:Source\mbedtls_open\library/xtea.c ****     (b)[(i) + 2] = (unsigned char) ( (n) >>  8 );       \
+  65:Source\mbedtls_open\library/xtea.c ****     (b)[(i) + 3] = (unsigned char) ( (n)       );       \
+  66:Source\mbedtls_open\library/xtea.c **** }
+  67:Source\mbedtls_open\library/xtea.c **** #endif
+  68:Source\mbedtls_open\library/xtea.c **** 
+  69:Source\mbedtls_open\library/xtea.c **** void mbedtls_xtea_init( mbedtls_xtea_context *ctx )
+  70:Source\mbedtls_open\library/xtea.c **** {
+  28              		.loc 1 70 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  33 0000 10B5     		push	{r4, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  71:Source\mbedtls_open\library/xtea.c ****     memset( ctx, 0, sizeof( mbedtls_xtea_context ) );
+  37              		.loc 1 71 0
+  38 0002 1022     		movs	r2, #16
+  39 0004 0021     		movs	r1, #0
+  40 0006 FFF7FEFF 		bl	memset
+  41              	.LVL1:
+  72:Source\mbedtls_open\library/xtea.c **** }
+  42              		.loc 1 72 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 3
+
+
+  43              		@ sp needed
+  44 000a 10BD     		pop	{r4, pc}
+  45              		.cfi_endproc
+  46              	.LFE1:
+  47              		.size	mbedtls_xtea_init, .-mbedtls_xtea_init
+  48              		.section	.text.mbedtls_xtea_free,"ax",%progbits
+  49              		.align	2
+  50              		.global	mbedtls_xtea_free
+  51              		.code	16
+  52              		.thumb_func
+  53              		.type	mbedtls_xtea_free, %function
+  54              	mbedtls_xtea_free:
+  55              	.LFB2:
+  73:Source\mbedtls_open\library/xtea.c **** 
+  74:Source\mbedtls_open\library/xtea.c **** void mbedtls_xtea_free( mbedtls_xtea_context *ctx )
+  75:Source\mbedtls_open\library/xtea.c **** {
+  56              		.loc 1 75 0
+  57              		.cfi_startproc
+  58              		@ args = 0, pretend = 0, frame = 0
+  59              		@ frame_needed = 0, uses_anonymous_args = 0
+  60              	.LVL2:
+  61 0000 10B5     		push	{r4, lr}
+  62              		.cfi_def_cfa_offset 8
+  63              		.cfi_offset 4, -8
+  64              		.cfi_offset 14, -4
+  76:Source\mbedtls_open\library/xtea.c ****     if( ctx == NULL )
+  65              		.loc 1 76 0
+  66 0002 0028     		cmp	r0, #0
+  67 0004 02D0     		beq	.L2
+  77:Source\mbedtls_open\library/xtea.c ****         return;
+  78:Source\mbedtls_open\library/xtea.c **** 
+  79:Source\mbedtls_open\library/xtea.c ****     mbedtls_platform_zeroize( ctx, sizeof( mbedtls_xtea_context ) );
+  68              		.loc 1 79 0
+  69 0006 1021     		movs	r1, #16
+  70 0008 FFF7FEFF 		bl	mbedtls_platform_zeroize
+  71              	.LVL3:
+  72              	.L2:
+  80:Source\mbedtls_open\library/xtea.c **** }
+  73              		.loc 1 80 0
+  74              		@ sp needed
+  75 000c 10BD     		pop	{r4, pc}
+  76              		.cfi_endproc
+  77              	.LFE2:
+  78              		.size	mbedtls_xtea_free, .-mbedtls_xtea_free
+  79 000e C046     		.section	.text.mbedtls_xtea_setup,"ax",%progbits
+  80              		.align	2
+  81              		.global	mbedtls_xtea_setup
+  82              		.code	16
+  83              		.thumb_func
+  84              		.type	mbedtls_xtea_setup, %function
+  85              	mbedtls_xtea_setup:
+  86              	.LFB3:
+  81:Source\mbedtls_open\library/xtea.c **** 
+  82:Source\mbedtls_open\library/xtea.c **** /*
+  83:Source\mbedtls_open\library/xtea.c ****  * XTEA key schedule
+  84:Source\mbedtls_open\library/xtea.c ****  */
+  85:Source\mbedtls_open\library/xtea.c **** void mbedtls_xtea_setup( mbedtls_xtea_context *ctx, const unsigned char key[16] )
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 4
+
+
+  86:Source\mbedtls_open\library/xtea.c **** {
+  87              		.loc 1 86 0
+  88              		.cfi_startproc
+  89              		@ args = 0, pretend = 0, frame = 0
+  90              		@ frame_needed = 0, uses_anonymous_args = 0
+  91              	.LVL4:
+  92 0000 70B5     		push	{r4, r5, r6, lr}
+  93              		.cfi_def_cfa_offset 16
+  94              		.cfi_offset 4, -16
+  95              		.cfi_offset 5, -12
+  96              		.cfi_offset 6, -8
+  97              		.cfi_offset 14, -4
+  98 0002 0500     		movs	r5, r0
+  99 0004 0C00     		movs	r4, r1
+  87:Source\mbedtls_open\library/xtea.c ****     int i;
+  88:Source\mbedtls_open\library/xtea.c **** 
+  89:Source\mbedtls_open\library/xtea.c ****     memset( ctx, 0, sizeof(mbedtls_xtea_context) );
+ 100              		.loc 1 89 0
+ 101 0006 1022     		movs	r2, #16
+ 102 0008 0021     		movs	r1, #0
+ 103              	.LVL5:
+ 104 000a FFF7FEFF 		bl	memset
+ 105              	.LVL6:
+  90:Source\mbedtls_open\library/xtea.c **** 
+  91:Source\mbedtls_open\library/xtea.c ****     for( i = 0; i < 4; i++ )
+ 106              		.loc 1 91 0
+ 107 000e 0021     		movs	r1, #0
+ 108 0010 0DE0     		b	.L5
+ 109              	.LVL7:
+ 110              	.L6:
+  92:Source\mbedtls_open\library/xtea.c ****     {
+  93:Source\mbedtls_open\library/xtea.c ****         GET_UINT32_BE( ctx->k[i], key, i << 2 );
+ 111              		.loc 1 93 0 discriminator 3
+ 112 0012 8800     		lsls	r0, r1, #2
+ 113 0014 235C     		ldrb	r3, [r4, r0]
+ 114 0016 1A06     		lsls	r2, r3, #24
+ 115 0018 2618     		adds	r6, r4, r0
+ 116 001a 7378     		ldrb	r3, [r6, #1]
+ 117 001c 1B04     		lsls	r3, r3, #16
+ 118 001e 1343     		orrs	r3, r2
+ 119 0020 B278     		ldrb	r2, [r6, #2]
+ 120 0022 1202     		lsls	r2, r2, #8
+ 121 0024 1343     		orrs	r3, r2
+ 122 0026 F278     		ldrb	r2, [r6, #3]
+ 123 0028 1343     		orrs	r3, r2
+ 124 002a 4351     		str	r3, [r0, r5]
+  91:Source\mbedtls_open\library/xtea.c ****     {
+ 125              		.loc 1 91 0 discriminator 3
+ 126 002c 0131     		adds	r1, r1, #1
+ 127              	.LVL8:
+ 128              	.L5:
+  91:Source\mbedtls_open\library/xtea.c ****     {
+ 129              		.loc 1 91 0 is_stmt 0 discriminator 1
+ 130 002e 0329     		cmp	r1, #3
+ 131 0030 EFDD     		ble	.L6
+  94:Source\mbedtls_open\library/xtea.c ****     }
+  95:Source\mbedtls_open\library/xtea.c **** }
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 5
+
+
+ 132              		.loc 1 95 0 is_stmt 1
+ 133              		@ sp needed
+ 134              	.LVL9:
+ 135              	.LVL10:
+ 136 0032 70BD     		pop	{r4, r5, r6, pc}
+ 137              		.cfi_endproc
+ 138              	.LFE3:
+ 139              		.size	mbedtls_xtea_setup, .-mbedtls_xtea_setup
+ 140              		.section	.text.mbedtls_xtea_crypt_ecb,"ax",%progbits
+ 141              		.align	2
+ 142              		.global	mbedtls_xtea_crypt_ecb
+ 143              		.code	16
+ 144              		.thumb_func
+ 145              		.type	mbedtls_xtea_crypt_ecb, %function
+ 146              	mbedtls_xtea_crypt_ecb:
+ 147              	.LFB4:
+  96:Source\mbedtls_open\library/xtea.c **** 
+  97:Source\mbedtls_open\library/xtea.c **** /*
+  98:Source\mbedtls_open\library/xtea.c ****  * XTEA encrypt function
+  99:Source\mbedtls_open\library/xtea.c ****  */
+ 100:Source\mbedtls_open\library/xtea.c **** int mbedtls_xtea_crypt_ecb( mbedtls_xtea_context *ctx, int mode,
+ 101:Source\mbedtls_open\library/xtea.c ****                     const unsigned char input[8], unsigned char output[8])
+ 102:Source\mbedtls_open\library/xtea.c **** {
+ 148              		.loc 1 102 0
+ 149              		.cfi_startproc
+ 150              		@ args = 0, pretend = 0, frame = 0
+ 151              		@ frame_needed = 0, uses_anonymous_args = 0
+ 152              	.LVL11:
+ 153 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 154              		.cfi_def_cfa_offset 20
+ 155              		.cfi_offset 4, -20
+ 156              		.cfi_offset 5, -16
+ 157              		.cfi_offset 6, -12
+ 158              		.cfi_offset 7, -8
+ 159              		.cfi_offset 14, -4
+ 160 0002 4F46     		mov	r7, r9
+ 161 0004 4646     		mov	r6, r8
+ 162 0006 C0B4     		push	{r6, r7}
+ 163              		.cfi_def_cfa_offset 28
+ 164              		.cfi_offset 8, -28
+ 165              		.cfi_offset 9, -24
+ 166 0008 1500     		movs	r5, r2
+ 167 000a 9C46     		mov	ip, r3
+ 103:Source\mbedtls_open\library/xtea.c ****     uint32_t *k, v0, v1, i;
+ 104:Source\mbedtls_open\library/xtea.c **** 
+ 105:Source\mbedtls_open\library/xtea.c ****     k = ctx->k;
+ 168              		.loc 1 105 0
+ 169 000c 0300     		movs	r3, r0
+ 170              	.LVL12:
+ 106:Source\mbedtls_open\library/xtea.c **** 
+ 107:Source\mbedtls_open\library/xtea.c ****     GET_UINT32_BE( v0, input, 0 );
+ 171              		.loc 1 107 0
+ 172 000e 1478     		ldrb	r4, [r2]
+ 173 0010 2406     		lsls	r4, r4, #24
+ 174 0012 5278     		ldrb	r2, [r2, #1]
+ 175              	.LVL13:
+ 176 0014 1204     		lsls	r2, r2, #16
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 6
+
+
+ 177 0016 1443     		orrs	r4, r2
+ 178 0018 AA78     		ldrb	r2, [r5, #2]
+ 179 001a 1202     		lsls	r2, r2, #8
+ 180 001c 1443     		orrs	r4, r2
+ 181 001e EA78     		ldrb	r2, [r5, #3]
+ 182 0020 1443     		orrs	r4, r2
+ 183              	.LVL14:
+ 108:Source\mbedtls_open\library/xtea.c ****     GET_UINT32_BE( v1, input, 4 );
+ 184              		.loc 1 108 0
+ 185 0022 2A79     		ldrb	r2, [r5, #4]
+ 186 0024 1006     		lsls	r0, r2, #24
+ 187              	.LVL15:
+ 188 0026 6A79     		ldrb	r2, [r5, #5]
+ 189 0028 1204     		lsls	r2, r2, #16
+ 190 002a 0243     		orrs	r2, r0
+ 191 002c A879     		ldrb	r0, [r5, #6]
+ 192 002e 0002     		lsls	r0, r0, #8
+ 193 0030 0243     		orrs	r2, r0
+ 194 0032 E879     		ldrb	r0, [r5, #7]
+ 195 0034 0243     		orrs	r2, r0
+ 196              	.LVL16:
+ 109:Source\mbedtls_open\library/xtea.c **** 
+ 110:Source\mbedtls_open\library/xtea.c ****     if( mode == MBEDTLS_XTEA_ENCRYPT )
+ 197              		.loc 1 110 0
+ 198 0036 0129     		cmp	r1, #1
+ 199 0038 1FD0     		beq	.L13
+ 200 003a 2B4D     		ldr	r5, .L14
+ 201              	.LVL17:
+ 202 003c 0020     		movs	r0, #0
+ 203 003e 3CE0     		b	.L9
+ 204              	.LVL18:
+ 205              	.L10:
+ 206              	.LBB2:
+ 111:Source\mbedtls_open\library/xtea.c ****     {
+ 112:Source\mbedtls_open\library/xtea.c ****         uint32_t sum = 0, delta = 0x9E3779B9;
+ 113:Source\mbedtls_open\library/xtea.c **** 
+ 114:Source\mbedtls_open\library/xtea.c ****         for( i = 0; i < 32; i++ )
+ 115:Source\mbedtls_open\library/xtea.c ****         {
+ 116:Source\mbedtls_open\library/xtea.c ****             v0 += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + k[sum & 3]);
+ 207              		.loc 1 116 0 discriminator 3
+ 208 0040 1501     		lsls	r5, r2, #4
+ 209 0042 5009     		lsrs	r0, r2, #5
+ 210 0044 6840     		eors	r0, r5
+ 211 0046 1018     		adds	r0, r2, r0
+ 212 0048 0325     		movs	r5, #3
+ 213 004a A846     		mov	r8, r5
+ 214 004c 0D40     		ands	r5, r1
+ 215 004e AD00     		lsls	r5, r5, #2
+ 216 0050 EF58     		ldr	r7, [r5, r3]
+ 217 0052 CF19     		adds	r7, r1, r7
+ 218 0054 7840     		eors	r0, r7
+ 219 0056 2418     		adds	r4, r4, r0
+ 220              	.LVL19:
+ 117:Source\mbedtls_open\library/xtea.c ****             sum += delta;
+ 221              		.loc 1 117 0 discriminator 3
+ 222 0058 2448     		ldr	r0, .L14+4
+ 223 005a 8146     		mov	r9, r0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 7
+
+
+ 224 005c 4944     		add	r1, r1, r9
+ 225              	.LVL20:
+ 118:Source\mbedtls_open\library/xtea.c ****             v1 += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + k[(sum>>11) & 3]);
+ 226              		.loc 1 118 0 discriminator 3
+ 227 005e 2501     		lsls	r5, r4, #4
+ 228 0060 6009     		lsrs	r0, r4, #5
+ 229 0062 6840     		eors	r0, r5
+ 230 0064 2018     		adds	r0, r4, r0
+ 231 0066 CD0A     		lsrs	r5, r1, #11
+ 232 0068 4746     		mov	r7, r8
+ 233 006a 3D40     		ands	r5, r7
+ 234 006c AD00     		lsls	r5, r5, #2
+ 235 006e ED58     		ldr	r5, [r5, r3]
+ 236 0070 4D19     		adds	r5, r1, r5
+ 237 0072 6840     		eors	r0, r5
+ 238 0074 1218     		adds	r2, r2, r0
+ 239              	.LVL21:
+ 114:Source\mbedtls_open\library/xtea.c ****         {
+ 240              		.loc 1 114 0 discriminator 3
+ 241 0076 0136     		adds	r6, r6, #1
+ 242              	.LVL22:
+ 243 0078 01E0     		b	.L8
+ 244              	.LVL23:
+ 245              	.L13:
+ 246              	.LBE2:
+ 247 007a 0021     		movs	r1, #0
+ 248              	.LVL24:
+ 249 007c 0026     		movs	r6, #0
+ 250              	.LVL25:
+ 251              	.L8:
+ 252              	.LBB3:
+ 114:Source\mbedtls_open\library/xtea.c ****         {
+ 253              		.loc 1 114 0 is_stmt 0 discriminator 1
+ 254 007e 1F2E     		cmp	r6, #31
+ 255 0080 DED9     		bls	.L10
+ 256 0082 1CE0     		b	.L11
+ 257              	.LVL26:
+ 258              	.L12:
+ 259              	.LBE3:
+ 260              	.LBB4:
+ 119:Source\mbedtls_open\library/xtea.c ****         }
+ 120:Source\mbedtls_open\library/xtea.c ****     }
+ 121:Source\mbedtls_open\library/xtea.c ****     else /* MBEDTLS_XTEA_DECRYPT */
+ 122:Source\mbedtls_open\library/xtea.c ****     {
+ 123:Source\mbedtls_open\library/xtea.c ****         uint32_t delta = 0x9E3779B9, sum = delta * 32;
+ 124:Source\mbedtls_open\library/xtea.c **** 
+ 125:Source\mbedtls_open\library/xtea.c ****         for( i = 0; i < 32; i++ )
+ 126:Source\mbedtls_open\library/xtea.c ****         {
+ 127:Source\mbedtls_open\library/xtea.c ****             v1 -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + k[(sum>>11) & 3]);
+ 261              		.loc 1 127 0 is_stmt 1 discriminator 3
+ 262 0084 2601     		lsls	r6, r4, #4
+ 263 0086 6109     		lsrs	r1, r4, #5
+ 264 0088 4E40     		eors	r6, r1
+ 265 008a A619     		adds	r6, r4, r6
+ 266 008c EF0A     		lsrs	r7, r5, #11
+ 267 008e 0321     		movs	r1, #3
+ 268 0090 0F40     		ands	r7, r1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 8
+
+
+ 269 0092 BF00     		lsls	r7, r7, #2
+ 270 0094 FF58     		ldr	r7, [r7, r3]
+ 271 0096 EF19     		adds	r7, r5, r7
+ 272 0098 7E40     		eors	r6, r7
+ 273 009a 921B     		subs	r2, r2, r6
+ 274              	.LVL27:
+ 128:Source\mbedtls_open\library/xtea.c ****             sum -= delta;
+ 275              		.loc 1 128 0 discriminator 3
+ 276 009c 144E     		ldr	r6, .L14+8
+ 277 009e B046     		mov	r8, r6
+ 278 00a0 4544     		add	r5, r5, r8
+ 279              	.LVL28:
+ 129:Source\mbedtls_open\library/xtea.c ****             v0 -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + k[sum & 3]);
+ 280              		.loc 1 129 0 discriminator 3
+ 281 00a2 1701     		lsls	r7, r2, #4
+ 282 00a4 5609     		lsrs	r6, r2, #5
+ 283 00a6 7740     		eors	r7, r6
+ 284 00a8 D719     		adds	r7, r2, r7
+ 285 00aa 2940     		ands	r1, r5
+ 286 00ac 8900     		lsls	r1, r1, #2
+ 287 00ae CE58     		ldr	r6, [r1, r3]
+ 288 00b0 AE19     		adds	r6, r5, r6
+ 289 00b2 3900     		movs	r1, r7
+ 290 00b4 7140     		eors	r1, r6
+ 291 00b6 641A     		subs	r4, r4, r1
+ 292              	.LVL29:
+ 125:Source\mbedtls_open\library/xtea.c ****         {
+ 293              		.loc 1 125 0 discriminator 3
+ 294 00b8 0130     		adds	r0, r0, #1
+ 295              	.LVL30:
+ 296              	.L9:
+ 125:Source\mbedtls_open\library/xtea.c ****         {
+ 297              		.loc 1 125 0 is_stmt 0 discriminator 1
+ 298 00ba 1F28     		cmp	r0, #31
+ 299 00bc E2D9     		bls	.L12
+ 300              	.LVL31:
+ 301              	.L11:
+ 302              	.LBE4:
+ 130:Source\mbedtls_open\library/xtea.c ****         }
+ 131:Source\mbedtls_open\library/xtea.c ****     }
+ 132:Source\mbedtls_open\library/xtea.c **** 
+ 133:Source\mbedtls_open\library/xtea.c ****     PUT_UINT32_BE( v0, output, 0 );
+ 303              		.loc 1 133 0 is_stmt 1
+ 304 00be 230E     		lsrs	r3, r4, #24
+ 305              	.LVL32:
+ 306 00c0 6146     		mov	r1, ip
+ 307 00c2 0B70     		strb	r3, [r1]
+ 308 00c4 230C     		lsrs	r3, r4, #16
+ 309 00c6 4B70     		strb	r3, [r1, #1]
+ 310 00c8 230A     		lsrs	r3, r4, #8
+ 311 00ca 8B70     		strb	r3, [r1, #2]
+ 312 00cc CC70     		strb	r4, [r1, #3]
+ 134:Source\mbedtls_open\library/xtea.c ****     PUT_UINT32_BE( v1, output, 4 );
+ 313              		.loc 1 134 0
+ 314 00ce 130E     		lsrs	r3, r2, #24
+ 315 00d0 0B71     		strb	r3, [r1, #4]
+ 316 00d2 130C     		lsrs	r3, r2, #16
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 9
+
+
+ 317 00d4 4B71     		strb	r3, [r1, #5]
+ 318 00d6 130A     		lsrs	r3, r2, #8
+ 319 00d8 8B71     		strb	r3, [r1, #6]
+ 320 00da CA71     		strb	r2, [r1, #7]
+ 135:Source\mbedtls_open\library/xtea.c **** 
+ 136:Source\mbedtls_open\library/xtea.c ****     return( 0 );
+ 137:Source\mbedtls_open\library/xtea.c **** }
+ 321              		.loc 1 137 0
+ 322 00dc 0020     		movs	r0, #0
+ 323              		@ sp needed
+ 324              	.LVL33:
+ 325 00de 0CBC     		pop	{r2, r3}
+ 326 00e0 9046     		mov	r8, r2
+ 327 00e2 9946     		mov	r9, r3
+ 328 00e4 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 329              	.L15:
+ 330 00e6 C046     		.align	2
+ 331              	.L14:
+ 332 00e8 2037EFC6 		.word	-957401312
+ 333 00ec B979379E 		.word	-1640531527
+ 334 00f0 4786C861 		.word	1640531527
+ 335              		.cfi_endproc
+ 336              	.LFE4:
+ 337              		.size	mbedtls_xtea_crypt_ecb, .-mbedtls_xtea_crypt_ecb
+ 338              		.section	.text.mbedtls_xtea_crypt_cbc,"ax",%progbits
+ 339              		.align	2
+ 340              		.global	mbedtls_xtea_crypt_cbc
+ 341              		.code	16
+ 342              		.thumb_func
+ 343              		.type	mbedtls_xtea_crypt_cbc, %function
+ 344              	mbedtls_xtea_crypt_cbc:
+ 345              	.LFB5:
+ 138:Source\mbedtls_open\library/xtea.c **** 
+ 139:Source\mbedtls_open\library/xtea.c **** #if defined(MBEDTLS_CIPHER_MODE_CBC)
+ 140:Source\mbedtls_open\library/xtea.c **** /*
+ 141:Source\mbedtls_open\library/xtea.c ****  * XTEA-CBC buffer encryption/decryption
+ 142:Source\mbedtls_open\library/xtea.c ****  */
+ 143:Source\mbedtls_open\library/xtea.c **** int mbedtls_xtea_crypt_cbc( mbedtls_xtea_context *ctx, int mode, size_t length,
+ 144:Source\mbedtls_open\library/xtea.c ****                     unsigned char iv[8], const unsigned char *input,
+ 145:Source\mbedtls_open\library/xtea.c ****                     unsigned char *output)
+ 146:Source\mbedtls_open\library/xtea.c **** {
+ 346              		.loc 1 146 0
+ 347              		.cfi_startproc
+ 348              		@ args = 8, pretend = 0, frame = 16
+ 349              		@ frame_needed = 0, uses_anonymous_args = 0
+ 350              	.LVL34:
+ 351 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 352              		.cfi_def_cfa_offset 20
+ 353              		.cfi_offset 4, -20
+ 354              		.cfi_offset 5, -16
+ 355              		.cfi_offset 6, -12
+ 356              		.cfi_offset 7, -8
+ 357              		.cfi_offset 14, -4
+ 358 0002 85B0     		sub	sp, sp, #20
+ 359              		.cfi_def_cfa_offset 40
+ 360 0004 0090     		str	r0, [sp]
+ 361 0006 0191     		str	r1, [sp, #4]
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 10
+
+
+ 362 0008 1500     		movs	r5, r2
+ 363 000a 1F00     		movs	r7, r3
+ 364 000c 0A9C     		ldr	r4, [sp, #40]
+ 365 000e 0B9E     		ldr	r6, [sp, #44]
+ 147:Source\mbedtls_open\library/xtea.c ****     int i;
+ 148:Source\mbedtls_open\library/xtea.c ****     unsigned char temp[8];
+ 149:Source\mbedtls_open\library/xtea.c **** 
+ 150:Source\mbedtls_open\library/xtea.c ****     if( length % 8 )
+ 366              		.loc 1 150 0
+ 367 0010 5307     		lsls	r3, r2, #29
+ 368 0012 3ED1     		bne	.L25
+ 369              	.LVL35:
+ 151:Source\mbedtls_open\library/xtea.c ****         return( MBEDTLS_ERR_XTEA_INVALID_INPUT_LENGTH );
+ 152:Source\mbedtls_open\library/xtea.c **** 
+ 153:Source\mbedtls_open\library/xtea.c ****     if( mode == MBEDTLS_XTEA_DECRYPT )
+ 370              		.loc 1 153 0
+ 371 0014 0029     		cmp	r1, #0
+ 372 0016 1DD0     		beq	.L18
+ 373 0018 37E0     		b	.L19
+ 374              	.LVL36:
+ 375              	.L22:
+ 154:Source\mbedtls_open\library/xtea.c ****     {
+ 155:Source\mbedtls_open\library/xtea.c ****         while( length > 0 )
+ 156:Source\mbedtls_open\library/xtea.c ****         {
+ 157:Source\mbedtls_open\library/xtea.c ****             memcpy( temp, input, 8 );
+ 376              		.loc 1 157 0
+ 377 001a 0822     		movs	r2, #8
+ 378 001c 2100     		movs	r1, r4
+ 379 001e 02A8     		add	r0, sp, #8
+ 380 0020 FFF7FEFF 		bl	memcpy
+ 381              	.LVL37:
+ 158:Source\mbedtls_open\library/xtea.c ****             mbedtls_xtea_crypt_ecb( ctx, mode, input, output );
+ 382              		.loc 1 158 0
+ 383 0024 3300     		movs	r3, r6
+ 384 0026 2200     		movs	r2, r4
+ 385 0028 0199     		ldr	r1, [sp, #4]
+ 386 002a 0098     		ldr	r0, [sp]
+ 387 002c FFF7FEFF 		bl	mbedtls_xtea_crypt_ecb
+ 388              	.LVL38:
+ 159:Source\mbedtls_open\library/xtea.c **** 
+ 160:Source\mbedtls_open\library/xtea.c ****             for( i = 0; i < 8; i++ )
+ 389              		.loc 1 160 0
+ 390 0030 0023     		movs	r3, #0
+ 391 0032 05E0     		b	.L20
+ 392              	.LVL39:
+ 393              	.L21:
+ 161:Source\mbedtls_open\library/xtea.c ****                 output[i] = (unsigned char)( output[i] ^ iv[i] );
+ 394              		.loc 1 161 0 discriminator 3
+ 395 0034 F118     		adds	r1, r6, r3
+ 396 0036 0878     		ldrb	r0, [r1]
+ 397 0038 FA5C     		ldrb	r2, [r7, r3]
+ 398 003a 4240     		eors	r2, r0
+ 399 003c 0A70     		strb	r2, [r1]
+ 160:Source\mbedtls_open\library/xtea.c ****                 output[i] = (unsigned char)( output[i] ^ iv[i] );
+ 400              		.loc 1 160 0 discriminator 3
+ 401 003e 0133     		adds	r3, r3, #1
+ 402              	.LVL40:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 11
+
+
+ 403              	.L20:
+ 160:Source\mbedtls_open\library/xtea.c ****                 output[i] = (unsigned char)( output[i] ^ iv[i] );
+ 404              		.loc 1 160 0 is_stmt 0 discriminator 1
+ 405 0040 072B     		cmp	r3, #7
+ 406 0042 F7DD     		ble	.L21
+ 162:Source\mbedtls_open\library/xtea.c **** 
+ 163:Source\mbedtls_open\library/xtea.c ****             memcpy( iv, temp, 8 );
+ 407              		.loc 1 163 0 is_stmt 1
+ 408 0044 0822     		movs	r2, #8
+ 409 0046 02A9     		add	r1, sp, #8
+ 410 0048 3800     		movs	r0, r7
+ 411 004a FFF7FEFF 		bl	memcpy
+ 412              	.LVL41:
+ 164:Source\mbedtls_open\library/xtea.c **** 
+ 165:Source\mbedtls_open\library/xtea.c ****             input  += 8;
+ 413              		.loc 1 165 0
+ 414 004e 0834     		adds	r4, r4, #8
+ 415              	.LVL42:
+ 166:Source\mbedtls_open\library/xtea.c ****             output += 8;
+ 416              		.loc 1 166 0
+ 417 0050 0836     		adds	r6, r6, #8
+ 418              	.LVL43:
+ 167:Source\mbedtls_open\library/xtea.c ****             length -= 8;
+ 419              		.loc 1 167 0
+ 420 0052 083D     		subs	r5, r5, #8
+ 421              	.LVL44:
+ 422              	.L18:
+ 155:Source\mbedtls_open\library/xtea.c ****         {
+ 423              		.loc 1 155 0
+ 424 0054 002D     		cmp	r5, #0
+ 425 0056 E0D1     		bne	.L22
+ 168:Source\mbedtls_open\library/xtea.c ****         }
+ 169:Source\mbedtls_open\library/xtea.c ****     }
+ 170:Source\mbedtls_open\library/xtea.c ****     else
+ 171:Source\mbedtls_open\library/xtea.c ****     {
+ 172:Source\mbedtls_open\library/xtea.c ****         while( length > 0 )
+ 173:Source\mbedtls_open\library/xtea.c ****         {
+ 174:Source\mbedtls_open\library/xtea.c ****             for( i = 0; i < 8; i++ )
+ 175:Source\mbedtls_open\library/xtea.c ****                 output[i] = (unsigned char)( input[i] ^ iv[i] );
+ 176:Source\mbedtls_open\library/xtea.c **** 
+ 177:Source\mbedtls_open\library/xtea.c ****             mbedtls_xtea_crypt_ecb( ctx, mode, output, output );
+ 178:Source\mbedtls_open\library/xtea.c ****             memcpy( iv, output, 8 );
+ 179:Source\mbedtls_open\library/xtea.c **** 
+ 180:Source\mbedtls_open\library/xtea.c ****             input  += 8;
+ 181:Source\mbedtls_open\library/xtea.c ****             output += 8;
+ 182:Source\mbedtls_open\library/xtea.c ****             length -= 8;
+ 183:Source\mbedtls_open\library/xtea.c ****         }
+ 184:Source\mbedtls_open\library/xtea.c ****     }
+ 185:Source\mbedtls_open\library/xtea.c **** 
+ 186:Source\mbedtls_open\library/xtea.c ****     return( 0 );
+ 426              		.loc 1 186 0
+ 427 0058 0020     		movs	r0, #0
+ 428 005a 1CE0     		b	.L17
+ 429              	.LVL45:
+ 430              	.L23:
+ 175:Source\mbedtls_open\library/xtea.c **** 
+ 431              		.loc 1 175 0 discriminator 3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 12
+
+
+ 432 005c E15C     		ldrb	r1, [r4, r3]
+ 433 005e FA5C     		ldrb	r2, [r7, r3]
+ 434 0060 4A40     		eors	r2, r1
+ 435 0062 F254     		strb	r2, [r6, r3]
+ 174:Source\mbedtls_open\library/xtea.c ****                 output[i] = (unsigned char)( input[i] ^ iv[i] );
+ 436              		.loc 1 174 0 discriminator 3
+ 437 0064 0133     		adds	r3, r3, #1
+ 438              	.LVL46:
+ 439 0066 00E0     		b	.L24
+ 440              	.LVL47:
+ 441              	.L26:
+ 442 0068 0023     		movs	r3, #0
+ 443              	.L24:
+ 444              	.LVL48:
+ 174:Source\mbedtls_open\library/xtea.c ****                 output[i] = (unsigned char)( input[i] ^ iv[i] );
+ 445              		.loc 1 174 0 is_stmt 0 discriminator 1
+ 446 006a 072B     		cmp	r3, #7
+ 447 006c F6DD     		ble	.L23
+ 177:Source\mbedtls_open\library/xtea.c ****             memcpy( iv, output, 8 );
+ 448              		.loc 1 177 0 is_stmt 1
+ 449 006e 3300     		movs	r3, r6
+ 450              	.LVL49:
+ 451 0070 3200     		movs	r2, r6
+ 452 0072 0199     		ldr	r1, [sp, #4]
+ 453 0074 0098     		ldr	r0, [sp]
+ 454 0076 FFF7FEFF 		bl	mbedtls_xtea_crypt_ecb
+ 455              	.LVL50:
+ 178:Source\mbedtls_open\library/xtea.c **** 
+ 456              		.loc 1 178 0
+ 457 007a 0822     		movs	r2, #8
+ 458 007c 3100     		movs	r1, r6
+ 459 007e 3800     		movs	r0, r7
+ 460 0080 FFF7FEFF 		bl	memcpy
+ 461              	.LVL51:
+ 180:Source\mbedtls_open\library/xtea.c ****             output += 8;
+ 462              		.loc 1 180 0
+ 463 0084 0834     		adds	r4, r4, #8
+ 464              	.LVL52:
+ 181:Source\mbedtls_open\library/xtea.c ****             length -= 8;
+ 465              		.loc 1 181 0
+ 466 0086 0836     		adds	r6, r6, #8
+ 467              	.LVL53:
+ 182:Source\mbedtls_open\library/xtea.c ****         }
+ 468              		.loc 1 182 0
+ 469 0088 083D     		subs	r5, r5, #8
+ 470              	.LVL54:
+ 471              	.L19:
+ 172:Source\mbedtls_open\library/xtea.c ****         {
+ 472              		.loc 1 172 0
+ 473 008a 002D     		cmp	r5, #0
+ 474 008c ECD1     		bne	.L26
+ 475              		.loc 1 186 0
+ 476 008e 0020     		movs	r0, #0
+ 477 0090 01E0     		b	.L17
+ 478              	.LVL55:
+ 479              	.L25:
+ 151:Source\mbedtls_open\library/xtea.c **** 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 13
+
+
+ 480              		.loc 1 151 0
+ 481 0092 2820     		movs	r0, #40
+ 482              	.LVL56:
+ 483 0094 4042     		rsbs	r0, r0, #0
+ 484              	.LVL57:
+ 485              	.L17:
+ 187:Source\mbedtls_open\library/xtea.c **** }
+ 486              		.loc 1 187 0
+ 487 0096 05B0     		add	sp, sp, #20
+ 488              	.LVL58:
+ 489              		@ sp needed
+ 490              	.LVL59:
+ 491              	.LVL60:
+ 492 0098 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 493              		.cfi_endproc
+ 494              	.LFE5:
+ 495              		.size	mbedtls_xtea_crypt_cbc, .-mbedtls_xtea_crypt_cbc
+ 496 009a C046     		.section	.text.mbedtls_xtea_self_test,"ax",%progbits
+ 497              		.align	2
+ 498              		.global	mbedtls_xtea_self_test
+ 499              		.code	16
+ 500              		.thumb_func
+ 501              		.type	mbedtls_xtea_self_test, %function
+ 502              	mbedtls_xtea_self_test:
+ 503              	.LFB6:
+ 188:Source\mbedtls_open\library/xtea.c **** #endif /* MBEDTLS_CIPHER_MODE_CBC */
+ 189:Source\mbedtls_open\library/xtea.c **** #endif /* !MBEDTLS_XTEA_ALT */
+ 190:Source\mbedtls_open\library/xtea.c **** 
+ 191:Source\mbedtls_open\library/xtea.c **** #if defined(MBEDTLS_SELF_TEST)
+ 192:Source\mbedtls_open\library/xtea.c **** 
+ 193:Source\mbedtls_open\library/xtea.c **** /*
+ 194:Source\mbedtls_open\library/xtea.c ****  * XTEA tests vectors (non-official)
+ 195:Source\mbedtls_open\library/xtea.c ****  */
+ 196:Source\mbedtls_open\library/xtea.c **** 
+ 197:Source\mbedtls_open\library/xtea.c **** static const unsigned char xtea_test_key[6][16] =
+ 198:Source\mbedtls_open\library/xtea.c **** {
+ 199:Source\mbedtls_open\library/xtea.c ****    { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
+ 200:Source\mbedtls_open\library/xtea.c ****      0x0c, 0x0d, 0x0e, 0x0f },
+ 201:Source\mbedtls_open\library/xtea.c ****    { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
+ 202:Source\mbedtls_open\library/xtea.c ****      0x0c, 0x0d, 0x0e, 0x0f },
+ 203:Source\mbedtls_open\library/xtea.c ****    { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
+ 204:Source\mbedtls_open\library/xtea.c ****      0x0c, 0x0d, 0x0e, 0x0f },
+ 205:Source\mbedtls_open\library/xtea.c ****    { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ 206:Source\mbedtls_open\library/xtea.c ****      0x00, 0x00, 0x00, 0x00 },
+ 207:Source\mbedtls_open\library/xtea.c ****    { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ 208:Source\mbedtls_open\library/xtea.c ****      0x00, 0x00, 0x00, 0x00 },
+ 209:Source\mbedtls_open\library/xtea.c ****    { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ 210:Source\mbedtls_open\library/xtea.c ****      0x00, 0x00, 0x00, 0x00 }
+ 211:Source\mbedtls_open\library/xtea.c **** };
+ 212:Source\mbedtls_open\library/xtea.c **** 
+ 213:Source\mbedtls_open\library/xtea.c **** static const unsigned char xtea_test_pt[6][8] =
+ 214:Source\mbedtls_open\library/xtea.c **** {
+ 215:Source\mbedtls_open\library/xtea.c ****     { 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48 },
+ 216:Source\mbedtls_open\library/xtea.c ****     { 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41 },
+ 217:Source\mbedtls_open\library/xtea.c ****     { 0x5a, 0x5b, 0x6e, 0x27, 0x89, 0x48, 0xd7, 0x7f },
+ 218:Source\mbedtls_open\library/xtea.c ****     { 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48 },
+ 219:Source\mbedtls_open\library/xtea.c ****     { 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41 },
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 14
+
+
+ 220:Source\mbedtls_open\library/xtea.c ****     { 0x70, 0xe1, 0x22, 0x5d, 0x6e, 0x4e, 0x76, 0x55 }
+ 221:Source\mbedtls_open\library/xtea.c **** };
+ 222:Source\mbedtls_open\library/xtea.c **** 
+ 223:Source\mbedtls_open\library/xtea.c **** static const unsigned char xtea_test_ct[6][8] =
+ 224:Source\mbedtls_open\library/xtea.c **** {
+ 225:Source\mbedtls_open\library/xtea.c ****     { 0x49, 0x7d, 0xf3, 0xd0, 0x72, 0x61, 0x2c, 0xb5 },
+ 226:Source\mbedtls_open\library/xtea.c ****     { 0xe7, 0x8f, 0x2d, 0x13, 0x74, 0x43, 0x41, 0xd8 },
+ 227:Source\mbedtls_open\library/xtea.c ****     { 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41 },
+ 228:Source\mbedtls_open\library/xtea.c ****     { 0xa0, 0x39, 0x05, 0x89, 0xf8, 0xb8, 0xef, 0xa5 },
+ 229:Source\mbedtls_open\library/xtea.c ****     { 0xed, 0x23, 0x37, 0x5a, 0x82, 0x1a, 0x8c, 0x2d },
+ 230:Source\mbedtls_open\library/xtea.c ****     { 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41 }
+ 231:Source\mbedtls_open\library/xtea.c **** };
+ 232:Source\mbedtls_open\library/xtea.c **** 
+ 233:Source\mbedtls_open\library/xtea.c **** /*
+ 234:Source\mbedtls_open\library/xtea.c ****  * Checkup routine
+ 235:Source\mbedtls_open\library/xtea.c ****  */
+ 236:Source\mbedtls_open\library/xtea.c **** int mbedtls_xtea_self_test( int verbose )
+ 237:Source\mbedtls_open\library/xtea.c **** {
+ 504              		.loc 1 237 0
+ 505              		.cfi_startproc
+ 506              		@ args = 0, pretend = 0, frame = 24
+ 507              		@ frame_needed = 0, uses_anonymous_args = 0
+ 508              	.LVL61:
+ 509 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 510              		.cfi_def_cfa_offset 20
+ 511              		.cfi_offset 4, -20
+ 512              		.cfi_offset 5, -16
+ 513              		.cfi_offset 6, -12
+ 514              		.cfi_offset 7, -8
+ 515              		.cfi_offset 14, -4
+ 516 0002 87B0     		sub	sp, sp, #28
+ 517              		.cfi_def_cfa_offset 48
+ 518 0004 0700     		movs	r7, r0
+ 519              	.LVL62:
+ 238:Source\mbedtls_open\library/xtea.c ****     int i, ret = 0;
+ 239:Source\mbedtls_open\library/xtea.c ****     unsigned char buf[8];
+ 240:Source\mbedtls_open\library/xtea.c ****     mbedtls_xtea_context ctx;
+ 241:Source\mbedtls_open\library/xtea.c **** 
+ 242:Source\mbedtls_open\library/xtea.c ****     mbedtls_xtea_init( &ctx );
+ 520              		.loc 1 242 0
+ 521 0006 6846     		mov	r0, sp
+ 522              	.LVL63:
+ 523 0008 FFF7FEFF 		bl	mbedtls_xtea_init
+ 524              	.LVL64:
+ 243:Source\mbedtls_open\library/xtea.c ****     for( i = 0; i < 6; i++ )
+ 525              		.loc 1 243 0
+ 526 000c 0025     		movs	r5, #0
+ 527 000e 30E0     		b	.L28
+ 528              	.LVL65:
+ 529              	.L33:
+ 244:Source\mbedtls_open\library/xtea.c ****     {
+ 245:Source\mbedtls_open\library/xtea.c ****         if( verbose != 0 )
+ 530              		.loc 1 245 0
+ 531 0010 002F     		cmp	r7, #0
+ 532 0012 03D0     		beq	.L29
+ 246:Source\mbedtls_open\library/xtea.c ****             mbedtls_printf( "  XTEA test #%d: ", i + 1 );
+ 533              		.loc 1 246 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 15
+
+
+ 534 0014 691C     		adds	r1, r5, #1
+ 535 0016 2048     		ldr	r0, .L36
+ 536 0018 FFF7FEFF 		bl	printf
+ 537              	.LVL66:
+ 538              	.L29:
+ 247:Source\mbedtls_open\library/xtea.c **** 
+ 248:Source\mbedtls_open\library/xtea.c ****         memcpy( buf, xtea_test_pt[i], 8 );
+ 539              		.loc 1 248 0
+ 540 001c 04AC     		add	r4, sp, #16
+ 541 001e 1F4B     		ldr	r3, .L36+4
+ 542 0020 9C46     		mov	ip, r3
+ 543 0022 EE00     		lsls	r6, r5, #3
+ 544 0024 9B19     		adds	r3, r3, r6
+ 545 0026 2200     		movs	r2, r4
+ 546 0028 03CB     		ldmia	r3!, {r0, r1}
+ 547 002a 03C2     		stmia	r2!, {r0, r1}
+ 249:Source\mbedtls_open\library/xtea.c **** 
+ 250:Source\mbedtls_open\library/xtea.c ****         mbedtls_xtea_setup( &ctx, xtea_test_key[i] );
+ 548              		.loc 1 250 0
+ 549 002c 6146     		mov	r1, ip
+ 550 002e 3031     		adds	r1, r1, #48
+ 551 0030 2B01     		lsls	r3, r5, #4
+ 552 0032 C918     		adds	r1, r1, r3
+ 553 0034 6846     		mov	r0, sp
+ 554 0036 FFF7FEFF 		bl	mbedtls_xtea_setup
+ 555              	.LVL67:
+ 251:Source\mbedtls_open\library/xtea.c ****         mbedtls_xtea_crypt_ecb( &ctx, MBEDTLS_XTEA_ENCRYPT, buf, buf );
+ 556              		.loc 1 251 0
+ 557 003a 2300     		movs	r3, r4
+ 558 003c 2200     		movs	r2, r4
+ 559 003e 0121     		movs	r1, #1
+ 560 0040 6846     		mov	r0, sp
+ 561 0042 FFF7FEFF 		bl	mbedtls_xtea_crypt_ecb
+ 562              	.LVL68:
+ 252:Source\mbedtls_open\library/xtea.c **** 
+ 253:Source\mbedtls_open\library/xtea.c ****         if( memcmp( buf, xtea_test_ct[i], 8 ) != 0 )
+ 563              		.loc 1 253 0
+ 564 0046 1649     		ldr	r1, .L36+8
+ 565 0048 1031     		adds	r1, r1, #16
+ 566 004a 8919     		adds	r1, r1, r6
+ 567 004c 0822     		movs	r2, #8
+ 568 004e 2000     		movs	r0, r4
+ 569 0050 FFF7FEFF 		bl	memcmp
+ 570              	.LVL69:
+ 571 0054 0028     		cmp	r0, #0
+ 572 0056 06D0     		beq	.L30
+ 254:Source\mbedtls_open\library/xtea.c ****         {
+ 255:Source\mbedtls_open\library/xtea.c ****             if( verbose != 0 )
+ 573              		.loc 1 255 0
+ 574 0058 002F     		cmp	r7, #0
+ 575 005a 13D0     		beq	.L34
+ 256:Source\mbedtls_open\library/xtea.c ****                 mbedtls_printf( "failed\n" );
+ 576              		.loc 1 256 0
+ 577 005c 1148     		ldr	r0, .L36+12
+ 578 005e FFF7FEFF 		bl	puts
+ 579              	.LVL70:
+ 257:Source\mbedtls_open\library/xtea.c **** 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 16
+
+
+ 258:Source\mbedtls_open\library/xtea.c ****             ret = 1;
+ 580              		.loc 1 258 0
+ 581 0062 0124     		movs	r4, #1
+ 582 0064 11E0     		b	.L31
+ 583              	.L30:
+ 259:Source\mbedtls_open\library/xtea.c ****             goto exit;
+ 260:Source\mbedtls_open\library/xtea.c ****         }
+ 261:Source\mbedtls_open\library/xtea.c **** 
+ 262:Source\mbedtls_open\library/xtea.c ****         if( verbose != 0 )
+ 584              		.loc 1 262 0
+ 585 0066 002F     		cmp	r7, #0
+ 586 0068 02D0     		beq	.L32
+ 263:Source\mbedtls_open\library/xtea.c ****             mbedtls_printf( "passed\n" );
+ 587              		.loc 1 263 0
+ 588 006a 0F48     		ldr	r0, .L36+16
+ 589 006c FFF7FEFF 		bl	puts
+ 590              	.LVL71:
+ 591              	.L32:
+ 243:Source\mbedtls_open\library/xtea.c ****     {
+ 592              		.loc 1 243 0 discriminator 2
+ 593 0070 0135     		adds	r5, r5, #1
+ 594              	.LVL72:
+ 595              	.L28:
+ 243:Source\mbedtls_open\library/xtea.c ****     {
+ 596              		.loc 1 243 0 is_stmt 0 discriminator 1
+ 597 0072 052D     		cmp	r5, #5
+ 598 0074 CCDD     		ble	.L33
+ 264:Source\mbedtls_open\library/xtea.c ****     }
+ 265:Source\mbedtls_open\library/xtea.c **** 
+ 266:Source\mbedtls_open\library/xtea.c ****     if( verbose != 0 )
+ 599              		.loc 1 266 0 is_stmt 1
+ 600 0076 002F     		cmp	r7, #0
+ 601 0078 06D0     		beq	.L35
+ 267:Source\mbedtls_open\library/xtea.c ****         mbedtls_printf( "\n" );
+ 602              		.loc 1 267 0
+ 603 007a 0A20     		movs	r0, #10
+ 604 007c FFF7FEFF 		bl	putchar
+ 605              	.LVL73:
+ 238:Source\mbedtls_open\library/xtea.c ****     unsigned char buf[8];
+ 606              		.loc 1 238 0
+ 607 0080 0024     		movs	r4, #0
+ 608 0082 02E0     		b	.L31
+ 609              	.L34:
+ 258:Source\mbedtls_open\library/xtea.c ****             goto exit;
+ 610              		.loc 1 258 0
+ 611 0084 0124     		movs	r4, #1
+ 612 0086 00E0     		b	.L31
+ 613              	.L35:
+ 238:Source\mbedtls_open\library/xtea.c ****     unsigned char buf[8];
+ 614              		.loc 1 238 0
+ 615 0088 0024     		movs	r4, #0
+ 616              	.L31:
+ 617              	.LVL74:
+ 268:Source\mbedtls_open\library/xtea.c **** 
+ 269:Source\mbedtls_open\library/xtea.c **** exit:
+ 270:Source\mbedtls_open\library/xtea.c ****     mbedtls_xtea_free( &ctx );
+ 618              		.loc 1 270 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 17
+
+
+ 619 008a 6846     		mov	r0, sp
+ 620 008c FFF7FEFF 		bl	mbedtls_xtea_free
+ 621              	.LVL75:
+ 271:Source\mbedtls_open\library/xtea.c **** 
+ 272:Source\mbedtls_open\library/xtea.c ****     return( ret );
+ 273:Source\mbedtls_open\library/xtea.c **** }
+ 622              		.loc 1 273 0
+ 623 0090 2000     		movs	r0, r4
+ 624 0092 07B0     		add	sp, sp, #28
+ 625              		@ sp needed
+ 626              	.LVL76:
+ 627              	.LVL77:
+ 628              	.LVL78:
+ 629 0094 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 630              	.L37:
+ 631 0096 C046     		.align	2
+ 632              	.L36:
+ 633 0098 00000000 		.word	.LC0
+ 634 009c 00000000 		.word	.LANCHOR0
+ 635 00a0 80000000 		.word	.LANCHOR1
+ 636 00a4 14000000 		.word	.LC4
+ 637 00a8 1C000000 		.word	.LC6
+ 638              		.cfi_endproc
+ 639              	.LFE6:
+ 640              		.size	mbedtls_xtea_self_test, .-mbedtls_xtea_self_test
+ 641              		.section	.rodata
+ 642              		.align	2
+ 643              		.set	.LANCHOR0,. + 0
+ 644              		.set	.LANCHOR1,. + 128
+ 645              		.type	xtea_test_pt, %object
+ 646              		.size	xtea_test_pt, 48
+ 647              	xtea_test_pt:
+ 648 0000 41       		.byte	65
+ 649 0001 42       		.byte	66
+ 650 0002 43       		.byte	67
+ 651 0003 44       		.byte	68
+ 652 0004 45       		.byte	69
+ 653 0005 46       		.byte	70
+ 654 0006 47       		.byte	71
+ 655 0007 48       		.byte	72
+ 656 0008 41       		.byte	65
+ 657 0009 41       		.byte	65
+ 658 000a 41       		.byte	65
+ 659 000b 41       		.byte	65
+ 660 000c 41       		.byte	65
+ 661 000d 41       		.byte	65
+ 662 000e 41       		.byte	65
+ 663 000f 41       		.byte	65
+ 664 0010 5A       		.byte	90
+ 665 0011 5B       		.byte	91
+ 666 0012 6E       		.byte	110
+ 667 0013 27       		.byte	39
+ 668 0014 89       		.byte	-119
+ 669 0015 48       		.byte	72
+ 670 0016 D7       		.byte	-41
+ 671 0017 7F       		.byte	127
+ 672 0018 41       		.byte	65
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 18
+
+
+ 673 0019 42       		.byte	66
+ 674 001a 43       		.byte	67
+ 675 001b 44       		.byte	68
+ 676 001c 45       		.byte	69
+ 677 001d 46       		.byte	70
+ 678 001e 47       		.byte	71
+ 679 001f 48       		.byte	72
+ 680 0020 41       		.byte	65
+ 681 0021 41       		.byte	65
+ 682 0022 41       		.byte	65
+ 683 0023 41       		.byte	65
+ 684 0024 41       		.byte	65
+ 685 0025 41       		.byte	65
+ 686 0026 41       		.byte	65
+ 687 0027 41       		.byte	65
+ 688 0028 70       		.byte	112
+ 689 0029 E1       		.byte	-31
+ 690 002a 22       		.byte	34
+ 691 002b 5D       		.byte	93
+ 692 002c 6E       		.byte	110
+ 693 002d 4E       		.byte	78
+ 694 002e 76       		.byte	118
+ 695 002f 55       		.byte	85
+ 696              		.type	xtea_test_key, %object
+ 697              		.size	xtea_test_key, 96
+ 698              	xtea_test_key:
+ 699 0030 00       		.byte	0
+ 700 0031 01       		.byte	1
+ 701 0032 02       		.byte	2
+ 702 0033 03       		.byte	3
+ 703 0034 04       		.byte	4
+ 704 0035 05       		.byte	5
+ 705 0036 06       		.byte	6
+ 706 0037 07       		.byte	7
+ 707 0038 08       		.byte	8
+ 708 0039 09       		.byte	9
+ 709 003a 0A       		.byte	10
+ 710 003b 0B       		.byte	11
+ 711 003c 0C       		.byte	12
+ 712 003d 0D       		.byte	13
+ 713 003e 0E       		.byte	14
+ 714 003f 0F       		.byte	15
+ 715 0040 00       		.byte	0
+ 716 0041 01       		.byte	1
+ 717 0042 02       		.byte	2
+ 718 0043 03       		.byte	3
+ 719 0044 04       		.byte	4
+ 720 0045 05       		.byte	5
+ 721 0046 06       		.byte	6
+ 722 0047 07       		.byte	7
+ 723 0048 08       		.byte	8
+ 724 0049 09       		.byte	9
+ 725 004a 0A       		.byte	10
+ 726 004b 0B       		.byte	11
+ 727 004c 0C       		.byte	12
+ 728 004d 0D       		.byte	13
+ 729 004e 0E       		.byte	14
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 19
+
+
+ 730 004f 0F       		.byte	15
+ 731 0050 00       		.byte	0
+ 732 0051 01       		.byte	1
+ 733 0052 02       		.byte	2
+ 734 0053 03       		.byte	3
+ 735 0054 04       		.byte	4
+ 736 0055 05       		.byte	5
+ 737 0056 06       		.byte	6
+ 738 0057 07       		.byte	7
+ 739 0058 08       		.byte	8
+ 740 0059 09       		.byte	9
+ 741 005a 0A       		.byte	10
+ 742 005b 0B       		.byte	11
+ 743 005c 0C       		.byte	12
+ 744 005d 0D       		.byte	13
+ 745 005e 0E       		.byte	14
+ 746 005f 0F       		.byte	15
+ 747 0060 00       		.byte	0
+ 748 0061 00       		.byte	0
+ 749 0062 00       		.byte	0
+ 750 0063 00       		.byte	0
+ 751 0064 00       		.byte	0
+ 752 0065 00       		.byte	0
+ 753 0066 00       		.byte	0
+ 754 0067 00       		.byte	0
+ 755 0068 00       		.byte	0
+ 756 0069 00       		.byte	0
+ 757 006a 00       		.byte	0
+ 758 006b 00       		.byte	0
+ 759 006c 00       		.byte	0
+ 760 006d 00       		.byte	0
+ 761 006e 00       		.byte	0
+ 762 006f 00       		.byte	0
+ 763 0070 00       		.byte	0
+ 764 0071 00       		.byte	0
+ 765 0072 00       		.byte	0
+ 766 0073 00       		.byte	0
+ 767 0074 00       		.byte	0
+ 768 0075 00       		.byte	0
+ 769 0076 00       		.byte	0
+ 770 0077 00       		.byte	0
+ 771 0078 00       		.byte	0
+ 772 0079 00       		.byte	0
+ 773 007a 00       		.byte	0
+ 774 007b 00       		.byte	0
+ 775 007c 00       		.byte	0
+ 776 007d 00       		.byte	0
+ 777 007e 00       		.byte	0
+ 778 007f 00       		.byte	0
+ 779 0080 00       		.byte	0
+ 780 0081 00       		.byte	0
+ 781 0082 00       		.byte	0
+ 782 0083 00       		.byte	0
+ 783 0084 00       		.byte	0
+ 784 0085 00       		.byte	0
+ 785 0086 00       		.byte	0
+ 786 0087 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 20
+
+
+ 787 0088 00       		.byte	0
+ 788 0089 00       		.byte	0
+ 789 008a 00       		.byte	0
+ 790 008b 00       		.byte	0
+ 791 008c 00       		.byte	0
+ 792 008d 00       		.byte	0
+ 793 008e 00       		.byte	0
+ 794 008f 00       		.byte	0
+ 795              		.type	xtea_test_ct, %object
+ 796              		.size	xtea_test_ct, 48
+ 797              	xtea_test_ct:
+ 798 0090 49       		.byte	73
+ 799 0091 7D       		.byte	125
+ 800 0092 F3       		.byte	-13
+ 801 0093 D0       		.byte	-48
+ 802 0094 72       		.byte	114
+ 803 0095 61       		.byte	97
+ 804 0096 2C       		.byte	44
+ 805 0097 B5       		.byte	-75
+ 806 0098 E7       		.byte	-25
+ 807 0099 8F       		.byte	-113
+ 808 009a 2D       		.byte	45
+ 809 009b 13       		.byte	19
+ 810 009c 74       		.byte	116
+ 811 009d 43       		.byte	67
+ 812 009e 41       		.byte	65
+ 813 009f D8       		.byte	-40
+ 814 00a0 41       		.byte	65
+ 815 00a1 41       		.byte	65
+ 816 00a2 41       		.byte	65
+ 817 00a3 41       		.byte	65
+ 818 00a4 41       		.byte	65
+ 819 00a5 41       		.byte	65
+ 820 00a6 41       		.byte	65
+ 821 00a7 41       		.byte	65
+ 822 00a8 A0       		.byte	-96
+ 823 00a9 39       		.byte	57
+ 824 00aa 05       		.byte	5
+ 825 00ab 89       		.byte	-119
+ 826 00ac F8       		.byte	-8
+ 827 00ad B8       		.byte	-72
+ 828 00ae EF       		.byte	-17
+ 829 00af A5       		.byte	-91
+ 830 00b0 ED       		.byte	-19
+ 831 00b1 23       		.byte	35
+ 832 00b2 37       		.byte	55
+ 833 00b3 5A       		.byte	90
+ 834 00b4 82       		.byte	-126
+ 835 00b5 1A       		.byte	26
+ 836 00b6 8C       		.byte	-116
+ 837 00b7 2D       		.byte	45
+ 838 00b8 41       		.byte	65
+ 839 00b9 41       		.byte	65
+ 840 00ba 41       		.byte	65
+ 841 00bb 41       		.byte	65
+ 842 00bc 41       		.byte	65
+ 843 00bd 41       		.byte	65
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 21
+
+
+ 844 00be 41       		.byte	65
+ 845 00bf 41       		.byte	65
+ 846              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 847              		.align	2
+ 848              	.LC0:
+ 849 0000 20205854 		.ascii	"  XTEA test #%d: \000"
+ 849      45412074 
+ 849      65737420 
+ 849      2325643A 
+ 849      2000
+ 850 0012 0000     		.space	2
+ 851              	.LC4:
+ 852 0014 6661696C 		.ascii	"failed\000"
+ 852      656400
+ 853 001b 00       		.space	1
+ 854              	.LC6:
+ 855 001c 70617373 		.ascii	"passed\000"
+ 855      656400
+ 856              		.text
+ 857              	.Letext0:
+ 858              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 859              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 860              		.file 4 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 861              		.file 5 ".\\Source\\mbedtls_open\\include/mbedtls/xtea.h"
+ 862              		.file 6 ".\\Source\\mbedtls_open\\include/mbedtls/platform_util.h"
+ 863              		.file 7 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 864              		.file 8 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 865              		.file 9 "<built-in>"
+ 866              		.section	.debug_info,"",%progbits
+ 867              	.Ldebug_info0:
+ 868 0000 F6050000 		.4byte	0x5f6
+ 869 0004 0400     		.2byte	0x4
+ 870 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 871 000a 04       		.byte	0x4
+ 872 000b 01       		.uleb128 0x1
+ 873 000c 76020000 		.4byte	.LASF41
+ 874 0010 0C       		.byte	0xc
+ 875 0011 8C000000 		.4byte	.LASF42
+ 876 0015 25010000 		.4byte	.LASF43
+ 877 0019 18000000 		.4byte	.Ldebug_ranges0+0x18
+ 878 001d 00000000 		.4byte	0
+ 879 0021 00000000 		.4byte	.Ldebug_line0
+ 880 0025 02       		.uleb128 0x2
+ 881 0026 01       		.byte	0x1
+ 882 0027 06       		.byte	0x6
+ 883 0028 08030000 		.4byte	.LASF0
+ 884 002c 02       		.uleb128 0x2
+ 885 002d 01       		.byte	0x1
+ 886 002e 08       		.byte	0x8
+ 887 002f 78000000 		.4byte	.LASF1
+ 888 0033 02       		.uleb128 0x2
+ 889 0034 02       		.byte	0x2
+ 890 0035 05       		.byte	0x5
+ 891 0036 4E020000 		.4byte	.LASF2
+ 892 003a 02       		.uleb128 0x2
+ 893 003b 02       		.byte	0x2
+ 894 003c 07       		.byte	0x7
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 22
+
+
+ 895 003d C6000000 		.4byte	.LASF3
+ 896 0041 02       		.uleb128 0x2
+ 897 0042 04       		.byte	0x4
+ 898 0043 05       		.byte	0x5
+ 899 0044 61020000 		.4byte	.LASF4
+ 900 0048 03       		.uleb128 0x3
+ 901 0049 ED000000 		.4byte	.LASF9
+ 902 004d 02       		.byte	0x2
+ 903 004e 41       		.byte	0x41
+ 904 004f 53000000 		.4byte	0x53
+ 905 0053 02       		.uleb128 0x2
+ 906 0054 04       		.byte	0x4
+ 907 0055 07       		.byte	0x7
+ 908 0056 AF000000 		.4byte	.LASF5
+ 909 005a 02       		.uleb128 0x2
+ 910 005b 08       		.byte	0x8
+ 911 005c 05       		.byte	0x5
+ 912 005d 01020000 		.4byte	.LASF6
+ 913 0061 02       		.uleb128 0x2
+ 914 0062 08       		.byte	0x8
+ 915 0063 07       		.byte	0x7
+ 916 0064 CA010000 		.4byte	.LASF7
+ 917 0068 04       		.uleb128 0x4
+ 918 0069 04       		.byte	0x4
+ 919 006a 05       		.byte	0x5
+ 920 006b 696E7400 		.ascii	"int\000"
+ 921 006f 02       		.uleb128 0x2
+ 922 0070 04       		.byte	0x4
+ 923 0071 07       		.byte	0x7
+ 924 0072 18010000 		.4byte	.LASF8
+ 925 0076 03       		.uleb128 0x3
+ 926 0077 0D000000 		.4byte	.LASF10
+ 927 007b 03       		.byte	0x3
+ 928 007c D8       		.byte	0xd8
+ 929 007d 6F000000 		.4byte	0x6f
+ 930 0081 02       		.uleb128 0x2
+ 931 0082 08       		.byte	0x8
+ 932 0083 04       		.byte	0x4
+ 933 0084 6A020000 		.4byte	.LASF11
+ 934 0088 03       		.uleb128 0x3
+ 935 0089 58020000 		.4byte	.LASF12
+ 936 008d 04       		.byte	0x4
+ 937 008e 30       		.byte	0x30
+ 938 008f 48000000 		.4byte	0x48
+ 939 0093 05       		.uleb128 0x5
+ 940 0094 4B030000 		.4byte	.LASF14
+ 941 0098 10       		.byte	0x10
+ 942 0099 05       		.byte	0x5
+ 943 009a 35       		.byte	0x35
+ 944 009b AA000000 		.4byte	0xaa
+ 945 009f 06       		.uleb128 0x6
+ 946 00a0 6B00     		.ascii	"k\000"
+ 947 00a2 05       		.byte	0x5
+ 948 00a3 37       		.byte	0x37
+ 949 00a4 AA000000 		.4byte	0xaa
+ 950 00a8 00       		.byte	0
+ 951 00a9 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 23
+
+
+ 952 00aa 07       		.uleb128 0x7
+ 953 00ab 88000000 		.4byte	0x88
+ 954 00af BA000000 		.4byte	0xba
+ 955 00b3 08       		.uleb128 0x8
+ 956 00b4 BA000000 		.4byte	0xba
+ 957 00b8 03       		.byte	0x3
+ 958 00b9 00       		.byte	0
+ 959 00ba 02       		.uleb128 0x2
+ 960 00bb 04       		.byte	0x4
+ 961 00bc 07       		.byte	0x7
+ 962 00bd F8010000 		.4byte	.LASF13
+ 963 00c1 03       		.uleb128 0x3
+ 964 00c2 4B030000 		.4byte	.LASF14
+ 965 00c6 05       		.byte	0x5
+ 966 00c7 39       		.byte	0x39
+ 967 00c8 93000000 		.4byte	0x93
+ 968 00cc 09       		.uleb128 0x9
+ 969 00cd 04       		.byte	0x4
+ 970 00ce 2C000000 		.4byte	0x2c
+ 971 00d2 02       		.uleb128 0x2
+ 972 00d3 01       		.byte	0x1
+ 973 00d4 08       		.byte	0x8
+ 974 00d5 1D020000 		.4byte	.LASF15
+ 975 00d9 0A       		.uleb128 0xa
+ 976 00da 66000000 		.4byte	.LASF16
+ 977 00de 01       		.byte	0x1
+ 978 00df 45       		.byte	0x45
+ 979 00e0 00000000 		.4byte	.LFB1
+ 980 00e4 0C000000 		.4byte	.LFE1-.LFB1
+ 981 00e8 01       		.uleb128 0x1
+ 982 00e9 9C       		.byte	0x9c
+ 983 00ea 19010000 		.4byte	0x119
+ 984 00ee 0B       		.uleb128 0xb
+ 985 00ef 63747800 		.ascii	"ctx\000"
+ 986 00f3 01       		.byte	0x1
+ 987 00f4 45       		.byte	0x45
+ 988 00f5 19010000 		.4byte	0x119
+ 989 00f9 00000000 		.4byte	.LLST0
+ 990 00fd 0C       		.uleb128 0xc
+ 991 00fe 0A000000 		.4byte	.LVL1
+ 992 0102 A8050000 		.4byte	0x5a8
+ 993 0106 0D       		.uleb128 0xd
+ 994 0107 01       		.uleb128 0x1
+ 995 0108 50       		.byte	0x50
+ 996 0109 03       		.uleb128 0x3
+ 997 010a F3       		.byte	0xf3
+ 998 010b 01       		.uleb128 0x1
+ 999 010c 50       		.byte	0x50
+ 1000 010d 0D       		.uleb128 0xd
+ 1001 010e 01       		.uleb128 0x1
+ 1002 010f 51       		.byte	0x51
+ 1003 0110 01       		.uleb128 0x1
+ 1004 0111 30       		.byte	0x30
+ 1005 0112 0D       		.uleb128 0xd
+ 1006 0113 01       		.uleb128 0x1
+ 1007 0114 52       		.byte	0x52
+ 1008 0115 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 24
+
+
+ 1009 0116 40       		.byte	0x40
+ 1010 0117 00       		.byte	0
+ 1011 0118 00       		.byte	0
+ 1012 0119 09       		.uleb128 0x9
+ 1013 011a 04       		.byte	0x4
+ 1014 011b C1000000 		.4byte	0xc1
+ 1015 011f 0A       		.uleb128 0xa
+ 1016 0120 30020000 		.4byte	.LASF17
+ 1017 0124 01       		.byte	0x1
+ 1018 0125 4A       		.byte	0x4a
+ 1019 0126 00000000 		.4byte	.LFB2
+ 1020 012a 0E000000 		.4byte	.LFE2-.LFB2
+ 1021 012e 01       		.uleb128 0x1
+ 1022 012f 9C       		.byte	0x9c
+ 1023 0130 5A010000 		.4byte	0x15a
+ 1024 0134 0B       		.uleb128 0xb
+ 1025 0135 63747800 		.ascii	"ctx\000"
+ 1026 0139 01       		.byte	0x1
+ 1027 013a 4A       		.byte	0x4a
+ 1028 013b 19010000 		.4byte	0x119
+ 1029 013f 21000000 		.4byte	.LLST1
+ 1030 0143 0C       		.uleb128 0xc
+ 1031 0144 0C000000 		.4byte	.LVL3
+ 1032 0148 B1050000 		.4byte	0x5b1
+ 1033 014c 0D       		.uleb128 0xd
+ 1034 014d 01       		.uleb128 0x1
+ 1035 014e 50       		.byte	0x50
+ 1036 014f 03       		.uleb128 0x3
+ 1037 0150 F3       		.byte	0xf3
+ 1038 0151 01       		.uleb128 0x1
+ 1039 0152 50       		.byte	0x50
+ 1040 0153 0D       		.uleb128 0xd
+ 1041 0154 01       		.uleb128 0x1
+ 1042 0155 51       		.byte	0x51
+ 1043 0156 01       		.uleb128 0x1
+ 1044 0157 40       		.byte	0x40
+ 1045 0158 00       		.byte	0
+ 1046 0159 00       		.byte	0
+ 1047 015a 0A       		.uleb128 0xa
+ 1048 015b F8000000 		.4byte	.LASF18
+ 1049 015f 01       		.byte	0x1
+ 1050 0160 55       		.byte	0x55
+ 1051 0161 00000000 		.4byte	.LFB3
+ 1052 0165 34000000 		.4byte	.LFE3-.LFB3
+ 1053 0169 01       		.uleb128 0x1
+ 1054 016a 9C       		.byte	0x9c
+ 1055 016b B5010000 		.4byte	0x1b5
+ 1056 016f 0B       		.uleb128 0xb
+ 1057 0170 63747800 		.ascii	"ctx\000"
+ 1058 0174 01       		.byte	0x1
+ 1059 0175 55       		.byte	0x55
+ 1060 0176 19010000 		.4byte	0x119
+ 1061 017a 42000000 		.4byte	.LLST2
+ 1062 017e 0B       		.uleb128 0xb
+ 1063 017f 6B657900 		.ascii	"key\000"
+ 1064 0183 01       		.byte	0x1
+ 1065 0184 55       		.byte	0x55
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 25
+
+
+ 1066 0185 B5010000 		.4byte	0x1b5
+ 1067 0189 6E000000 		.4byte	.LLST3
+ 1068 018d 0E       		.uleb128 0xe
+ 1069 018e 6900     		.ascii	"i\000"
+ 1070 0190 01       		.byte	0x1
+ 1071 0191 57       		.byte	0x57
+ 1072 0192 68000000 		.4byte	0x68
+ 1073 0196 9A000000 		.4byte	.LLST4
+ 1074 019a 0C       		.uleb128 0xc
+ 1075 019b 0E000000 		.4byte	.LVL6
+ 1076 019f A8050000 		.4byte	0x5a8
+ 1077 01a3 0D       		.uleb128 0xd
+ 1078 01a4 01       		.uleb128 0x1
+ 1079 01a5 50       		.byte	0x50
+ 1080 01a6 02       		.uleb128 0x2
+ 1081 01a7 75       		.byte	0x75
+ 1082 01a8 00       		.sleb128 0
+ 1083 01a9 0D       		.uleb128 0xd
+ 1084 01aa 01       		.uleb128 0x1
+ 1085 01ab 51       		.byte	0x51
+ 1086 01ac 01       		.uleb128 0x1
+ 1087 01ad 30       		.byte	0x30
+ 1088 01ae 0D       		.uleb128 0xd
+ 1089 01af 01       		.uleb128 0x1
+ 1090 01b0 52       		.byte	0x52
+ 1091 01b1 01       		.uleb128 0x1
+ 1092 01b2 40       		.byte	0x40
+ 1093 01b3 00       		.byte	0
+ 1094 01b4 00       		.byte	0
+ 1095 01b5 09       		.uleb128 0x9
+ 1096 01b6 04       		.byte	0x4
+ 1097 01b7 BB010000 		.4byte	0x1bb
+ 1098 01bb 0F       		.uleb128 0xf
+ 1099 01bc 2C000000 		.4byte	0x2c
+ 1100 01c0 10       		.uleb128 0x10
+ 1101 01c1 4F000000 		.4byte	.LASF23
+ 1102 01c5 01       		.byte	0x1
+ 1103 01c6 64       		.byte	0x64
+ 1104 01c7 68000000 		.4byte	0x68
+ 1105 01cb 00000000 		.4byte	.LFB4
+ 1106 01cf F4000000 		.4byte	.LFE4-.LFB4
+ 1107 01d3 01       		.uleb128 0x1
+ 1108 01d4 9C       		.byte	0x9c
+ 1109 01d5 92020000 		.4byte	0x292
+ 1110 01d9 0B       		.uleb128 0xb
+ 1111 01da 63747800 		.ascii	"ctx\000"
+ 1112 01de 01       		.byte	0x1
+ 1113 01df 64       		.byte	0x64
+ 1114 01e0 19010000 		.4byte	0x119
+ 1115 01e4 B9000000 		.4byte	.LLST5
+ 1116 01e8 11       		.uleb128 0x11
+ 1117 01e9 49020000 		.4byte	.LASF19
+ 1118 01ed 01       		.byte	0x1
+ 1119 01ee 64       		.byte	0x64
+ 1120 01ef 68000000 		.4byte	0x68
+ 1121 01f3 E5000000 		.4byte	.LLST6
+ 1122 01f7 11       		.uleb128 0x11
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 26
+
+
+ 1123 01f8 86000000 		.4byte	.LASF20
+ 1124 01fc 01       		.byte	0x1
+ 1125 01fd 65       		.byte	0x65
+ 1126 01fe B5010000 		.4byte	0x1b5
+ 1127 0202 1F010000 		.4byte	.LLST7
+ 1128 0206 11       		.uleb128 0x11
+ 1129 0207 42020000 		.4byte	.LASF21
+ 1130 020b 01       		.byte	0x1
+ 1131 020c 65       		.byte	0x65
+ 1132 020d CC000000 		.4byte	0xcc
+ 1133 0211 64010000 		.4byte	.LLST8
+ 1134 0215 0E       		.uleb128 0xe
+ 1135 0216 6B00     		.ascii	"k\000"
+ 1136 0218 01       		.byte	0x1
+ 1137 0219 67       		.byte	0x67
+ 1138 021a 92020000 		.4byte	0x292
+ 1139 021e 82010000 		.4byte	.LLST9
+ 1140 0222 0E       		.uleb128 0xe
+ 1141 0223 763000   		.ascii	"v0\000"
+ 1142 0226 01       		.byte	0x1
+ 1143 0227 67       		.byte	0x67
+ 1144 0228 88000000 		.4byte	0x88
+ 1145 022c AE010000 		.4byte	.LLST10
+ 1146 0230 12       		.uleb128 0x12
+ 1147 0231 763100   		.ascii	"v1\000"
+ 1148 0234 01       		.byte	0x1
+ 1149 0235 67       		.byte	0x67
+ 1150 0236 88000000 		.4byte	0x88
+ 1151 023a 01       		.uleb128 0x1
+ 1152 023b 52       		.byte	0x52
+ 1153 023c 0E       		.uleb128 0xe
+ 1154 023d 6900     		.ascii	"i\000"
+ 1155 023f 01       		.byte	0x1
+ 1156 0240 67       		.byte	0x67
+ 1157 0241 88000000 		.4byte	0x88
+ 1158 0245 C1010000 		.4byte	.LLST11
+ 1159 0249 13       		.uleb128 0x13
+ 1160 024a 00000000 		.4byte	.Ldebug_ranges0+0
+ 1161 024e 6D020000 		.4byte	0x26d
+ 1162 0252 0E       		.uleb128 0xe
+ 1163 0253 73756D00 		.ascii	"sum\000"
+ 1164 0257 01       		.byte	0x1
+ 1165 0258 70       		.byte	0x70
+ 1166 0259 88000000 		.4byte	0x88
+ 1167 025d EA010000 		.4byte	.LLST12
+ 1168 0261 14       		.uleb128 0x14
+ 1169 0262 20000000 		.4byte	.LASF22
+ 1170 0266 01       		.byte	0x1
+ 1171 0267 70       		.byte	0x70
+ 1172 0268 88000000 		.4byte	0x88
+ 1173 026c 00       		.byte	0
+ 1174 026d 15       		.uleb128 0x15
+ 1175 026e 84000000 		.4byte	.LBB4
+ 1176 0272 3A000000 		.4byte	.LBE4-.LBB4
+ 1177 0276 14       		.uleb128 0x14
+ 1178 0277 20000000 		.4byte	.LASF22
+ 1179 027b 01       		.byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 27
+
+
+ 1180 027c 7B       		.byte	0x7b
+ 1181 027d 88000000 		.4byte	0x88
+ 1182 0281 0E       		.uleb128 0xe
+ 1183 0282 73756D00 		.ascii	"sum\000"
+ 1184 0286 01       		.byte	0x1
+ 1185 0287 7B       		.byte	0x7b
+ 1186 0288 88000000 		.4byte	0x88
+ 1187 028c 08020000 		.4byte	.LLST13
+ 1188 0290 00       		.byte	0
+ 1189 0291 00       		.byte	0
+ 1190 0292 09       		.uleb128 0x9
+ 1191 0293 04       		.byte	0x4
+ 1192 0294 88000000 		.4byte	0x88
+ 1193 0298 10       		.uleb128 0x10
+ 1194 0299 E1010000 		.4byte	.LASF24
+ 1195 029d 01       		.byte	0x1
+ 1196 029e 8F       		.byte	0x8f
+ 1197 029f 68000000 		.4byte	0x68
+ 1198 02a3 00000000 		.4byte	.LFB5
+ 1199 02a7 9A000000 		.4byte	.LFE5-.LFB5
+ 1200 02ab 01       		.uleb128 0x1
+ 1201 02ac 9C       		.byte	0x9c
+ 1202 02ad CF030000 		.4byte	0x3cf
+ 1203 02b1 0B       		.uleb128 0xb
+ 1204 02b2 63747800 		.ascii	"ctx\000"
+ 1205 02b6 01       		.byte	0x1
+ 1206 02b7 8F       		.byte	0x8f
+ 1207 02b8 19010000 		.4byte	0x119
+ 1208 02bc 1B020000 		.4byte	.LLST14
+ 1209 02c0 11       		.uleb128 0x11
+ 1210 02c1 49020000 		.4byte	.LASF19
+ 1211 02c5 01       		.byte	0x1
+ 1212 02c6 8F       		.byte	0x8f
+ 1213 02c7 68000000 		.4byte	0x68
+ 1214 02cb 5D020000 		.4byte	.LLST15
+ 1215 02cf 11       		.uleb128 0x11
+ 1216 02d0 1C030000 		.4byte	.LASF25
+ 1217 02d4 01       		.byte	0x1
+ 1218 02d5 8F       		.byte	0x8f
+ 1219 02d6 76000000 		.4byte	0x76
+ 1220 02da 93020000 		.4byte	.LLST16
+ 1221 02de 0B       		.uleb128 0xb
+ 1222 02df 697600   		.ascii	"iv\000"
+ 1223 02e2 01       		.byte	0x1
+ 1224 02e3 90       		.byte	0x90
+ 1225 02e4 CC000000 		.4byte	0xcc
+ 1226 02e8 C7020000 		.4byte	.LLST17
+ 1227 02ec 11       		.uleb128 0x11
+ 1228 02ed 86000000 		.4byte	.LASF20
+ 1229 02f1 01       		.byte	0x1
+ 1230 02f2 90       		.byte	0x90
+ 1231 02f3 B5010000 		.4byte	0x1b5
+ 1232 02f7 F3020000 		.4byte	.LLST18
+ 1233 02fb 11       		.uleb128 0x11
+ 1234 02fc 42020000 		.4byte	.LASF21
+ 1235 0300 01       		.byte	0x1
+ 1236 0301 91       		.byte	0x91
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 28
+
+
+ 1237 0302 CC000000 		.4byte	0xcc
+ 1238 0306 29030000 		.4byte	.LLST19
+ 1239 030a 0E       		.uleb128 0xe
+ 1240 030b 6900     		.ascii	"i\000"
+ 1241 030d 01       		.byte	0x1
+ 1242 030e 93       		.byte	0x93
+ 1243 030f 68000000 		.4byte	0x68
+ 1244 0313 5F030000 		.4byte	.LLST20
+ 1245 0317 16       		.uleb128 0x16
+ 1246 0318 C1000000 		.4byte	.LASF26
+ 1247 031c 01       		.byte	0x1
+ 1248 031d 94       		.byte	0x94
+ 1249 031e CF030000 		.4byte	0x3cf
+ 1250 0322 02       		.uleb128 0x2
+ 1251 0323 91       		.byte	0x91
+ 1252 0324 60       		.sleb128 -32
+ 1253 0325 17       		.uleb128 0x17
+ 1254 0326 24000000 		.4byte	.LVL37
+ 1255 032a BC050000 		.4byte	0x5bc
+ 1256 032e 44030000 		.4byte	0x344
+ 1257 0332 0D       		.uleb128 0xd
+ 1258 0333 01       		.uleb128 0x1
+ 1259 0334 50       		.byte	0x50
+ 1260 0335 02       		.uleb128 0x2
+ 1261 0336 91       		.byte	0x91
+ 1262 0337 60       		.sleb128 -32
+ 1263 0338 0D       		.uleb128 0xd
+ 1264 0339 01       		.uleb128 0x1
+ 1265 033a 51       		.byte	0x51
+ 1266 033b 02       		.uleb128 0x2
+ 1267 033c 74       		.byte	0x74
+ 1268 033d 00       		.sleb128 0
+ 1269 033e 0D       		.uleb128 0xd
+ 1270 033f 01       		.uleb128 0x1
+ 1271 0340 52       		.byte	0x52
+ 1272 0341 01       		.uleb128 0x1
+ 1273 0342 38       		.byte	0x38
+ 1274 0343 00       		.byte	0
+ 1275 0344 17       		.uleb128 0x17
+ 1276 0345 30000000 		.4byte	.LVL38
+ 1277 0349 C0010000 		.4byte	0x1c0
+ 1278 034d 6C030000 		.4byte	0x36c
+ 1279 0351 0D       		.uleb128 0xd
+ 1280 0352 01       		.uleb128 0x1
+ 1281 0353 50       		.byte	0x50
+ 1282 0354 03       		.uleb128 0x3
+ 1283 0355 7D       		.byte	0x7d
+ 1284 0356 00       		.sleb128 0
+ 1285 0357 06       		.byte	0x6
+ 1286 0358 0D       		.uleb128 0xd
+ 1287 0359 01       		.uleb128 0x1
+ 1288 035a 51       		.byte	0x51
+ 1289 035b 03       		.uleb128 0x3
+ 1290 035c 91       		.byte	0x91
+ 1291 035d 5C       		.sleb128 -36
+ 1292 035e 06       		.byte	0x6
+ 1293 035f 0D       		.uleb128 0xd
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 29
+
+
+ 1294 0360 01       		.uleb128 0x1
+ 1295 0361 52       		.byte	0x52
+ 1296 0362 02       		.uleb128 0x2
+ 1297 0363 74       		.byte	0x74
+ 1298 0364 00       		.sleb128 0
+ 1299 0365 0D       		.uleb128 0xd
+ 1300 0366 01       		.uleb128 0x1
+ 1301 0367 53       		.byte	0x53
+ 1302 0368 02       		.uleb128 0x2
+ 1303 0369 76       		.byte	0x76
+ 1304 036a 00       		.sleb128 0
+ 1305 036b 00       		.byte	0
+ 1306 036c 17       		.uleb128 0x17
+ 1307 036d 4E000000 		.4byte	.LVL41
+ 1308 0371 BC050000 		.4byte	0x5bc
+ 1309 0375 8B030000 		.4byte	0x38b
+ 1310 0379 0D       		.uleb128 0xd
+ 1311 037a 01       		.uleb128 0x1
+ 1312 037b 50       		.byte	0x50
+ 1313 037c 02       		.uleb128 0x2
+ 1314 037d 77       		.byte	0x77
+ 1315 037e 00       		.sleb128 0
+ 1316 037f 0D       		.uleb128 0xd
+ 1317 0380 01       		.uleb128 0x1
+ 1318 0381 51       		.byte	0x51
+ 1319 0382 02       		.uleb128 0x2
+ 1320 0383 91       		.byte	0x91
+ 1321 0384 60       		.sleb128 -32
+ 1322 0385 0D       		.uleb128 0xd
+ 1323 0386 01       		.uleb128 0x1
+ 1324 0387 52       		.byte	0x52
+ 1325 0388 01       		.uleb128 0x1
+ 1326 0389 38       		.byte	0x38
+ 1327 038a 00       		.byte	0
+ 1328 038b 17       		.uleb128 0x17
+ 1329 038c 7A000000 		.4byte	.LVL50
+ 1330 0390 C0010000 		.4byte	0x1c0
+ 1331 0394 B3030000 		.4byte	0x3b3
+ 1332 0398 0D       		.uleb128 0xd
+ 1333 0399 01       		.uleb128 0x1
+ 1334 039a 50       		.byte	0x50
+ 1335 039b 03       		.uleb128 0x3
+ 1336 039c 7D       		.byte	0x7d
+ 1337 039d 00       		.sleb128 0
+ 1338 039e 06       		.byte	0x6
+ 1339 039f 0D       		.uleb128 0xd
+ 1340 03a0 01       		.uleb128 0x1
+ 1341 03a1 51       		.byte	0x51
+ 1342 03a2 03       		.uleb128 0x3
+ 1343 03a3 91       		.byte	0x91
+ 1344 03a4 5C       		.sleb128 -36
+ 1345 03a5 06       		.byte	0x6
+ 1346 03a6 0D       		.uleb128 0xd
+ 1347 03a7 01       		.uleb128 0x1
+ 1348 03a8 52       		.byte	0x52
+ 1349 03a9 02       		.uleb128 0x2
+ 1350 03aa 76       		.byte	0x76
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 30
+
+
+ 1351 03ab 00       		.sleb128 0
+ 1352 03ac 0D       		.uleb128 0xd
+ 1353 03ad 01       		.uleb128 0x1
+ 1354 03ae 53       		.byte	0x53
+ 1355 03af 02       		.uleb128 0x2
+ 1356 03b0 76       		.byte	0x76
+ 1357 03b1 00       		.sleb128 0
+ 1358 03b2 00       		.byte	0
+ 1359 03b3 0C       		.uleb128 0xc
+ 1360 03b4 84000000 		.4byte	.LVL51
+ 1361 03b8 BC050000 		.4byte	0x5bc
+ 1362 03bc 0D       		.uleb128 0xd
+ 1363 03bd 01       		.uleb128 0x1
+ 1364 03be 50       		.byte	0x50
+ 1365 03bf 02       		.uleb128 0x2
+ 1366 03c0 77       		.byte	0x77
+ 1367 03c1 00       		.sleb128 0
+ 1368 03c2 0D       		.uleb128 0xd
+ 1369 03c3 01       		.uleb128 0x1
+ 1370 03c4 51       		.byte	0x51
+ 1371 03c5 02       		.uleb128 0x2
+ 1372 03c6 76       		.byte	0x76
+ 1373 03c7 00       		.sleb128 0
+ 1374 03c8 0D       		.uleb128 0xd
+ 1375 03c9 01       		.uleb128 0x1
+ 1376 03ca 52       		.byte	0x52
+ 1377 03cb 01       		.uleb128 0x1
+ 1378 03cc 38       		.byte	0x38
+ 1379 03cd 00       		.byte	0
+ 1380 03ce 00       		.byte	0
+ 1381 03cf 07       		.uleb128 0x7
+ 1382 03d0 2C000000 		.4byte	0x2c
+ 1383 03d4 DF030000 		.4byte	0x3df
+ 1384 03d8 08       		.uleb128 0x8
+ 1385 03d9 BA000000 		.4byte	0xba
+ 1386 03dd 07       		.byte	0x7
+ 1387 03de 00       		.byte	0
+ 1388 03df 10       		.uleb128 0x10
+ 1389 03e0 26000000 		.4byte	.LASF27
+ 1390 03e4 01       		.byte	0x1
+ 1391 03e5 EC       		.byte	0xec
+ 1392 03e6 68000000 		.4byte	0x68
+ 1393 03ea 00000000 		.4byte	.LFB6
+ 1394 03ee AC000000 		.4byte	.LFE6-.LFB6
+ 1395 03f2 01       		.uleb128 0x1
+ 1396 03f3 9C       		.byte	0x9c
+ 1397 03f4 3A050000 		.4byte	0x53a
+ 1398 03f8 11       		.uleb128 0x11
+ 1399 03f9 14030000 		.4byte	.LASF28
+ 1400 03fd 01       		.byte	0x1
+ 1401 03fe EC       		.byte	0xec
+ 1402 03ff 68000000 		.4byte	0x68
+ 1403 0403 94030000 		.4byte	.LLST21
+ 1404 0407 0E       		.uleb128 0xe
+ 1405 0408 6900     		.ascii	"i\000"
+ 1406 040a 01       		.byte	0x1
+ 1407 040b EE       		.byte	0xee
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 31
+
+
+ 1408 040c 68000000 		.4byte	0x68
+ 1409 0410 C0030000 		.4byte	.LLST22
+ 1410 0414 0E       		.uleb128 0xe
+ 1411 0415 72657400 		.ascii	"ret\000"
+ 1412 0419 01       		.byte	0x1
+ 1413 041a EE       		.byte	0xee
+ 1414 041b 68000000 		.4byte	0x68
+ 1415 041f DF030000 		.4byte	.LLST23
+ 1416 0423 12       		.uleb128 0x12
+ 1417 0424 62756600 		.ascii	"buf\000"
+ 1418 0428 01       		.byte	0x1
+ 1419 0429 EF       		.byte	0xef
+ 1420 042a CF030000 		.4byte	0x3cf
+ 1421 042e 02       		.uleb128 0x2
+ 1422 042f 91       		.byte	0x91
+ 1423 0430 60       		.sleb128 -32
+ 1424 0431 12       		.uleb128 0x12
+ 1425 0432 63747800 		.ascii	"ctx\000"
+ 1426 0436 01       		.byte	0x1
+ 1427 0437 F0       		.byte	0xf0
+ 1428 0438 C1000000 		.4byte	0xc1
+ 1429 043c 02       		.uleb128 0x2
+ 1430 043d 91       		.byte	0x91
+ 1431 043e 50       		.sleb128 -48
+ 1432 043f 18       		.uleb128 0x18
+ 1433 0440 14000000 		.4byte	.LASF44
+ 1434 0444 01       		.byte	0x1
+ 1435 0445 0D01     		.2byte	0x10d
+ 1436 0447 8A000000 		.4byte	.L31
+ 1437 044b 17       		.uleb128 0x17
+ 1438 044c 0C000000 		.4byte	.LVL64
+ 1439 0450 D9000000 		.4byte	0xd9
+ 1440 0454 5F040000 		.4byte	0x45f
+ 1441 0458 0D       		.uleb128 0xd
+ 1442 0459 01       		.uleb128 0x1
+ 1443 045a 50       		.byte	0x50
+ 1444 045b 02       		.uleb128 0x2
+ 1445 045c 7D       		.byte	0x7d
+ 1446 045d 00       		.sleb128 0
+ 1447 045e 00       		.byte	0
+ 1448 045f 17       		.uleb128 0x17
+ 1449 0460 1C000000 		.4byte	.LVL66
+ 1450 0464 C5050000 		.4byte	0x5c5
+ 1451 0468 7C040000 		.4byte	0x47c
+ 1452 046c 0D       		.uleb128 0xd
+ 1453 046d 01       		.uleb128 0x1
+ 1454 046e 50       		.byte	0x50
+ 1455 046f 05       		.uleb128 0x5
+ 1456 0470 03       		.byte	0x3
+ 1457 0471 00000000 		.4byte	.LC0
+ 1458 0475 0D       		.uleb128 0xd
+ 1459 0476 01       		.uleb128 0x1
+ 1460 0477 51       		.byte	0x51
+ 1461 0478 02       		.uleb128 0x2
+ 1462 0479 75       		.byte	0x75
+ 1463 047a 01       		.sleb128 1
+ 1464 047b 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 32
+
+
+ 1465 047c 17       		.uleb128 0x17
+ 1466 047d 3A000000 		.4byte	.LVL67
+ 1467 0481 5A010000 		.4byte	0x15a
+ 1468 0485 9E040000 		.4byte	0x49e
+ 1469 0489 0D       		.uleb128 0xd
+ 1470 048a 01       		.uleb128 0x1
+ 1471 048b 50       		.byte	0x50
+ 1472 048c 02       		.uleb128 0x2
+ 1473 048d 7D       		.byte	0x7d
+ 1474 048e 00       		.sleb128 0
+ 1475 048f 0D       		.uleb128 0xd
+ 1476 0490 01       		.uleb128 0x1
+ 1477 0491 51       		.byte	0x51
+ 1478 0492 0A       		.uleb128 0xa
+ 1479 0493 75       		.byte	0x75
+ 1480 0494 00       		.sleb128 0
+ 1481 0495 34       		.byte	0x34
+ 1482 0496 24       		.byte	0x24
+ 1483 0497 03       		.byte	0x3
+ 1484 0498 30000000 		.4byte	.LANCHOR0+48
+ 1485 049c 22       		.byte	0x22
+ 1486 049d 00       		.byte	0
+ 1487 049e 17       		.uleb128 0x17
+ 1488 049f 46000000 		.4byte	.LVL68
+ 1489 04a3 C0010000 		.4byte	0x1c0
+ 1490 04a7 C3040000 		.4byte	0x4c3
+ 1491 04ab 0D       		.uleb128 0xd
+ 1492 04ac 01       		.uleb128 0x1
+ 1493 04ad 50       		.byte	0x50
+ 1494 04ae 02       		.uleb128 0x2
+ 1495 04af 7D       		.byte	0x7d
+ 1496 04b0 00       		.sleb128 0
+ 1497 04b1 0D       		.uleb128 0xd
+ 1498 04b2 01       		.uleb128 0x1
+ 1499 04b3 51       		.byte	0x51
+ 1500 04b4 01       		.uleb128 0x1
+ 1501 04b5 31       		.byte	0x31
+ 1502 04b6 0D       		.uleb128 0xd
+ 1503 04b7 01       		.uleb128 0x1
+ 1504 04b8 52       		.byte	0x52
+ 1505 04b9 02       		.uleb128 0x2
+ 1506 04ba 74       		.byte	0x74
+ 1507 04bb 00       		.sleb128 0
+ 1508 04bc 0D       		.uleb128 0xd
+ 1509 04bd 01       		.uleb128 0x1
+ 1510 04be 53       		.byte	0x53
+ 1511 04bf 02       		.uleb128 0x2
+ 1512 04c0 74       		.byte	0x74
+ 1513 04c1 00       		.sleb128 0
+ 1514 04c2 00       		.byte	0
+ 1515 04c3 17       		.uleb128 0x17
+ 1516 04c4 54000000 		.4byte	.LVL69
+ 1517 04c8 D0050000 		.4byte	0x5d0
+ 1518 04cc E8040000 		.4byte	0x4e8
+ 1519 04d0 0D       		.uleb128 0xd
+ 1520 04d1 01       		.uleb128 0x1
+ 1521 04d2 50       		.byte	0x50
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 33
+
+
+ 1522 04d3 02       		.uleb128 0x2
+ 1523 04d4 74       		.byte	0x74
+ 1524 04d5 00       		.sleb128 0
+ 1525 04d6 0D       		.uleb128 0xd
+ 1526 04d7 01       		.uleb128 0x1
+ 1527 04d8 51       		.byte	0x51
+ 1528 04d9 08       		.uleb128 0x8
+ 1529 04da 76       		.byte	0x76
+ 1530 04db 00       		.sleb128 0
+ 1531 04dc 03       		.byte	0x3
+ 1532 04dd 90000000 		.4byte	.LANCHOR1+16
+ 1533 04e1 22       		.byte	0x22
+ 1534 04e2 0D       		.uleb128 0xd
+ 1535 04e3 01       		.uleb128 0x1
+ 1536 04e4 52       		.byte	0x52
+ 1537 04e5 01       		.uleb128 0x1
+ 1538 04e6 38       		.byte	0x38
+ 1539 04e7 00       		.byte	0
+ 1540 04e8 17       		.uleb128 0x17
+ 1541 04e9 62000000 		.4byte	.LVL70
+ 1542 04ed DB050000 		.4byte	0x5db
+ 1543 04f1 FF040000 		.4byte	0x4ff
+ 1544 04f5 0D       		.uleb128 0xd
+ 1545 04f6 01       		.uleb128 0x1
+ 1546 04f7 50       		.byte	0x50
+ 1547 04f8 05       		.uleb128 0x5
+ 1548 04f9 03       		.byte	0x3
+ 1549 04fa 14000000 		.4byte	.LC4
+ 1550 04fe 00       		.byte	0
+ 1551 04ff 17       		.uleb128 0x17
+ 1552 0500 70000000 		.4byte	.LVL71
+ 1553 0504 DB050000 		.4byte	0x5db
+ 1554 0508 16050000 		.4byte	0x516
+ 1555 050c 0D       		.uleb128 0xd
+ 1556 050d 01       		.uleb128 0x1
+ 1557 050e 50       		.byte	0x50
+ 1558 050f 05       		.uleb128 0x5
+ 1559 0510 03       		.byte	0x3
+ 1560 0511 1C000000 		.4byte	.LC6
+ 1561 0515 00       		.byte	0
+ 1562 0516 17       		.uleb128 0x17
+ 1563 0517 80000000 		.4byte	.LVL73
+ 1564 051b EA050000 		.4byte	0x5ea
+ 1565 051f 29050000 		.4byte	0x529
+ 1566 0523 0D       		.uleb128 0xd
+ 1567 0524 01       		.uleb128 0x1
+ 1568 0525 50       		.byte	0x50
+ 1569 0526 01       		.uleb128 0x1
+ 1570 0527 3A       		.byte	0x3a
+ 1571 0528 00       		.byte	0
+ 1572 0529 0C       		.uleb128 0xc
+ 1573 052a 90000000 		.4byte	.LVL75
+ 1574 052e 1F010000 		.4byte	0x11f
+ 1575 0532 0D       		.uleb128 0xd
+ 1576 0533 01       		.uleb128 0x1
+ 1577 0534 50       		.byte	0x50
+ 1578 0535 02       		.uleb128 0x2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 34
+
+
+ 1579 0536 7D       		.byte	0x7d
+ 1580 0537 00       		.sleb128 0
+ 1581 0538 00       		.byte	0
+ 1582 0539 00       		.byte	0
+ 1583 053a 07       		.uleb128 0x7
+ 1584 053b BB010000 		.4byte	0x1bb
+ 1585 053f 50050000 		.4byte	0x550
+ 1586 0543 08       		.uleb128 0x8
+ 1587 0544 BA000000 		.4byte	0xba
+ 1588 0548 05       		.byte	0x5
+ 1589 0549 08       		.uleb128 0x8
+ 1590 054a BA000000 		.4byte	0xba
+ 1591 054e 0F       		.byte	0xf
+ 1592 054f 00       		.byte	0
+ 1593 0550 16       		.uleb128 0x16
+ 1594 0551 0F020000 		.4byte	.LASF29
+ 1595 0555 01       		.byte	0x1
+ 1596 0556 C5       		.byte	0xc5
+ 1597 0557 61050000 		.4byte	0x561
+ 1598 055b 05       		.uleb128 0x5
+ 1599 055c 03       		.byte	0x3
+ 1600 055d 30000000 		.4byte	xtea_test_key
+ 1601 0561 0F       		.uleb128 0xf
+ 1602 0562 3A050000 		.4byte	0x53a
+ 1603 0566 07       		.uleb128 0x7
+ 1604 0567 BB010000 		.4byte	0x1bb
+ 1605 056b 7C050000 		.4byte	0x57c
+ 1606 056f 08       		.uleb128 0x8
+ 1607 0570 BA000000 		.4byte	0xba
+ 1608 0574 05       		.byte	0x5
+ 1609 0575 08       		.uleb128 0x8
+ 1610 0576 BA000000 		.4byte	0xba
+ 1611 057a 07       		.byte	0x7
+ 1612 057b 00       		.byte	0
+ 1613 057c 16       		.uleb128 0x16
+ 1614 057d 00000000 		.4byte	.LASF30
+ 1615 0581 01       		.byte	0x1
+ 1616 0582 D5       		.byte	0xd5
+ 1617 0583 8D050000 		.4byte	0x58d
+ 1618 0587 05       		.uleb128 0x5
+ 1619 0588 03       		.byte	0x3
+ 1620 0589 00000000 		.4byte	xtea_test_pt
+ 1621 058d 0F       		.uleb128 0xf
+ 1622 058e 66050000 		.4byte	0x566
+ 1623 0592 16       		.uleb128 0x16
+ 1624 0593 0B010000 		.4byte	.LASF31
+ 1625 0597 01       		.byte	0x1
+ 1626 0598 DF       		.byte	0xdf
+ 1627 0599 A3050000 		.4byte	0x5a3
+ 1628 059d 05       		.uleb128 0x5
+ 1629 059e 03       		.byte	0x3
+ 1630 059f 90000000 		.4byte	xtea_test_ct
+ 1631 05a3 0F       		.uleb128 0xf
+ 1632 05a4 66050000 		.4byte	0x566
+ 1633 05a8 19       		.uleb128 0x19
+ 1634 05a9 E6000000 		.4byte	.LASF32
+ 1635 05ad E6000000 		.4byte	.LASF32
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 35
+
+
+ 1636 05b1 1A       		.uleb128 0x1a
+ 1637 05b2 32030000 		.4byte	.LASF34
+ 1638 05b6 32030000 		.4byte	.LASF34
+ 1639 05ba 06       		.byte	0x6
+ 1640 05bb 42       		.byte	0x42
+ 1641 05bc 19       		.uleb128 0x19
+ 1642 05bd 29020000 		.4byte	.LASF33
+ 1643 05c1 29020000 		.4byte	.LASF33
+ 1644 05c5 1A       		.uleb128 0x1a
+ 1645 05c6 22020000 		.4byte	.LASF35
+ 1646 05ca 22020000 		.4byte	.LASF35
+ 1647 05ce 07       		.byte	0x7
+ 1648 05cf BB       		.byte	0xbb
+ 1649 05d0 1A       		.uleb128 0x1a
+ 1650 05d1 19000000 		.4byte	.LASF36
+ 1651 05d5 19000000 		.4byte	.LASF36
+ 1652 05d9 08       		.byte	0x8
+ 1653 05da 16       		.byte	0x16
+ 1654 05db 1B       		.uleb128 0x1b
+ 1655 05dc E1000000 		.4byte	.LASF37
+ 1656 05e0 23030000 		.4byte	.LASF39
+ 1657 05e4 09       		.byte	0x9
+ 1658 05e5 00       		.byte	0
+ 1659 05e6 E1000000 		.4byte	.LASF37
+ 1660 05ea 1B       		.uleb128 0x1b
+ 1661 05eb D9000000 		.4byte	.LASF38
+ 1662 05ef 3D000000 		.4byte	.LASF40
+ 1663 05f3 09       		.byte	0x9
+ 1664 05f4 00       		.byte	0
+ 1665 05f5 D9000000 		.4byte	.LASF38
+ 1666 05f9 00       		.byte	0
+ 1667              		.section	.debug_abbrev,"",%progbits
+ 1668              	.Ldebug_abbrev0:
+ 1669 0000 01       		.uleb128 0x1
+ 1670 0001 11       		.uleb128 0x11
+ 1671 0002 01       		.byte	0x1
+ 1672 0003 25       		.uleb128 0x25
+ 1673 0004 0E       		.uleb128 0xe
+ 1674 0005 13       		.uleb128 0x13
+ 1675 0006 0B       		.uleb128 0xb
+ 1676 0007 03       		.uleb128 0x3
+ 1677 0008 0E       		.uleb128 0xe
+ 1678 0009 1B       		.uleb128 0x1b
+ 1679 000a 0E       		.uleb128 0xe
+ 1680 000b 55       		.uleb128 0x55
+ 1681 000c 17       		.uleb128 0x17
+ 1682 000d 11       		.uleb128 0x11
+ 1683 000e 01       		.uleb128 0x1
+ 1684 000f 10       		.uleb128 0x10
+ 1685 0010 17       		.uleb128 0x17
+ 1686 0011 00       		.byte	0
+ 1687 0012 00       		.byte	0
+ 1688 0013 02       		.uleb128 0x2
+ 1689 0014 24       		.uleb128 0x24
+ 1690 0015 00       		.byte	0
+ 1691 0016 0B       		.uleb128 0xb
+ 1692 0017 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 36
+
+
+ 1693 0018 3E       		.uleb128 0x3e
+ 1694 0019 0B       		.uleb128 0xb
+ 1695 001a 03       		.uleb128 0x3
+ 1696 001b 0E       		.uleb128 0xe
+ 1697 001c 00       		.byte	0
+ 1698 001d 00       		.byte	0
+ 1699 001e 03       		.uleb128 0x3
+ 1700 001f 16       		.uleb128 0x16
+ 1701 0020 00       		.byte	0
+ 1702 0021 03       		.uleb128 0x3
+ 1703 0022 0E       		.uleb128 0xe
+ 1704 0023 3A       		.uleb128 0x3a
+ 1705 0024 0B       		.uleb128 0xb
+ 1706 0025 3B       		.uleb128 0x3b
+ 1707 0026 0B       		.uleb128 0xb
+ 1708 0027 49       		.uleb128 0x49
+ 1709 0028 13       		.uleb128 0x13
+ 1710 0029 00       		.byte	0
+ 1711 002a 00       		.byte	0
+ 1712 002b 04       		.uleb128 0x4
+ 1713 002c 24       		.uleb128 0x24
+ 1714 002d 00       		.byte	0
+ 1715 002e 0B       		.uleb128 0xb
+ 1716 002f 0B       		.uleb128 0xb
+ 1717 0030 3E       		.uleb128 0x3e
+ 1718 0031 0B       		.uleb128 0xb
+ 1719 0032 03       		.uleb128 0x3
+ 1720 0033 08       		.uleb128 0x8
+ 1721 0034 00       		.byte	0
+ 1722 0035 00       		.byte	0
+ 1723 0036 05       		.uleb128 0x5
+ 1724 0037 13       		.uleb128 0x13
+ 1725 0038 01       		.byte	0x1
+ 1726 0039 03       		.uleb128 0x3
+ 1727 003a 0E       		.uleb128 0xe
+ 1728 003b 0B       		.uleb128 0xb
+ 1729 003c 0B       		.uleb128 0xb
+ 1730 003d 3A       		.uleb128 0x3a
+ 1731 003e 0B       		.uleb128 0xb
+ 1732 003f 3B       		.uleb128 0x3b
+ 1733 0040 0B       		.uleb128 0xb
+ 1734 0041 01       		.uleb128 0x1
+ 1735 0042 13       		.uleb128 0x13
+ 1736 0043 00       		.byte	0
+ 1737 0044 00       		.byte	0
+ 1738 0045 06       		.uleb128 0x6
+ 1739 0046 0D       		.uleb128 0xd
+ 1740 0047 00       		.byte	0
+ 1741 0048 03       		.uleb128 0x3
+ 1742 0049 08       		.uleb128 0x8
+ 1743 004a 3A       		.uleb128 0x3a
+ 1744 004b 0B       		.uleb128 0xb
+ 1745 004c 3B       		.uleb128 0x3b
+ 1746 004d 0B       		.uleb128 0xb
+ 1747 004e 49       		.uleb128 0x49
+ 1748 004f 13       		.uleb128 0x13
+ 1749 0050 38       		.uleb128 0x38
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 37
+
+
+ 1750 0051 0B       		.uleb128 0xb
+ 1751 0052 00       		.byte	0
+ 1752 0053 00       		.byte	0
+ 1753 0054 07       		.uleb128 0x7
+ 1754 0055 01       		.uleb128 0x1
+ 1755 0056 01       		.byte	0x1
+ 1756 0057 49       		.uleb128 0x49
+ 1757 0058 13       		.uleb128 0x13
+ 1758 0059 01       		.uleb128 0x1
+ 1759 005a 13       		.uleb128 0x13
+ 1760 005b 00       		.byte	0
+ 1761 005c 00       		.byte	0
+ 1762 005d 08       		.uleb128 0x8
+ 1763 005e 21       		.uleb128 0x21
+ 1764 005f 00       		.byte	0
+ 1765 0060 49       		.uleb128 0x49
+ 1766 0061 13       		.uleb128 0x13
+ 1767 0062 2F       		.uleb128 0x2f
+ 1768 0063 0B       		.uleb128 0xb
+ 1769 0064 00       		.byte	0
+ 1770 0065 00       		.byte	0
+ 1771 0066 09       		.uleb128 0x9
+ 1772 0067 0F       		.uleb128 0xf
+ 1773 0068 00       		.byte	0
+ 1774 0069 0B       		.uleb128 0xb
+ 1775 006a 0B       		.uleb128 0xb
+ 1776 006b 49       		.uleb128 0x49
+ 1777 006c 13       		.uleb128 0x13
+ 1778 006d 00       		.byte	0
+ 1779 006e 00       		.byte	0
+ 1780 006f 0A       		.uleb128 0xa
+ 1781 0070 2E       		.uleb128 0x2e
+ 1782 0071 01       		.byte	0x1
+ 1783 0072 3F       		.uleb128 0x3f
+ 1784 0073 19       		.uleb128 0x19
+ 1785 0074 03       		.uleb128 0x3
+ 1786 0075 0E       		.uleb128 0xe
+ 1787 0076 3A       		.uleb128 0x3a
+ 1788 0077 0B       		.uleb128 0xb
+ 1789 0078 3B       		.uleb128 0x3b
+ 1790 0079 0B       		.uleb128 0xb
+ 1791 007a 27       		.uleb128 0x27
+ 1792 007b 19       		.uleb128 0x19
+ 1793 007c 11       		.uleb128 0x11
+ 1794 007d 01       		.uleb128 0x1
+ 1795 007e 12       		.uleb128 0x12
+ 1796 007f 06       		.uleb128 0x6
+ 1797 0080 40       		.uleb128 0x40
+ 1798 0081 18       		.uleb128 0x18
+ 1799 0082 9742     		.uleb128 0x2117
+ 1800 0084 19       		.uleb128 0x19
+ 1801 0085 01       		.uleb128 0x1
+ 1802 0086 13       		.uleb128 0x13
+ 1803 0087 00       		.byte	0
+ 1804 0088 00       		.byte	0
+ 1805 0089 0B       		.uleb128 0xb
+ 1806 008a 05       		.uleb128 0x5
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 38
+
+
+ 1807 008b 00       		.byte	0
+ 1808 008c 03       		.uleb128 0x3
+ 1809 008d 08       		.uleb128 0x8
+ 1810 008e 3A       		.uleb128 0x3a
+ 1811 008f 0B       		.uleb128 0xb
+ 1812 0090 3B       		.uleb128 0x3b
+ 1813 0091 0B       		.uleb128 0xb
+ 1814 0092 49       		.uleb128 0x49
+ 1815 0093 13       		.uleb128 0x13
+ 1816 0094 02       		.uleb128 0x2
+ 1817 0095 17       		.uleb128 0x17
+ 1818 0096 00       		.byte	0
+ 1819 0097 00       		.byte	0
+ 1820 0098 0C       		.uleb128 0xc
+ 1821 0099 898201   		.uleb128 0x4109
+ 1822 009c 01       		.byte	0x1
+ 1823 009d 11       		.uleb128 0x11
+ 1824 009e 01       		.uleb128 0x1
+ 1825 009f 31       		.uleb128 0x31
+ 1826 00a0 13       		.uleb128 0x13
+ 1827 00a1 00       		.byte	0
+ 1828 00a2 00       		.byte	0
+ 1829 00a3 0D       		.uleb128 0xd
+ 1830 00a4 8A8201   		.uleb128 0x410a
+ 1831 00a7 00       		.byte	0
+ 1832 00a8 02       		.uleb128 0x2
+ 1833 00a9 18       		.uleb128 0x18
+ 1834 00aa 9142     		.uleb128 0x2111
+ 1835 00ac 18       		.uleb128 0x18
+ 1836 00ad 00       		.byte	0
+ 1837 00ae 00       		.byte	0
+ 1838 00af 0E       		.uleb128 0xe
+ 1839 00b0 34       		.uleb128 0x34
+ 1840 00b1 00       		.byte	0
+ 1841 00b2 03       		.uleb128 0x3
+ 1842 00b3 08       		.uleb128 0x8
+ 1843 00b4 3A       		.uleb128 0x3a
+ 1844 00b5 0B       		.uleb128 0xb
+ 1845 00b6 3B       		.uleb128 0x3b
+ 1846 00b7 0B       		.uleb128 0xb
+ 1847 00b8 49       		.uleb128 0x49
+ 1848 00b9 13       		.uleb128 0x13
+ 1849 00ba 02       		.uleb128 0x2
+ 1850 00bb 17       		.uleb128 0x17
+ 1851 00bc 00       		.byte	0
+ 1852 00bd 00       		.byte	0
+ 1853 00be 0F       		.uleb128 0xf
+ 1854 00bf 26       		.uleb128 0x26
+ 1855 00c0 00       		.byte	0
+ 1856 00c1 49       		.uleb128 0x49
+ 1857 00c2 13       		.uleb128 0x13
+ 1858 00c3 00       		.byte	0
+ 1859 00c4 00       		.byte	0
+ 1860 00c5 10       		.uleb128 0x10
+ 1861 00c6 2E       		.uleb128 0x2e
+ 1862 00c7 01       		.byte	0x1
+ 1863 00c8 3F       		.uleb128 0x3f
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 39
+
+
+ 1864 00c9 19       		.uleb128 0x19
+ 1865 00ca 03       		.uleb128 0x3
+ 1866 00cb 0E       		.uleb128 0xe
+ 1867 00cc 3A       		.uleb128 0x3a
+ 1868 00cd 0B       		.uleb128 0xb
+ 1869 00ce 3B       		.uleb128 0x3b
+ 1870 00cf 0B       		.uleb128 0xb
+ 1871 00d0 27       		.uleb128 0x27
+ 1872 00d1 19       		.uleb128 0x19
+ 1873 00d2 49       		.uleb128 0x49
+ 1874 00d3 13       		.uleb128 0x13
+ 1875 00d4 11       		.uleb128 0x11
+ 1876 00d5 01       		.uleb128 0x1
+ 1877 00d6 12       		.uleb128 0x12
+ 1878 00d7 06       		.uleb128 0x6
+ 1879 00d8 40       		.uleb128 0x40
+ 1880 00d9 18       		.uleb128 0x18
+ 1881 00da 9742     		.uleb128 0x2117
+ 1882 00dc 19       		.uleb128 0x19
+ 1883 00dd 01       		.uleb128 0x1
+ 1884 00de 13       		.uleb128 0x13
+ 1885 00df 00       		.byte	0
+ 1886 00e0 00       		.byte	0
+ 1887 00e1 11       		.uleb128 0x11
+ 1888 00e2 05       		.uleb128 0x5
+ 1889 00e3 00       		.byte	0
+ 1890 00e4 03       		.uleb128 0x3
+ 1891 00e5 0E       		.uleb128 0xe
+ 1892 00e6 3A       		.uleb128 0x3a
+ 1893 00e7 0B       		.uleb128 0xb
+ 1894 00e8 3B       		.uleb128 0x3b
+ 1895 00e9 0B       		.uleb128 0xb
+ 1896 00ea 49       		.uleb128 0x49
+ 1897 00eb 13       		.uleb128 0x13
+ 1898 00ec 02       		.uleb128 0x2
+ 1899 00ed 17       		.uleb128 0x17
+ 1900 00ee 00       		.byte	0
+ 1901 00ef 00       		.byte	0
+ 1902 00f0 12       		.uleb128 0x12
+ 1903 00f1 34       		.uleb128 0x34
+ 1904 00f2 00       		.byte	0
+ 1905 00f3 03       		.uleb128 0x3
+ 1906 00f4 08       		.uleb128 0x8
+ 1907 00f5 3A       		.uleb128 0x3a
+ 1908 00f6 0B       		.uleb128 0xb
+ 1909 00f7 3B       		.uleb128 0x3b
+ 1910 00f8 0B       		.uleb128 0xb
+ 1911 00f9 49       		.uleb128 0x49
+ 1912 00fa 13       		.uleb128 0x13
+ 1913 00fb 02       		.uleb128 0x2
+ 1914 00fc 18       		.uleb128 0x18
+ 1915 00fd 00       		.byte	0
+ 1916 00fe 00       		.byte	0
+ 1917 00ff 13       		.uleb128 0x13
+ 1918 0100 0B       		.uleb128 0xb
+ 1919 0101 01       		.byte	0x1
+ 1920 0102 55       		.uleb128 0x55
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 40
+
+
+ 1921 0103 17       		.uleb128 0x17
+ 1922 0104 01       		.uleb128 0x1
+ 1923 0105 13       		.uleb128 0x13
+ 1924 0106 00       		.byte	0
+ 1925 0107 00       		.byte	0
+ 1926 0108 14       		.uleb128 0x14
+ 1927 0109 34       		.uleb128 0x34
+ 1928 010a 00       		.byte	0
+ 1929 010b 03       		.uleb128 0x3
+ 1930 010c 0E       		.uleb128 0xe
+ 1931 010d 3A       		.uleb128 0x3a
+ 1932 010e 0B       		.uleb128 0xb
+ 1933 010f 3B       		.uleb128 0x3b
+ 1934 0110 0B       		.uleb128 0xb
+ 1935 0111 49       		.uleb128 0x49
+ 1936 0112 13       		.uleb128 0x13
+ 1937 0113 00       		.byte	0
+ 1938 0114 00       		.byte	0
+ 1939 0115 15       		.uleb128 0x15
+ 1940 0116 0B       		.uleb128 0xb
+ 1941 0117 01       		.byte	0x1
+ 1942 0118 11       		.uleb128 0x11
+ 1943 0119 01       		.uleb128 0x1
+ 1944 011a 12       		.uleb128 0x12
+ 1945 011b 06       		.uleb128 0x6
+ 1946 011c 00       		.byte	0
+ 1947 011d 00       		.byte	0
+ 1948 011e 16       		.uleb128 0x16
+ 1949 011f 34       		.uleb128 0x34
+ 1950 0120 00       		.byte	0
+ 1951 0121 03       		.uleb128 0x3
+ 1952 0122 0E       		.uleb128 0xe
+ 1953 0123 3A       		.uleb128 0x3a
+ 1954 0124 0B       		.uleb128 0xb
+ 1955 0125 3B       		.uleb128 0x3b
+ 1956 0126 0B       		.uleb128 0xb
+ 1957 0127 49       		.uleb128 0x49
+ 1958 0128 13       		.uleb128 0x13
+ 1959 0129 02       		.uleb128 0x2
+ 1960 012a 18       		.uleb128 0x18
+ 1961 012b 00       		.byte	0
+ 1962 012c 00       		.byte	0
+ 1963 012d 17       		.uleb128 0x17
+ 1964 012e 898201   		.uleb128 0x4109
+ 1965 0131 01       		.byte	0x1
+ 1966 0132 11       		.uleb128 0x11
+ 1967 0133 01       		.uleb128 0x1
+ 1968 0134 31       		.uleb128 0x31
+ 1969 0135 13       		.uleb128 0x13
+ 1970 0136 01       		.uleb128 0x1
+ 1971 0137 13       		.uleb128 0x13
+ 1972 0138 00       		.byte	0
+ 1973 0139 00       		.byte	0
+ 1974 013a 18       		.uleb128 0x18
+ 1975 013b 0A       		.uleb128 0xa
+ 1976 013c 00       		.byte	0
+ 1977 013d 03       		.uleb128 0x3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 41
+
+
+ 1978 013e 0E       		.uleb128 0xe
+ 1979 013f 3A       		.uleb128 0x3a
+ 1980 0140 0B       		.uleb128 0xb
+ 1981 0141 3B       		.uleb128 0x3b
+ 1982 0142 05       		.uleb128 0x5
+ 1983 0143 11       		.uleb128 0x11
+ 1984 0144 01       		.uleb128 0x1
+ 1985 0145 00       		.byte	0
+ 1986 0146 00       		.byte	0
+ 1987 0147 19       		.uleb128 0x19
+ 1988 0148 2E       		.uleb128 0x2e
+ 1989 0149 00       		.byte	0
+ 1990 014a 3F       		.uleb128 0x3f
+ 1991 014b 19       		.uleb128 0x19
+ 1992 014c 3C       		.uleb128 0x3c
+ 1993 014d 19       		.uleb128 0x19
+ 1994 014e 6E       		.uleb128 0x6e
+ 1995 014f 0E       		.uleb128 0xe
+ 1996 0150 03       		.uleb128 0x3
+ 1997 0151 0E       		.uleb128 0xe
+ 1998 0152 00       		.byte	0
+ 1999 0153 00       		.byte	0
+ 2000 0154 1A       		.uleb128 0x1a
+ 2001 0155 2E       		.uleb128 0x2e
+ 2002 0156 00       		.byte	0
+ 2003 0157 3F       		.uleb128 0x3f
+ 2004 0158 19       		.uleb128 0x19
+ 2005 0159 3C       		.uleb128 0x3c
+ 2006 015a 19       		.uleb128 0x19
+ 2007 015b 6E       		.uleb128 0x6e
+ 2008 015c 0E       		.uleb128 0xe
+ 2009 015d 03       		.uleb128 0x3
+ 2010 015e 0E       		.uleb128 0xe
+ 2011 015f 3A       		.uleb128 0x3a
+ 2012 0160 0B       		.uleb128 0xb
+ 2013 0161 3B       		.uleb128 0x3b
+ 2014 0162 0B       		.uleb128 0xb
+ 2015 0163 00       		.byte	0
+ 2016 0164 00       		.byte	0
+ 2017 0165 1B       		.uleb128 0x1b
+ 2018 0166 2E       		.uleb128 0x2e
+ 2019 0167 00       		.byte	0
+ 2020 0168 3F       		.uleb128 0x3f
+ 2021 0169 19       		.uleb128 0x19
+ 2022 016a 3C       		.uleb128 0x3c
+ 2023 016b 19       		.uleb128 0x19
+ 2024 016c 6E       		.uleb128 0x6e
+ 2025 016d 0E       		.uleb128 0xe
+ 2026 016e 03       		.uleb128 0x3
+ 2027 016f 0E       		.uleb128 0xe
+ 2028 0170 3A       		.uleb128 0x3a
+ 2029 0171 0B       		.uleb128 0xb
+ 2030 0172 3B       		.uleb128 0x3b
+ 2031 0173 0B       		.uleb128 0xb
+ 2032 0174 6E       		.uleb128 0x6e
+ 2033 0175 0E       		.uleb128 0xe
+ 2034 0176 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 42
+
+
+ 2035 0177 00       		.byte	0
+ 2036 0178 00       		.byte	0
+ 2037              		.section	.debug_loc,"",%progbits
+ 2038              	.Ldebug_loc0:
+ 2039              	.LLST0:
+ 2040 0000 00000000 		.4byte	.LVL0
+ 2041 0004 09000000 		.4byte	.LVL1-1
+ 2042 0008 0100     		.2byte	0x1
+ 2043 000a 50       		.byte	0x50
+ 2044 000b 09000000 		.4byte	.LVL1-1
+ 2045 000f 0C000000 		.4byte	.LFE1
+ 2046 0013 0400     		.2byte	0x4
+ 2047 0015 F3       		.byte	0xf3
+ 2048 0016 01       		.uleb128 0x1
+ 2049 0017 50       		.byte	0x50
+ 2050 0018 9F       		.byte	0x9f
+ 2051 0019 00000000 		.4byte	0
+ 2052 001d 00000000 		.4byte	0
+ 2053              	.LLST1:
+ 2054 0021 00000000 		.4byte	.LVL2
+ 2055 0025 0B000000 		.4byte	.LVL3-1
+ 2056 0029 0100     		.2byte	0x1
+ 2057 002b 50       		.byte	0x50
+ 2058 002c 0B000000 		.4byte	.LVL3-1
+ 2059 0030 0E000000 		.4byte	.LFE2
+ 2060 0034 0400     		.2byte	0x4
+ 2061 0036 F3       		.byte	0xf3
+ 2062 0037 01       		.uleb128 0x1
+ 2063 0038 50       		.byte	0x50
+ 2064 0039 9F       		.byte	0x9f
+ 2065 003a 00000000 		.4byte	0
+ 2066 003e 00000000 		.4byte	0
+ 2067              	.LLST2:
+ 2068 0042 00000000 		.4byte	.LVL4
+ 2069 0046 0D000000 		.4byte	.LVL6-1
+ 2070 004a 0100     		.2byte	0x1
+ 2071 004c 50       		.byte	0x50
+ 2072 004d 0D000000 		.4byte	.LVL6-1
+ 2073 0051 32000000 		.4byte	.LVL10
+ 2074 0055 0100     		.2byte	0x1
+ 2075 0057 55       		.byte	0x55
+ 2076 0058 32000000 		.4byte	.LVL10
+ 2077 005c 34000000 		.4byte	.LFE3
+ 2078 0060 0400     		.2byte	0x4
+ 2079 0062 F3       		.byte	0xf3
+ 2080 0063 01       		.uleb128 0x1
+ 2081 0064 50       		.byte	0x50
+ 2082 0065 9F       		.byte	0x9f
+ 2083 0066 00000000 		.4byte	0
+ 2084 006a 00000000 		.4byte	0
+ 2085              	.LLST3:
+ 2086 006e 00000000 		.4byte	.LVL4
+ 2087 0072 0A000000 		.4byte	.LVL5
+ 2088 0076 0100     		.2byte	0x1
+ 2089 0078 51       		.byte	0x51
+ 2090 0079 0A000000 		.4byte	.LVL5
+ 2091 007d 32000000 		.4byte	.LVL9
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 43
+
+
+ 2092 0081 0100     		.2byte	0x1
+ 2093 0083 54       		.byte	0x54
+ 2094 0084 32000000 		.4byte	.LVL9
+ 2095 0088 34000000 		.4byte	.LFE3
+ 2096 008c 0400     		.2byte	0x4
+ 2097 008e F3       		.byte	0xf3
+ 2098 008f 01       		.uleb128 0x1
+ 2099 0090 51       		.byte	0x51
+ 2100 0091 9F       		.byte	0x9f
+ 2101 0092 00000000 		.4byte	0
+ 2102 0096 00000000 		.4byte	0
+ 2103              	.LLST4:
+ 2104 009a 0E000000 		.4byte	.LVL6
+ 2105 009e 12000000 		.4byte	.LVL7
+ 2106 00a2 0200     		.2byte	0x2
+ 2107 00a4 30       		.byte	0x30
+ 2108 00a5 9F       		.byte	0x9f
+ 2109 00a6 12000000 		.4byte	.LVL7
+ 2110 00aa 34000000 		.4byte	.LFE3
+ 2111 00ae 0100     		.2byte	0x1
+ 2112 00b0 51       		.byte	0x51
+ 2113 00b1 00000000 		.4byte	0
+ 2114 00b5 00000000 		.4byte	0
+ 2115              	.LLST5:
+ 2116 00b9 00000000 		.4byte	.LVL11
+ 2117 00bd 26000000 		.4byte	.LVL15
+ 2118 00c1 0100     		.2byte	0x1
+ 2119 00c3 50       		.byte	0x50
+ 2120 00c4 26000000 		.4byte	.LVL15
+ 2121 00c8 C0000000 		.4byte	.LVL32
+ 2122 00cc 0100     		.2byte	0x1
+ 2123 00ce 53       		.byte	0x53
+ 2124 00cf C0000000 		.4byte	.LVL32
+ 2125 00d3 F4000000 		.4byte	.LFE4
+ 2126 00d7 0400     		.2byte	0x4
+ 2127 00d9 F3       		.byte	0xf3
+ 2128 00da 01       		.uleb128 0x1
+ 2129 00db 50       		.byte	0x50
+ 2130 00dc 9F       		.byte	0x9f
+ 2131 00dd 00000000 		.4byte	0
+ 2132 00e1 00000000 		.4byte	0
+ 2133              	.LLST6:
+ 2134 00e5 00000000 		.4byte	.LVL11
+ 2135 00e9 40000000 		.4byte	.LVL18
+ 2136 00ed 0100     		.2byte	0x1
+ 2137 00ef 51       		.byte	0x51
+ 2138 00f0 40000000 		.4byte	.LVL18
+ 2139 00f4 7A000000 		.4byte	.LVL23
+ 2140 00f8 0400     		.2byte	0x4
+ 2141 00fa F3       		.byte	0xf3
+ 2142 00fb 01       		.uleb128 0x1
+ 2143 00fc 51       		.byte	0x51
+ 2144 00fd 9F       		.byte	0x9f
+ 2145 00fe 7A000000 		.4byte	.LVL23
+ 2146 0102 7C000000 		.4byte	.LVL24
+ 2147 0106 0100     		.2byte	0x1
+ 2148 0108 51       		.byte	0x51
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 44
+
+
+ 2149 0109 7C000000 		.4byte	.LVL24
+ 2150 010d F4000000 		.4byte	.LFE4
+ 2151 0111 0400     		.2byte	0x4
+ 2152 0113 F3       		.byte	0xf3
+ 2153 0114 01       		.uleb128 0x1
+ 2154 0115 51       		.byte	0x51
+ 2155 0116 9F       		.byte	0x9f
+ 2156 0117 00000000 		.4byte	0
+ 2157 011b 00000000 		.4byte	0
+ 2158              	.LLST7:
+ 2159 011f 00000000 		.4byte	.LVL11
+ 2160 0123 14000000 		.4byte	.LVL13
+ 2161 0127 0100     		.2byte	0x1
+ 2162 0129 52       		.byte	0x52
+ 2163 012a 14000000 		.4byte	.LVL13
+ 2164 012e 3C000000 		.4byte	.LVL17
+ 2165 0132 0100     		.2byte	0x1
+ 2166 0134 55       		.byte	0x55
+ 2167 0135 3C000000 		.4byte	.LVL17
+ 2168 0139 7A000000 		.4byte	.LVL23
+ 2169 013d 0400     		.2byte	0x4
+ 2170 013f F3       		.byte	0xf3
+ 2171 0140 01       		.uleb128 0x1
+ 2172 0141 52       		.byte	0x52
+ 2173 0142 9F       		.byte	0x9f
+ 2174 0143 7A000000 		.4byte	.LVL23
+ 2175 0147 7E000000 		.4byte	.LVL25
+ 2176 014b 0100     		.2byte	0x1
+ 2177 014d 55       		.byte	0x55
+ 2178 014e 7E000000 		.4byte	.LVL25
+ 2179 0152 F4000000 		.4byte	.LFE4
+ 2180 0156 0400     		.2byte	0x4
+ 2181 0158 F3       		.byte	0xf3
+ 2182 0159 01       		.uleb128 0x1
+ 2183 015a 52       		.byte	0x52
+ 2184 015b 9F       		.byte	0x9f
+ 2185 015c 00000000 		.4byte	0
+ 2186 0160 00000000 		.4byte	0
+ 2187              	.LLST8:
+ 2188 0164 00000000 		.4byte	.LVL11
+ 2189 0168 0E000000 		.4byte	.LVL12
+ 2190 016c 0100     		.2byte	0x1
+ 2191 016e 53       		.byte	0x53
+ 2192 016f 0E000000 		.4byte	.LVL12
+ 2193 0173 F4000000 		.4byte	.LFE4
+ 2194 0177 0100     		.2byte	0x1
+ 2195 0179 5C       		.byte	0x5c
+ 2196 017a 00000000 		.4byte	0
+ 2197 017e 00000000 		.4byte	0
+ 2198              	.LLST9:
+ 2199 0182 0E000000 		.4byte	.LVL12
+ 2200 0186 26000000 		.4byte	.LVL15
+ 2201 018a 0100     		.2byte	0x1
+ 2202 018c 50       		.byte	0x50
+ 2203 018d 26000000 		.4byte	.LVL15
+ 2204 0191 C0000000 		.4byte	.LVL32
+ 2205 0195 0100     		.2byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 45
+
+
+ 2206 0197 53       		.byte	0x53
+ 2207 0198 C0000000 		.4byte	.LVL32
+ 2208 019c F4000000 		.4byte	.LFE4
+ 2209 01a0 0400     		.2byte	0x4
+ 2210 01a2 F3       		.byte	0xf3
+ 2211 01a3 01       		.uleb128 0x1
+ 2212 01a4 50       		.byte	0x50
+ 2213 01a5 9F       		.byte	0x9f
+ 2214 01a6 00000000 		.4byte	0
+ 2215 01aa 00000000 		.4byte	0
+ 2216              	.LLST10:
+ 2217 01ae 22000000 		.4byte	.LVL14
+ 2218 01b2 DE000000 		.4byte	.LVL33
+ 2219 01b6 0100     		.2byte	0x1
+ 2220 01b8 54       		.byte	0x54
+ 2221 01b9 00000000 		.4byte	0
+ 2222 01bd 00000000 		.4byte	0
+ 2223              	.LLST11:
+ 2224 01c1 40000000 		.4byte	.LVL18
+ 2225 01c5 7A000000 		.4byte	.LVL23
+ 2226 01c9 0100     		.2byte	0x1
+ 2227 01cb 56       		.byte	0x56
+ 2228 01cc 7E000000 		.4byte	.LVL25
+ 2229 01d0 84000000 		.4byte	.LVL26
+ 2230 01d4 0100     		.2byte	0x1
+ 2231 01d6 56       		.byte	0x56
+ 2232 01d7 84000000 		.4byte	.LVL26
+ 2233 01db BE000000 		.4byte	.LVL31
+ 2234 01df 0100     		.2byte	0x1
+ 2235 01e1 50       		.byte	0x50
+ 2236 01e2 00000000 		.4byte	0
+ 2237 01e6 00000000 		.4byte	0
+ 2238              	.LLST12:
+ 2239 01ea 40000000 		.4byte	.LVL18
+ 2240 01ee 7A000000 		.4byte	.LVL23
+ 2241 01f2 0100     		.2byte	0x1
+ 2242 01f4 51       		.byte	0x51
+ 2243 01f5 7E000000 		.4byte	.LVL25
+ 2244 01f9 84000000 		.4byte	.LVL26
+ 2245 01fd 0100     		.2byte	0x1
+ 2246 01ff 51       		.byte	0x51
+ 2247 0200 00000000 		.4byte	0
+ 2248 0204 00000000 		.4byte	0
+ 2249              	.LLST13:
+ 2250 0208 84000000 		.4byte	.LVL26
+ 2251 020c BE000000 		.4byte	.LVL31
+ 2252 0210 0100     		.2byte	0x1
+ 2253 0212 55       		.byte	0x55
+ 2254 0213 00000000 		.4byte	0
+ 2255 0217 00000000 		.4byte	0
+ 2256              	.LLST14:
+ 2257 021b 00000000 		.4byte	.LVL34
+ 2258 021f 1A000000 		.4byte	.LVL36
+ 2259 0223 0100     		.2byte	0x1
+ 2260 0225 50       		.byte	0x50
+ 2261 0226 1A000000 		.4byte	.LVL36
+ 2262 022a 92000000 		.4byte	.LVL55
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 46
+
+
+ 2263 022e 0200     		.2byte	0x2
+ 2264 0230 7D       		.byte	0x7d
+ 2265 0231 00       		.sleb128 0
+ 2266 0232 92000000 		.4byte	.LVL55
+ 2267 0236 94000000 		.4byte	.LVL56
+ 2268 023a 0100     		.2byte	0x1
+ 2269 023c 50       		.byte	0x50
+ 2270 023d 94000000 		.4byte	.LVL56
+ 2271 0241 98000000 		.4byte	.LVL58
+ 2272 0245 0200     		.2byte	0x2
+ 2273 0247 7D       		.byte	0x7d
+ 2274 0248 00       		.sleb128 0
+ 2275 0249 98000000 		.4byte	.LVL58
+ 2276 024d 9A000000 		.4byte	.LFE5
+ 2277 0251 0200     		.2byte	0x2
+ 2278 0253 91       		.byte	0x91
+ 2279 0254 58       		.sleb128 -40
+ 2280 0255 00000000 		.4byte	0
+ 2281 0259 00000000 		.4byte	0
+ 2282              	.LLST15:
+ 2283 025d 00000000 		.4byte	.LVL34
+ 2284 0261 1A000000 		.4byte	.LVL36
+ 2285 0265 0100     		.2byte	0x1
+ 2286 0267 51       		.byte	0x51
+ 2287 0268 1A000000 		.4byte	.LVL36
+ 2288 026c 92000000 		.4byte	.LVL55
+ 2289 0270 0200     		.2byte	0x2
+ 2290 0272 91       		.byte	0x91
+ 2291 0273 5C       		.sleb128 -36
+ 2292 0274 92000000 		.4byte	.LVL55
+ 2293 0278 96000000 		.4byte	.LVL57
+ 2294 027c 0100     		.2byte	0x1
+ 2295 027e 51       		.byte	0x51
+ 2296 027f 96000000 		.4byte	.LVL57
+ 2297 0283 9A000000 		.4byte	.LFE5
+ 2298 0287 0200     		.2byte	0x2
+ 2299 0289 91       		.byte	0x91
+ 2300 028a 5C       		.sleb128 -36
+ 2301 028b 00000000 		.4byte	0
+ 2302 028f 00000000 		.4byte	0
+ 2303              	.LLST16:
+ 2304 0293 00000000 		.4byte	.LVL34
+ 2305 0297 1A000000 		.4byte	.LVL36
+ 2306 029b 0100     		.2byte	0x1
+ 2307 029d 52       		.byte	0x52
+ 2308 029e 1A000000 		.4byte	.LVL36
+ 2309 02a2 92000000 		.4byte	.LVL55
+ 2310 02a6 0100     		.2byte	0x1
+ 2311 02a8 55       		.byte	0x55
+ 2312 02a9 92000000 		.4byte	.LVL55
+ 2313 02ad 96000000 		.4byte	.LVL57
+ 2314 02b1 0100     		.2byte	0x1
+ 2315 02b3 52       		.byte	0x52
+ 2316 02b4 96000000 		.4byte	.LVL57
+ 2317 02b8 98000000 		.4byte	.LVL59
+ 2318 02bc 0100     		.2byte	0x1
+ 2319 02be 55       		.byte	0x55
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 47
+
+
+ 2320 02bf 00000000 		.4byte	0
+ 2321 02c3 00000000 		.4byte	0
+ 2322              	.LLST17:
+ 2323 02c7 00000000 		.4byte	.LVL34
+ 2324 02cb 14000000 		.4byte	.LVL35
+ 2325 02cf 0100     		.2byte	0x1
+ 2326 02d1 53       		.byte	0x53
+ 2327 02d2 14000000 		.4byte	.LVL35
+ 2328 02d6 98000000 		.4byte	.LVL60
+ 2329 02da 0100     		.2byte	0x1
+ 2330 02dc 57       		.byte	0x57
+ 2331 02dd 98000000 		.4byte	.LVL60
+ 2332 02e1 9A000000 		.4byte	.LFE5
+ 2333 02e5 0400     		.2byte	0x4
+ 2334 02e7 F3       		.byte	0xf3
+ 2335 02e8 01       		.uleb128 0x1
+ 2336 02e9 53       		.byte	0x53
+ 2337 02ea 9F       		.byte	0x9f
+ 2338 02eb 00000000 		.4byte	0
+ 2339 02ef 00000000 		.4byte	0
+ 2340              	.LLST18:
+ 2341 02f3 00000000 		.4byte	.LVL34
+ 2342 02f7 1A000000 		.4byte	.LVL36
+ 2343 02fb 0200     		.2byte	0x2
+ 2344 02fd 91       		.byte	0x91
+ 2345 02fe 00       		.sleb128 0
+ 2346 02ff 1A000000 		.4byte	.LVL36
+ 2347 0303 34000000 		.4byte	.LVL39
+ 2348 0307 0100     		.2byte	0x1
+ 2349 0309 54       		.byte	0x54
+ 2350 030a 50000000 		.4byte	.LVL42
+ 2351 030e 92000000 		.4byte	.LVL55
+ 2352 0312 0100     		.2byte	0x1
+ 2353 0314 54       		.byte	0x54
+ 2354 0315 92000000 		.4byte	.LVL55
+ 2355 0319 96000000 		.4byte	.LVL57
+ 2356 031d 0200     		.2byte	0x2
+ 2357 031f 91       		.byte	0x91
+ 2358 0320 00       		.sleb128 0
+ 2359 0321 00000000 		.4byte	0
+ 2360 0325 00000000 		.4byte	0
+ 2361              	.LLST19:
+ 2362 0329 00000000 		.4byte	.LVL34
+ 2363 032d 1A000000 		.4byte	.LVL36
+ 2364 0331 0200     		.2byte	0x2
+ 2365 0333 91       		.byte	0x91
+ 2366 0334 04       		.sleb128 4
+ 2367 0335 1A000000 		.4byte	.LVL36
+ 2368 0339 34000000 		.4byte	.LVL39
+ 2369 033d 0100     		.2byte	0x1
+ 2370 033f 56       		.byte	0x56
+ 2371 0340 52000000 		.4byte	.LVL43
+ 2372 0344 92000000 		.4byte	.LVL55
+ 2373 0348 0100     		.2byte	0x1
+ 2374 034a 56       		.byte	0x56
+ 2375 034b 92000000 		.4byte	.LVL55
+ 2376 034f 96000000 		.4byte	.LVL57
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 48
+
+
+ 2377 0353 0200     		.2byte	0x2
+ 2378 0355 91       		.byte	0x91
+ 2379 0356 04       		.sleb128 4
+ 2380 0357 00000000 		.4byte	0
+ 2381 035b 00000000 		.4byte	0
+ 2382              	.LLST20:
+ 2383 035f 30000000 		.4byte	.LVL38
+ 2384 0363 34000000 		.4byte	.LVL39
+ 2385 0367 0200     		.2byte	0x2
+ 2386 0369 30       		.byte	0x30
+ 2387 036a 9F       		.byte	0x9f
+ 2388 036b 34000000 		.4byte	.LVL39
+ 2389 036f 4D000000 		.4byte	.LVL41-1
+ 2390 0373 0100     		.2byte	0x1
+ 2391 0375 53       		.byte	0x53
+ 2392 0376 5C000000 		.4byte	.LVL45
+ 2393 037a 68000000 		.4byte	.LVL47
+ 2394 037e 0100     		.2byte	0x1
+ 2395 0380 53       		.byte	0x53
+ 2396 0381 6A000000 		.4byte	.LVL48
+ 2397 0385 70000000 		.4byte	.LVL49
+ 2398 0389 0100     		.2byte	0x1
+ 2399 038b 53       		.byte	0x53
+ 2400 038c 00000000 		.4byte	0
+ 2401 0390 00000000 		.4byte	0
+ 2402              	.LLST21:
+ 2403 0394 00000000 		.4byte	.LVL61
+ 2404 0398 08000000 		.4byte	.LVL63
+ 2405 039c 0100     		.2byte	0x1
+ 2406 039e 50       		.byte	0x50
+ 2407 039f 08000000 		.4byte	.LVL63
+ 2408 03a3 94000000 		.4byte	.LVL78
+ 2409 03a7 0100     		.2byte	0x1
+ 2410 03a9 57       		.byte	0x57
+ 2411 03aa 94000000 		.4byte	.LVL78
+ 2412 03ae AC000000 		.4byte	.LFE6
+ 2413 03b2 0400     		.2byte	0x4
+ 2414 03b4 F3       		.byte	0xf3
+ 2415 03b5 01       		.uleb128 0x1
+ 2416 03b6 50       		.byte	0x50
+ 2417 03b7 9F       		.byte	0x9f
+ 2418 03b8 00000000 		.4byte	0
+ 2419 03bc 00000000 		.4byte	0
+ 2420              	.LLST22:
+ 2421 03c0 0C000000 		.4byte	.LVL64
+ 2422 03c4 10000000 		.4byte	.LVL65
+ 2423 03c8 0200     		.2byte	0x2
+ 2424 03ca 30       		.byte	0x30
+ 2425 03cb 9F       		.byte	0x9f
+ 2426 03cc 10000000 		.4byte	.LVL65
+ 2427 03d0 94000000 		.4byte	.LVL77
+ 2428 03d4 0100     		.2byte	0x1
+ 2429 03d6 55       		.byte	0x55
+ 2430 03d7 00000000 		.4byte	0
+ 2431 03db 00000000 		.4byte	0
+ 2432              	.LLST23:
+ 2433 03df 06000000 		.4byte	.LVL62
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 49
+
+
+ 2434 03e3 8A000000 		.4byte	.LVL74
+ 2435 03e7 0200     		.2byte	0x2
+ 2436 03e9 30       		.byte	0x30
+ 2437 03ea 9F       		.byte	0x9f
+ 2438 03eb 8A000000 		.4byte	.LVL74
+ 2439 03ef 94000000 		.4byte	.LVL76
+ 2440 03f3 0100     		.2byte	0x1
+ 2441 03f5 54       		.byte	0x54
+ 2442 03f6 94000000 		.4byte	.LVL76
+ 2443 03fa AC000000 		.4byte	.LFE6
+ 2444 03fe 0100     		.2byte	0x1
+ 2445 0400 50       		.byte	0x50
+ 2446 0401 00000000 		.4byte	0
+ 2447 0405 00000000 		.4byte	0
+ 2448              		.section	.debug_aranges,"",%progbits
+ 2449 0000 44000000 		.4byte	0x44
+ 2450 0004 0200     		.2byte	0x2
+ 2451 0006 00000000 		.4byte	.Ldebug_info0
+ 2452 000a 04       		.byte	0x4
+ 2453 000b 00       		.byte	0
+ 2454 000c 0000     		.2byte	0
+ 2455 000e 0000     		.2byte	0
+ 2456 0010 00000000 		.4byte	.LFB1
+ 2457 0014 0C000000 		.4byte	.LFE1-.LFB1
+ 2458 0018 00000000 		.4byte	.LFB2
+ 2459 001c 0E000000 		.4byte	.LFE2-.LFB2
+ 2460 0020 00000000 		.4byte	.LFB3
+ 2461 0024 34000000 		.4byte	.LFE3-.LFB3
+ 2462 0028 00000000 		.4byte	.LFB4
+ 2463 002c F4000000 		.4byte	.LFE4-.LFB4
+ 2464 0030 00000000 		.4byte	.LFB5
+ 2465 0034 9A000000 		.4byte	.LFE5-.LFB5
+ 2466 0038 00000000 		.4byte	.LFB6
+ 2467 003c AC000000 		.4byte	.LFE6-.LFB6
+ 2468 0040 00000000 		.4byte	0
+ 2469 0044 00000000 		.4byte	0
+ 2470              		.section	.debug_ranges,"",%progbits
+ 2471              	.Ldebug_ranges0:
+ 2472 0000 40000000 		.4byte	.LBB2
+ 2473 0004 7A000000 		.4byte	.LBE2
+ 2474 0008 7E000000 		.4byte	.LBB3
+ 2475 000c 84000000 		.4byte	.LBE3
+ 2476 0010 00000000 		.4byte	0
+ 2477 0014 00000000 		.4byte	0
+ 2478 0018 00000000 		.4byte	.LFB1
+ 2479 001c 0C000000 		.4byte	.LFE1
+ 2480 0020 00000000 		.4byte	.LFB2
+ 2481 0024 0E000000 		.4byte	.LFE2
+ 2482 0028 00000000 		.4byte	.LFB3
+ 2483 002c 34000000 		.4byte	.LFE3
+ 2484 0030 00000000 		.4byte	.LFB4
+ 2485 0034 F4000000 		.4byte	.LFE4
+ 2486 0038 00000000 		.4byte	.LFB5
+ 2487 003c 9A000000 		.4byte	.LFE5
+ 2488 0040 00000000 		.4byte	.LFB6
+ 2489 0044 AC000000 		.4byte	.LFE6
+ 2490 0048 00000000 		.4byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 50
+
+
+ 2491 004c 00000000 		.4byte	0
+ 2492              		.section	.debug_line,"",%progbits
+ 2493              	.Ldebug_line0:
+ 2494 0000 B6030000 		.section	.debug_str,"MS",%progbits,1
+ 2494      02008802 
+ 2494      00000201 
+ 2494      FB0E0D00 
+ 2494      01010101 
+ 2495              	.LASF30:
+ 2496 0000 78746561 		.ascii	"xtea_test_pt\000"
+ 2496      5F746573 
+ 2496      745F7074 
+ 2496      00
+ 2497              	.LASF10:
+ 2498 000d 73697A65 		.ascii	"size_t\000"
+ 2498      5F7400
+ 2499              	.LASF44:
+ 2500 0014 65786974 		.ascii	"exit\000"
+ 2500      00
+ 2501              	.LASF36:
+ 2502 0019 6D656D63 		.ascii	"memcmp\000"
+ 2502      6D7000
+ 2503              	.LASF22:
+ 2504 0020 64656C74 		.ascii	"delta\000"
+ 2504      6100
+ 2505              	.LASF27:
+ 2506 0026 6D626564 		.ascii	"mbedtls_xtea_self_test\000"
+ 2506      746C735F 
+ 2506      78746561 
+ 2506      5F73656C 
+ 2506      665F7465 
+ 2507              	.LASF40:
+ 2508 003d 5F5F6275 		.ascii	"__builtin_putchar\000"
+ 2508      696C7469 
+ 2508      6E5F7075 
+ 2508      74636861 
+ 2508      7200
+ 2509              	.LASF23:
+ 2510 004f 6D626564 		.ascii	"mbedtls_xtea_crypt_ecb\000"
+ 2510      746C735F 
+ 2510      78746561 
+ 2510      5F637279 
+ 2510      70745F65 
+ 2511              	.LASF16:
+ 2512 0066 6D626564 		.ascii	"mbedtls_xtea_init\000"
+ 2512      746C735F 
+ 2512      78746561 
+ 2512      5F696E69 
+ 2512      7400
+ 2513              	.LASF1:
+ 2514 0078 756E7369 		.ascii	"unsigned char\000"
+ 2514      676E6564 
+ 2514      20636861 
+ 2514      7200
+ 2515              	.LASF20:
+ 2516 0086 696E7075 		.ascii	"input\000"
+ 2516      7400
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 51
+
+
+ 2517              	.LASF42:
+ 2518 008c 536F7572 		.ascii	"Source\\mbedtls_open\\library\\xtea.c\000"
+ 2518      63655C6D 
+ 2518      62656474 
+ 2518      6C735F6F 
+ 2518      70656E5C 
+ 2519              	.LASF5:
+ 2520 00af 6C6F6E67 		.ascii	"long unsigned int\000"
+ 2520      20756E73 
+ 2520      69676E65 
+ 2520      6420696E 
+ 2520      7400
+ 2521              	.LASF26:
+ 2522 00c1 74656D70 		.ascii	"temp\000"
+ 2522      00
+ 2523              	.LASF3:
+ 2524 00c6 73686F72 		.ascii	"short unsigned int\000"
+ 2524      7420756E 
+ 2524      7369676E 
+ 2524      65642069 
+ 2524      6E7400
+ 2525              	.LASF38:
+ 2526 00d9 70757463 		.ascii	"putchar\000"
+ 2526      68617200 
+ 2527              	.LASF37:
+ 2528 00e1 70757473 		.ascii	"puts\000"
+ 2528      00
+ 2529              	.LASF32:
+ 2530 00e6 6D656D73 		.ascii	"memset\000"
+ 2530      657400
+ 2531              	.LASF9:
+ 2532 00ed 5F5F7569 		.ascii	"__uint32_t\000"
+ 2532      6E743332 
+ 2532      5F7400
+ 2533              	.LASF18:
+ 2534 00f8 6D626564 		.ascii	"mbedtls_xtea_setup\000"
+ 2534      746C735F 
+ 2534      78746561 
+ 2534      5F736574 
+ 2534      757000
+ 2535              	.LASF31:
+ 2536 010b 78746561 		.ascii	"xtea_test_ct\000"
+ 2536      5F746573 
+ 2536      745F6374 
+ 2536      00
+ 2537              	.LASF8:
+ 2538 0118 756E7369 		.ascii	"unsigned int\000"
+ 2538      676E6564 
+ 2538      20696E74 
+ 2538      00
+ 2539              	.LASF43:
+ 2540 0125 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 2540      73657273 
+ 2540      5C506875 
+ 2540      6F6E675C 
+ 2540      446F6375 
+ 2541 0153 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 52
+
+
+ 2541      6F742D73 
+ 2541      646B2D69 
+ 2541      6F742D64 
+ 2541      65765C50 
+ 2542 0184 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 2542      494F542D 
+ 2542      4875622D 
+ 2542      44656D6F 
+ 2542      5C50534F 
+ 2543 01b6 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 2543      2D487562 
+ 2543      2D44656D 
+ 2543      6F2E6379 
+ 2543      64736E00 
+ 2544              	.LASF7:
+ 2545 01ca 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 2545      206C6F6E 
+ 2545      6720756E 
+ 2545      7369676E 
+ 2545      65642069 
+ 2546              	.LASF24:
+ 2547 01e1 6D626564 		.ascii	"mbedtls_xtea_crypt_cbc\000"
+ 2547      746C735F 
+ 2547      78746561 
+ 2547      5F637279 
+ 2547      70745F63 
+ 2548              	.LASF13:
+ 2549 01f8 73697A65 		.ascii	"sizetype\000"
+ 2549      74797065 
+ 2549      00
+ 2550              	.LASF6:
+ 2551 0201 6C6F6E67 		.ascii	"long long int\000"
+ 2551      206C6F6E 
+ 2551      6720696E 
+ 2551      7400
+ 2552              	.LASF29:
+ 2553 020f 78746561 		.ascii	"xtea_test_key\000"
+ 2553      5F746573 
+ 2553      745F6B65 
+ 2553      7900
+ 2554              	.LASF15:
+ 2555 021d 63686172 		.ascii	"char\000"
+ 2555      00
+ 2556              	.LASF35:
+ 2557 0222 7072696E 		.ascii	"printf\000"
+ 2557      746600
+ 2558              	.LASF33:
+ 2559 0229 6D656D63 		.ascii	"memcpy\000"
+ 2559      707900
+ 2560              	.LASF17:
+ 2561 0230 6D626564 		.ascii	"mbedtls_xtea_free\000"
+ 2561      746C735F 
+ 2561      78746561 
+ 2561      5F667265 
+ 2561      6500
+ 2562              	.LASF21:
+ 2563 0242 6F757470 		.ascii	"output\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 53
+
+
+ 2563      757400
+ 2564              	.LASF19:
+ 2565 0249 6D6F6465 		.ascii	"mode\000"
+ 2565      00
+ 2566              	.LASF2:
+ 2567 024e 73686F72 		.ascii	"short int\000"
+ 2567      7420696E 
+ 2567      7400
+ 2568              	.LASF12:
+ 2569 0258 75696E74 		.ascii	"uint32_t\000"
+ 2569      33325F74 
+ 2569      00
+ 2570              	.LASF4:
+ 2571 0261 6C6F6E67 		.ascii	"long int\000"
+ 2571      20696E74 
+ 2571      00
+ 2572              	.LASF11:
+ 2573 026a 6C6F6E67 		.ascii	"long double\000"
+ 2573      20646F75 
+ 2573      626C6500 
+ 2574              	.LASF41:
+ 2575 0276 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 2575      43313120 
+ 2575      352E342E 
+ 2575      31203230 
+ 2575      31363036 
+ 2576 02a9 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 2576      20726576 
+ 2576      6973696F 
+ 2576      6E203233 
+ 2576      37373135 
+ 2577 02dc 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 2577      67202D66 
+ 2577      66756E63 
+ 2577      74696F6E 
+ 2577      2D736563 
+ 2578              	.LASF0:
+ 2579 0308 7369676E 		.ascii	"signed char\000"
+ 2579      65642063 
+ 2579      68617200 
+ 2580              	.LASF28:
+ 2581 0314 76657262 		.ascii	"verbose\000"
+ 2581      6F736500 
+ 2582              	.LASF25:
+ 2583 031c 6C656E67 		.ascii	"length\000"
+ 2583      746800
+ 2584              	.LASF39:
+ 2585 0323 5F5F6275 		.ascii	"__builtin_puts\000"
+ 2585      696C7469 
+ 2585      6E5F7075 
+ 2585      747300
+ 2586              	.LASF34:
+ 2587 0332 6D626564 		.ascii	"mbedtls_platform_zeroize\000"
+ 2587      746C735F 
+ 2587      706C6174 
+ 2587      666F726D 
+ 2587      5F7A6572 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc6ywEyA.s 			page 54
+
+
+ 2588              	.LASF14:
+ 2589 034b 6D626564 		.ascii	"mbedtls_xtea_context\000"
+ 2589      746C735F 
+ 2589      78746561 
+ 2589      5F636F6E 
+ 2589      74657874 
+ 2590              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

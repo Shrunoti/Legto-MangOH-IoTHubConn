@@ -1,0 +1,199 @@
+\hyperlink{unix_socket_8h}{Click here for the A\+PI reference documentation.}
+
+
+
+\hypertarget{c_unixSockets_toc}{}\section{Table of Contents}\label{c_unixSockets_toc}
+
+\begin{DoxyItemize}
+\item \hyperlink{c_unixSockets_c_unixSocketsIntro}{Introduction}
+\item \hyperlink{c_unixSockets_c_unixSocketsCreatingSingle}{Creating a Single Socket}
+\item \hyperlink{c_unixSockets_c_unixSocketsCreatingPair}{Creating a Pair of Connected Sockets}
+\item \hyperlink{c_unixSockets_c_unixSocketsConnecting}{Listening and Connecting}
+\item \hyperlink{c_unixSockets_c_unixSocketsSendingAndReceiving}{Sending and Receiving}
+\item \hyperlink{c_unixSockets_c_unixSocketsGettingCredentialsDirect}{Getting Credentials Directly from a Connected Socket}
+\item \hyperlink{c_unixSockets_c_unixSocketsDeleting}{Deleting a Socket}
+\end{DoxyItemize}
+
+
+
+\hypertarget{c_unixSockets_c_unixSocketsIntro}{}\section{Introduction}\label{c_unixSockets_c_unixSocketsIntro}
+Unix domain sockets are a powerful and relatively efficient means of communicating between processes in Unix systems. However, the use of Unix domain sockets is not without pitfalls, some of which can result in security holes or race conditions. Therefore, Unix domain sockets should be avoided, unless fully understood and carefully managed. Use the Legato messaging system(s) instead.
+
+Unix Domain Sockets can be {\bfseries named} or {\bfseries unnamed}.
+
+A {\bfseries named} socket appears in the file system as a \char`\"{}socket\char`\"{} type file, and is addressed using a file system path.
+
+An {\bfseries unnamed} socket does not appear in the file system and essentially has no address. It won\textquotesingle{}t receive anything unless it is {\bfseries connected} to another socket.
+
+\begin{DoxyNote}{Note}
+In Linux, Unix Domain sockets can also be \char`\"{}abstract\char`\"{}, where an abstract socket has a name but does not appear in the file system. However, this is not portable to other Unix platforms (like B\+SD), and can be a security hole, since the abstract namespace does not support file system permissions and can be accessed from inside chroot() jails.
+\end{DoxyNote}
+Unix Domain Sockets can also be {\bfseries datagram-\/}, {\bfseries stream-\/}, or {\bfseries  sequenced-\/packet-\/ } oriented, just like U\+DP, T\+CP, and S\+C\+TP sockets, respectively. Unlike U\+DP datagram sockets, however, Unix Domain datagram sockets are guaranteed to deliver every datagram in the order in which they were sent.
+
+An added bonus of Unix Domain sockets is that they can be used to {\bfseries  pass file descriptors } between processes. Furthermore, they allow one process to {\bfseries  check the credentials } (Process ID, User ID, and Group ID) of another process on the other end of a connection. The OS checks the validity of the credentials, so the recipient can be certain that they are valid.\hypertarget{c_unixSockets_c_unixSocketsCreatingSingle}{}\section{Creating a Single Socket}\label{c_unixSockets_c_unixSocketsCreatingSingle}
+Use \hyperlink{unix_socket_8h_af4c4d4e3521f296f0bfc4f398d3cafd9}{unix\+Socket\+\_\+\+Create\+Datagram\+Named()} to create a single, named datagram socket whose address is a given file system path.
+
+
+\begin{DoxyCode}
+\textcolor{keywordtype}{int} socketFd;
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result;
+
+result = \hyperlink{unix_socket_8h_af4c4d4e3521f296f0bfc4f398d3cafd9}{unixSocket\_CreateDatagramNamed}(\textcolor{stringliteral}{"/tmp/my\_app/server\_socket"});
+
+\hyperlink{le__log_8h_a7a3e66a87026cc9e57bcb748840ab41b}{LE\_FATAL\_IF}(result != LE\_OK, \textcolor{stringliteral}{"Failed to create socket!"});
+\end{DoxyCode}
+
+
+This seems simple enough on the surface, but beware of pitfalls here.
+
+If the socket name corresponds to a location in a non-\/volatile file system (e.\+g., a flash file system), then the socket will consume a small amount of space in that file system. Furthermore, creating and deleting sockets in a non-\/volatile file system will wear the backing store (e.\+g., the flash memory device), thereby shortening its life. It is highly recommended that sockets be placed in R\+A\+M-\/based file systems (e.\+g., tmpfs) to avoid these issues.
+
+Of course, the location you choose must be managed very carefully. In particular, the only way to portably guarantee that unauthorized processes don\textquotesingle{}t hijack your socket address is to put it in a directory that has its permissions set such that unauthorized processes can\textquotesingle{}t search (execute permission) or write that directory.
+
+Also beware that it is possible to leave socket bindings lying around in the file system after a process dies. This will consume system resources and could lead to a memory leak if successive incarnations of the process use different socket names. Furthermore, if every incarnation of the process uses the same socket name, then socket creation will fail if an old socket with the same name is still there. As a result, its a good idea to remove the socket from the filesystem using unlink() when your process dies. However, even if your process has clean-\/up code that unlinks a socket from the filesystem when it terminates, your process may not always get the opportunity to run that code (e.\+g., if it receives S\+I\+G\+\_\+\+K\+I\+LL). Therefore, your system design must ensure that your sockets get cleaned up somehow, even if your process doesn\textquotesingle{}t terminate gracefully.
+
+To create a single, named stream socket, use unix\+Socket\+\_\+\+Create\+Stream\+Named().
+
+To create a single, named sequenced-\/packet socket, use \hyperlink{unix_socket_8h_a1a9716076a305c1e918584568da28907}{unix\+Socket\+\_\+\+Create\+Seq\+Packet\+Named()}.
+
+To create a single, unnamed datagram socket, use unix\+Socket\+\_\+\+Create\+Datagram\+Unnamed().
+
+To create a single, unnamed stream socket, use unix\+Socket\+\_\+\+Create\+Stream\+Unnamed().
+
+To create a single, unnamed sequenced-\/packet socket, use \hyperlink{unix_socket_8h_abb4b00a74449a57fdfa4fd1a642fb37a}{unix\+Socket\+\_\+\+Create\+Seq\+Packet\+Unnamed()}.
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000055}{Todo}]Implement additional functions, as needed.\end{DoxyRefDesc}
+\hypertarget{c_unixSockets_c_unixSocketsCreatingPair}{}\section{Creating a Pair of Connected Sockets}\label{c_unixSockets_c_unixSocketsCreatingPair}
+Use \hyperlink{unix_socket_8h_a662207caa2695a24ff5abdbd82342a66}{unix\+Socket\+\_\+\+Create\+Datagram\+Pair()} to create a pair of unnamed datagram sockets that are connected to each other.
+
+
+\begin{DoxyCode}
+\textcolor{keywordtype}{int} socketFd1;
+\textcolor{keywordtype}{int} socketFd2;
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result;
+
+result = \hyperlink{unix_socket_8h_a662207caa2695a24ff5abdbd82342a66}{unixSocket\_CreateDatagramPair}(&socketFd1, &socketFd2);
+
+\hyperlink{le__log_8h_a7a3e66a87026cc9e57bcb748840ab41b}{LE\_FATAL\_IF}(result != LE\_OK, \textcolor{stringliteral}{"Failed to create socket pair!"});
+\end{DoxyCode}
+
+
+To create a pair of unnamed, connected stream sockets, use unix\+Socket\+\_\+\+Create\+Stream\+Pair().
+
+To create a pair of unnamed, connected sequenced-\/packet sockets, use \hyperlink{unix_socket_8h_a9eb8d8b2e6802827529abf2ad90f6ff6}{unix\+Socket\+\_\+\+Create\+Seq\+Packet\+Pair()}.\hypertarget{c_unixSockets_c_unixSocketsConnecting}{}\section{Listening and Connecting}\label{c_unixSockets_c_unixSocketsConnecting}
+Unix domain sockets work the same as Internet network sockets, with respect to listening, accepting, and connecting. Refer to the man pages for listen(), accept() and connect() for more information.
+
+When a socket is a listening socket, the socket will appear readable to a File Descriptor Monitor (see \hyperlink{c_fdMonitor}{File Descriptor Monitor A\+PI}) when a connection is waiting to be accepted. That is, a connection handler can be registered by registering a handler for the {\ttfamily P\+O\+L\+L\+IN} event type.\hypertarget{c_unixSockets_c_unixSocketsSendingAndReceiving}{}\section{Sending and Receiving}\label{c_unixSockets_c_unixSocketsSendingAndReceiving}
+Sending data on a socket can be done using the standard P\+O\+S\+IX A\+P\+Is for sending (write(), writev(), send(), sendto(), sendmsg(), etc.).
+
+Receiving data from a socket can be done using the standard P\+O\+S\+IX A\+P\+Is for receiving (read(), readv(), recv(), recvfrom(), recvmsg(), etc.).
+
+Likewise, the standard P\+O\+S\+IX select() and poll() functions (and variants of those) can be used to know when it is \char`\"{}clear-\/to-\/send\char`\"{} to a socket or when there is data available to be read from a socket. However, it is best when working in the Legato framework to use the file descriptor monitoring features of the \hyperlink{c_eventLoop}{Event Loop A\+PI} for this.
+
+The standard way to send file descriptors and authenticated credentials (P\+ID, U\+ID, G\+ID) through a Unix Domain socket is sendmsg() and recvmsg(). Those are particularly nasty A\+P\+Is. To make life easier, the Legato framework provides its own sending and receiving functions that (in addition to providing normal data message delivery) allow a file descriptor and/or authenticated process credentials to be sent between processes.
+
+
+\begin{DoxyItemize}
+\item \hyperlink{unix_socket_8h_af81ee1e16e1ee2edbb8610fbb4e34ebe}{unix\+Socket\+\_\+\+Send\+Msg()} sends a message containing any combination of normal data, a file descriptor, and authenticated credentials.
+\item \hyperlink{unix_socket_8h_ab64d779b38aa59e2a433a38f613fe191}{unix\+Socket\+\_\+\+Receive\+Msg()} receives a message containing any combination of normal data, a file descriptor, and authenticated credentials.
+\end{DoxyItemize}
+
+When file descriptors are sent, they are duplicated in the receiving process as if they had been created using the P\+O\+S\+IX dup() function. This means that they remain open in the sending process and must be closed by the sending process when it doesn\textquotesingle{}t need them anymore.
+
+Authentication of credentials is done at the receiving socket, and this feature is normally turned off by default (presumably to save overhead in the common case where authentication is not needed). To enable the authentication of credentials, \hyperlink{unix_socket_8h_a814c92589fc434132bc1cfbfc5b37e5b}{unix\+Socket\+\_\+\+Enable\+Authentication()} must be called on the receiving socket.
+
+
+\begin{DoxyCode}
+\textcolor{keyword}{static} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} PassFdToConnectedPeer(\textcolor{keywordtype}{int} sendSocketFd, \textcolor{keywordtype}{int} fdToSend)
+\{
+    \textcolor{comment}{// NOTE: My socket is connected, so I don't need to specify a destination address.}
+    \textcolor{keywordflow}{return} \hyperlink{unix_socket_8c_af81ee1e16e1ee2edbb8610fbb4e34ebe}{unixSocket\_SendMsg}(sendSocketFd, NULL, NULL, 0, fdToSend, \textcolor{keyword}{false});
+
+    \hyperlink{app_stop_client_8c_ac9aa243805b0ac0687f9c2e9b5bdb8ef}{close}(fdToSend); \textcolor{comment}{// I don't need the fd locally anymore, so close my copy of it.}
+\}
+\end{DoxyCode}
+
+
+\begin{DoxyWarning}{Warning}
+When sending ancillary data (fds or credentials) over a stream socket, at least one byte of data must accompany the ancillary data. This is a limitation of the underlying OS. Datagram and sequenced-\/packet sockets don\textquotesingle{}t have this limitation.
+\end{DoxyWarning}
+A regular \hyperlink{c_eventLoop}{Event Loop A\+PI} file descriptor monitor can be used to detect the arrival of an ancillary data message. The indication that is provided when a message containing ancillary data arrives is indistinguishable from the indication provided when normal data arrives.
+
+
+\begin{DoxyCode}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} SocketReadyForReadingHandler
+(
+    \textcolor{keywordtype}{int} socketFd
+)
+\{
+    \textcolor{keywordtype}{char} dataBuff[MAX\_MESSAGE\_DATA\_BYTES];
+    \textcolor{keywordtype}{size\_t} numDataBytes = \textcolor{keyword}{sizeof}(dataBuff);
+    \textcolor{keywordtype}{int} \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd};
+    \textcolor{keyword}{struct }ucred credentials;
+
+    result = \hyperlink{unix_socket_8c_ab64d779b38aa59e2a433a38f613fe191}{unixSocket\_ReceiveMsg}(socketFd,
+                                   NULL,    \textcolor{comment}{// addrBuffPtr - I don't need the sender's address.}
+                                   0,       \textcolor{comment}{// addrBuffSize}
+                                   dataBuff,
+                                   &numDataBytes,
+                                   &fd,
+                                   &credentials);
+    \textcolor{keywordflow}{if} (result != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Socket receive failed. Error = %d (%s)."}, result, 
+      \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{LE\_RESULT\_TXT}(result));
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \textcolor{keywordflow}{if} (numDataBytes > 0)
+        \{
+            \textcolor{comment}{// Got some data!}
+            ...
+        \}
+
+        \textcolor{keywordflow}{if} (fd > -1)
+        \{
+            \textcolor{comment}{// Got a file descriptor!}
+            ...
+        \}
+
+        \textcolor{keywordflow}{if} (credentials.pid != 0)
+        \{
+            \textcolor{comment}{// Got some credentials!}
+            ...
+        \}
+    \}
+\}
+\end{DoxyCode}
+\hypertarget{c_unixSockets_c_unixSocketsGettingCredentialsDirect}{}\section{Getting Credentials Directly from a Connected Socket}\label{c_unixSockets_c_unixSocketsGettingCredentialsDirect}
+Although it is possible to explicitly send credentials over Unix domain sockets, it is often not necessary to do so. Instead, you can often just use getsockopt() to fetch credentials directly from a local connected socket.
+
+If you have a connected Unix domain stream or sequenced-\/packet socket, you can use getsockopt() to fetch the credentials of {\bfseries the process that called bind()} on the socket at the other end of the connection.
+
+If you have any kind of connected Unix domain socket that was created using socketpair() or one of the helper functions built on top of socketpair (\hyperlink{unix_socket_8h_a662207caa2695a24ff5abdbd82342a66}{unix\+Socket\+\_\+\+Create\+Datagram\+Pair()}, unix\+Socket\+\_\+\+Create\+Stream\+Pair(), or \hyperlink{unix_socket_8h_a9eb8d8b2e6802827529abf2ad90f6ff6}{unix\+Socket\+\_\+\+Create\+Seq\+Packet\+Pair()}), you can also use getsockopt() to fetch the credentials of {\bfseries the process that created that socket}.
+
+
+\begin{DoxyCode}
+\textcolor{keyword}{struct }ucred credentials;
+socklen\_t size = \textcolor{keyword}{sizeof}(\textcolor{keyword}{struct }ucred);
+
+\textcolor{keywordflow}{if} (getsockopt(fd, SOL\_SOCKET, SO\_PEERCRED, &credentials, &size) != 0)
+\{
+    \hyperlink{le__log_8h_a54b4b07f5396e19a8d9fca74238f4795}{LE\_FATAL}(\textcolor{stringliteral}{"Failed to obtain credentials from socket.  Errno = %d (%m)"}, 
+      \hyperlink{supervisor_8c_a0a4ccfdbe1cf7b37afc60d34e748b066}{errno});
+\}
+
+\hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Credentials of peer process:  pid = %d;  uid = %d;  gid = %d."},
+        credentials.pid,
+        credentials.uid,
+        credentials.gid);
+\end{DoxyCode}
+\hypertarget{c_unixSockets_c_unixSocketsDeleting}{}\section{Deleting a Socket}\label{c_unixSockets_c_unixSocketsDeleting}
+The standard P\+O\+S\+IX \hyperlink{app_stop_client_8c_ac9aa243805b0ac0687f9c2e9b5bdb8ef}{close()} function can be used to delete a socket. However, is recommended that the function \hyperlink{file_descriptor_8c_ac66047067b00ef0ccc70e0ee7d70dd79}{fd\+\_\+\+Close()} be used.
+
+
+
+
+
+Copyright (C) Sierra Wireless Inc. 

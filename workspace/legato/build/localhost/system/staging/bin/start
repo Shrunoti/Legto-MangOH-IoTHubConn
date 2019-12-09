@@ -1,0 +1,101 @@
+#! /bin/sh
+# Copyright (C) Sierra Wireless Inc.
+
+LEGATO_SYSTEM_PATH="/legato/systems/current/bin"
+
+# Add LEGATO_SYSTEM_PATH with PATH.
+export PATH=$LEGATO_SYSTEM_PATH:$PATH
+
+case "$1" in
+
+    stop)
+        # if legato isn't running legato script likely won't be found as current/bin
+        # won't be set.
+        if [ -d $LEGATO_SYSTEM_PATH ]; then
+            legato stop
+        else
+            echo "Called stop but legato doesn't seem to be running."
+        fi
+    ;;
+
+    "")
+        # Configure the Kernel to dump core files in the format: "core-<Exe Name>-<Unix Time-stamp>"
+        # Where the Unix time-stamp is the count in seconds since the Epoch.
+        echo "core-%e-%t" > /proc/sys/kernel/core_pattern
+
+        # Configure the maximum messages size up to 260 Kbytes as some APIs may require big chunck
+        # of data to pass.
+        sysctl -w net.unix.max_dgram_qlen=32 >/dev/null || \
+            echo "Failed to set net.unix.max_dgram_qlen"
+        sysctl -w net.core.wmem_max=266240 >/dev/null || \
+            echo "Failed to set net.core.wmem_max"
+        sysctl -w net.core.wmem_default=266240 >/dev/null || \
+            echo "Failed to set net.core.wmem_default"
+        sysctl -w net.core.rmem_max=266240 >/dev/null || \
+            echo "Failed to set net.core.rmem_max"
+        sysctl -w net.core.rmem_default=266240 >/dev/null || \
+            echo "Failed to set net.core.rmem_default"
+
+        # Add LEGATO_SYSTEM_PATH to /etc/profile if it is not added there.
+        grep -F $LEGATO_SYSTEM_PATH /etc/profile >/dev/null
+        if [ $? -ne 0 ]; then
+            # Check if legato is read-only
+            if [ ! -w /etc/profile -a -f /mnt/legato/systems/current/read-only ]; then
+                cp /etc/profile /tmp/profile &&
+                chmod 755 /tmp/profile &&
+                mount -o bind /tmp/profile /etc/profile
+            fi
+            echo "export PATH=$LEGATO_SYSTEM_PATH:\$PATH" >> /etc/profile
+        fi
+
+        cd /mnt/legato/
+        if [ -z ""`grep -a '^/legato/.*/liblegato.so$' /etc/ld.so.cache` ]; then
+            # On some platforms, the '[ -w ... ]' returns true even it is located to read-only
+            # file system. Protect against by performing the action in read-write and if failed
+            # replay the action in read-only.
+            LDCONFIG=""
+            if [ -w /etc/ld.so.cache ]; then
+               ldconfig -i /legato/systems/current/lib 2>/dev/null && LDCONFIG="RW"
+            fi
+            if [ "RW" != "$LDCONFIG" ]; then
+               echo "/etc/ld.so.cache is R/O"
+               # Update ld.so cache
+               if [ -f /tmp/ld.so.cache ]; then
+                   umount /etc/ld.so.cache 2>/dev/null
+               fi
+               cp /etc/ld.so.cache /tmp/ld.so.cache
+               ldconfig -i /legato/systems/current/lib -C /tmp/ld.so.cache
+               # When installed from scratch, no /legato/systems/current exits, so we need to
+               # add the installation path to have the Legato starting.
+               [ ! -d /legato/systems/current/lib ] &&
+                   ldconfig -i /mnt/legato/system/lib -C /tmp/ld.so.cache
+               chmod 644 /tmp/ld.so.cache
+               mount -o bind /tmp/ld.so.cache /etc/ld.so.cache
+            fi
+        fi
+
+        # Check if legato is read-only
+        if [ -f systems/current/read-only ]; then
+
+            # Start the legato
+            ./systems/current/bin/startSystem
+        else
+            if [ -e /tmp/ld.so.cache ]; then
+                # Assume that /etc is NOT writable. So, copy /etc/hosts and /etc/resolv.conf
+                # to /tmp and perform a mount -o bind to have these files writable.
+                for file in hosts resolv.conf; do
+                    # Skip if file in /etc is a symbolic link
+                    test -L /etc/$file && continue
+                    umount /etc/$file 2>/dev/null
+                    cp /etc/$file /tmp/
+                    mount -o bind /tmp/$file /etc/$file
+                    [ $? -ne 0 ] && echo "Cannot mount /etc/$file writable" >/dev/stderr
+                done
+            fi
+            cd /mnt/legato
+            ./system/bin/startSystem
+        fi
+    ;;
+
+esac
+

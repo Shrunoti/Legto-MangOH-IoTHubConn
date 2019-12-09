@@ -1,0 +1,122 @@
+# Build script for executable 'logCtrlDaemon'
+
+# == Auto-generated file.  Do not edit. ==
+
+builddir = /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/logCtrlDaemon
+
+cFlags =  -DNO_LOG_CONTROL -I /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/logCtrlDaemon -I/home/shrunoti/Downloads/workspace/legato/interfaces -I/home/shrunoti/Downloads/workspace/legato/framework/include -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux -I/home/shrunoti/Downloads/workspace/legato/interfaces/supervisor -I.
+
+cxxFlags =  -I /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/logCtrlDaemon -I/home/shrunoti/Downloads/workspace/legato/interfaces -I/home/shrunoti/Downloads/workspace/legato/framework/include -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato -I/home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux -I/home/shrunoti/Downloads/workspace/legato/interfaces/supervisor -I.
+
+ldFlags = 
+
+target = localhost
+
+ifgenFlags =  --import-dir /home/shrunoti/Downloads/workspace/legato/interfaces --import-dir /home/shrunoti/Downloads/workspace/legato/framework/include --import-dir /home/shrunoti/Downloads/workspace/legato/framework/liblegato --import-dir /home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux --import-dir /home/shrunoti/Downloads/workspace/legato/interfaces/supervisor --import-dir .
+
+rule CompileC
+  description = Compiling C source
+  depfile = $out.d
+  command = /usr/bin//gcc --sysroot=/ -MMD -MF $out.d -c $in -o $out -DLE_FILENAME=`basename $in` -Wall -fPIC -Werror -fvisibility=hidden -DMK_TOOLS_BUILD -g $cFlags
+
+rule CompileCxx
+  description = Compiling C++ source
+  depfile = $out.d
+  command = /usr/bin//g++ --sysroot=/ -MMD -MF $out.d -c $in -o $out -DLE_FILENAME=`basename $in` -Wall -fPIC -Werror -fvisibility=hidden  -DMK_TOOLS_BUILD -g $cxxFlags
+
+rule LinkCLib
+  description = Linking C library
+  command = /usr/bin//gcc --sysroot=/ -Wl,--build-id -g -shared -o $out $in $ldFlags $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCxxLib
+  description = Linking C++ library
+  command = /usr/bin//g++ --sysroot=/ -Wl,--build-id -g -shared -o $out $in $ldFlags $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCExe
+  description = Linking C executable
+  command = /usr/bin//gcc --sysroot=/ -Wl,--build-id -g -fPIE -pie -o $out $in $ldFlags -g $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule LinkCxxExe
+  description = Linking C++ executable
+  command = /usr/bin//g++ --sysroot=/ -Wl,--build-id -g -fPIE -pie -o $out $in $ldFlags -g $
+      && splitdebug -d /home/shrunoti/Downloads/workspace/legato/build/localhost/debug $out
+
+rule CompileJava
+  description = Compiling Java source
+  command = javac -cp $classPath -d `dirname $out` $in && touch $out
+
+rule MakeJar
+  description = Making JAR file
+  command = INDIR=`dirname $in`; find $$INDIR -name '*.class' -printf "-C $$INDIR\n%P\n"|xargs jar -cf $out
+
+rule MakeKernelModule
+  description = Build kernel driver module
+  depfile = $out.d
+  command = make -C $in
+
+rule BuildExternal
+  description = Running external build step
+  command = cd $builddir/$workingdir && $
+            export CFLAGS="--sysroot=/ $cFlags" $
+            CXXFLAGS="--sysroot=/ $cxxFlags" $
+            LDFLAGS="--sysroot=/ $ldFlags" $
+            PATH="/usr/bin/:$$PATH" && $
+            $externalCommand
+
+rule GenInterfaceCode
+  description = Generating IPC interface code
+  command = ifgen --output-dir $outputDir $ifgenFlags $in
+
+rule GenPyApiCExtension
+  description = Generating Python API C Extension
+  command = cextgenerator.py $in -o $workDir > /dev/null
+rule CopyFile
+  description = Copying file
+  command = cp -d -f -T $in $out
+
+rule RegenNinjaScript
+  description = Regenerating build script
+  generator = 1
+  command = mkexe --dont-run-ninja "-o" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/bin/logCtrlDaemon" "-t" "localhost" "-w" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/logCtrlDaemon" "-l" "/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib" "-d" "/home/shrunoti/Downloads/workspace/legato/build/localhost/debug" "/home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/logDaemon" "--cflags=-DNO_LOG_CONTROL" "-i" "/home/shrunoti/Downloads/workspace/legato/framework/liblegato" "-i" "/home/shrunoti/Downloads/workspace/legato/framework/liblegato/linux" "-i" "/home/shrunoti/Downloads/workspace/legato/interfaces/supervisor"
+
+build $builddir/obj/logCtrlDaemon/_main.c.o: CompileC /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/logCtrlDaemon/src/logCtrlDaemon/_main.c
+  cFlags = $cFlags -DLE_COMPONENT_NAME=logCtrlDaemon_exe -DLE_LOG_SESSION=logCtrlDaemon_exe_LogSession -DLE_LOG_LEVEL_FILTER_PTR=logCtrlDaemon_exe_LogLevelFilterPtr 
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/bin/logCtrlDaemon: LinkCExe $builddir/obj/logCtrlDaemon/_main.c.o | /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/libComponent_logDaemon.so /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/liblegato.so /home/shrunoti/Downloads/workspace/legato/build/$target/framework/lib/liblegato.so
+  ldFlags = -rdynamic -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib:$$LEGATO_BUILD/framework/lib" -L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib "-L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib" -lComponent_logDaemon "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -ldl -lm $ldFlags
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/libComponent_logDaemon.so: LinkCLib $builddir/component/839c033c37c714af7254bc3d0df614f7/obj/54992c5a3989c25ca5fb188f80383fd6.o $builddir/component/839c033c37c714af7254bc3d0df614f7/obj/38aca95bf254adb01a80f0b8163dc31c.o $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_server.o $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_server.o $builddir/component/839c033c37c714af7254bc3d0df614f7/obj/_componentMain.c.o | /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib/liblegato.so
+  ldFlags =  -L/home/shrunoti/Downloads/workspace/legato/build/localhost/framework/lib -Wl,--enable-new-dtags,-rpath="\$$ORIGIN/../lib:$$LEGATO_BUILD/framework/lib" "-L$$LEGATO_BUILD/framework/lib" -llegato -lpthread -lrt -lm
+
+build $builddir/component/839c033c37c714af7254bc3d0df614f7/obj/54992c5a3989c25ca5fb188f80383fd6.o: CompileC /home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/logDaemon/logDaemon.c || $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_server.h $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_messages.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_server.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_messages.h $builddir/api/b0405ed1080555feee94a613afef58d8/server/le_limit_server.h 
+  cFlags = $cFlags -I$builddir/component/839c033c37c714af7254bc3d0df614f7/src -I$builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server -I$builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server -I$builddir/api/b0405ed1080555feee94a613afef58d8/server -DLE_COMPONENT_NAME=logDaemon -DLE_LOG_SESSION=logDaemon_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=logDaemon_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _logDaemon_COMPONENT_INIT()" -DFRAMEWORK_WDOG_NAME=logDaemonWdog
+
+build $builddir/component/839c033c37c714af7254bc3d0df614f7/obj/38aca95bf254adb01a80f0b8163dc31c.o: CompileC /home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/common/frameworkWdog.c || $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_server.h $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_messages.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_server.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_messages.h $builddir/api/b0405ed1080555feee94a613afef58d8/server/le_limit_server.h 
+  cFlags = $cFlags -I$builddir/component/839c033c37c714af7254bc3d0df614f7/src -I$builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server -I$builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server -I$builddir/api/b0405ed1080555feee94a613afef58d8/server -DLE_COMPONENT_NAME=logDaemon -DLE_LOG_SESSION=logDaemon_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=logDaemon_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _logDaemon_COMPONENT_INIT()" -DFRAMEWORK_WDOG_NAME=logDaemonWdog
+
+build $builddir/component/839c033c37c714af7254bc3d0df614f7/obj/_componentMain.c.o: CompileC $builddir/component/839c033c37c714af7254bc3d0df614f7/src/_componentMain.c
+  cFlags = $cFlags -I$builddir/component/839c033c37c714af7254bc3d0df614f7/src -I$builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server -I$builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server -I$builddir/api/b0405ed1080555feee94a613afef58d8/server -DLE_COMPONENT_NAME=logDaemon -DLE_LOG_SESSION=logDaemon_LogSession  -DLE_LOG_LEVEL_FILTER_PTR=logDaemon_LogLevelFilterPtr  "-DCOMPONENT_INIT=LE_CI_LINKAGE LE_SHARED void _logDaemon_COMPONENT_INIT()"
+
+build $builddir/api/b0405ed1080555feee94a613afef58d8/server/le_limit_server.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/le_limit.api |
+  outputDir = $builddir/api/b0405ed1080555feee94a613afef58d8/server
+  ifgenFlags = --gen-server-interface $ifgenFlags
+
+build $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_server.o: CompileC $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_server.c | $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_messages.h $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_server.h $builddir/api/b0405ed1080555feee94a613afef58d8/server/le_limit_server.h
+  cFlags = $cFlags -I$builddir/api/b0405ed1080555feee94a613afef58d8/server
+
+build $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_server.c $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_server.h $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server/logFd_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/logDaemon/logFd.api | /home/shrunoti/Downloads/workspace/legato/interfaces/le_limit.api
+  ifgenFlags = --gen-server --gen-server-interface --gen-local --name-prefix logFd $ifgenFlags
+  outputDir = $builddir/api/eb1a5f39d2e87e23bbc650140833ed0e/server
+
+build $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_server.o: CompileC $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_server.c | $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_messages.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_server.h
+  cFlags = $cFlags
+
+build $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_server.c $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_server.h $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server/logDaemonWdog_messages.h: GenInterfaceCode /home/shrunoti/Downloads/workspace/legato/interfaces/watchdog/frameworkWdog.api |
+  ifgenFlags = --gen-server --gen-server-interface --gen-local --name-prefix logDaemonWdog $ifgenFlags
+  outputDir = $builddir/api/c7579f409ee53ef76deebbf6b6cb4197/server
+
+build /home/shrunoti/Downloads/workspace/legato/build/localhost/framework/logCtrlDaemon/build.ninja: RegenNinjaScript | /home/shrunoti/Downloads/workspace/legato/build/tools/mk /home/shrunoti/Downloads/workspace/legato/framework/daemons/linux/logDaemon/Component.cdef /home/shrunoti/Downloads/workspace/legato/interfaces/le_limit.api /home/shrunoti/Downloads/workspace/legato/interfaces/logDaemon/logFd.api /home/shrunoti/Downloads/workspace/legato/interfaces/watchdog/frameworkWdog.api
+

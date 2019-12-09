@@ -1,0 +1,713 @@
+\hypertarget{supervisor_8c}{}\section{framework/daemons/linux/supervisor/supervisor.c File Reference}
+\label{supervisor_8c}\index{framework/daemons/linux/supervisor/supervisor.\+c@{framework/daemons/linux/supervisor/supervisor.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}interfaces.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}user.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kernel\+Modules.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}framework\+Daemons.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}cgroups.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}smack.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}supervisor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sys\+Paths.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}daemon.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}apps.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}wait.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+System.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sys\+Status.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}start.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}ima.\+h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{supervisor_8c_a242f0882c7f64ff0aeeaab983e3bc6a8}{S\+U\+P\+E\+R\+V\+I\+S\+O\+R\+\_\+\+I\+N\+S\+T\+A\+N\+C\+E\+\_\+\+F\+I\+LE}~\hyperlink{le__basics_8h_a3428692efe6051ef30016ffde1a9f7bb}{S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+D\+IR) \char`\"{}supervisor\+Inst\char`\"{}
+\item 
+\#define \hyperlink{supervisor_8c_a1ee59325b14b86b372dd06ac0a534e3c}{B\+O\+O\+T\+\_\+\+C\+F\+G\+\_\+\+P\+A\+TH}~\char`\"{}/\char`\"{}
+\item 
+\#define \hyperlink{supervisor_8c_af1e039d4cb1c5396a50dc1bc1da2ceda}{B\+O\+O\+T\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+P\+A\+TH}~\char`\"{}boot\+Timeout\char`\"{}
+\item 
+\#define \hyperlink{supervisor_8c_ab902f631495bb51d956038671d636d5c}{D\+E\+F\+A\+U\+L\+T\+\_\+\+B\+O\+O\+T\+\_\+\+P\+E\+R\+I\+OD}~60000
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \{ \hyperlink{supervisor_8c_ac36f475ca5b446f4fde4c9b90bec77c8a54f49c44c860a80dc9f50cb8ab6fc93c}{A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+A\+U\+TO}, 
+\hyperlink{supervisor_8c_ac36f475ca5b446f4fde4c9b90bec77c8a3be0e407a33aa39247ac808f0eba8794}{A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+N\+O\+NE}
+ \}
+\item 
+enum \{ \\*
+\hyperlink{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eaa5f51c4eb8c8eec3b16b058c5e29a037}{S\+T\+A\+T\+E\+\_\+\+S\+T\+A\+R\+T\+I\+NG}, 
+\hyperlink{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eae583c55c9f9a3aa9888e4ed771d6a9b6}{S\+T\+A\+T\+E\+\_\+\+N\+O\+R\+M\+AL}, 
+\hyperlink{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eadadecf1f2baeff5ca52267cead15d340}{S\+T\+A\+T\+E\+\_\+\+S\+T\+O\+P\+P\+I\+NG}, 
+\hyperlink{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eaad614b6176e292c799a0897f72f2acc6}{S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+NG}, 
+\\*
+\hyperlink{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eaaea971748b64fc1e16e4d6d969f39a76}{S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+N\+G\+\_\+\+M\+A\+N\+U\+AL}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a4636a28aa35491d27d7c67d3495be126}{Print\+Help} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_ad877cdc3401b81606c70901078bc42d2}{Parse\+Command\+Line} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a6c048f529ede05f77fdc17183a91c4f5}{Start\+Framework} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a77142064d27df2d5aa4c087fb66428d9}{Delete\+Reboot\+Count} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static size\+\_\+t \hyperlink{supervisor_8c_a09398b9825219ef301acf113b93d2f5a}{Get\+Boot\+Expire\+Period} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a18284b813dde589f151e299c67e282aa}{Handle\+Reboot\+Expiry} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a2f98bb49964f85832c1a5be8e3540c57}{Stop\+Supervisor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a4517f3bd1e19081e6ed9a84a23a618ac}{Prepare\+Full\+Shutdown} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_abb5700f525c6e25842cd53a818b329eb}{Shutdown\+Framework} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a4b0c6480b66c97058a6213df8cfa08f4}{Begin\+Shutdown} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a658df2aee997986950110c30cfc100d8}{framework\+\_\+\+Reboot} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a630d68371a52550fad0b48268f997439}{Capture\+Debug\+Data} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a02f348360211f77ef709b2f0427af38b}{Sig\+Child\+Handler} (int sig\+Num)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a976552bc58f2a1f99346795f74fcc544}{le\+\_\+framework\+\_\+\+Stop} (le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a6f7e88fa8e923152c80ad1dd4fac05c4}{le\+\_\+framework\+\_\+\+Restart} (le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, bool manual\+Restart)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_8c_a17b20e4ee9914896a3eed847c0c41f28}{le\+\_\+ima\+\_\+\+Import\+Cert} (const char $\ast$cert\+Path)
+\item 
+bool \hyperlink{supervisor_8c_a1a505304f96a2c4b53d783562ed78dc1}{framework\+\_\+\+Is\+Stopping} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a3500b8d18fce384f77689e415e1243ad}{le\+\_\+framework\+\_\+\+Is\+Stopping} (le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_ae139a6700cd90c01ba48982452c5d6d0}{le\+\_\+framework\+\_\+\+Is\+Read\+Only} (le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_af0838a24bc4dc957424ef46287a40dc2}{le\+\_\+framework\+\_\+\+Notify\+Expected\+Reboot} (le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref)
+\item 
+\hyperlink{supervisor_8c_afa9069e7bbdeed2332b5cbffbb472691}{le\+\_\+sig\+\_\+\+Block} (S\+I\+G\+P\+I\+PE)
+\item 
+\hyperlink{supervisor_8c_aff1baec97b758377b0f3a3c8d8f82cb0}{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF} ((nice(L\+E\+G\+A\+T\+O\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL)==-\/1)\&\&(errno!=0),\char`\"{}Could not set the nice level.  \%m.\char`\"{})
+\item 
+\hyperlink{supervisor_8c_a3ed13d5f54a2f897c2fc6e97f1178c69}{if} (!\hyperlink{supervisor_8c_a4c10b08f0c536290bd804816b578d448}{Should\+Not\+Daemonize})
+\item 
+\hyperlink{supervisor_8c_a27dedd1fac9e13c893261a34a0fc21a7}{L\+E\+\_\+\+A\+S\+S\+E\+RT} (\hyperlink{dir_8c_a7ac7d25b67f2e47127084677626d5344}{le\+\_\+dir\+\_\+\+Make}(\hyperlink{le__basics_8h_a3428692efe6051ef30016ffde1a9f7bb}{S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+D\+IR), S\+\_\+\+I\+R\+W\+XU$\vert$S\+\_\+\+I\+X\+O\+TH)!=\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{L\+E\+\_\+\+F\+A\+U\+LT})
+\item 
+\hyperlink{supervisor_8c_ae6ded5bccde397fd6ffc85ea3de9d664}{if} (\hyperlink{file_lock_8c_a4f7b134b467adb749401f2ef2ccd92d2}{le\+\_\+flock\+\_\+\+Try\+Create}(\hyperlink{supervisor_8c_a242f0882c7f64ff0aeeaab983e3bc6a8}{S\+U\+P\+E\+R\+V\+I\+S\+O\+R\+\_\+\+I\+N\+S\+T\+A\+N\+C\+E\+\_\+\+F\+I\+LE}, \hyperlink{le__file_lock_8h_a5e5400e33a5e10b7c624748a9ce11280a058867728a1de4773023f009c2934188}{L\+E\+\_\+\+F\+L\+O\+C\+K\+\_\+\+W\+R\+I\+TE}, \hyperlink{le__file_lock_8h_a35d8c575df68d1da52a1048916f7e7d9a1bc49344dc291a19f7860fc850376153}{L\+E\+\_\+\+F\+L\+O\+C\+K\+\_\+\+O\+P\+E\+N\+\_\+\+I\+F\+\_\+\+E\+X\+I\+ST}, S\+\_\+\+I\+R\+W\+XU)$<$ 0)
+\item 
+\hyperlink{supervisor_8c_ad2c77028b3adbf2aed592699085afca5}{L\+E\+\_\+\+C\+R\+IT} (\char`\"{}Set Child Subreaper not supported. Applications with forked processes may not shutdown properly.\char`\"{})
+\item 
+\hyperlink{supervisor_8c_a3e9284a065fbe4f65aad310617e311a4}{user\+\_\+\+Init} ()
+\item 
+\hyperlink{supervisor_8c_aef51a606d699d4a7edcf09f56945c949}{kernel\+Modules\+\_\+\+Init} ()
+\item 
+\hyperlink{supervisor_8c_a7ef39dc654a9abb357749ecd64e3db6f}{smack\+\_\+\+Init} ()
+\item 
+\hyperlink{supervisor_8c_a1691a7fd4ff13d6ae15a99d1d579066a}{smack\+\_\+\+Set\+Rule} (\char`\"{}\+\_\+\char`\"{},\char`\"{}rw\char`\"{},\char`\"{}syslog\char`\"{})
+\item 
+\hyperlink{supervisor_8c_a6654084a7c73e3b819d773b9278af6eb}{smack\+\_\+\+Set\+Rule} (\char`\"{}admin\char`\"{},\char`\"{}rw\char`\"{},\char`\"{}syslog\char`\"{})
+\item 
+\hyperlink{supervisor_8c_a886a7c537a56bbd91691ff9662e920f3}{smack\+\_\+\+Set\+Rule} (\char`\"{}framework\char`\"{},\char`\"{}rw\char`\"{},\char`\"{}syslog\char`\"{})
+\item 
+\hyperlink{supervisor_8c_a91a50aa8f77dc552f4b6b0c5bf5d6cd5}{cgrp\+\_\+\+Init} ()
+\item 
+\hyperlink{supervisor_8c_a2eb645189be654e43dfeb29c95143ed8}{le\+\_\+sig\+\_\+\+Set\+Event\+Handler} (S\+I\+G\+C\+H\+LD, \hyperlink{sbtrace_8c_a02f348360211f77ef709b2f0427af38b}{Sig\+Child\+Handler})
+\item 
+\hyperlink{supervisor_8c_a6b24a81c045be6ce791c367d34628e62}{if} (!\hyperlink{file_system_8h_aec3e9193acefbcf28d3fa96c53c8198b}{fs\+\_\+\+Is\+Mount\+Point}(\hyperlink{sys_paths_8h_a9285d2ec5322a9e23d72df98aa34a845}{C\+U\+R\+R\+E\+N\+T\+\_\+\+S\+Y\+S\+T\+E\+M\+\_\+\+P\+A\+TH}))
+\item 
+\hyperlink{supervisor_8c_a3d25990913d40212038035b1ee740e7a}{if} (\hyperlink{supervisor_8c_a7c8a10e4120b029cdd764e9fda140ed3}{is\+Read\+Only})
+\item 
+\hyperlink{supervisor_8c_af9b3199e99e5dd5c71195ab1d4c80fdb}{le\+\_\+sig\+\_\+\+Block} (S\+I\+G\+C\+H\+LD)
+\item 
+\hyperlink{supervisor_8c_aac6126993d64c70627a6d9506c624485}{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF} (freopen(\char`\"{}/dev/null\char`\"{},\char`\"{}r\char`\"{}, stdin)==N\+U\+LL,\char`\"{}Failed to redirect stdin to /dev/null.  \%m.\char`\"{})
+\item 
+\hyperlink{supervisor_8c_addb8d7f5caa5c3ad4ef892eefa0c3dfa}{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF} ((unlink(\char`\"{}/legato/S\+M\+A\+C\+K\+\_\+\+D\+I\+S\+A\+B\+L\+ED\char`\"{})==-\/1)\&\&((errno!=E\+N\+O\+E\+NT)\&\&(errno!=E\+R\+O\+FS)),\char`\"{}Cannot \hyperlink{app_stop_client_8c_a5d172089e2e0c7a575dbb9681fcebe61}{remove} /legato/S\+M\+A\+C\+K\+\_\+\+D\+I\+S\+A\+B\+L\+E\+D. \%m.\char`\"{})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_aa866700c6c817e1580ad5a5e687df2e5}{le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+Legato} (le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_8c_a8bcca83375f59c1d64c8b5ea34140899}{le\+\_\+sup\+\_\+ctrl\+\_\+\+Restart\+Legato} (le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, bool manual\+Restart)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} \hyperlink{supervisor_8c_a1508da73938b4b955d9024c5bcaf8b25}{Reboot\+Timer}
+\item 
+static enum  \{ ... \}  \hyperlink{supervisor_8c_affcf38f42b1f82a3591748cc753cd445}{App\+Start\+Mode} = \hyperlink{supervisor_8c_ac36f475ca5b446f4fde4c9b90bec77c8a54f49c44c860a80dc9f50cb8ab6fc93c}{A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+A\+U\+TO}
+\item 
+static le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t \hyperlink{supervisor_8c_a1a8e8a75f06289f20c952e37c5c3e8f1}{Stop\+Api\+Cmd\+Ref} = N\+U\+LL
+\item 
+static bool \hyperlink{supervisor_8c_a562bcf86c53d12c4a5cea7fd55cea8f5}{Using\+Deprecated\+Sup\+Ctrl\+Api} = false
+\item 
+static enum  \{ ... \}  \hyperlink{supervisor_8c_a6b755e7c656a1d810c33c4ddb3732228}{State} = \hyperlink{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eaa5f51c4eb8c8eec3b16b058c5e29a037}{S\+T\+A\+T\+E\+\_\+\+S\+T\+A\+R\+T\+I\+NG}
+\item 
+static bool \hyperlink{supervisor_8c_a4c10b08f0c536290bd804816b578d448}{Should\+Not\+Daemonize} = false
+\item 
+\hyperlink{supervisor_8c_a0392d452f926ce36c4852de26b5eca12}{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}
+\item 
+\hyperlink{supervisor_8c_a0a4ccfdbe1cf7b37afc60d34e748b066}{errno} = 0
+\item 
+\hyperlink{supervisor_8c_a0544c3fe466e421738dae463968b70ba}{else}
+\item 
+bool \hyperlink{supervisor_8c_a7c8a10e4120b029cdd764e9fda140ed3}{is\+Read\+Only} = \hyperlink{sys_status_8h_a6f5824e6461d9cf76a4568fdf3aca4ac}{sys\+Status\+\_\+\+Is\+Read\+Only}()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The Legato Supervisor is the first Legato framework process to start and is responsible for starting and monitoring all other framework processes as well as applications. The Supervisor has root privileges and administrative M\+AC rights.
+
+
+\begin{DoxyItemize}
+\item \hyperlink{supervisor_8c_c_sup_kernelModules}{Kernel Modules}
+\item \hyperlink{supervisor_8c_c_sup_frameworkDaemons}{Framework Daemons}
+\item \hyperlink{supervisor_8c_c_sup_appStarts}{Starting Applications}
+\item \hyperlink{supervisor_8c_c_sup_sandboxedApps}{Sandboxed Applications}
+\item \hyperlink{supervisor_8c_c_sup_nonSandboxedApps}{Non-\/\+Sandboxed Applications}
+\item \hyperlink{supervisor_8c_c_sup_appUsers}{Application Users and Groups}
+\item \hyperlink{supervisor_8c_c_sup_faultRecovery}{Fault Recovery}
+\item \hyperlink{supervisor_8c_c_sup_faultLimits}{Fault Limits}
+\item \hyperlink{supervisor_8c_c_sup_singleInstance}{Single Instance}
+\item \hyperlink{supervisor_8c_c_sup_configLayout}{Application Configuration}
+\item \hyperlink{supervisor_8c_c_sup_smack}{S\+M\+A\+CK}
+\end{DoxyItemize}\hypertarget{supervisor_8c_c_sup_kernelModules}{}\subsection{Kernel Modules}\label{supervisor_8c_c_sup_kernelModules}
+Prior to starting any executables, Supervisor inserts kernel modules bundled with Legato app. Legato-\/supplied modules are considered to be self-\/contained and independent from each-\/other. They are inserted in alphabetical order, i.\+e. in the order in which they are listed in Legato\textquotesingle{}s system/modules directory.\hypertarget{supervisor_8c_c_sup_frameworkDaemons}{}\subsection{Framework Daemons}\label{supervisor_8c_c_sup_frameworkDaemons}
+Besides the Supervisor, the Legato runtime system consists of a number of framework daemons that must be started before any apps are started.
+
+The framework daemons must be started in a specific order and must be given time to initialize properly.
+
+After starting each framework daemon, the Supervisor waits for the daemon to signal that it\textquotesingle{}s ready before continuing to the next daemon. Only after all framework daemons have been started and initialized, will apps be started.\hypertarget{supervisor_8c_c_sup_appStarts}{}\subsection{Starting Applications}\label{supervisor_8c_c_sup_appStarts}
+Installed apps may be configured to start automatically or manually. If configured to start automatically, the Supervisor starts the app on start-\/up, after all framework daemons have been started.
+
+All apps can be stopped and started manually by sending a request to the Supervisor. Only one instance of the app may be running at a time.\hypertarget{supervisor_8c_c_sup_sandboxedApps}{}\subsection{Sandboxed Applications}\label{supervisor_8c_c_sup_sandboxedApps}
+An app can be configured to be either sandboxed or non-\/sandboxed.
+
+Sandboxed apps run in a chrooted environment and have no visibility to the rest of the system. Sandboxed apps also have strict resource limits.\hypertarget{supervisor_8c_c_sup_nonSandboxedApps}{}\subsection{Non-\/\+Sandboxed Applications}\label{supervisor_8c_c_sup_nonSandboxedApps}
+A non-\/sandboxed app is one that runs in the main file system.
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000013}{Todo}]Add capabilities to non-\/sandboxed apps.\end{DoxyRefDesc}
+\hypertarget{supervisor_8c_c_sup_appUsers}{}\subsection{Application Users and Groups}\label{supervisor_8c_c_sup_appUsers}
+When an app is installed it is assigned a user name, user ID, primary group name and primary group ID. The user and primary group names are the same and are derived from the app name.
+
+Also, non-\/sandboxed apps may have a list of supplementary groups. If a supplementary group doesn\textquotesingle{}t already exist in the system, the group is created.
+
+An app\textquotesingle{}s supplementary groups list isn\textquotesingle{}t stored in the system\textquotesingle{}s /etc/group file because the supplementary groups are already stored in the config DB added to the app\textquotesingle{}s processes when the processes are started.
+
+When an app starts, all the app\textquotesingle{}s processes are given the app\textquotesingle{}s user ID, primary group ID and, if applicable, supplementary groups ID.\hypertarget{supervisor_8c_c_sup_faultRecovery}{}\subsection{Fault Recovery}\label{supervisor_8c_c_sup_faultRecovery}
+The Supervisor monitors all running app processes for faults. A fault is when a process terminates without returning E\+X\+I\+T\+\_\+\+S\+U\+C\+C\+E\+SS. When the Supervisor detects a fault, it will perform the configured fault recovery action.\hypertarget{supervisor_8c_c_sup_faultLimits}{}\subsection{Fault Limits}\label{supervisor_8c_c_sup_faultLimits}
+To prevent a process that is continually faulting from continually consuming resources, the Supervisor imposes a fault limit on all processes in the system. The fault limit is the minimum time interval between two faults; if more than one fault occurs within the fault limit time interval, the fault limit is reached.
+
+If a process reaches the fault limit, a critical message is logged, the app the process belongs to is shutdown, and no further fault recovery action is taken.
+
+The fault limits only prevent automatic recovery by the Supervisor, it doesn\textquotesingle{}t prevent apps from being restarted manually even after the fault limit is exceeded.\hypertarget{supervisor_8c_c_sup_singleInstance}{}\subsection{Single Instance}\label{supervisor_8c_c_sup_singleInstance}
+The Supervisor uses a locked file to ensure there is only one instance of the Supervisor running.\hypertarget{supervisor_8c_c_sup_configLayout}{}\subsection{Application Configuration}\label{supervisor_8c_c_sup_configLayout}
+All app configuration settings are stored in the Legato Configuration Database. See framework\+DB.
+
+The Supervisor refers to the \char`\"{}apps\char`\"{} branch of the \char`\"{}system\char`\"{} config tree to determine what apps exist, how they should be started, and which ones should be started automatically when the framework comes up.\hypertarget{supervisor_8c_c_sup_smack}{}\subsection{S\+M\+A\+CK}\label{supervisor_8c_c_sup_smack}
+S\+M\+A\+CK policies are set by the Legato startup scripts, the Legato Installer, and the Legato Supervisor.
+
+By default system files have the \char`\"{}\+\_\+\char`\"{} S\+M\+A\+CK label meaning everyone has read and execute access to them. The Legato startup scripts are responsible for setting S\+M\+A\+CK labels for system files that require special permission handling (e.\+g., {\ttfamily /dev/null} file is given the label \char`\"{}$\ast$\char`\"{} by the start up scripts so the file is fully accessible to everyone. The Legato startup scripts also ensure the Legato Supervisor and Installer have the \textquotesingle{}admin\textquotesingle{} S\+M\+A\+CK label.
+
+The Legato Installer sets S\+M\+A\+CK labels for all app bundled files. The S\+M\+A\+CK label for each app is unique to the app.
+
+The Supervisor sets S\+M\+A\+CK labels for framework daemons, processes for apps, sandbox directories and S\+M\+A\+CK rules for I\+PC bindings.
+
+Framework daemons are given the S\+M\+A\+CK label \char`\"{}framework\char`\"{}.
+
+All processes are given the same S\+M\+A\+CK label as their app. All app labels are unique.
+
+S\+M\+A\+CK rules are set so I\+PC bindings between apps work. Here\textquotesingle{}s a code sample of rules to set if a client app needs to access a server app\+:
+
+
+\begin{DoxyCode}
+\textcolor{stringliteral}{'clientAppLabel'} rw \textcolor{stringliteral}{'serverAppLabel'}     \textcolor{comment}{// client has read-write access to server.}
+\textcolor{stringliteral}{'serverAppLabel'} rw \textcolor{stringliteral}{'clientAppLabel'}     \textcolor{comment}{// server has read-write access to client.}
+\end{DoxyCode}
+
+
+Sandboxed directories are given labels corresponding to the app\textquotesingle{}s access rights to those directory. Generally, an app only has read and execute permission to its sandboxes /bin directory. Its properties look like this\+:
+
+owner = root group = root D\+AC permissions = -\/-\/-\/---r-\/x S\+M\+A\+CK label = \textquotesingle{}App\+Labelrx\textquotesingle{}
+
+The Supervisor also sets up the S\+M\+A\+CK rule so the app has the proper access to the directory\+:
+
+\textquotesingle{}App\+Label\textquotesingle{} rx \textquotesingle{}App\+Labelrx\textquotesingle{}
+
+App\textquotesingle{}s directories are given different labels than the app itself so that if an I\+PC binding is present, the remote app has access to the local app but doesn\textquotesingle{}t have direct access to the local app\textquotesingle{}s files.
+
+All bundled files within an app\textquotesingle{}s sandbox are given the app\textquotesingle{}s S\+M\+A\+CK label. This supports passing file descriptors from one app to another. However, the file descriptor can\textquotesingle{}t be passed onto a third app.\hypertarget{supervisor_8c_c_sup_smack_limitations}{}\subsection{S\+M\+A\+C\+K Limitations}\label{supervisor_8c_c_sup_smack_limitations}
+Extended attributes used to store the S\+M\+A\+CK label are available on all file systems we currently use with one key feature missing\+: when a new file is created, the file should inherit the S\+M\+A\+CK label of the creator. Because this feature is missing, our current implementation of S\+M\+A\+CK has the following limitations\+:
+
+
+\begin{DoxyItemize}
+\item Mqueue file system will always set new files to \char`\"{}\+\_\+\char`\"{} label. This means we can\textquotesingle{}t control access between apps that use M\+Queues.
+\item Tmpfs always sets new files to \char`\"{}$\ast$\char`\"{} label. This means we can\textquotesingle{}t totally control access to files created in sandboxes because sandboxes use tmpfs. It\textquotesingle{}s only an issue when file descriptors for the created files are passed over I\+PC to another app. The other app can then pass that fd onto a third app and so on.
+\item Yaffs2 does not set any label for newly created files. This causes an issue with the config daemon that has the label \char`\"{}framework\char`\"{}, but its created files don\textquotesingle{}t have any labels. To work around this, the config daemon must run as root and the \textquotesingle{}onlycap\textquotesingle{} S\+M\+A\+CK file must not be set. This means there is limited protection because all root processes have the ability to change S\+M\+A\+CK labels on files. Note that U\+B\+I\+FS no longer has this issue.
+\item Q\+MI sockets are currently set to \char`\"{}$\ast$\char`\"{} because some apps need to write to them. Ideally, the Q\+MI socket file would be given a label such as \char`\"{}qmi\char`\"{} and a rule would be created to only allow access to the app that requires it. However, there currently isn\textquotesingle{}t a way to specify this in the xdef file. This is not a limitation of S\+M\+A\+CK or the file system but the xdef files.
+\end{DoxyItemize}
+
+
+
+
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{supervisor.\+c@{supervisor.\+c}!B\+O\+O\+T\+\_\+\+C\+F\+G\+\_\+\+P\+A\+TH@{B\+O\+O\+T\+\_\+\+C\+F\+G\+\_\+\+P\+A\+TH}}
+\index{B\+O\+O\+T\+\_\+\+C\+F\+G\+\_\+\+P\+A\+TH@{B\+O\+O\+T\+\_\+\+C\+F\+G\+\_\+\+P\+A\+TH}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{B\+O\+O\+T\+\_\+\+C\+F\+G\+\_\+\+P\+A\+TH}{BOOT_CFG_PATH}}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\+O\+O\+T\+\_\+\+C\+F\+G\+\_\+\+P\+A\+TH~\char`\"{}/\char`\"{}}\hypertarget{supervisor_8c_a1ee59325b14b86b372dd06ac0a534e3c}{}\label{supervisor_8c_a1ee59325b14b86b372dd06ac0a534e3c}
+Boot configuration path \index{supervisor.\+c@{supervisor.\+c}!B\+O\+O\+T\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+P\+A\+TH@{B\+O\+O\+T\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+P\+A\+TH}}
+\index{B\+O\+O\+T\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+P\+A\+TH@{B\+O\+O\+T\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+P\+A\+TH}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{B\+O\+O\+T\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+P\+A\+TH}{BOOT_TIMEOUT_PATH}}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\+O\+O\+T\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+P\+A\+TH~\char`\"{}boot\+Timeout\char`\"{}}\hypertarget{supervisor_8c_af1e039d4cb1c5396a50dc1bc1da2ceda}{}\label{supervisor_8c_af1e039d4cb1c5396a50dc1bc1da2ceda}
+Location in boot configuration path to store user defined value for minimum allowable time (in milliseconds) between boots. If system restarts less than this time, it is treated as a boot loop. \index{supervisor.\+c@{supervisor.\+c}!D\+E\+F\+A\+U\+L\+T\+\_\+\+B\+O\+O\+T\+\_\+\+P\+E\+R\+I\+OD@{D\+E\+F\+A\+U\+L\+T\+\_\+\+B\+O\+O\+T\+\_\+\+P\+E\+R\+I\+OD}}
+\index{D\+E\+F\+A\+U\+L\+T\+\_\+\+B\+O\+O\+T\+\_\+\+P\+E\+R\+I\+OD@{D\+E\+F\+A\+U\+L\+T\+\_\+\+B\+O\+O\+T\+\_\+\+P\+E\+R\+I\+OD}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{D\+E\+F\+A\+U\+L\+T\+\_\+\+B\+O\+O\+T\+\_\+\+P\+E\+R\+I\+OD}{DEFAULT_BOOT_PERIOD}}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+E\+F\+A\+U\+L\+T\+\_\+\+B\+O\+O\+T\+\_\+\+P\+E\+R\+I\+OD~60000}\hypertarget{supervisor_8c_ab902f631495bb51d956038671d636d5c}{}\label{supervisor_8c_ab902f631495bb51d956038671d636d5c}
+Default value of minimum allowable time between boots. This value is taken if there is no user defined value. \index{supervisor.\+c@{supervisor.\+c}!S\+U\+P\+E\+R\+V\+I\+S\+O\+R\+\_\+\+I\+N\+S\+T\+A\+N\+C\+E\+\_\+\+F\+I\+LE@{S\+U\+P\+E\+R\+V\+I\+S\+O\+R\+\_\+\+I\+N\+S\+T\+A\+N\+C\+E\+\_\+\+F\+I\+LE}}
+\index{S\+U\+P\+E\+R\+V\+I\+S\+O\+R\+\_\+\+I\+N\+S\+T\+A\+N\+C\+E\+\_\+\+F\+I\+LE@{S\+U\+P\+E\+R\+V\+I\+S\+O\+R\+\_\+\+I\+N\+S\+T\+A\+N\+C\+E\+\_\+\+F\+I\+LE}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{S\+U\+P\+E\+R\+V\+I\+S\+O\+R\+\_\+\+I\+N\+S\+T\+A\+N\+C\+E\+\_\+\+F\+I\+LE}{SUPERVISOR_INSTANCE_FILE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\+U\+P\+E\+R\+V\+I\+S\+O\+R\+\_\+\+I\+N\+S\+T\+A\+N\+C\+E\+\_\+\+F\+I\+LE~{\bf S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+D\+IR) \char`\"{}supervisor\+Inst\char`\"{}}\hypertarget{supervisor_8c_a242f0882c7f64ff0aeeaab983e3bc6a8}{}\label{supervisor_8c_a242f0882c7f64ff0aeeaab983e3bc6a8}
+The file the Supervisor uses to ensure that only a single instance of the Supervisor is running. 
+
+\subsection{Enumeration Type Documentation}
+\subsubsection[{\texorpdfstring{anonymous enum}{anonymous enum}}]{\setlength{\rightskip}{0pt plus 5cm}anonymous enum}\hypertarget{supervisor_8c_ac36f475ca5b446f4fde4c9b90bec77c8}{}\label{supervisor_8c_ac36f475ca5b446f4fde4c9b90bec77c8}
+Enumerates the different application start options that can be provided on the command-\/line. \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+A\+U\+TO@{A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+A\+U\+TO}!supervisor.\+c@{supervisor.\+c}}\index{supervisor.\+c@{supervisor.\+c}!A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+A\+U\+TO@{A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+A\+U\+TO}}\item[{\em 
+A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+A\+U\+TO\hypertarget{supervisor_8c_ac36f475ca5b446f4fde4c9b90bec77c8a54f49c44c860a80dc9f50cb8ab6fc93c}{}\label{supervisor_8c_ac36f475ca5b446f4fde4c9b90bec77c8a54f49c44c860a80dc9f50cb8ab6fc93c}
+}]Start all apps that are marked for automatic start. \index{A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+N\+O\+NE@{A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+N\+O\+NE}!supervisor.\+c@{supervisor.\+c}}\index{supervisor.\+c@{supervisor.\+c}!A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+N\+O\+NE@{A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+N\+O\+NE}}\item[{\em 
+A\+P\+P\+\_\+\+S\+T\+A\+R\+T\+\_\+\+N\+O\+NE\hypertarget{supervisor_8c_ac36f475ca5b446f4fde4c9b90bec77c8a3be0e407a33aa39247ac808f0eba8794}{}\label{supervisor_8c_ac36f475ca5b446f4fde4c9b90bec77c8a3be0e407a33aa39247ac808f0eba8794}
+}]Don\textquotesingle{}t start any apps until told to do so through the App Control A\+PI. \end{description}
+\end{Desc}
+\subsubsection[{\texorpdfstring{anonymous enum}{anonymous enum}}]{\setlength{\rightskip}{0pt plus 5cm}anonymous enum}\hypertarget{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9e}{}\label{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9e}
+Operating states. \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{S\+T\+A\+T\+E\+\_\+\+S\+T\+A\+R\+T\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+S\+T\+A\+R\+T\+I\+NG}!supervisor.\+c@{supervisor.\+c}}\index{supervisor.\+c@{supervisor.\+c}!S\+T\+A\+T\+E\+\_\+\+S\+T\+A\+R\+T\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+S\+T\+A\+R\+T\+I\+NG}}\item[{\em 
+S\+T\+A\+T\+E\+\_\+\+S\+T\+A\+R\+T\+I\+NG\hypertarget{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eaa5f51c4eb8c8eec3b16b058c5e29a037}{}\label{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eaa5f51c4eb8c8eec3b16b058c5e29a037}
+}]Starting the framework. No apps running yet. \index{S\+T\+A\+T\+E\+\_\+\+N\+O\+R\+M\+AL@{S\+T\+A\+T\+E\+\_\+\+N\+O\+R\+M\+AL}!supervisor.\+c@{supervisor.\+c}}\index{supervisor.\+c@{supervisor.\+c}!S\+T\+A\+T\+E\+\_\+\+N\+O\+R\+M\+AL@{S\+T\+A\+T\+E\+\_\+\+N\+O\+R\+M\+AL}}\item[{\em 
+S\+T\+A\+T\+E\+\_\+\+N\+O\+R\+M\+AL\hypertarget{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eae583c55c9f9a3aa9888e4ed771d6a9b6}{}\label{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eae583c55c9f9a3aa9888e4ed771d6a9b6}
+}]Normal operation. Fully initialized. All framework daemons running. \index{S\+T\+A\+T\+E\+\_\+\+S\+T\+O\+P\+P\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+S\+T\+O\+P\+P\+I\+NG}!supervisor.\+c@{supervisor.\+c}}\index{supervisor.\+c@{supervisor.\+c}!S\+T\+A\+T\+E\+\_\+\+S\+T\+O\+P\+P\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+S\+T\+O\+P\+P\+I\+NG}}\item[{\em 
+S\+T\+A\+T\+E\+\_\+\+S\+T\+O\+P\+P\+I\+NG\hypertarget{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eadadecf1f2baeff5ca52267cead15d340}{}\label{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eadadecf1f2baeff5ca52267cead15d340}
+}]Controlled shutdown of framework underway. \index{S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+NG}!supervisor.\+c@{supervisor.\+c}}\index{supervisor.\+c@{supervisor.\+c}!S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+NG@{S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+NG}}\item[{\em 
+S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+NG\hypertarget{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eaad614b6176e292c799a0897f72f2acc6}{}\label{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eaad614b6176e292c799a0897f72f2acc6}
+}]Controlled shutdown and restart of framework underway. \index{S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+N\+G\+\_\+\+M\+A\+N\+U\+AL@{S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+N\+G\+\_\+\+M\+A\+N\+U\+AL}!supervisor.\+c@{supervisor.\+c}}\index{supervisor.\+c@{supervisor.\+c}!S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+N\+G\+\_\+\+M\+A\+N\+U\+AL@{S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+N\+G\+\_\+\+M\+A\+N\+U\+AL}}\item[{\em 
+S\+T\+A\+T\+E\+\_\+\+R\+E\+S\+T\+A\+R\+T\+I\+N\+G\+\_\+\+M\+A\+N\+U\+AL\hypertarget{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eaaea971748b64fc1e16e4d6d969f39a76}{}\label{supervisor_8c_a05589fbab0657f08285ebdfe93f5ec9eaaea971748b64fc1e16e4d6d969f39a76}
+}]Manual shutdown and restart of framework underway. \end{description}
+\end{Desc}
+
+
+\subsection{Function Documentation}
+\index{supervisor.\+c@{supervisor.\+c}!Begin\+Shutdown@{Begin\+Shutdown}}
+\index{Begin\+Shutdown@{Begin\+Shutdown}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Begin\+Shutdown(void)}{BeginShutdown(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Begin\+Shutdown (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a4b0c6480b66c97058a6213df8cfa08f4}{}\label{supervisor_8c_a4b0c6480b66c97058a6213df8cfa08f4}
+Shuts down all apps and all framework daemons. The shutdown process is asynchronous and this function kicks off the chain of handlers that will shutdown all apps and framework daemons. \index{supervisor.\+c@{supervisor.\+c}!Capture\+Debug\+Data@{Capture\+Debug\+Data}}
+\index{Capture\+Debug\+Data@{Capture\+Debug\+Data}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Capture\+Debug\+Data(void)}{CaptureDebugData(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Capture\+Debug\+Data (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a630d68371a52550fad0b48268f997439}{}\label{supervisor_8c_a630d68371a52550fad0b48268f997439}
+Called to capture any extra data that may help indicate what contributed to the fault that caused the framework to fail.
+
+This function calls a shell script that will save a dump of the system log and any core files that have been generated into a known location. \index{supervisor.\+c@{supervisor.\+c}!cgrp\+\_\+\+Init@{cgrp\+\_\+\+Init}}
+\index{cgrp\+\_\+\+Init@{cgrp\+\_\+\+Init}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{cgrp\+\_\+\+Init()}{cgrp_Init()}}]{\setlength{\rightskip}{0pt plus 5cm}cgrp\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a91a50aa8f77dc552f4b6b0c5bf5d6cd5}{}\label{supervisor_8c_a91a50aa8f77dc552f4b6b0c5bf5d6cd5}
+Initializes cgroups for the system. Sets up a hierarchy for each supported subsystem.
+
+\begin{DoxyNote}{Note}
+Should be called once for the entire system, subsequent calls to this function will have no effect. Must be called before any of the other functions in this A\+PI is called.
+
+Failures will cause the calling process to exit. 
+\end{DoxyNote}
+\index{supervisor.\+c@{supervisor.\+c}!Delete\+Reboot\+Count@{Delete\+Reboot\+Count}}
+\index{Delete\+Reboot\+Count@{Delete\+Reboot\+Count}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Reboot\+Count(void)}{DeleteRebootCount(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+Reboot\+Count (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a77142064d27df2d5aa4c087fb66428d9}{}\label{supervisor_8c_a77142064d27df2d5aa4c087fb66428d9}
+Deletes the reboot count file \index{supervisor.\+c@{supervisor.\+c}!framework\+\_\+\+Is\+Stopping@{framework\+\_\+\+Is\+Stopping}}
+\index{framework\+\_\+\+Is\+Stopping@{framework\+\_\+\+Is\+Stopping}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{framework\+\_\+\+Is\+Stopping(void)}{framework_IsStopping(void)}}]{\setlength{\rightskip}{0pt plus 5cm}bool framework\+\_\+\+Is\+Stopping (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a1a505304f96a2c4b53d783562ed78dc1}{}\label{supervisor_8c_a1a505304f96a2c4b53d783562ed78dc1}
+Reports if the Legato framework is stopping.
+
+\begin{DoxyReturn}{Returns}
+true if the framework is stopping or rebooting false otherwise 
+\end{DoxyReturn}
+\index{supervisor.\+c@{supervisor.\+c}!framework\+\_\+\+Reboot@{framework\+\_\+\+Reboot}}
+\index{framework\+\_\+\+Reboot@{framework\+\_\+\+Reboot}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{framework\+\_\+\+Reboot(void)}{framework_Reboot(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} framework\+\_\+\+Reboot (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a658df2aee997986950110c30cfc100d8}{}\label{supervisor_8c_a658df2aee997986950110c30cfc100d8}
+Reboot the system. \index{supervisor.\+c@{supervisor.\+c}!Get\+Boot\+Expire\+Period@{Get\+Boot\+Expire\+Period}}
+\index{Get\+Boot\+Expire\+Period@{Get\+Boot\+Expire\+Period}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Boot\+Expire\+Period(void)}{GetBootExpirePeriod(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static size\+\_\+t Get\+Boot\+Expire\+Period (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a09398b9825219ef301acf113b93d2f5a}{}\label{supervisor_8c_a09398b9825219ef301acf113b93d2f5a}
+Get the boot timer period. Should be called after all framework daemons are running.
+
+\begin{DoxyReturn}{Returns}
+The timer period, in milliseconds. 
+\end{DoxyReturn}
+\index{supervisor.\+c@{supervisor.\+c}!Handle\+Reboot\+Expiry@{Handle\+Reboot\+Expiry}}
+\index{Handle\+Reboot\+Expiry@{Handle\+Reboot\+Expiry}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Handle\+Reboot\+Expiry(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer)}{HandleRebootExpiry(le_timer_Ref_t timer)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Handle\+Reboot\+Expiry (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a18284b813dde589f151e299c67e282aa}{}\label{supervisor_8c_a18284b813dde589f151e299c67e282aa}
+Handle fast reboot detect timer expiring.
+
+Deletes the reboot count file \index{supervisor.\+c@{supervisor.\+c}!if@{if}}
+\index{if@{if}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{if("!Should\+Not\+Daemonize)}{if(!ShouldNotDaemonize)}}]{\setlength{\rightskip}{0pt plus 5cm}if (
+\begin{DoxyParamCaption}
+\item[{!}]{Should\+Not\+Daemonize}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a3ed13d5f54a2f897c2fc6e97f1178c69}{}\label{supervisor_8c_a3ed13d5f54a2f897c2fc6e97f1178c69}
+-\/1 = Never timeout. \index{supervisor.\+c@{supervisor.\+c}!if@{if}}
+\index{if@{if}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{if(le\+\_\+flock\+\_\+\+Try\+Create(\+S\+U\+P\+E\+R\+V\+I\+S\+O\+R\+\_\+\+I\+N\+S\+T\+A\+N\+C\+E\+\_\+\+F\+I\+L\+E, L\+E\+\_\+\+F\+L\+O\+C\+K\+\_\+\+W\+R\+I\+T\+E, L\+E\+\_\+\+F\+L\+O\+C\+K\+\_\+\+O\+P\+E\+N\+\_\+\+I\+F\+\_\+\+E\+X\+I\+S\+T, S\+\_\+\+I\+R\+W\+X\+U)$<$ 0)}{if(le_flock_TryCreate(SUPERVISOR_INSTANCE_FILE, LE_FLOCK_WRITE, LE_FLOCK_OPEN_IF_EXIST, S_IRWXU)< 0)}}]{\setlength{\rightskip}{0pt plus 5cm}if (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_ae6ded5bccde397fd6ffc85ea3de9d664}{}\label{supervisor_8c_ae6ded5bccde397fd6ffc85ea3de9d664}
+\index{supervisor.\+c@{supervisor.\+c}!if@{if}}
+\index{if@{if}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{if("!fs\+\_\+\+Is\+Mount\+Point(\+C\+U\+R\+R\+E\+N\+T\+\_\+\+S\+Y\+S\+T\+E\+M\+\_\+\+P\+A\+T\+H))}{if(!fs_IsMountPoint(CURRENT_SYSTEM_PATH))}}]{\setlength{\rightskip}{0pt plus 5cm}if (
+\begin{DoxyParamCaption}
+\item[{!}]{fs\+\_\+\+Is\+Mount\+PointC\+U\+R\+R\+E\+N\+T\+\_\+\+S\+Y\+S\+T\+E\+M\+\_\+\+P\+A\+TH}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a6b24a81c045be6ce791c367d34628e62}{}\label{supervisor_8c_a6b24a81c045be6ce791c367d34628e62}
+\index{supervisor.\+c@{supervisor.\+c}!if@{if}}
+\index{if@{if}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{if(is\+Read\+Only)}{if(isReadOnly)}}]{\setlength{\rightskip}{0pt plus 5cm}if (
+\begin{DoxyParamCaption}
+\item[{{\bf is\+Read\+Only}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a3d25990913d40212038035b1ee740e7a}{}\label{supervisor_8c_a3d25990913d40212038035b1ee740e7a}
+\index{supervisor.\+c@{supervisor.\+c}!kernel\+Modules\+\_\+\+Init@{kernel\+Modules\+\_\+\+Init}}
+\index{kernel\+Modules\+\_\+\+Init@{kernel\+Modules\+\_\+\+Init}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{kernel\+Modules\+\_\+\+Init()}{kernelModules_Init()}}]{\setlength{\rightskip}{0pt plus 5cm}kernel\+Modules\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_aef51a606d699d4a7edcf09f56945c949}{}\label{supervisor_8c_aef51a606d699d4a7edcf09f56945c949}
+Initialize kernel module handler \index{supervisor.\+c@{supervisor.\+c}!L\+E\+\_\+\+A\+S\+S\+E\+RT@{L\+E\+\_\+\+A\+S\+S\+E\+RT}}
+\index{L\+E\+\_\+\+A\+S\+S\+E\+RT@{L\+E\+\_\+\+A\+S\+S\+E\+RT}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+A\+S\+S\+E\+R\+T(le\+\_\+dir\+\_\+\+Make(\+S\+T\+R\+I\+N\+G\+I\+Z\+E(\+L\+E\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+D\+I\+R), S\+\_\+\+I\+R\+W\+XU\texttt{"|}S\+\_\+\+I\+X\+O\+T\+H)"!=\+L\+E\+\_\+\+F\+A\+U\+L\+T)}{LE_ASSERT(le_dir_Make(STRINGIZE(LE_RUNTIME_DIR), S_IRWXU|S_IXOTH)!=LE_FAULT)}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+A\+S\+S\+E\+RT (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dir\+\_\+\+Make}({\bf S\+T\+R\+I\+N\+G\+I\+ZE}(L\+E\+\_\+\+R\+U\+N\+T\+I\+M\+E\+\_\+\+D\+IR), S\+\_\+\+I\+R\+W\+XU$\vert$S\+\_\+\+I\+X\+O\+TH)!}]{ = {\ttfamily {\bf L\+E\+\_\+\+F\+A\+U\+LT}}}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a27dedd1fac9e13c893261a34a0fc21a7}{}\label{supervisor_8c_a27dedd1fac9e13c893261a34a0fc21a7}
+\index{supervisor.\+c@{supervisor.\+c}!L\+E\+\_\+\+C\+R\+IT@{L\+E\+\_\+\+C\+R\+IT}}
+\index{L\+E\+\_\+\+C\+R\+IT@{L\+E\+\_\+\+C\+R\+IT}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+C\+R\+I\+T(""Set Child Subreaper not supported. Applications with forked processes may not shutdown properly."")}{LE_CRIT("Set Child Subreaper not supported. Applications with forked processes may not shutdown properly.")}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+C\+R\+IT (
+\begin{DoxyParamCaption}
+\item[{\char`\"{}Set Child Subreaper not supported. Applications with forked processes may not shutdown properly.\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_ad2c77028b3adbf2aed592699085afca5}{}\label{supervisor_8c_ad2c77028b3adbf2aed592699085afca5}
+\index{supervisor.\+c@{supervisor.\+c}!L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF@{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF}}
+\index{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF@{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+I\+F((nice(\+L\+E\+G\+A\+T\+O\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+E\+L)==-\/1)\&\&(errno"!=0),""Could not set the nice level.  \%m."")}{LE_FATAL_IF((nice(LEGATO_FRAMEWORK_NICE_LEVEL)==-1)&&(errno!=0),"Could not set the nice level.  %m.")}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF (
+\begin{DoxyParamCaption}
+\item[{(nice(L\+E\+G\+A\+T\+O\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL)==-\/1)\&\&(errno!=0)}]{, }
+\item[{\char`\"{}Could not set the nice level. \%m.\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_aff1baec97b758377b0f3a3c8d8f82cb0}{}\label{supervisor_8c_aff1baec97b758377b0f3a3c8d8f82cb0}
+\index{supervisor.\+c@{supervisor.\+c}!L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF@{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF}}
+\index{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF@{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+I\+F(freopen(""/dev/null"",""r"", stdin)==\+N\+U\+L\+L,""Failed to redirect stdin to /dev/null.  \%m."")}{LE_FATAL_IF(freopen("/dev/null","r", stdin)==NULL,"Failed to redirect stdin to /dev/null.  %m.")}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF (
+\begin{DoxyParamCaption}
+\item[{freopen(\char`\"{}/dev/null\char`\"{},\char`\"{}r\char`\"{}, stdin)}]{ = {\ttfamily =NULL}, }
+\item[{\char`\"{}Failed to redirect stdin to /dev/null. \%m.\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_aac6126993d64c70627a6d9506c624485}{}\label{supervisor_8c_aac6126993d64c70627a6d9506c624485}
+\index{supervisor.\+c@{supervisor.\+c}!L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF@{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF}}
+\index{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF@{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+I\+F((unlink(""/legato/\+S\+M\+A\+C\+K\+\_\+\+D\+I\+S\+A\+B\+L\+ED"")==-\/1)\&\&((errno"!=\+E\+N\+O\+E\+N\+T)\&\&(errno"!=\+E\+R\+O\+F\+S)),""Cannot remove /legato/\+S\+M\+A\+C\+K\+\_\+\+D\+I\+S\+A\+B\+L\+E\+D. \%m."")}{LE_FATAL_IF((unlink("/legato/SMACK_DISABLED")==-1)&&((errno!=ENOENT)&&(errno!=EROFS)),"Cannot remove /legato/SMACK_DISABLED. %m.")}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+F\+A\+T\+A\+L\+\_\+\+IF (
+\begin{DoxyParamCaption}
+\item[{(unlink(\char`\"{}/legato/S\+M\+A\+C\+K\+\_\+\+D\+I\+S\+A\+B\+L\+ED\char`\"{})==-\/1)\&\&((errno!=E\+N\+O\+E\+NT)\&\&(errno!=E\+R\+O\+FS))}]{, }
+\item[{\char`\"{}Cannot {\bf remove} /legato/S\+M\+A\+C\+K\+\_\+\+D\+I\+S\+A\+B\+L\+E\+D. \%m.\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_addb8d7f5caa5c3ad4ef892eefa0c3dfa}{}\label{supervisor_8c_addb8d7f5caa5c3ad4ef892eefa0c3dfa}
+\index{supervisor.\+c@{supervisor.\+c}!le\+\_\+framework\+\_\+\+Is\+Read\+Only@{le\+\_\+framework\+\_\+\+Is\+Read\+Only}}
+\index{le\+\_\+framework\+\_\+\+Is\+Read\+Only@{le\+\_\+framework\+\_\+\+Is\+Read\+Only}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+framework\+\_\+\+Is\+Read\+Only(le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref)}{le_framework_IsReadOnly(le_framework_ServerCmdRef_t _cmdRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+framework\+\_\+\+Is\+Read\+Only (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{\+\_\+cmd\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_ae139a6700cd90c01ba48982452c5d6d0}{}\label{supervisor_8c_ae139a6700cd90c01ba48982452c5d6d0}
+Checks whether legato framework is Read-\/\+Only or not.
+
+\begin{DoxyReturn}{Returns}
+true if the framework is Read-\/\+Only false otherwise 
+\end{DoxyReturn}
+\index{supervisor.\+c@{supervisor.\+c}!le\+\_\+framework\+\_\+\+Is\+Stopping@{le\+\_\+framework\+\_\+\+Is\+Stopping}}
+\index{le\+\_\+framework\+\_\+\+Is\+Stopping@{le\+\_\+framework\+\_\+\+Is\+Stopping}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+framework\+\_\+\+Is\+Stopping(le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref)}{le_framework_IsStopping(le_framework_ServerCmdRef_t _cmdRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+framework\+\_\+\+Is\+Stopping (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{\+\_\+cmd\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a3500b8d18fce384f77689e415e1243ad}{}\label{supervisor_8c_a3500b8d18fce384f77689e415e1243ad}
+Reports if the Legato framework is stopping.
+
+A\+PI implementation function.
+
+\begin{DoxyReturn}{Returns}
+true if the framework is stopping or rebooting false otherwise 
+\end{DoxyReturn}
+\index{supervisor.\+c@{supervisor.\+c}!le\+\_\+framework\+\_\+\+Notify\+Expected\+Reboot@{le\+\_\+framework\+\_\+\+Notify\+Expected\+Reboot}}
+\index{le\+\_\+framework\+\_\+\+Notify\+Expected\+Reboot@{le\+\_\+framework\+\_\+\+Notify\+Expected\+Reboot}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+framework\+\_\+\+Notify\+Expected\+Reboot(le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t \+\_\+cmd\+Ref)}{le_framework_NotifyExpectedReboot(le_framework_ServerCmdRef_t _cmdRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+framework\+\_\+\+Notify\+Expected\+Reboot (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{\+\_\+cmd\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_af0838a24bc4dc957424ef46287a40dc2}{}\label{supervisor_8c_af0838a24bc4dc957424ef46287a40dc2}
+Mark the next reboot as expected. Should be called by short lived app that shutdown platform after a small wakeup. This prevents system not to rollback on expected reboot. \index{supervisor.\+c@{supervisor.\+c}!le\+\_\+framework\+\_\+\+Restart@{le\+\_\+framework\+\_\+\+Restart}}
+\index{le\+\_\+framework\+\_\+\+Restart@{le\+\_\+framework\+\_\+\+Restart}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+framework\+\_\+\+Restart(le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, bool manual\+Restart)}{le_framework_Restart(le_framework_ServerCmdRef_t cmdRef, bool manualRestart)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+framework\+\_\+\+Restart (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref, }
+\item[{bool}]{manual\+Restart}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a6f7e88fa8e923152c80ad1dd4fac05c4}{}\label{supervisor_8c_a6f7e88fa8e923152c80ad1dd4fac05c4}
+Restarts the Legato framework.
+
+Async A\+PI function. Calls le\+\_\+framework\+\_\+\+Restart\+Respond() to report results. \index{supervisor.\+c@{supervisor.\+c}!le\+\_\+framework\+\_\+\+Stop@{le\+\_\+framework\+\_\+\+Stop}}
+\index{le\+\_\+framework\+\_\+\+Stop@{le\+\_\+framework\+\_\+\+Stop}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+framework\+\_\+\+Stop(le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref)}{le_framework_Stop(le_framework_ServerCmdRef_t cmdRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+framework\+\_\+\+Stop (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a976552bc58f2a1f99346795f74fcc544}{}\label{supervisor_8c_a976552bc58f2a1f99346795f74fcc544}
+Stops the Legato framework.
+
+Async A\+PI function. Calls le\+\_\+framework\+\_\+\+Stop\+Respond() to report results. \index{supervisor.\+c@{supervisor.\+c}!le\+\_\+ima\+\_\+\+Import\+Cert@{le\+\_\+ima\+\_\+\+Import\+Cert}}
+\index{le\+\_\+ima\+\_\+\+Import\+Cert@{le\+\_\+ima\+\_\+\+Import\+Cert}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+ima\+\_\+\+Import\+Cert(const char $\ast$cert\+Path)}{le_ima_ImportCert(const char *certPath)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+ima\+\_\+\+Import\+Cert (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{cert\+Path}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a17b20e4ee9914896a3eed847c0c41f28}{}\label{supervisor_8c_a17b20e4ee9914896a3eed847c0c41f28}
+Import a public certificate in linux keyring.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if successful
+\item L\+E\+\_\+\+F\+A\+U\+LT if there is a failure. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\index{supervisor.\+c@{supervisor.\+c}!le\+\_\+sig\+\_\+\+Block@{le\+\_\+sig\+\_\+\+Block}}
+\index{le\+\_\+sig\+\_\+\+Block@{le\+\_\+sig\+\_\+\+Block}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sig\+\_\+\+Block(\+S\+I\+G\+P\+I\+P\+E)}{le_sig_Block(SIGPIPE)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+sig\+\_\+\+Block (
+\begin{DoxyParamCaption}
+\item[{S\+I\+G\+P\+I\+PE}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_afa9069e7bbdeed2332b5cbffbb472691}{}\label{supervisor_8c_afa9069e7bbdeed2332b5cbffbb472691}
+\index{supervisor.\+c@{supervisor.\+c}!le\+\_\+sig\+\_\+\+Block@{le\+\_\+sig\+\_\+\+Block}}
+\index{le\+\_\+sig\+\_\+\+Block@{le\+\_\+sig\+\_\+\+Block}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sig\+\_\+\+Block(\+S\+I\+G\+C\+H\+L\+D)}{le_sig_Block(SIGCHLD)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+sig\+\_\+\+Block (
+\begin{DoxyParamCaption}
+\item[{S\+I\+G\+C\+H\+LD}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_af9b3199e99e5dd5c71195ab1d4c80fdb}{}\label{supervisor_8c_af9b3199e99e5dd5c71195ab1d4c80fdb}
+\index{supervisor.\+c@{supervisor.\+c}!le\+\_\+sig\+\_\+\+Set\+Event\+Handler@{le\+\_\+sig\+\_\+\+Set\+Event\+Handler}}
+\index{le\+\_\+sig\+\_\+\+Set\+Event\+Handler@{le\+\_\+sig\+\_\+\+Set\+Event\+Handler}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sig\+\_\+\+Set\+Event\+Handler(\+S\+I\+G\+C\+H\+L\+D, Sig\+Child\+Handler)}{le_sig_SetEventHandler(SIGCHLD, SigChildHandler)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+sig\+\_\+\+Set\+Event\+Handler (
+\begin{DoxyParamCaption}
+\item[{S\+I\+G\+C\+H\+LD}]{, }
+\item[{{\bf Sig\+Child\+Handler}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a2eb645189be654e43dfeb29c95143ed8}{}\label{supervisor_8c_a2eb645189be654e43dfeb29c95143ed8}
+\index{supervisor.\+c@{supervisor.\+c}!le\+\_\+sup\+\_\+ctrl\+\_\+\+Restart\+Legato@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Restart\+Legato}}
+\index{le\+\_\+sup\+\_\+ctrl\+\_\+\+Restart\+Legato@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Restart\+Legato}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sup\+\_\+ctrl\+\_\+\+Restart\+Legato(le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref, bool manual\+Restart)}{le_sup_ctrl_RestartLegato(le_sup_ctrl_ServerCmdRef_t cmdRef, bool manualRestart)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+sup\+\_\+ctrl\+\_\+\+Restart\+Legato (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref, }
+\item[{bool}]{manual\+Restart}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a8bcca83375f59c1d64c8b5ea34140899}{}\label{supervisor_8c_a8bcca83375f59c1d64c8b5ea34140899}
+Restarts the Legato framework.
+
+Async A\+PI function. Calls le\+\_\+sup\+\_\+ctrl\+\_\+\+Restart\+Legato\+Respond() to report results. \index{supervisor.\+c@{supervisor.\+c}!le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+Legato@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+Legato}}
+\index{le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+Legato@{le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+Legato}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+Legato(le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t cmd\+Ref)}{le_sup_ctrl_StopLegato(le_sup_ctrl_ServerCmdRef_t cmdRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+Legato (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+sup\+\_\+ctrl\+\_\+\+Server\+Cmd\+Ref\+\_\+t}]{cmd\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_aa866700c6c817e1580ad5a5e687df2e5}{}\label{supervisor_8c_aa866700c6c817e1580ad5a5e687df2e5}
+Stops the Legato framework.
+
+Async A\+PI function. Calls le\+\_\+sup\+\_\+ctrl\+\_\+\+Stop\+Legato\+Respond() to report results. \index{supervisor.\+c@{supervisor.\+c}!Parse\+Command\+Line@{Parse\+Command\+Line}}
+\index{Parse\+Command\+Line@{Parse\+Command\+Line}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Parse\+Command\+Line(void)}{ParseCommandLine(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Parse\+Command\+Line (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_ad877cdc3401b81606c70901078bc42d2}{}\label{supervisor_8c_ad877cdc3401b81606c70901078bc42d2}
+Parse the command-\/line arguments for options. \index{supervisor.\+c@{supervisor.\+c}!Prepare\+Full\+Shutdown@{Prepare\+Full\+Shutdown}}
+\index{Prepare\+Full\+Shutdown@{Prepare\+Full\+Shutdown}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Prepare\+Full\+Shutdown(void)}{PrepareFullShutdown(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Prepare\+Full\+Shutdown (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a4517f3bd1e19081e6ed9a84a23a618ac}{}\label{supervisor_8c_a4517f3bd1e19081e6ed9a84a23a618ac}
+Prepares for a full shutdown of the framework by responding to the Stop Legato command telling the requesting process the framework has shutdown and closing all services that the Supervisor has advertised.
+
+This should be called only when all user apps and all framework daemons, except the Service Directory, are shutdown but before the Service Directory and Supervisor are shutdown. \index{supervisor.\+c@{supervisor.\+c}!Print\+Help@{Print\+Help}}
+\index{Print\+Help@{Print\+Help}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Print\+Help(void)}{PrintHelp(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Print\+Help (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a4636a28aa35491d27d7c67d3495be126}{}\label{supervisor_8c_a4636a28aa35491d27d7c67d3495be126}
+Prints man page style usage help to stdout. \index{supervisor.\+c@{supervisor.\+c}!Shutdown\+Framework@{Shutdown\+Framework}}
+\index{Shutdown\+Framework@{Shutdown\+Framework}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Shutdown\+Framework(void)}{ShutdownFramework(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Shutdown\+Framework (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_abb5700f525c6e25842cd53a818b329eb}{}\label{supervisor_8c_abb5700f525c6e25842cd53a818b329eb}
+Stops framework daemons. This function kicks off the chain of handlers that will stop all framework daemons. \index{supervisor.\+c@{supervisor.\+c}!Sig\+Child\+Handler@{Sig\+Child\+Handler}}
+\index{Sig\+Child\+Handler@{Sig\+Child\+Handler}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Sig\+Child\+Handler(int sig\+Num)}{SigChildHandler(int sigNum)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Sig\+Child\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{sig\+Num}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a02f348360211f77ef709b2f0427af38b}{}\label{supervisor_8c_a02f348360211f77ef709b2f0427af38b}
+The signal event handler function for S\+I\+G\+C\+H\+LD called from the Legato event loop.
+
+This is called for all framework daemon processes as well as most application processes. Application processes that were started by the Supervisor are children of the Supervisor and naturally generate a S\+I\+G\+C\+H\+I\+LD to the Supervisor when they die. Application processes that were started by other processes in the same app would generate S\+I\+G\+C\+H\+I\+L\+Ds to their parent not the Supervisor. However, these lower level processes are still descendents of the Supervisor and if their parent were to die they would be reparented to the Supervisor. This is because the Supervisor is a sub-\/reaper.
+
+Because S\+I\+G\+C\+H\+I\+LD signals may come from either apps or framework daemons they are caught here first. In this function we do a \hyperlink{wait_8c_a1eb272282bc9ebe3ac28970cfecf4f94}{wait\+\_\+\+Peek()} to get the P\+ID of the process that generated the S\+I\+G\+C\+H\+I\+LD without reaping the child. The P\+ID is passed down to the apps S\+I\+G\+C\+H\+I\+LD handler and framework daemon S\+I\+G\+C\+H\+I\+LD handler for identification and processing. The lower layer handlers are assumed to reap the child only if it is going to handle the process death. If neither the apps or framework daemons recognize the child then we must reap it here. \index{supervisor.\+c@{supervisor.\+c}!smack\+\_\+\+Init@{smack\+\_\+\+Init}}
+\index{smack\+\_\+\+Init@{smack\+\_\+\+Init}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{smack\+\_\+\+Init()}{smack_Init()}}]{\setlength{\rightskip}{0pt plus 5cm}smack\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a7ef39dc654a9abb357749ecd64e3db6f}{}\label{supervisor_8c_a7ef39dc654a9abb357749ecd64e3db6f}
+Initializes the S\+M\+A\+CK system. Mounts the smack file system.
+
+\begin{DoxyNote}{Note}
+Should be called once for the entire system, subsequent calls to this function will have no effect. Must be called before any of the other functions in this A\+PI is called.
+
+Failures will cause the calling process to exit. 
+\end{DoxyNote}
+\index{supervisor.\+c@{supervisor.\+c}!smack\+\_\+\+Set\+Rule@{smack\+\_\+\+Set\+Rule}}
+\index{smack\+\_\+\+Set\+Rule@{smack\+\_\+\+Set\+Rule}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{smack\+\_\+\+Set\+Rule(""\+\_\+"",""rw"",""syslog"")}{smack_SetRule("_","rw","syslog")}}]{\setlength{\rightskip}{0pt plus 5cm}smack\+\_\+\+Set\+Rule (
+\begin{DoxyParamCaption}
+\item[{\char`\"{}\+\_\+\char`\"{}}]{, }
+\item[{\char`\"{}rw\char`\"{}}]{, }
+\item[{\char`\"{}syslog\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a1691a7fd4ff13d6ae15a99d1d579066a}{}\label{supervisor_8c_a1691a7fd4ff13d6ae15a99d1d579066a}
+\index{supervisor.\+c@{supervisor.\+c}!smack\+\_\+\+Set\+Rule@{smack\+\_\+\+Set\+Rule}}
+\index{smack\+\_\+\+Set\+Rule@{smack\+\_\+\+Set\+Rule}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{smack\+\_\+\+Set\+Rule(""admin"",""rw"",""syslog"")}{smack_SetRule("admin","rw","syslog")}}]{\setlength{\rightskip}{0pt plus 5cm}smack\+\_\+\+Set\+Rule (
+\begin{DoxyParamCaption}
+\item[{\char`\"{}admin\char`\"{}}]{, }
+\item[{\char`\"{}rw\char`\"{}}]{, }
+\item[{\char`\"{}syslog\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a6654084a7c73e3b819d773b9278af6eb}{}\label{supervisor_8c_a6654084a7c73e3b819d773b9278af6eb}
+\index{supervisor.\+c@{supervisor.\+c}!smack\+\_\+\+Set\+Rule@{smack\+\_\+\+Set\+Rule}}
+\index{smack\+\_\+\+Set\+Rule@{smack\+\_\+\+Set\+Rule}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{smack\+\_\+\+Set\+Rule(""framework"",""rw"",""syslog"")}{smack_SetRule("framework","rw","syslog")}}]{\setlength{\rightskip}{0pt plus 5cm}smack\+\_\+\+Set\+Rule (
+\begin{DoxyParamCaption}
+\item[{\char`\"{}framework\char`\"{}}]{, }
+\item[{\char`\"{}rw\char`\"{}}]{, }
+\item[{\char`\"{}syslog\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a886a7c537a56bbd91691ff9662e920f3}{}\label{supervisor_8c_a886a7c537a56bbd91691ff9662e920f3}
+\index{supervisor.\+c@{supervisor.\+c}!Start\+Framework@{Start\+Framework}}
+\index{Start\+Framework@{Start\+Framework}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Start\+Framework(void)}{StartFramework(void)}}]{\setlength{\rightskip}{0pt plus 5cm}Start\+Framework (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a6c048f529ede05f77fdc17183a91c4f5}{}\label{supervisor_8c_a6c048f529ede05f77fdc17183a91c4f5}
+Starts all framework daemons and apps.
+
+Closes stdin (reopens to /dev/null) when finished to signal any parent process that cares that the framework is started. \index{supervisor.\+c@{supervisor.\+c}!Stop\+Supervisor@{Stop\+Supervisor}}
+\index{Stop\+Supervisor@{Stop\+Supervisor}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Stop\+Supervisor(void)}{StopSupervisor(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Stop\+Supervisor (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a2f98bb49964f85832c1a5be8e3540c57}{}\label{supervisor_8c_a2f98bb49964f85832c1a5be8e3540c57}
+Stops the Supervisor. This should only be called after all user apps and framework daemons are shutdown. \index{supervisor.\+c@{supervisor.\+c}!user\+\_\+\+Init@{user\+\_\+\+Init}}
+\index{user\+\_\+\+Init@{user\+\_\+\+Init}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{user\+\_\+\+Init()}{user_Init()}}]{\setlength{\rightskip}{0pt plus 5cm}user\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_8c_a3e9284a065fbe4f65aad310617e311a4}{}\label{supervisor_8c_a3e9284a065fbe4f65aad310617e311a4}
+Initialize the user system. This should be called before any other function in this A\+PI. 
+
+\subsection{Variable Documentation}
+\index{supervisor.\+c@{supervisor.\+c}!App\+Start\+Mode@{App\+Start\+Mode}}
+\index{App\+Start\+Mode@{App\+Start\+Mode}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{App\+Start\+Mode}{AppStartMode}}]{\setlength{\rightskip}{0pt plus 5cm}enum \{ ... \} 
+ App\+Start\+Mode\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_affcf38f42b1f82a3591748cc753cd445}{}\label{supervisor_8c_affcf38f42b1f82a3591748cc753cd445}
+Enumerates the different application start options that can be provided on the command-\/line. \index{supervisor.\+c@{supervisor.\+c}!C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}}
+\index{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}{COMPONENT_INIT}}]{\setlength{\rightskip}{0pt plus 5cm}C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}\hypertarget{supervisor_8c_a0392d452f926ce36c4852de26b5eca12}{}\label{supervisor_8c_a0392d452f926ce36c4852de26b5eca12}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+    \hyperlink{supervisor_8c_ad877cdc3401b81606c70901078bc42d2}{ParseCommandLine}()
+\end{DoxyCode}
+The supervisor\textquotesingle{}s initialization function. \index{supervisor.\+c@{supervisor.\+c}!else@{else}}
+\index{else@{else}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{else}{else}}]{\setlength{\rightskip}{0pt plus 5cm}else}\hypertarget{supervisor_8c_a0544c3fe466e421738dae463968b70ba}{}\label{supervisor_8c_a0544c3fe466e421738dae463968b70ba}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+        
+        
+        \hyperlink{update_daemon_8c_aa5c063c7e6dcd964c817f5fe9b1d72fc}{umask}(0)
+\end{DoxyCode}
+\index{supervisor.\+c@{supervisor.\+c}!errno@{errno}}
+\index{errno@{errno}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{errno}{errno}}]{\setlength{\rightskip}{0pt plus 5cm}errno = 0}\hypertarget{supervisor_8c_a0a4ccfdbe1cf7b37afc60d34e748b066}{}\label{supervisor_8c_a0a4ccfdbe1cf7b37afc60d34e748b066}
+\index{supervisor.\+c@{supervisor.\+c}!is\+Read\+Only@{is\+Read\+Only}}
+\index{is\+Read\+Only@{is\+Read\+Only}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{is\+Read\+Only}{isReadOnly}}]{\setlength{\rightskip}{0pt plus 5cm}bool is\+Read\+Only = {\bf sys\+Status\+\_\+\+Is\+Read\+Only}()}\hypertarget{supervisor_8c_a7c8a10e4120b029cdd764e9fda140ed3}{}\label{supervisor_8c_a7c8a10e4120b029cdd764e9fda140ed3}
+\index{supervisor.\+c@{supervisor.\+c}!Reboot\+Timer@{Reboot\+Timer}}
+\index{Reboot\+Timer@{Reboot\+Timer}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Reboot\+Timer}{RebootTimer}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t} Reboot\+Timer}\hypertarget{supervisor_8c_a1508da73938b4b955d9024c5bcaf8b25}{}\label{supervisor_8c_a1508da73938b4b955d9024c5bcaf8b25}
+Reboot timer \index{supervisor.\+c@{supervisor.\+c}!Should\+Not\+Daemonize@{Should\+Not\+Daemonize}}
+\index{Should\+Not\+Daemonize@{Should\+Not\+Daemonize}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Should\+Not\+Daemonize}{ShouldNotDaemonize}}]{\setlength{\rightskip}{0pt plus 5cm}bool Should\+Not\+Daemonize = false\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a4c10b08f0c536290bd804816b578d448}{}\label{supervisor_8c_a4c10b08f0c536290bd804816b578d448}
+true if the process should N\+OT daemonize itself (i.\+e., it should remain attached to its controlling terminal and parent process) \index{supervisor.\+c@{supervisor.\+c}!State@{State}}
+\index{State@{State}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{State}{State}}]{\setlength{\rightskip}{0pt plus 5cm}enum \{ ... \} 
+ State\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a6b755e7c656a1d810c33c4ddb3732228}{}\label{supervisor_8c_a6b755e7c656a1d810c33c4ddb3732228}
+Operating states. \index{supervisor.\+c@{supervisor.\+c}!Stop\+Api\+Cmd\+Ref@{Stop\+Api\+Cmd\+Ref}}
+\index{Stop\+Api\+Cmd\+Ref@{Stop\+Api\+Cmd\+Ref}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Stop\+Api\+Cmd\+Ref}{StopApiCmdRef}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+framework\+\_\+\+Server\+Cmd\+Ref\+\_\+t Stop\+Api\+Cmd\+Ref = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a1a8e8a75f06289f20c952e37c5c3e8f1}{}\label{supervisor_8c_a1a8e8a75f06289f20c952e37c5c3e8f1}
+Command reference for asynchronous A\+PI commands \hyperlink{supervisor_8c_a976552bc58f2a1f99346795f74fcc544}{le\+\_\+framework\+\_\+\+Stop()}, \hyperlink{supervisor_8c_a6f7e88fa8e923152c80ad1dd4fac05c4}{le\+\_\+framework\+\_\+\+Restart()}. \index{supervisor.\+c@{supervisor.\+c}!Using\+Deprecated\+Sup\+Ctrl\+Api@{Using\+Deprecated\+Sup\+Ctrl\+Api}}
+\index{Using\+Deprecated\+Sup\+Ctrl\+Api@{Using\+Deprecated\+Sup\+Ctrl\+Api}!supervisor.\+c@{supervisor.\+c}}
+\subsubsection[{\texorpdfstring{Using\+Deprecated\+Sup\+Ctrl\+Api}{UsingDeprecatedSupCtrlApi}}]{\setlength{\rightskip}{0pt plus 5cm}bool Using\+Deprecated\+Sup\+Ctrl\+Api = false\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_8c_a562bcf86c53d12c4a5cea7fd55cea8f5}{}\label{supervisor_8c_a562bcf86c53d12c4a5cea7fd55cea8f5}
+Flag to indicate whether the deprecated A\+PI is being used. Delete this flag when the deprecated A\+PI is deleted. 

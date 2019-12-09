@@ -1,0 +1,731 @@
+\hypertarget{start_8c}{}\section{framework/daemons/linux/start/start.c File Reference}
+\label{start_8c}\index{framework/daemons/linux/start/start.\+c@{framework/daemons/linux/start/start.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}start.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}installer.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}smack.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}daemon.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+System.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sys\+Paths.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sys\+Status.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$mntent.\+h$>$}\\*
+{\ttfamily \#include $<$linux/limits.\+h$>$}\\*
+{\ttfamily \#include $<$ima.\+h$>$}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{start_8c_a141b753c61f4bb30268cda22a3c7fe3c}{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+E\+R\+MS}~(S\+\_\+\+I\+R\+W\+XU $\vert$ S\+\_\+\+I\+R\+W\+XG $\vert$ S\+\_\+\+I\+R\+O\+TH $\vert$ S\+\_\+\+I\+X\+O\+TH)
+\begin{DoxyCompactList}\small\item\em Default D\+AC permissions for directory creation. \end{DoxyCompactList}\item 
+\#define \hyperlink{start_8c_afd63d23830ad86d01b6fff2e6c615f7e}{M\+A\+X\+\_\+\+T\+R\+I\+ES}~4
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{start_8c_ac5f920bdb2877bfe954ca54911b04091}{System\+Status\+\_\+t} \{ \hyperlink{start_8c_ac5f920bdb2877bfe954ca54911b04091acabffd2e883471658507bca29af4ae99}{S\+T\+A\+T\+U\+S\+\_\+\+G\+O\+OD}, 
+\hyperlink{start_8c_ac5f920bdb2877bfe954ca54911b04091abf530b11ecaf1a6bbab49b3c9175b4d0}{S\+T\+A\+T\+U\+S\+\_\+\+B\+AD}, 
+\hyperlink{start_8c_ac5f920bdb2877bfe954ca54911b04091af761dfa5d54293ec680d69fd1a529b8d}{S\+T\+A\+T\+U\+S\+\_\+\+T\+R\+Y\+A\+B\+LE}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static bool \hyperlink{start_8c_a90c7863fc40ca3d6aa32c3f0f088ed92}{File\+Exists} (const char $\ast$path)
+\item 
+static bool \hyperlink{start_8c_a8aa60e5ddf27b2d31beab8f23309e3ca}{Dir\+Exists} (const char $\ast$path)
+\item 
+static bool \hyperlink{start_8c_ae969601d8dd3f8fd0dca416e68ec9d29}{Is\+Dir} (struct dirent $\ast$dir\+Entry\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a1f2e2af08dd7cad105db132a2a9d7e0a}{Recursive\+Delete} (const char $\ast$path)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_af80e005a98376830cdc15c9298d9e97c}{Delete\+System\+Unpack} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a073bdbbc1ba6d7121003bf98c537617a}{Delete\+Apps\+Unpack} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_af53119adffc5fbb55748ee6340008d40}{Create\+System\+Path\+Name} (int index, char $\ast$system\+Path, size\+\_\+t size)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_adf6b9ddde201c633c23b1107075dafc1}{Create\+Status\+File\+Path} (const char $\ast$system\+Name, char $\ast$buff\+Ptr, size\+\_\+t size)
+\item 
+static int \hyperlink{start_8c_a95f0dd0572e69dd257dde44e74362ac8}{Write\+To\+File} (const char $\ast$file\+Name, const char $\ast$buffer, size\+\_\+t buffer\+Size)
+\item 
+static int \hyperlink{start_8c_a76a4f0b8a15794ebc520580ad7ad704d}{Read\+From\+File} (const char $\ast$file\+Path, char $\ast$buffer, size\+\_\+t size)
+\item 
+static int \hyperlink{start_8c_a6b62e44f731a1da2c0147eabfcd63621}{Read\+Index\+File} (const char $\ast$system\+Dir\+Path)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a5fe4303187c36dc9c161bcafde1321d0}{Make\+Dir} (const char $\ast$dir\+Path)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a8b927efbd3c9f81657e14c34ff6a6d16}{Write\+Unpack\+Index\+File} (int new\+Index)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a1cbdb7dd6550b2f0ae3e391bae1d5ad7}{Mark\+Unpack\+Good} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a174ea21b5a9c2a80648fec9a43f580d5}{Make\+Unpack\+Dir\+From\+Golden} (int index)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a47ad72499c5ce34fc46d13f0c041caf0}{Import\+Old\+Config\+Trees} (int old\+Index, int new\+Index)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a6de87eb6d341a5fe53758ac7e5ed68de}{Delete\+All\+But\+Current} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a79f20f6e1dc04adbe2bd4828cd287669}{Rename} (const char $\ast$from\+Name, const char $\ast$to\+Name)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a986fb86745bd0bf81374f812bf09f593}{Update\+Ld\+So\+Cache} (const char $\ast$system\+Path)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a2411c4babf3ecffc3818adc52a0254ca}{Request\+Ld\+So\+Config} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_ab2252f3bd39cbd51c9e983e5933379ff}{Get\+App\+Writeable\+Files\+From\+Opt\+Legato} (const char $\ast$app\+Hash, const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, const char $\ast$smack\+Label)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a0ba4f8791b5e1c3db1ef5fff026084b9}{Set\+Up\+App} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, int previous\+System\+Index)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a2a817aa8df39360176e0f150465778d2}{Install\+Golden\+Apps} (int previous\+System\+Index)
+\item 
+static bool \hyperlink{start_8c_a6ccc8672f2224e331c10444f8943faec}{Is\+Good} (const char $\ast$buff)
+\item 
+static bool \hyperlink{start_8c_a0a7009386eb32ffbddc192dc48c09ea8}{Is\+Bad} (const char $\ast$buff)
+\item 
+static int \hyperlink{start_8c_a86ee52f94499cde4fc2b02e0b16a10b0}{Get\+Num\+Tries} (const char $\ast$buff)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a3cd12b30dc835da308f763b9e9077397}{Mark\+Status\+Tried} (int num\+Try)
+\item 
+static int \hyperlink{start_8c_a761b29c5d1c93e1d649d72e4990ec088}{Read\+Status} (const char $\ast$system\+Name, char $\ast$buff\+Ptr, size\+\_\+t buff\+Size)
+\item 
+static \hyperlink{start_8c_ac5f920bdb2877bfe954ca54911b04091}{System\+Status\+\_\+t} \hyperlink{start_8c_a4c243de00675441b4ada379f47065cbc}{Get\+Status} (const char $\ast$system\+Name, int $\ast$tries\+Ptr)
+\item 
+static bool \hyperlink{start_8c_aa0c3e56df9e9c16e28ac20462285b3bf}{Is\+Current\+System\+Golden} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static int \hyperlink{start_8c_a5be66a595a5fa2fd88e1fb3d4058a2be}{Read\+Boot\+Count} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_af85d1804231ecaaaa83729b4a97ea77a}{Write\+Boot\+Count} (int boot\+Count)
+\item 
+static int \hyperlink{start_8c_a3e082138d51d5c0ef835a80fb7504253}{Try\+To\+Run} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static int \hyperlink{start_8c_ae7029d876da4082ffa7e83c87ed7c99a}{Find\+Newest\+System\+Index} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static bool \hyperlink{start_8c_abef75e4ffe6aa134f3354c3ac24a712c}{Should\+Install\+Golden} (int newest\+Version)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_ae0e958ec76c93c058ffb750162af5431}{Mark\+Golden\+Install\+Complete} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static bool \hyperlink{start_8c_a96a3566d92637d317876625f26cef057}{Is\+Mounted} (char $\ast$mount\+Point)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a7ebe72e06cfcfae685d1b0d1b72b702c}{Bind\+Mount} (char $\ast$path, char $\ast$mounted\+At)
+\item 
+static int \hyperlink{start_8c_a36cbb843f3a2604a919f78d0d298d5a9}{Run\+Current\+System} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a0b35bc1e59c9475bad47d4a8f588d437}{Set\+Current} (int new\+Current\+Index)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_aa59c94c05693a4807681ec19dbefa23a}{Launch} (bool \hyperlink{supervisor_8c_a7c8a10e4120b029cdd764e9fda140ed3}{is\+Read\+Only})
+\item 
+static int \hyperlink{start_8c_aef0f93aa7156e27f1523e806e0d76b9d}{Install\+Golden} (int newest\+Index, int current\+Index)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{start_8c_a9634732241a9be5872b7b9d34fc44596}{Install\+Current\+System\+Cert} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{start_8c_a9f19bf3a3b57bcf37f424a186d09fa4d}{Check\+And\+Install\+Current\+System} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+int \hyperlink{start_8c_a3c04138a5bfe5d72780bb7e82a18e627}{main} (int argc, char $\ast$$\ast$argv)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const char \hyperlink{start_8c_a28385a999cd03308ca58732e5553f77e}{Systems\+Dir} \mbox{[}$\,$\mbox{]} = \char`\"{}/legato/systems\char`\"{}
+\item 
+static const char \hyperlink{start_8c_a4f841ad4a332ae8600135c7fe237ba5d}{Current\+System\+Dir} \mbox{[}$\,$\mbox{]} = \char`\"{}/legato/systems/current\char`\"{}
+\item 
+static const char \hyperlink{start_8c_ac530a794308c48e0ee3f768236471ce6}{Apps\+Dir} \mbox{[}$\,$\mbox{]} = \char`\"{}/legato/apps\char`\"{}
+\item 
+static const char \hyperlink{start_8c_af590abf0736eec41dfac69f59fa632a6}{Systems\+Unpack\+Dir} \mbox{[}$\,$\mbox{]} = \char`\"{}/legato/systems/unpack\char`\"{}
+\item 
+static const char \hyperlink{start_8c_a1e943ae26d19560fc30d0d3e9b5a14fc}{Apps\+Unpack\+Dir} \mbox{[}$\,$\mbox{]} = \char`\"{}/legato/apps/unpack\char`\"{}
+\item 
+static const char \hyperlink{start_8c_aca7a3e58f44251c713356b0f4367bd07}{Old\+Fw\+Dir} \mbox{[}$\,$\mbox{]} = \char`\"{}/mnt/flash/opt/legato\char`\"{}
+\item 
+static const char \hyperlink{start_8c_ae2d498060b07d8a3c7a13b9ab46682c1}{Ldconfig\+Not\+Done\+Marker\+File} \mbox{[}$\,$\mbox{]} = \char`\"{}/legato/systems/needs\+\_\+ldconfig\char`\"{}
+\item 
+static const char \hyperlink{start_8c_a9b49be9cc89e0c6449f786cdfd326fa4}{Golden\+Version\+File} \mbox{[}$\,$\mbox{]} = \char`\"{}/mnt/legato/system/version\char`\"{}
+\item 
+static const char \hyperlink{start_8c_aea78887cc3555ef18b1ad97550eaf944}{Current\+Version\+File} \mbox{[}$\,$\mbox{]} = \char`\"{}/legato/systems/current/version\char`\"{}
+\item 
+static const char \hyperlink{start_8c_a1d7b7a403dc0c074f34250ee127ce580}{No\+Reboot\+File} \mbox{[}$\,$\mbox{]} = \char`\"{}/tmp/legato/.D\+E\+B\+U\+G\+\_\+\+N\+O\+\_\+\+R\+E\+B\+O\+OT\char`\"{}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The start program is the entry point for the legato framework. It\textquotesingle{}s primary job is to select a system (under /legato/systems) to run and run it.
+
+If there is a new image in /mnt/legato, it will be made the current system (marked \char`\"{}good\char`\"{}). Otherwise, it will select the newest non-\/bad system to run, where \char`\"{}non-\/bad\char`\"{} means its status file has valid contents that are not either \char`\"{}bad\char`\"{} or \char`\"{}tried N\char`\"{}, where N is $>$ M\+A\+X\+\_\+\+T\+R\+I\+ES.
+
+Each time a system that is not yet known to be \char`\"{}good\char`\"{} is started, its \char`\"{}tries N\char`\"{} count is incremented.
+
+Once the running system\textquotesingle{}s Supervisor indicates that it has finished its start sequence, the start program will daemonize itself so that the init scripts can continue running. It stays in the foreground in the meantime to allow the Legato system to get up and running as soon as possible, without having to contend for C\+PU and flash bandwidth with other less time-\/critical things.
+
+When the system is running, the start program remains alive so it can listen for the death of the Supervisor. If the Supervisor exits, the status is checked and the start program either exits or selects a system to run again.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{start.\+c@{start.\+c}!D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+E\+R\+MS@{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+E\+R\+MS}}
+\index{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+E\+R\+MS@{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+E\+R\+MS}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+E\+R\+MS}{DEFAULT_PERMS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+E\+R\+MS~(S\+\_\+\+I\+R\+W\+XU $\vert$ S\+\_\+\+I\+R\+W\+XG $\vert$ S\+\_\+\+I\+R\+O\+TH $\vert$ S\+\_\+\+I\+X\+O\+TH)}\hypertarget{start_8c_a141b753c61f4bb30268cda22a3c7fe3c}{}\label{start_8c_a141b753c61f4bb30268cda22a3c7fe3c}
+
+
+Default D\+AC permissions for directory creation. 
+
+\index{start.\+c@{start.\+c}!M\+A\+X\+\_\+\+T\+R\+I\+ES@{M\+A\+X\+\_\+\+T\+R\+I\+ES}}
+\index{M\+A\+X\+\_\+\+T\+R\+I\+ES@{M\+A\+X\+\_\+\+T\+R\+I\+ES}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+T\+R\+I\+ES}{MAX_TRIES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+T\+R\+I\+ES~4}\hypertarget{start_8c_afd63d23830ad86d01b6fff2e6c615f7e}{}\label{start_8c_afd63d23830ad86d01b6fff2e6c615f7e}
+M\+A\+X\+\_\+\+T\+R\+I\+ES denotes the maximum number of times a new system can be tried (unless it becomes marked \char`\"{}good\char`\"{}) before it is reverted.
+
+It is also the maximum number of times in a row a good system will be rebooted before reverting to the golden master. 
+
+\subsection{Enumeration Type Documentation}
+\index{start.\+c@{start.\+c}!System\+Status\+\_\+t@{System\+Status\+\_\+t}}
+\index{System\+Status\+\_\+t@{System\+Status\+\_\+t}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{System\+Status\+\_\+t}{SystemStatus_t}}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf System\+Status\+\_\+t}}\hypertarget{start_8c_ac5f920bdb2877bfe954ca54911b04091}{}\label{start_8c_ac5f920bdb2877bfe954ca54911b04091}
+return values for status test function \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{S\+T\+A\+T\+U\+S\+\_\+\+G\+O\+OD@{S\+T\+A\+T\+U\+S\+\_\+\+G\+O\+OD}!start.\+c@{start.\+c}}\index{start.\+c@{start.\+c}!S\+T\+A\+T\+U\+S\+\_\+\+G\+O\+OD@{S\+T\+A\+T\+U\+S\+\_\+\+G\+O\+OD}}\item[{\em 
+S\+T\+A\+T\+U\+S\+\_\+\+G\+O\+OD\hypertarget{start_8c_ac5f920bdb2877bfe954ca54911b04091acabffd2e883471658507bca29af4ae99}{}\label{start_8c_ac5f920bdb2877bfe954ca54911b04091acabffd2e883471658507bca29af4ae99}
+}]System is in \char`\"{}good\char`\"{} state. \index{S\+T\+A\+T\+U\+S\+\_\+\+B\+AD@{S\+T\+A\+T\+U\+S\+\_\+\+B\+AD}!start.\+c@{start.\+c}}\index{start.\+c@{start.\+c}!S\+T\+A\+T\+U\+S\+\_\+\+B\+AD@{S\+T\+A\+T\+U\+S\+\_\+\+B\+AD}}\item[{\em 
+S\+T\+A\+T\+U\+S\+\_\+\+B\+AD\hypertarget{start_8c_ac5f920bdb2877bfe954ca54911b04091abf530b11ecaf1a6bbab49b3c9175b4d0}{}\label{start_8c_ac5f920bdb2877bfe954ca54911b04091abf530b11ecaf1a6bbab49b3c9175b4d0}
+}]System is bad and should be reverted. \index{S\+T\+A\+T\+U\+S\+\_\+\+T\+R\+Y\+A\+B\+LE@{S\+T\+A\+T\+U\+S\+\_\+\+T\+R\+Y\+A\+B\+LE}!start.\+c@{start.\+c}}\index{start.\+c@{start.\+c}!S\+T\+A\+T\+U\+S\+\_\+\+T\+R\+Y\+A\+B\+LE@{S\+T\+A\+T\+U\+S\+\_\+\+T\+R\+Y\+A\+B\+LE}}\item[{\em 
+S\+T\+A\+T\+U\+S\+\_\+\+T\+R\+Y\+A\+B\+LE\hypertarget{start_8c_ac5f920bdb2877bfe954ca54911b04091af761dfa5d54293ec680d69fd1a529b8d}{}\label{start_8c_ac5f920bdb2877bfe954ca54911b04091af761dfa5d54293ec680d69fd1a529b8d}
+}]System has been tried fewer than M\+A\+X\+\_\+\+T\+R\+I\+ES times. \end{description}
+\end{Desc}
+
+
+\subsection{Function Documentation}
+\index{start.\+c@{start.\+c}!Bind\+Mount@{Bind\+Mount}}
+\index{Bind\+Mount@{Bind\+Mount}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Bind\+Mount(char $\ast$path, char $\ast$mounted\+At)}{BindMount(char *path, char *mountedAt)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Bind\+Mount (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{path, }
+\item[{char $\ast$}]{mounted\+At}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a7ebe72e06cfcfae685d1b0d1b72b702c}{}\label{start_8c_a7ebe72e06cfcfae685d1b0d1b72b702c}
+Bind mount the given path to the mount point 
+\begin{DoxyParams}{Parameters}
+{\em path} & Directory to be mounted \\
+\hline
+{\em mounted\+At} & Where is should be mounted \\
+\hline
+\end{DoxyParams}
+\index{start.\+c@{start.\+c}!Check\+And\+Install\+Current\+System@{Check\+And\+Install\+Current\+System}}
+\index{Check\+And\+Install\+Current\+System@{Check\+And\+Install\+Current\+System}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Check\+And\+Install\+Current\+System(void)}{CheckAndInstallCurrentSystem(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Check\+And\+Install\+Current\+System (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a9f19bf3a3b57bcf37f424a186d09fa4d}{}\label{start_8c_a9f19bf3a3b57bcf37f424a186d09fa4d}
+Verify and install the current system
+
+\begin{DoxyReturn}{Returns}
+None 
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!Create\+Status\+File\+Path@{Create\+Status\+File\+Path}}
+\index{Create\+Status\+File\+Path@{Create\+Status\+File\+Path}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Status\+File\+Path(const char $\ast$system\+Name, char $\ast$buff\+Ptr, size\+\_\+t size)}{CreateStatusFilePath(const char *systemName, char *buffPtr, size_t size)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Create\+Status\+File\+Path (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{system\+Name, }
+\item[{char $\ast$}]{buff\+Ptr, }
+\item[{size\+\_\+t}]{size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_adf6b9ddde201c633c23b1107075dafc1}{}\label{start_8c_adf6b9ddde201c633c23b1107075dafc1}
+Get the path to the status file in a given system (given the system name). Store into the buffer given by buff\+Ptr ensuring that it does not exceed size. 
+\begin{DoxyParams}{Parameters}
+{\em system\+Name} & \char`\"{}current\char`\"{}, \char`\"{}unpack\char`\"{}, \char`\"{}0\char`\"{}, \char`\"{}1\char`\"{}, etc. \\
+\hline
+\end{DoxyParams}
+\index{start.\+c@{start.\+c}!Create\+System\+Path\+Name@{Create\+System\+Path\+Name}}
+\index{Create\+System\+Path\+Name@{Create\+System\+Path\+Name}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Create\+System\+Path\+Name(int index, char $\ast$system\+Path, size\+\_\+t size)}{CreateSystemPathName(int index, char *systemPath, size_t size)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Create\+System\+Path\+Name (
+\begin{DoxyParamCaption}
+\item[{int}]{index, }
+\item[{char $\ast$}]{system\+Path, }
+\item[{size\+\_\+t}]{size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_af53119adffc5fbb55748ee6340008d40}{}\label{start_8c_af53119adffc5fbb55748ee6340008d40}
+Given a system index, create the path to that system in the buffer given by system\+Path ensuring that the name does not exceed size. \index{start.\+c@{start.\+c}!Delete\+All\+But\+Current@{Delete\+All\+But\+Current}}
+\index{Delete\+All\+But\+Current@{Delete\+All\+But\+Current}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+All\+But\+Current(void)}{DeleteAllButCurrent(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+All\+But\+Current (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a6de87eb6d341a5fe53758ac7e5ed68de}{}\label{start_8c_a6de87eb6d341a5fe53758ac7e5ed68de}
+Delete all systems except for the current one. \index{start.\+c@{start.\+c}!Delete\+Apps\+Unpack@{Delete\+Apps\+Unpack}}
+\index{Delete\+Apps\+Unpack@{Delete\+Apps\+Unpack}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Apps\+Unpack(void)}{DeleteAppsUnpack(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+Apps\+Unpack (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a073bdbbc1ba6d7121003bf98c537617a}{}\label{start_8c_a073bdbbc1ba6d7121003bf98c537617a}
+Delete the apps unpack directory \index{start.\+c@{start.\+c}!Delete\+System\+Unpack@{Delete\+System\+Unpack}}
+\index{Delete\+System\+Unpack@{Delete\+System\+Unpack}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+System\+Unpack(void)}{DeleteSystemUnpack(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+System\+Unpack (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_af80e005a98376830cdc15c9298d9e97c}{}\label{start_8c_af80e005a98376830cdc15c9298d9e97c}
+Delete the unpack dir and its contents. It is not an error if there is no unpack to delete and nor does a failure to delete preclude us from trying to start up a system. \index{start.\+c@{start.\+c}!Dir\+Exists@{Dir\+Exists}}
+\index{Dir\+Exists@{Dir\+Exists}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Dir\+Exists(const char $\ast$path)}{DirExists(const char *path)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Dir\+Exists (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}\hypertarget{start_8c_a8aa60e5ddf27b2d31beab8f23309e3ca}{}\label{start_8c_a8aa60e5ddf27b2d31beab8f23309e3ca}
+Check if a directory exists.
+
+\begin{DoxyReturn}{Returns}
+True if directory exists, else False 
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!File\+Exists@{File\+Exists}}
+\index{File\+Exists@{File\+Exists}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{File\+Exists(const char $\ast$path)}{FileExists(const char *path)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool File\+Exists (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}\hypertarget{start_8c_a90c7863fc40ca3d6aa32c3f0f088ed92}{}\label{start_8c_a90c7863fc40ca3d6aa32c3f0f088ed92}
+Check if a file exists and is a regular file.
+
+\begin{DoxyReturn}{Returns}
+True if file exists, else False 
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!Find\+Newest\+System\+Index@{Find\+Newest\+System\+Index}}
+\index{Find\+Newest\+System\+Index@{Find\+Newest\+System\+Index}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Newest\+System\+Index(void)}{FindNewestSystemIndex(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Find\+Newest\+System\+Index (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_ae7029d876da4082ffa7e83c87ed7c99a}{}\label{start_8c_ae7029d876da4082ffa7e83c87ed7c99a}
+Scans the contents of the systems directory and finds the good, new, or tried system with the highest index number.
+
+\begin{DoxyReturn}{Returns}
+the system index or -\/1 if no system index found. 
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!Get\+App\+Writeable\+Files\+From\+Opt\+Legato@{Get\+App\+Writeable\+Files\+From\+Opt\+Legato}}
+\index{Get\+App\+Writeable\+Files\+From\+Opt\+Legato@{Get\+App\+Writeable\+Files\+From\+Opt\+Legato}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Get\+App\+Writeable\+Files\+From\+Opt\+Legato(const char $\ast$app\+Hash, const char $\ast$app\+Name, const char $\ast$smack\+Label)}{GetAppWriteableFilesFromOptLegato(const char *appHash, const char *appName, const char *smackLabel)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Get\+App\+Writeable\+Files\+From\+Opt\+Legato (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Hash, }
+\item[{const char $\ast$}]{app\+Name, }
+\item[{const char $\ast$}]{smack\+Label}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_ab2252f3bd39cbd51c9e983e5933379ff}{}\label{start_8c_ab2252f3bd39cbd51c9e983e5933379ff}
+Attempt to get the writeable files for an app from an old, legacy system in /opt/legato, copy them into the system unpack directory and then update according to the version of the app that is supposed to be in the system. \index{start.\+c@{start.\+c}!Get\+Num\+Tries@{Get\+Num\+Tries}}
+\index{Get\+Num\+Tries@{Get\+Num\+Tries}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Num\+Tries(const char $\ast$buff)}{GetNumTries(const char *buff)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Get\+Num\+Tries (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{buff}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a86ee52f94499cde4fc2b02e0b16a10b0}{}\label{start_8c_a86ee52f94499cde4fc2b02e0b16a10b0}
+Parse the buffer to a) determine that is is of the form \char`\"{}tried \#\char`\"{} where \# represents and integer and if so then to parse the integer value and return it. \begin{DoxyReturn}{Returns}
+-\/1 if string does not start \char`\"{}tried \char`\"{} 0 if \# is zero or a non-\/numeric character (0 is an illegal value for tried) int representing the number of tries. 
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!Get\+Status@{Get\+Status}}
+\index{Get\+Status@{Get\+Status}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Status(const char $\ast$system\+Name, int $\ast$tries\+Ptr)}{GetStatus(const char *systemName, int *triesPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf System\+Status\+\_\+t} Get\+Status (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{system\+Name, }
+\item[{int $\ast$}]{tries\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a4c243de00675441b4ada379f47065cbc}{}\label{start_8c_a4c243de00675441b4ada379f47065cbc}
+Determine if a given system\textquotesingle{}s status is new, good, tryable, or bad.
+
+\begin{DoxyReturn}{Returns}
+the status of the system. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em tries\+Ptr} & Ptr to where to store number of tries if S\+T\+A\+T\+U\+S\+\_\+\+T\+R\+Y\+A\+B\+LE (or N\+U\+LL). \\
+\hline
+\end{DoxyParams}
+\index{start.\+c@{start.\+c}!Import\+Old\+Config\+Trees@{Import\+Old\+Config\+Trees}}
+\index{Import\+Old\+Config\+Trees@{Import\+Old\+Config\+Trees}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Import\+Old\+Config\+Trees(int old\+Index, int new\+Index)}{ImportOldConfigTrees(int oldIndex, int newIndex)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Import\+Old\+Config\+Trees (
+\begin{DoxyParamCaption}
+\item[{int}]{old\+Index, }
+\item[{int}]{new\+Index}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a47ad72499c5ce34fc46d13f0c041caf0}{}\label{start_8c_a47ad72499c5ce34fc46d13f0c041caf0}
+Copy the previous system\textquotesingle{}s configuration trees into the new system config directory. 
+\begin{DoxyParams}{Parameters}
+{\em old\+Index} & Index of system to fetch old config. Nothing will be copied if it is negative. \\
+\hline
+{\em new\+Index} & Index of new system to transfer. Negative value for system unpack directory. \\
+\hline
+\end{DoxyParams}
+\index{start.\+c@{start.\+c}!Install\+Current\+System\+Cert@{Install\+Current\+System\+Cert}}
+\index{Install\+Current\+System\+Cert@{Install\+Current\+System\+Cert}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Install\+Current\+System\+Cert(void)}{InstallCurrentSystemCert(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} Install\+Current\+System\+Cert (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{start_8c_a9634732241a9be5872b7b9d34fc44596}{}\label{start_8c_a9634732241a9be5872b7b9d34fc44596}
+Traverse the current system directory and install all public certificates
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if installation of all public certificate passes.
+\item L\+E\+\_\+\+F\+A\+U\+LT if any error. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!Install\+Golden@{Install\+Golden}}
+\index{Install\+Golden@{Install\+Golden}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Install\+Golden(int newest\+Index, int current\+Index)}{InstallGolden(int newestIndex, int currentIndex)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Install\+Golden (
+\begin{DoxyParamCaption}
+\item[{int}]{newest\+Index, }
+\item[{int}]{current\+Index}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_aef0f93aa7156e27f1523e806e0d76b9d}{}\label{start_8c_aef0f93aa7156e27f1523e806e0d76b9d}
+Install the \char`\"{}golden\char`\"{} system in /mnt/legato as the new current system with an index higher than the highest previous valid system index in /legato/systems.
+
+\begin{DoxyNote}{Note}
+If there\textquotesingle{}s a bad or malformed system already using that index, that old system will be deleted first to make way.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+The index of the newly installed golden system. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em newest\+Index} & Index of newest non-\/bad system in /legato/systems, or -\/1 if none. \\
+\hline
+{\em current\+Index} & Index of current system, or -\/1 if none. \\
+\hline
+\end{DoxyParams}
+\index{start.\+c@{start.\+c}!Install\+Golden\+Apps@{Install\+Golden\+Apps}}
+\index{Install\+Golden\+Apps@{Install\+Golden\+Apps}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Install\+Golden\+Apps(int previous\+System\+Index)}{InstallGoldenApps(int previousSystemIndex)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Install\+Golden\+Apps (
+\begin{DoxyParamCaption}
+\item[{int}]{previous\+System\+Index}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a2a817aa8df39360176e0f150465778d2}{}\label{start_8c_a2a817aa8df39360176e0f150465778d2}
+Install all the apps found in golden system. \index{start.\+c@{start.\+c}!Is\+Bad@{Is\+Bad}}
+\index{Is\+Bad@{Is\+Bad}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Bad(const char $\ast$buff)}{IsBad(const char *buff)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Bad (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{buff}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a0a7009386eb32ffbddc192dc48c09ea8}{}\label{start_8c_a0a7009386eb32ffbddc192dc48c09ea8}
+Thin wrapper to test if the buffer contains the string bad \begin{DoxyReturn}{Returns}
+true is buffer equals \char`\"{}bad\char`\"{} false otherwise 
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!Is\+Current\+System\+Golden@{Is\+Current\+System\+Golden}}
+\index{Is\+Current\+System\+Golden@{Is\+Current\+System\+Golden}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Current\+System\+Golden(void)}{IsCurrentSystemGolden(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Current\+System\+Golden (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_aa0c3e56df9e9c16e28ac20462285b3bf}{}\label{start_8c_aa0c3e56df9e9c16e28ac20462285b3bf}
+Determine if a system is the golden system \index{start.\+c@{start.\+c}!Is\+Dir@{Is\+Dir}}
+\index{Is\+Dir@{Is\+Dir}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Dir(struct dirent $\ast$dir\+Entry\+Ptr)}{IsDir(struct dirent *dirEntryPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Dir (
+\begin{DoxyParamCaption}
+\item[{struct dirent $\ast$}]{dir\+Entry\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_ae969601d8dd3f8fd0dca416e68ec9d29}{}\label{start_8c_ae969601d8dd3f8fd0dca416e68ec9d29}
+Check whether a directory entry is a directory or not.
+
+\begin{DoxyReturn}{Returns}
+True if specified entry is a directory False otherwise. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em dir\+Entry\+Ptr} & Directory entry in question. \\
+\hline
+\end{DoxyParams}
+\index{start.\+c@{start.\+c}!Is\+Good@{Is\+Good}}
+\index{Is\+Good@{Is\+Good}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Good(const char $\ast$buff)}{IsGood(const char *buff)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Good (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{buff}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a6ccc8672f2224e331c10444f8943faec}{}\label{start_8c_a6ccc8672f2224e331c10444f8943faec}
+Thin wrapper to test if the buffer contains the string good \begin{DoxyReturn}{Returns}
+true is buffer equals \char`\"{}good\char`\"{} false otherwise 
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!Is\+Mounted@{Is\+Mounted}}
+\index{Is\+Mounted@{Is\+Mounted}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Mounted(char $\ast$mount\+Point)}{IsMounted(char *mountPoint)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Mounted (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{mount\+Point}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a96a3566d92637d317876625f26cef057}{}\label{start_8c_a96a3566d92637d317876625f26cef057}
+Check if something is mounted on mount\+Point.
+
+\begin{DoxyReturn}{Returns}
+true if the mount point is mounted already. 
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!Launch@{Launch}}
+\index{Launch@{Launch}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Launch(bool is\+Read\+Only)}{Launch(bool isReadOnly)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Launch (
+\begin{DoxyParamCaption}
+\item[{bool}]{is\+Read\+Only}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_aa59c94c05693a4807681ec19dbefa23a}{}\label{start_8c_aa59c94c05693a4807681ec19dbefa23a}
+Check the status and if everything looks good to go, get the ball rolling, else revert! \index{start.\+c@{start.\+c}!main@{main}}
+\index{main@{main}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{main(int argc, char $\ast$$\ast$argv)}{main(int argc, char **argv)}}]{\setlength{\rightskip}{0pt plus 5cm}int main (
+\begin{DoxyParamCaption}
+\item[{int}]{argc, }
+\item[{char $\ast$$\ast$}]{argv}
+\end{DoxyParamCaption}
+)}\hypertarget{start_8c_a3c04138a5bfe5d72780bb7e82a18e627}{}\label{start_8c_a3c04138a5bfe5d72780bb7e82a18e627}
+It all starts here. \index{start.\+c@{start.\+c}!Make\+Dir@{Make\+Dir}}
+\index{Make\+Dir@{Make\+Dir}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Make\+Dir(const char $\ast$dir\+Path)}{MakeDir(const char *dirPath)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Make\+Dir (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{dir\+Path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a5fe4303187c36dc9c161bcafde1321d0}{}\label{start_8c_a5fe4303187c36dc9c161bcafde1321d0}
+Create a directory. Log an error and exit if unsuccessful. Do nothing if the directory already exists. \index{start.\+c@{start.\+c}!Make\+Unpack\+Dir\+From\+Golden@{Make\+Unpack\+Dir\+From\+Golden}}
+\index{Make\+Unpack\+Dir\+From\+Golden@{Make\+Unpack\+Dir\+From\+Golden}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Make\+Unpack\+Dir\+From\+Golden(int index)}{MakeUnpackDirFromGolden(int index)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Make\+Unpack\+Dir\+From\+Golden (
+\begin{DoxyParamCaption}
+\item[{int}]{index}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a174ea21b5a9c2a80648fec9a43f580d5}{}\label{start_8c_a174ea21b5a9c2a80648fec9a43f580d5}
+Create a fresh legato directory structure in the unpack directory and symlink the correct paths from /mnt/legato 
+\begin{DoxyParams}{Parameters}
+{\em index} & Index to use for this system. \\
+\hline
+\end{DoxyParams}
+\index{start.\+c@{start.\+c}!Mark\+Golden\+Install\+Complete@{Mark\+Golden\+Install\+Complete}}
+\index{Mark\+Golden\+Install\+Complete@{Mark\+Golden\+Install\+Complete}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Mark\+Golden\+Install\+Complete(void)}{MarkGoldenInstallComplete(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Mark\+Golden\+Install\+Complete (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_ae0e958ec76c93c058ffb750162af5431}{}\label{start_8c_ae0e958ec76c93c058ffb750162af5431}
+Record the fact that the current contents of /mnt/legato have been installed into /legato so that we won\textquotesingle{}t do it again next time we start.
+
+\begin{DoxyWarning}{Warning}
+Do this last when installing a \char`\"{}golden\char`\"{} system from /mnt/legato. 
+\end{DoxyWarning}
+\index{start.\+c@{start.\+c}!Mark\+Status\+Tried@{Mark\+Status\+Tried}}
+\index{Mark\+Status\+Tried@{Mark\+Status\+Tried}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Mark\+Status\+Tried(int num\+Try)}{MarkStatusTried(int numTry)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Mark\+Status\+Tried (
+\begin{DoxyParamCaption}
+\item[{int}]{num\+Try}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a3cd12b30dc835da308f763b9e9077397}{}\label{start_8c_a3cd12b30dc835da308f763b9e9077397}
+Set the status of the current system to indicate how many times this system has been tried. \index{start.\+c@{start.\+c}!Mark\+Unpack\+Good@{Mark\+Unpack\+Good}}
+\index{Mark\+Unpack\+Good@{Mark\+Unpack\+Good}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Mark\+Unpack\+Good(void)}{MarkUnpackGood(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Mark\+Unpack\+Good (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a1cbdb7dd6550b2f0ae3e391bae1d5ad7}{}\label{start_8c_a1cbdb7dd6550b2f0ae3e391bae1d5ad7}
+Mark the system in the unpack directory as good. This system has not actually been tried but since we are in the start program we know that it has been set up from the built in system and is therefore assumed de facto good. \index{start.\+c@{start.\+c}!Read\+Boot\+Count@{Read\+Boot\+Count}}
+\index{Read\+Boot\+Count@{Read\+Boot\+Count}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Read\+Boot\+Count(void)}{ReadBootCount(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Read\+Boot\+Count (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a5be66a595a5fa2fd88e1fb3d4058a2be}{}\label{start_8c_a5be66a595a5fa2fd88e1fb3d4058a2be}
+Determine the number of consecutive reboots. \index{start.\+c@{start.\+c}!Read\+From\+File@{Read\+From\+File}}
+\index{Read\+From\+File@{Read\+From\+File}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Read\+From\+File(const char $\ast$file\+Path, char $\ast$buffer, size\+\_\+t size)}{ReadFromFile(const char *filePath, char *buffer, size_t size)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Read\+From\+File (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{file\+Path, }
+\item[{char $\ast$}]{buffer, }
+\item[{size\+\_\+t}]{size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a76a4f0b8a15794ebc520580ad7ad704d}{}\label{start_8c_a76a4f0b8a15794ebc520580ad7ad704d}
+Read up to one less than size characters from a file into a buffer provided.
+
+Always null-\/terminates the buffer.
+
+\begin{DoxyReturn}{Returns}
+-\/1 fail (errno set to E\+N\+O\+E\+NT if file does not exist) \subsection*{of bytes read.}
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em buffer} & Ptr to the buffer to store results into. \\
+\hline
+ & {\em size} & Size of the buffer in bytes. \\
+\hline
+\end{DoxyParams}
+\index{start.\+c@{start.\+c}!Read\+Index\+File@{Read\+Index\+File}}
+\index{Read\+Index\+File@{Read\+Index\+File}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Read\+Index\+File(const char $\ast$system\+Dir\+Path)}{ReadIndexFile(const char *systemDirPath)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Read\+Index\+File (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{system\+Dir\+Path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a6b62e44f731a1da2c0147eabfcd63621}{}\label{start_8c_a6b62e44f731a1da2c0147eabfcd63621}
+Read the index for the given system from it\textquotesingle{}s index file
+
+\begin{DoxyReturn}{Returns}
+the index, or -\/1 if failed. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em system\+Dir\+Path} & Name of the system directory (e.\+g., \char`\"{}0\char`\"{}, \char`\"{}1\char`\"{}, \char`\"{}current\char`\"{}). \\
+\hline
+\end{DoxyParams}
+\index{start.\+c@{start.\+c}!Read\+Status@{Read\+Status}}
+\index{Read\+Status@{Read\+Status}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Read\+Status(const char $\ast$system\+Name, char $\ast$buff\+Ptr, size\+\_\+t buff\+Size)}{ReadStatus(const char *systemName, char *buffPtr, size_t buffSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Read\+Status (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{system\+Name, }
+\item[{char $\ast$}]{buff\+Ptr, }
+\item[{size\+\_\+t}]{buff\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a761b29c5d1c93e1d649d72e4990ec088}{}\label{start_8c_a761b29c5d1c93e1d649d72e4990ec088}
+Read what is in the status file for a given system.
+
+\begin{DoxyReturn}{Returns}
+\# of bytes read. On error, -\/1 is returned and errno is set (E\+N\+O\+E\+NT if file doesn\textquotesingle{}t exist) 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em system\+Name} & E.\+g., \char`\"{}current\char`\"{}, \char`\"{}unpack\char`\"{}, \char`\"{}0\char`\"{}, \char`\"{}1\char`\"{}, etc. \\
+\hline
+{\em buff\+Ptr} & On success, null-\/terminated status string is stored here. \\
+\hline
+{\em buff\+Size} & Size of buffer pointed to by buff\+Ptr. \\
+\hline
+\end{DoxyParams}
+\index{start.\+c@{start.\+c}!Recursive\+Delete@{Recursive\+Delete}}
+\index{Recursive\+Delete@{Recursive\+Delete}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Recursive\+Delete(const char $\ast$path)}{RecursiveDelete(const char *path)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Recursive\+Delete (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a1f2e2af08dd7cad105db132a2a9d7e0a}{}\label{start_8c_a1f2e2af08dd7cad105db132a2a9d7e0a}
+Recursively remove a directory but don\textquotesingle{}t follow links and don\textquotesingle{}t cross mount points. \index{start.\+c@{start.\+c}!Rename@{Rename}}
+\index{Rename@{Rename}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Rename(const char $\ast$from\+Name, const char $\ast$to\+Name)}{Rename(const char *fromName, const char *toName)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Rename (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{from\+Name, }
+\item[{const char $\ast$}]{to\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a79f20f6e1dc04adbe2bd4828cd287669}{}\label{start_8c_a79f20f6e1dc04adbe2bd4828cd287669}
+Rename a file or directory. If to\+Name already exists, delete it first. \index{start.\+c@{start.\+c}!Request\+Ld\+So\+Config@{Request\+Ld\+So\+Config}}
+\index{Request\+Ld\+So\+Config@{Request\+Ld\+So\+Config}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Request\+Ld\+So\+Config(void)}{RequestLdSoConfig(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Request\+Ld\+So\+Config (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a2411c4babf3ecffc3818adc52a0254ca}{}\label{start_8c_a2411c4babf3ecffc3818adc52a0254ca}
+Create mark indicating that ldconfig is required before we start the system \index{start.\+c@{start.\+c}!Run\+Current\+System@{Run\+Current\+System}}
+\index{Run\+Current\+System@{Run\+Current\+System}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Run\+Current\+System(void)}{RunCurrentSystem(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Run\+Current\+System (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a36cbb843f3a2604a919f78d0d298d5a9}{}\label{start_8c_a36cbb843f3a2604a919f78d0d298d5a9}
+Runs the current system. Returns when the Supervisor exits.
+
+\begin{DoxyReturn}{Returns}
+exit code from the Supervisor. 
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!Set\+Current@{Set\+Current}}
+\index{Set\+Current@{Set\+Current}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Current(int new\+Current\+Index)}{SetCurrent(int newCurrentIndex)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Current (
+\begin{DoxyParamCaption}
+\item[{int}]{new\+Current\+Index}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a0b35bc1e59c9475bad47d4a8f588d437}{}\label{start_8c_a0b35bc1e59c9475bad47d4a8f588d437}
+Make a given system into the current system. 
+\begin{DoxyParams}{Parameters}
+{\em new\+Current\+Index} & Index of the system to be made current. \\
+\hline
+\end{DoxyParams}
+\index{start.\+c@{start.\+c}!Set\+Up\+App@{Set\+Up\+App}}
+\index{Set\+Up\+App@{Set\+Up\+App}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Up\+App(const char $\ast$app\+Name, int previous\+System\+Index)}{SetUpApp(const char *appName, int previousSystemIndex)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Up\+App (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name, }
+\item[{int}]{previous\+System\+Index}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a0ba4f8791b5e1c3db1ef5fff026084b9}{}\label{start_8c_a0ba4f8791b5e1c3db1ef5fff026084b9}
+Create the required directories and links to install an app in the system and import config and writeable files. \index{start.\+c@{start.\+c}!Should\+Install\+Golden@{Should\+Install\+Golden}}
+\index{Should\+Install\+Golden@{Should\+Install\+Golden}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Should\+Install\+Golden(int newest\+Version)}{ShouldInstallGolden(int newestVersion)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Should\+Install\+Golden (
+\begin{DoxyParamCaption}
+\item[{int}]{newest\+Version}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_abef75e4ffe6aa134f3354c3ac24a712c}{}\label{start_8c_abef75e4ffe6aa134f3354c3ac24a712c}
+Checks if the \char`\"{}golden\char`\"{} system in /mnt/legato should be installed.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item true if the \char`\"{}golden\char`\"{} system should be installed.
+\item false if the \char`\"{}golden\char`\"{} system should not be installed. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!Try\+To\+Run@{Try\+To\+Run}}
+\index{Try\+To\+Run@{Try\+To\+Run}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Try\+To\+Run(void)}{TryToRun(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Try\+To\+Run (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a3e082138d51d5c0ef835a80fb7504253}{}\label{start_8c_a3e082138d51d5c0ef835a80fb7504253}
+returns E\+X\+I\+T\+\_\+\+F\+A\+I\+L\+U\+RE on error, otherwise, returns the exit code of the Supervisor. \index{start.\+c@{start.\+c}!Update\+Ld\+So\+Cache@{Update\+Ld\+So\+Cache}}
+\index{Update\+Ld\+So\+Cache@{Update\+Ld\+So\+Cache}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Update\+Ld\+So\+Cache(const char $\ast$system\+Path)}{UpdateLdSoCache(const char *systemPath)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Update\+Ld\+So\+Cache (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{system\+Path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a986fb86745bd0bf81374f812bf09f593}{}\label{start_8c_a986fb86745bd0bf81374f812bf09f593}
+create the ld.\+so.\+cache for the new install (or reversion). \index{start.\+c@{start.\+c}!Write\+Boot\+Count@{Write\+Boot\+Count}}
+\index{Write\+Boot\+Count@{Write\+Boot\+Count}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Write\+Boot\+Count(int boot\+Count)}{WriteBootCount(int bootCount)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Write\+Boot\+Count (
+\begin{DoxyParamCaption}
+\item[{int}]{boot\+Count}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_af85d1804231ecaaaa83729b4a97ea77a}{}\label{start_8c_af85d1804231ecaaaa83729b4a97ea77a}
+Write the number of consecutive reboots. \index{start.\+c@{start.\+c}!Write\+To\+File@{Write\+To\+File}}
+\index{Write\+To\+File@{Write\+To\+File}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Write\+To\+File(const char $\ast$file\+Name, const char $\ast$buffer, size\+\_\+t buffer\+Size)}{WriteToFile(const char *fileName, const char *buffer, size_t bufferSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Write\+To\+File (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{file\+Name, }
+\item[{const char $\ast$}]{buffer, }
+\item[{size\+\_\+t}]{buffer\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a95f0dd0572e69dd257dde44e74362ac8}{}\label{start_8c_a95f0dd0572e69dd257dde44e74362ac8}
+Create a file named file\+Name (or truncate any such existing file) and write buffer\+Size bytes of data from the given buffer, then close the file.
+
+\begin{DoxyReturn}{Returns}
+Number of bytes written or -\/1 on error. 
+\end{DoxyReturn}
+\index{start.\+c@{start.\+c}!Write\+Unpack\+Index\+File@{Write\+Unpack\+Index\+File}}
+\index{Write\+Unpack\+Index\+File@{Write\+Unpack\+Index\+File}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Write\+Unpack\+Index\+File(int new\+Index)}{WriteUnpackIndexFile(int newIndex)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Write\+Unpack\+Index\+File (
+\begin{DoxyParamCaption}
+\item[{int}]{new\+Index}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a8b927efbd3c9f81657e14c34ff6a6d16}{}\label{start_8c_a8b927efbd3c9f81657e14c34ff6a6d16}
+Write the index for this new install into the index file in the unpack dir 
+
+\subsection{Variable Documentation}
+\index{start.\+c@{start.\+c}!Apps\+Dir@{Apps\+Dir}}
+\index{Apps\+Dir@{Apps\+Dir}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Apps\+Dir}{AppsDir}}]{\setlength{\rightskip}{0pt plus 5cm}const char Apps\+Dir\mbox{[}$\,$\mbox{]} = \char`\"{}/legato/apps\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_ac530a794308c48e0ee3f768236471ce6}{}\label{start_8c_ac530a794308c48e0ee3f768236471ce6}
+\index{start.\+c@{start.\+c}!Apps\+Unpack\+Dir@{Apps\+Unpack\+Dir}}
+\index{Apps\+Unpack\+Dir@{Apps\+Unpack\+Dir}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Apps\+Unpack\+Dir}{AppsUnpackDir}}]{\setlength{\rightskip}{0pt plus 5cm}const char Apps\+Unpack\+Dir\mbox{[}$\,$\mbox{]} = \char`\"{}/legato/apps/unpack\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a1e943ae26d19560fc30d0d3e9b5a14fc}{}\label{start_8c_a1e943ae26d19560fc30d0d3e9b5a14fc}
+\index{start.\+c@{start.\+c}!Current\+System\+Dir@{Current\+System\+Dir}}
+\index{Current\+System\+Dir@{Current\+System\+Dir}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Current\+System\+Dir}{CurrentSystemDir}}]{\setlength{\rightskip}{0pt plus 5cm}const char Current\+System\+Dir\mbox{[}$\,$\mbox{]} = \char`\"{}/legato/systems/current\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a4f841ad4a332ae8600135c7fe237ba5d}{}\label{start_8c_a4f841ad4a332ae8600135c7fe237ba5d}
+\index{start.\+c@{start.\+c}!Current\+Version\+File@{Current\+Version\+File}}
+\index{Current\+Version\+File@{Current\+Version\+File}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Current\+Version\+File}{CurrentVersionFile}}]{\setlength{\rightskip}{0pt plus 5cm}const char Current\+Version\+File\mbox{[}$\,$\mbox{]} = \char`\"{}/legato/systems/current/version\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_aea78887cc3555ef18b1ad97550eaf944}{}\label{start_8c_aea78887cc3555ef18b1ad97550eaf944}
+\index{start.\+c@{start.\+c}!Golden\+Version\+File@{Golden\+Version\+File}}
+\index{Golden\+Version\+File@{Golden\+Version\+File}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Golden\+Version\+File}{GoldenVersionFile}}]{\setlength{\rightskip}{0pt plus 5cm}const char Golden\+Version\+File\mbox{[}$\,$\mbox{]} = \char`\"{}/mnt/legato/system/version\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a9b49be9cc89e0c6449f786cdfd326fa4}{}\label{start_8c_a9b49be9cc89e0c6449f786cdfd326fa4}
+\index{start.\+c@{start.\+c}!Ldconfig\+Not\+Done\+Marker\+File@{Ldconfig\+Not\+Done\+Marker\+File}}
+\index{Ldconfig\+Not\+Done\+Marker\+File@{Ldconfig\+Not\+Done\+Marker\+File}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Ldconfig\+Not\+Done\+Marker\+File}{LdconfigNotDoneMarkerFile}}]{\setlength{\rightskip}{0pt plus 5cm}const char Ldconfig\+Not\+Done\+Marker\+File\mbox{[}$\,$\mbox{]} = \char`\"{}/legato/systems/needs\+\_\+ldconfig\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_ae2d498060b07d8a3c7a13b9ab46682c1}{}\label{start_8c_ae2d498060b07d8a3c7a13b9ab46682c1}
+\index{start.\+c@{start.\+c}!No\+Reboot\+File@{No\+Reboot\+File}}
+\index{No\+Reboot\+File@{No\+Reboot\+File}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{No\+Reboot\+File}{NoRebootFile}}]{\setlength{\rightskip}{0pt plus 5cm}const char No\+Reboot\+File\mbox{[}$\,$\mbox{]} = \char`\"{}/tmp/legato/.D\+E\+B\+U\+G\+\_\+\+N\+O\+\_\+\+R\+E\+B\+O\+OT\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a1d7b7a403dc0c074f34250ee127ce580}{}\label{start_8c_a1d7b7a403dc0c074f34250ee127ce580}
+\index{start.\+c@{start.\+c}!Old\+Fw\+Dir@{Old\+Fw\+Dir}}
+\index{Old\+Fw\+Dir@{Old\+Fw\+Dir}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Old\+Fw\+Dir}{OldFwDir}}]{\setlength{\rightskip}{0pt plus 5cm}const char Old\+Fw\+Dir\mbox{[}$\,$\mbox{]} = \char`\"{}/mnt/flash/opt/legato\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_aca7a3e58f44251c713356b0f4367bd07}{}\label{start_8c_aca7a3e58f44251c713356b0f4367bd07}
+\index{start.\+c@{start.\+c}!Systems\+Dir@{Systems\+Dir}}
+\index{Systems\+Dir@{Systems\+Dir}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Systems\+Dir}{SystemsDir}}]{\setlength{\rightskip}{0pt plus 5cm}const char Systems\+Dir\mbox{[}$\,$\mbox{]} = \char`\"{}/legato/systems\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_a28385a999cd03308ca58732e5553f77e}{}\label{start_8c_a28385a999cd03308ca58732e5553f77e}
+A collection of meaningful paths in the system \index{start.\+c@{start.\+c}!Systems\+Unpack\+Dir@{Systems\+Unpack\+Dir}}
+\index{Systems\+Unpack\+Dir@{Systems\+Unpack\+Dir}!start.\+c@{start.\+c}}
+\subsubsection[{\texorpdfstring{Systems\+Unpack\+Dir}{SystemsUnpackDir}}]{\setlength{\rightskip}{0pt plus 5cm}const char Systems\+Unpack\+Dir\mbox{[}$\,$\mbox{]} = \char`\"{}/legato/systems/unpack\char`\"{}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{start_8c_af590abf0736eec41dfac69f59fa632a6}{}\label{start_8c_af590abf0736eec41dfac69f59fa632a6}

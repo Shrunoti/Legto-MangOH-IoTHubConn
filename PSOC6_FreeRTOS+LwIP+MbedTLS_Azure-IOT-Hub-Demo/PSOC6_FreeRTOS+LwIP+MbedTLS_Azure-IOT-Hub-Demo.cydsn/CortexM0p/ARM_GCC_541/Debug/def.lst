@@ -1,0 +1,2233 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"def.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.lwip_htons,"ax",%progbits
+  20              		.align	2
+  21              		.global	lwip_htons
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	lwip_htons, %function
+  25              	lwip_htons:
+  26              	.LFB53:
+  27              		.file 1 "Source\\LwIP\\src\\core\\def.c"
+   1:Source\LwIP\src\core/def.c **** /**
+   2:Source\LwIP\src\core/def.c ****  * @file
+   3:Source\LwIP\src\core/def.c ****  * Common functions used throughout the stack.
+   4:Source\LwIP\src\core/def.c ****  *
+   5:Source\LwIP\src\core/def.c ****  * These are reference implementations of the byte swapping functions.
+   6:Source\LwIP\src\core/def.c ****  * Again with the aim of being simple, correct and fully portable.
+   7:Source\LwIP\src\core/def.c ****  * Byte swapping is the second thing you would want to optimize. You will
+   8:Source\LwIP\src\core/def.c ****  * need to port it to your architecture and in your cc.h:
+   9:Source\LwIP\src\core/def.c ****  *
+  10:Source\LwIP\src\core/def.c ****  * \#define lwip_htons(x) your_htons
+  11:Source\LwIP\src\core/def.c ****  * \#define lwip_htonl(x) your_htonl
+  12:Source\LwIP\src\core/def.c ****  *
+  13:Source\LwIP\src\core/def.c ****  * Note lwip_ntohs() and lwip_ntohl() are merely references to the htonx counterparts.
+  14:Source\LwIP\src\core/def.c ****  * 
+  15:Source\LwIP\src\core/def.c ****  * If you \#define them to htons() and htonl(), you should
+  16:Source\LwIP\src\core/def.c ****  * \#define LWIP_DONT_PROVIDE_BYTEORDER_FUNCTIONS to prevent lwIP from
+  17:Source\LwIP\src\core/def.c ****  * defining htonx/ntohx compatibility macros.
+  18:Source\LwIP\src\core/def.c **** 
+  19:Source\LwIP\src\core/def.c ****  * @defgroup sys_nonstandard Non-standard functions
+  20:Source\LwIP\src\core/def.c ****  * @ingroup sys_layer
+  21:Source\LwIP\src\core/def.c ****  * lwIP provides default implementations for non-standard functions.
+  22:Source\LwIP\src\core/def.c ****  * These can be mapped to OS functions to reduce code footprint if desired.
+  23:Source\LwIP\src\core/def.c ****  * All defines related to this section must not be placed in lwipopts.h,
+  24:Source\LwIP\src\core/def.c ****  * but in arch/cc.h!
+  25:Source\LwIP\src\core/def.c ****  * These options cannot be \#defined in lwipopts.h since they are not options
+  26:Source\LwIP\src\core/def.c ****  * of lwIP itself, but options of the lwIP port to your system.
+  27:Source\LwIP\src\core/def.c ****  */
+  28:Source\LwIP\src\core/def.c **** 
+  29:Source\LwIP\src\core/def.c **** /*
+  30:Source\LwIP\src\core/def.c ****  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 2
+
+
+  31:Source\LwIP\src\core/def.c ****  * All rights reserved.
+  32:Source\LwIP\src\core/def.c ****  *
+  33:Source\LwIP\src\core/def.c ****  * Redistribution and use in source and binary forms, with or without modification,
+  34:Source\LwIP\src\core/def.c ****  * are permitted provided that the following conditions are met:
+  35:Source\LwIP\src\core/def.c ****  *
+  36:Source\LwIP\src\core/def.c ****  * 1. Redistributions of source code must retain the above copyright notice,
+  37:Source\LwIP\src\core/def.c ****  *    this list of conditions and the following disclaimer.
+  38:Source\LwIP\src\core/def.c ****  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  39:Source\LwIP\src\core/def.c ****  *    this list of conditions and the following disclaimer in the documentation
+  40:Source\LwIP\src\core/def.c ****  *    and/or other materials provided with the distribution.
+  41:Source\LwIP\src\core/def.c ****  * 3. The name of the author may not be used to endorse or promote products
+  42:Source\LwIP\src\core/def.c ****  *    derived from this software without specific prior written permission.
+  43:Source\LwIP\src\core/def.c ****  *
+  44:Source\LwIP\src\core/def.c ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+  45:Source\LwIP\src\core/def.c ****  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+  46:Source\LwIP\src\core/def.c ****  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+  47:Source\LwIP\src\core/def.c ****  * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  48:Source\LwIP\src\core/def.c ****  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+  49:Source\LwIP\src\core/def.c ****  * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  50:Source\LwIP\src\core/def.c ****  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  51:Source\LwIP\src\core/def.c ****  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+  52:Source\LwIP\src\core/def.c ****  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+  53:Source\LwIP\src\core/def.c ****  * OF SUCH DAMAGE.
+  54:Source\LwIP\src\core/def.c ****  *
+  55:Source\LwIP\src\core/def.c ****  * This file is part of the lwIP TCP/IP stack.
+  56:Source\LwIP\src\core/def.c ****  *
+  57:Source\LwIP\src\core/def.c ****  * Author: Simon Goldschmidt
+  58:Source\LwIP\src\core/def.c ****  *
+  59:Source\LwIP\src\core/def.c ****  */
+  60:Source\LwIP\src\core/def.c **** 
+  61:Source\LwIP\src\core/def.c **** #include "lwip/opt.h"
+  62:Source\LwIP\src\core/def.c **** #include "lwip/def.h"
+  63:Source\LwIP\src\core/def.c **** 
+  64:Source\LwIP\src\core/def.c **** #include <string.h>
+  65:Source\LwIP\src\core/def.c **** 
+  66:Source\LwIP\src\core/def.c **** #if BYTE_ORDER == LITTLE_ENDIAN
+  67:Source\LwIP\src\core/def.c **** 
+  68:Source\LwIP\src\core/def.c **** #if !defined(lwip_htons)
+  69:Source\LwIP\src\core/def.c **** /**
+  70:Source\LwIP\src\core/def.c ****  * Convert an u16_t from host- to network byte order.
+  71:Source\LwIP\src\core/def.c ****  *
+  72:Source\LwIP\src\core/def.c ****  * @param n u16_t in host byte order
+  73:Source\LwIP\src\core/def.c ****  * @return n in network byte order
+  74:Source\LwIP\src\core/def.c ****  */
+  75:Source\LwIP\src\core/def.c **** u16_t
+  76:Source\LwIP\src\core/def.c **** lwip_htons(u16_t n)
+  77:Source\LwIP\src\core/def.c **** {
+  28              		.loc 1 77 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33              	.LVL0:
+  78:Source\LwIP\src\core/def.c ****   return (u16_t)PP_HTONS(n);
+  34              		.loc 1 78 0
+  35 0000 40BA     		rev16	r0, r0
+  36              	.LVL1:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 3
+
+
+  37 0002 80B2     		uxth	r0, r0
+  79:Source\LwIP\src\core/def.c **** }
+  38              		.loc 1 79 0
+  39              		@ sp needed
+  40 0004 7047     		bx	lr
+  41              		.cfi_endproc
+  42              	.LFE53:
+  43              		.size	lwip_htons, .-lwip_htons
+  44              		.section	.text.lwip_htonl,"ax",%progbits
+  45              		.align	2
+  46              		.global	lwip_htonl
+  47              		.code	16
+  48              		.thumb_func
+  49              		.type	lwip_htonl, %function
+  50              	lwip_htonl:
+  51              	.LFB54:
+  80:Source\LwIP\src\core/def.c **** #endif /* lwip_htons */
+  81:Source\LwIP\src\core/def.c **** 
+  82:Source\LwIP\src\core/def.c **** #if !defined(lwip_htonl)
+  83:Source\LwIP\src\core/def.c **** /**
+  84:Source\LwIP\src\core/def.c ****  * Convert an u32_t from host- to network byte order.
+  85:Source\LwIP\src\core/def.c ****  *
+  86:Source\LwIP\src\core/def.c ****  * @param n u32_t in host byte order
+  87:Source\LwIP\src\core/def.c ****  * @return n in network byte order
+  88:Source\LwIP\src\core/def.c ****  */
+  89:Source\LwIP\src\core/def.c **** u32_t
+  90:Source\LwIP\src\core/def.c **** lwip_htonl(u32_t n)
+  91:Source\LwIP\src\core/def.c **** {
+  52              		.loc 1 91 0
+  53              		.cfi_startproc
+  54              		@ args = 0, pretend = 0, frame = 0
+  55              		@ frame_needed = 0, uses_anonymous_args = 0
+  56              	.LVL2:
+  57 0000 10B5     		push	{r4, lr}
+  58              		.cfi_def_cfa_offset 8
+  59              		.cfi_offset 4, -8
+  60              		.cfi_offset 14, -4
+  92:Source\LwIP\src\core/def.c ****   return (u32_t)PP_HTONL(n);
+  61              		.loc 1 92 0
+  62 0002 0406     		lsls	r4, r0, #24
+  63 0004 0302     		lsls	r3, r0, #8
+  64 0006 FF22     		movs	r2, #255
+  65 0008 1204     		lsls	r2, r2, #16
+  66 000a 1340     		ands	r3, r2
+  67 000c 2100     		movs	r1, r4
+  68 000e 1943     		orrs	r1, r3
+  69 0010 030A     		lsrs	r3, r0, #8
+  70 0012 FF22     		movs	r2, #255
+  71 0014 1202     		lsls	r2, r2, #8
+  72 0016 1A40     		ands	r2, r3
+  73 0018 0B00     		movs	r3, r1
+  74 001a 1343     		orrs	r3, r2
+  75 001c 000E     		lsrs	r0, r0, #24
+  76              	.LVL3:
+  77 001e 1843     		orrs	r0, r3
+  93:Source\LwIP\src\core/def.c **** }
+  78              		.loc 1 93 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 4
+
+
+  79              		@ sp needed
+  80 0020 10BD     		pop	{r4, pc}
+  81              		.cfi_endproc
+  82              	.LFE54:
+  83              		.size	lwip_htonl, .-lwip_htonl
+  84 0022 C046     		.section	.text.lwip_strnstr,"ax",%progbits
+  85              		.align	2
+  86              		.global	lwip_strnstr
+  87              		.code	16
+  88              		.thumb_func
+  89              		.type	lwip_strnstr, %function
+  90              	lwip_strnstr:
+  91              	.LFB55:
+  94:Source\LwIP\src\core/def.c **** #endif /* lwip_htonl */
+  95:Source\LwIP\src\core/def.c **** 
+  96:Source\LwIP\src\core/def.c **** #endif /* BYTE_ORDER == LITTLE_ENDIAN */
+  97:Source\LwIP\src\core/def.c **** 
+  98:Source\LwIP\src\core/def.c **** #ifndef lwip_strnstr
+  99:Source\LwIP\src\core/def.c **** /**
+ 100:Source\LwIP\src\core/def.c ****  * @ingroup sys_nonstandard
+ 101:Source\LwIP\src\core/def.c ****  * lwIP default implementation for strnstr() non-standard function.
+ 102:Source\LwIP\src\core/def.c ****  * This can be \#defined to strnstr() depending on your platform port.
+ 103:Source\LwIP\src\core/def.c ****  */
+ 104:Source\LwIP\src\core/def.c **** char*
+ 105:Source\LwIP\src\core/def.c **** lwip_strnstr(const char* buffer, const char* token, size_t n)
+ 106:Source\LwIP\src\core/def.c **** {
+  92              		.loc 1 106 0
+  93              		.cfi_startproc
+  94              		@ args = 0, pretend = 0, frame = 0
+  95              		@ frame_needed = 0, uses_anonymous_args = 0
+  96              	.LVL4:
+  97 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+  98              		.cfi_def_cfa_offset 20
+  99              		.cfi_offset 4, -20
+ 100              		.cfi_offset 5, -16
+ 101              		.cfi_offset 6, -12
+ 102              		.cfi_offset 7, -8
+ 103              		.cfi_offset 14, -4
+ 104 0002 4746     		mov	r7, r8
+ 105 0004 80B4     		push	{r7}
+ 106              		.cfi_def_cfa_offset 24
+ 107              		.cfi_offset 8, -24
+ 108 0006 0700     		movs	r7, r0
+ 109 0008 0E00     		movs	r6, r1
+ 110 000a 9046     		mov	r8, r2
+ 107:Source\LwIP\src\core/def.c ****   const char* p;
+ 108:Source\LwIP\src\core/def.c ****   size_t tokenlen = strlen(token);
+ 111              		.loc 1 108 0
+ 112 000c 0800     		movs	r0, r1
+ 113              	.LVL5:
+ 114 000e FFF7FEFF 		bl	strlen
+ 115              	.LVL6:
+ 116 0012 051E     		subs	r5, r0, #0
+ 117              	.LVL7:
+ 109:Source\LwIP\src\core/def.c ****   if (tokenlen == 0) {
+ 118              		.loc 1 109 0
+ 119 0014 16D0     		beq	.L8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 5
+
+
+ 120 0016 3C00     		movs	r4, r7
+ 121 0018 0AE0     		b	.L5
+ 122              	.LVL8:
+ 123              	.L7:
+ 110:Source\LwIP\src\core/def.c ****     return LWIP_CONST_CAST(char *, buffer);
+ 111:Source\LwIP\src\core/def.c ****   }
+ 112:Source\LwIP\src\core/def.c ****   for (p = buffer; *p && (p + tokenlen <= buffer + n); p++) {
+ 113:Source\LwIP\src\core/def.c ****     if ((*p == *token) && (strncmp(p, token, tokenlen) == 0)) {
+ 124              		.loc 1 113 0
+ 125 001a 3378     		ldrb	r3, [r6]
+ 126 001c 9A42     		cmp	r2, r3
+ 127 001e 06D1     		bne	.L6
+ 128              		.loc 1 113 0 is_stmt 0 discriminator 1
+ 129 0020 2A00     		movs	r2, r5
+ 130 0022 3100     		movs	r1, r6
+ 131 0024 2000     		movs	r0, r4
+ 132 0026 FFF7FEFF 		bl	strncmp
+ 133              	.LVL9:
+ 134 002a 0028     		cmp	r0, #0
+ 135 002c 0CD0     		beq	.L9
+ 136              	.L6:
+ 112:Source\LwIP\src\core/def.c ****     if ((*p == *token) && (strncmp(p, token, tokenlen) == 0)) {
+ 137              		.loc 1 112 0 is_stmt 1 discriminator 2
+ 138 002e 0134     		adds	r4, r4, #1
+ 139              	.LVL10:
+ 140              	.L5:
+ 112:Source\LwIP\src\core/def.c ****     if ((*p == *token) && (strncmp(p, token, tokenlen) == 0)) {
+ 141              		.loc 1 112 0 is_stmt 0 discriminator 1
+ 142 0030 2278     		ldrb	r2, [r4]
+ 143 0032 002A     		cmp	r2, #0
+ 144 0034 0AD0     		beq	.L10
+ 112:Source\LwIP\src\core/def.c ****     if ((*p == *token) && (strncmp(p, token, tokenlen) == 0)) {
+ 145              		.loc 1 112 0 discriminator 3
+ 146 0036 6319     		adds	r3, r4, r5
+ 147 0038 4146     		mov	r1, r8
+ 148 003a 7918     		adds	r1, r7, r1
+ 149 003c 8B42     		cmp	r3, r1
+ 150 003e ECD9     		bls	.L7
+ 114:Source\LwIP\src\core/def.c ****       return LWIP_CONST_CAST(char *, p);
+ 115:Source\LwIP\src\core/def.c ****     }
+ 116:Source\LwIP\src\core/def.c ****   }
+ 117:Source\LwIP\src\core/def.c ****   return NULL;
+ 151              		.loc 1 117 0 is_stmt 1
+ 152 0040 0020     		movs	r0, #0
+ 153 0042 04E0     		b	.L4
+ 154              	.LVL11:
+ 155              	.L8:
+ 110:Source\LwIP\src\core/def.c ****   }
+ 156              		.loc 1 110 0
+ 157 0044 3800     		movs	r0, r7
+ 158              	.LVL12:
+ 159 0046 02E0     		b	.L4
+ 160              	.LVL13:
+ 161              	.L9:
+ 114:Source\LwIP\src\core/def.c ****       return LWIP_CONST_CAST(char *, p);
+ 162              		.loc 1 114 0
+ 163 0048 2000     		movs	r0, r4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 6
+
+
+ 164 004a 00E0     		b	.L4
+ 165              	.L10:
+ 166              		.loc 1 117 0
+ 167 004c 0020     		movs	r0, #0
+ 168              	.LVL14:
+ 169              	.L4:
+ 118:Source\LwIP\src\core/def.c **** }
+ 170              		.loc 1 118 0
+ 171              		@ sp needed
+ 172              	.LVL15:
+ 173              	.LVL16:
+ 174              	.LVL17:
+ 175              	.LVL18:
+ 176 004e 04BC     		pop	{r2}
+ 177 0050 9046     		mov	r8, r2
+ 178 0052 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 179              		.cfi_endproc
+ 180              	.LFE55:
+ 181              		.size	lwip_strnstr, .-lwip_strnstr
+ 182              		.section	.text.lwip_stricmp,"ax",%progbits
+ 183              		.align	2
+ 184              		.global	lwip_stricmp
+ 185              		.code	16
+ 186              		.thumb_func
+ 187              		.type	lwip_stricmp, %function
+ 188              	lwip_stricmp:
+ 189              	.LFB56:
+ 119:Source\LwIP\src\core/def.c **** #endif
+ 120:Source\LwIP\src\core/def.c **** 
+ 121:Source\LwIP\src\core/def.c **** #ifndef lwip_stricmp
+ 122:Source\LwIP\src\core/def.c **** /**
+ 123:Source\LwIP\src\core/def.c ****  * @ingroup sys_nonstandard
+ 124:Source\LwIP\src\core/def.c ****  * lwIP default implementation for stricmp() non-standard function.
+ 125:Source\LwIP\src\core/def.c ****  * This can be \#defined to stricmp() depending on your platform port.
+ 126:Source\LwIP\src\core/def.c ****  */
+ 127:Source\LwIP\src\core/def.c **** int
+ 128:Source\LwIP\src\core/def.c **** lwip_stricmp(const char* str1, const char* str2)
+ 129:Source\LwIP\src\core/def.c **** {
+ 190              		.loc 1 129 0
+ 191              		.cfi_startproc
+ 192              		@ args = 0, pretend = 0, frame = 0
+ 193              		@ frame_needed = 0, uses_anonymous_args = 0
+ 194              	.LVL19:
+ 195 0000 70B5     		push	{r4, r5, r6, lr}
+ 196              		.cfi_def_cfa_offset 16
+ 197              		.cfi_offset 4, -16
+ 198              		.cfi_offset 5, -12
+ 199              		.cfi_offset 6, -8
+ 200              		.cfi_offset 14, -4
+ 201              	.L14:
+ 130:Source\LwIP\src\core/def.c ****   char c1, c2;
+ 131:Source\LwIP\src\core/def.c **** 
+ 132:Source\LwIP\src\core/def.c ****   do {
+ 133:Source\LwIP\src\core/def.c ****     c1 = *str1++;
+ 202              		.loc 1 133 0
+ 203 0002 461C     		adds	r6, r0, #1
+ 204              	.LVL20:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 7
+
+
+ 205 0004 0478     		ldrb	r4, [r0]
+ 206              	.LVL21:
+ 134:Source\LwIP\src\core/def.c ****     c2 = *str2++;
+ 207              		.loc 1 134 0
+ 208 0006 4D1C     		adds	r5, r1, #1
+ 209              	.LVL22:
+ 210 0008 0878     		ldrb	r0, [r1]
+ 211              	.LVL23:
+ 135:Source\LwIP\src\core/def.c ****     if (c1 != c2) {
+ 212              		.loc 1 135 0
+ 213 000a 8442     		cmp	r4, r0
+ 214 000c 0CD0     		beq	.L12
+ 215              	.LBB2:
+ 136:Source\LwIP\src\core/def.c ****       char c1_upc = c1 | 0x20;
+ 216              		.loc 1 136 0
+ 217 000e 2023     		movs	r3, #32
+ 218 0010 2343     		orrs	r3, r4
+ 219 0012 DBB2     		uxtb	r3, r3
+ 220              	.LVL24:
+ 137:Source\LwIP\src\core/def.c ****       if ((c1_upc >= 'a') && (c1_upc <= 'z')) {
+ 221              		.loc 1 137 0
+ 222 0014 1900     		movs	r1, r3
+ 223 0016 6139     		subs	r1, r1, #97
+ 224 0018 C9B2     		uxtb	r1, r1
+ 225 001a 1929     		cmp	r1, #25
+ 226 001c 0AD8     		bhi	.L15
+ 227              	.LBB3:
+ 138:Source\LwIP\src\core/def.c ****         /* characters are not equal an one is in the alphabet range:
+ 139:Source\LwIP\src\core/def.c ****         downcase both chars and check again */
+ 140:Source\LwIP\src\core/def.c ****         char c2_upc = c2 | 0x20;
+ 228              		.loc 1 140 0
+ 229 001e 2022     		movs	r2, #32
+ 230 0020 0243     		orrs	r2, r0
+ 231 0022 D2B2     		uxtb	r2, r2
+ 232              	.LVL25:
+ 141:Source\LwIP\src\core/def.c ****         if (c1_upc != c2_upc) {
+ 233              		.loc 1 141 0
+ 234 0024 9342     		cmp	r3, r2
+ 235 0026 07D1     		bne	.L16
+ 236              	.LVL26:
+ 237              	.L12:
+ 238              	.LBE3:
+ 239              	.LBE2:
+ 133:Source\LwIP\src\core/def.c ****     c2 = *str2++;
+ 240              		.loc 1 133 0
+ 241 0028 3000     		movs	r0, r6
+ 242              	.LVL27:
+ 134:Source\LwIP\src\core/def.c ****     if (c1 != c2) {
+ 243              		.loc 1 134 0
+ 244 002a 2900     		movs	r1, r5
+ 142:Source\LwIP\src\core/def.c ****           /* still not equal */
+ 143:Source\LwIP\src\core/def.c ****           /* don't care for < or > */
+ 144:Source\LwIP\src\core/def.c ****           return 1;
+ 145:Source\LwIP\src\core/def.c ****         }
+ 146:Source\LwIP\src\core/def.c ****       } else {
+ 147:Source\LwIP\src\core/def.c ****         /* characters are not equal but none is in the alphabet range */
+ 148:Source\LwIP\src\core/def.c ****         return 1;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 8
+
+
+ 149:Source\LwIP\src\core/def.c ****       }
+ 150:Source\LwIP\src\core/def.c ****     }
+ 151:Source\LwIP\src\core/def.c ****   } while (c1 != 0);
+ 245              		.loc 1 151 0
+ 246 002c 002C     		cmp	r4, #0
+ 247 002e E8D1     		bne	.L14
+ 248              	.LVL28:
+ 152:Source\LwIP\src\core/def.c ****   return 0;
+ 249              		.loc 1 152 0
+ 250 0030 0020     		movs	r0, #0
+ 251              	.LVL29:
+ 252 0032 02E0     		b	.L13
+ 253              	.LVL30:
+ 254              	.L15:
+ 255              	.LBB5:
+ 148:Source\LwIP\src\core/def.c ****       }
+ 256              		.loc 1 148 0
+ 257 0034 0120     		movs	r0, #1
+ 258              	.LVL31:
+ 259 0036 00E0     		b	.L13
+ 260              	.LVL32:
+ 261              	.L16:
+ 262              	.LBB4:
+ 144:Source\LwIP\src\core/def.c ****         }
+ 263              		.loc 1 144 0
+ 264 0038 0120     		movs	r0, #1
+ 265              	.LVL33:
+ 266              	.L13:
+ 267              	.LBE4:
+ 268              	.LBE5:
+ 153:Source\LwIP\src\core/def.c **** }
+ 269              		.loc 1 153 0
+ 270              		@ sp needed
+ 271              	.LVL34:
+ 272              	.LVL35:
+ 273              	.LVL36:
+ 274 003a 70BD     		pop	{r4, r5, r6, pc}
+ 275              		.cfi_endproc
+ 276              	.LFE56:
+ 277              		.size	lwip_stricmp, .-lwip_stricmp
+ 278              		.section	.text.lwip_strnicmp,"ax",%progbits
+ 279              		.align	2
+ 280              		.global	lwip_strnicmp
+ 281              		.code	16
+ 282              		.thumb_func
+ 283              		.type	lwip_strnicmp, %function
+ 284              	lwip_strnicmp:
+ 285              	.LFB57:
+ 154:Source\LwIP\src\core/def.c **** #endif
+ 155:Source\LwIP\src\core/def.c **** 
+ 156:Source\LwIP\src\core/def.c **** #ifndef lwip_strnicmp
+ 157:Source\LwIP\src\core/def.c **** /**
+ 158:Source\LwIP\src\core/def.c ****  * @ingroup sys_nonstandard
+ 159:Source\LwIP\src\core/def.c ****  * lwIP default implementation for strnicmp() non-standard function.
+ 160:Source\LwIP\src\core/def.c ****  * This can be \#defined to strnicmp() depending on your platform port.
+ 161:Source\LwIP\src\core/def.c ****  */
+ 162:Source\LwIP\src\core/def.c **** int
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 9
+
+
+ 163:Source\LwIP\src\core/def.c **** lwip_strnicmp(const char* str1, const char* str2, size_t len)
+ 164:Source\LwIP\src\core/def.c **** {
+ 286              		.loc 1 164 0
+ 287              		.cfi_startproc
+ 288              		@ args = 0, pretend = 0, frame = 0
+ 289              		@ frame_needed = 0, uses_anonymous_args = 0
+ 290              	.LVL37:
+ 291 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 292              		.cfi_def_cfa_offset 20
+ 293              		.cfi_offset 4, -20
+ 294              		.cfi_offset 5, -16
+ 295              		.cfi_offset 6, -12
+ 296              		.cfi_offset 7, -8
+ 297              		.cfi_offset 14, -4
+ 298 0002 00E0     		b	.L20
+ 299              	.LVL38:
+ 300              	.L24:
+ 165:Source\LwIP\src\core/def.c ****   char c1, c2;
+ 166:Source\LwIP\src\core/def.c **** 
+ 167:Source\LwIP\src\core/def.c ****   do {
+ 168:Source\LwIP\src\core/def.c ****     c1 = *str1++;
+ 169:Source\LwIP\src\core/def.c ****     c2 = *str2++;
+ 170:Source\LwIP\src\core/def.c ****     if (c1 != c2) {
+ 171:Source\LwIP\src\core/def.c ****       char c1_upc = c1 | 0x20;
+ 172:Source\LwIP\src\core/def.c ****       if ((c1_upc >= 'a') && (c1_upc <= 'z')) {
+ 173:Source\LwIP\src\core/def.c ****         /* characters are not equal an one is in the alphabet range:
+ 174:Source\LwIP\src\core/def.c ****         downcase both chars and check again */
+ 175:Source\LwIP\src\core/def.c ****         char c2_upc = c2 | 0x20;
+ 176:Source\LwIP\src\core/def.c ****         if (c1_upc != c2_upc) {
+ 177:Source\LwIP\src\core/def.c ****           /* still not equal */
+ 178:Source\LwIP\src\core/def.c ****           /* don't care for < or > */
+ 179:Source\LwIP\src\core/def.c ****           return 1;
+ 180:Source\LwIP\src\core/def.c ****         }
+ 181:Source\LwIP\src\core/def.c ****       } else {
+ 182:Source\LwIP\src\core/def.c ****         /* characters are not equal but none is in the alphabet range */
+ 183:Source\LwIP\src\core/def.c ****         return 1;
+ 184:Source\LwIP\src\core/def.c ****       }
+ 185:Source\LwIP\src\core/def.c ****     }
+ 186:Source\LwIP\src\core/def.c ****   } while (len-- && c1 != 0);
+ 301              		.loc 1 186 0
+ 302 0004 1A00     		movs	r2, r3
+ 303              	.LVL39:
+ 304              	.L20:
+ 168:Source\LwIP\src\core/def.c ****     c2 = *str2++;
+ 305              		.loc 1 168 0
+ 306 0006 461C     		adds	r6, r0, #1
+ 307              	.LVL40:
+ 308 0008 0478     		ldrb	r4, [r0]
+ 309              	.LVL41:
+ 169:Source\LwIP\src\core/def.c ****     if (c1 != c2) {
+ 310              		.loc 1 169 0
+ 311 000a 4D1C     		adds	r5, r1, #1
+ 312              	.LVL42:
+ 313 000c 0F78     		ldrb	r7, [r1]
+ 314              	.LVL43:
+ 170:Source\LwIP\src\core/def.c ****       char c1_upc = c1 | 0x20;
+ 315              		.loc 1 170 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 10
+
+
+ 316 000e BC42     		cmp	r4, r7
+ 317 0010 0CD0     		beq	.L18
+ 318              	.LBB6:
+ 171:Source\LwIP\src\core/def.c ****       if ((c1_upc >= 'a') && (c1_upc <= 'z')) {
+ 319              		.loc 1 171 0
+ 320 0012 2023     		movs	r3, #32
+ 321 0014 2343     		orrs	r3, r4
+ 322 0016 DBB2     		uxtb	r3, r3
+ 323              	.LVL44:
+ 172:Source\LwIP\src\core/def.c ****         /* characters are not equal an one is in the alphabet range:
+ 324              		.loc 1 172 0
+ 325 0018 1800     		movs	r0, r3
+ 326 001a 6138     		subs	r0, r0, #97
+ 327 001c C0B2     		uxtb	r0, r0
+ 328 001e 1928     		cmp	r0, #25
+ 329 0020 0DD8     		bhi	.L21
+ 330              	.LBB7:
+ 175:Source\LwIP\src\core/def.c ****         if (c1_upc != c2_upc) {
+ 331              		.loc 1 175 0
+ 332 0022 2021     		movs	r1, #32
+ 333 0024 3943     		orrs	r1, r7
+ 334 0026 C9B2     		uxtb	r1, r1
+ 335              	.LVL45:
+ 176:Source\LwIP\src\core/def.c ****           /* still not equal */
+ 336              		.loc 1 176 0
+ 337 0028 8B42     		cmp	r3, r1
+ 338 002a 0AD1     		bne	.L22
+ 339              	.LVL46:
+ 340              	.L18:
+ 341              	.LBE7:
+ 342              	.LBE6:
+ 343              		.loc 1 186 0
+ 344 002c 531E     		subs	r3, r2, #1
+ 345              	.LVL47:
+ 346 002e 002A     		cmp	r2, #0
+ 347 0030 09D0     		beq	.L23
+ 168:Source\LwIP\src\core/def.c ****     c2 = *str2++;
+ 348              		.loc 1 168 0 discriminator 1
+ 349 0032 3000     		movs	r0, r6
+ 169:Source\LwIP\src\core/def.c ****     if (c1 != c2) {
+ 350              		.loc 1 169 0 discriminator 1
+ 351 0034 2900     		movs	r1, r5
+ 352              		.loc 1 186 0 discriminator 1
+ 353 0036 002C     		cmp	r4, #0
+ 354 0038 E4D1     		bne	.L24
+ 355              	.LVL48:
+ 187:Source\LwIP\src\core/def.c ****   return 0;
+ 356              		.loc 1 187 0
+ 357 003a 0020     		movs	r0, #0
+ 358              	.LVL49:
+ 359 003c 04E0     		b	.L19
+ 360              	.LVL50:
+ 361              	.L21:
+ 362              	.LBB9:
+ 183:Source\LwIP\src\core/def.c ****       }
+ 363              		.loc 1 183 0
+ 364 003e 0120     		movs	r0, #1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 11
+
+
+ 365 0040 02E0     		b	.L19
+ 366              	.LVL51:
+ 367              	.L22:
+ 368              	.LBB8:
+ 179:Source\LwIP\src\core/def.c ****         }
+ 369              		.loc 1 179 0
+ 370 0042 0120     		movs	r0, #1
+ 371 0044 00E0     		b	.L19
+ 372              	.LVL52:
+ 373              	.L23:
+ 374              	.LBE8:
+ 375              	.LBE9:
+ 376              		.loc 1 187 0
+ 377 0046 0020     		movs	r0, #0
+ 378              	.LVL53:
+ 379              	.L19:
+ 188:Source\LwIP\src\core/def.c **** }
+ 380              		.loc 1 188 0
+ 381              		@ sp needed
+ 382              	.LVL54:
+ 383              	.LVL55:
+ 384              	.LVL56:
+ 385              	.LVL57:
+ 386 0048 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 387              		.cfi_endproc
+ 388              	.LFE57:
+ 389              		.size	lwip_strnicmp, .-lwip_strnicmp
+ 390              		.global	__aeabi_idiv
+ 391 004a C046     		.section	.text.lwip_itoa,"ax",%progbits
+ 392              		.align	2
+ 393              		.global	lwip_itoa
+ 394              		.code	16
+ 395              		.thumb_func
+ 396              		.type	lwip_itoa, %function
+ 397              	lwip_itoa:
+ 398              	.LFB58:
+ 189:Source\LwIP\src\core/def.c **** #endif
+ 190:Source\LwIP\src\core/def.c **** 
+ 191:Source\LwIP\src\core/def.c **** #ifndef lwip_itoa
+ 192:Source\LwIP\src\core/def.c **** /**
+ 193:Source\LwIP\src\core/def.c ****  * @ingroup sys_nonstandard
+ 194:Source\LwIP\src\core/def.c ****  * lwIP default implementation for itoa() non-standard function.
+ 195:Source\LwIP\src\core/def.c ****  * This can be \#defined to itoa() or snprintf(result, bufsize, "%d", number) depending on your pla
+ 196:Source\LwIP\src\core/def.c ****  */
+ 197:Source\LwIP\src\core/def.c **** void
+ 198:Source\LwIP\src\core/def.c **** lwip_itoa(char* result, size_t bufsize, int number)
+ 199:Source\LwIP\src\core/def.c **** {
+ 399              		.loc 1 199 0
+ 400              		.cfi_startproc
+ 401              		@ args = 0, pretend = 0, frame = 0
+ 402              		@ frame_needed = 0, uses_anonymous_args = 0
+ 403              	.LVL58:
+ 404 0000 70B5     		push	{r4, r5, r6, lr}
+ 405              		.cfi_def_cfa_offset 16
+ 406              		.cfi_offset 4, -16
+ 407              		.cfi_offset 5, -12
+ 408              		.cfi_offset 6, -8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 12
+
+
+ 409              		.cfi_offset 14, -4
+ 410 0002 0500     		movs	r5, r0
+ 411 0004 1400     		movs	r4, r2
+ 412              	.LVL59:
+ 200:Source\LwIP\src\core/def.c ****   const int base = 10;
+ 201:Source\LwIP\src\core/def.c ****   char* ptr = result, *ptr1 = result, tmp_char;
+ 413              		.loc 1 201 0
+ 414 0006 0600     		movs	r6, r0
+ 415 0008 01E0     		b	.L26
+ 416              	.LVL60:
+ 417              	.L30:
+ 202:Source\LwIP\src\core/def.c ****   int tmp_value;
+ 203:Source\LwIP\src\core/def.c ****   LWIP_UNUSED_ARG(bufsize);
+ 204:Source\LwIP\src\core/def.c **** 
+ 205:Source\LwIP\src\core/def.c ****   do {
+ 206:Source\LwIP\src\core/def.c ****     tmp_value = number;
+ 207:Source\LwIP\src\core/def.c ****     number /= base;
+ 208:Source\LwIP\src\core/def.c ****     *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz"[35 + (tmp_va
+ 418              		.loc 1 208 0
+ 419 000a 1600     		movs	r6, r2
+ 207:Source\LwIP\src\core/def.c ****     *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz"[35 + (tmp_va
+ 420              		.loc 1 207 0
+ 421 000c 0400     		movs	r4, r0
+ 422              	.LVL61:
+ 423              	.L26:
+ 207:Source\LwIP\src\core/def.c ****     *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz"[35 + (tmp_va
+ 424              		.loc 1 207 0 is_stmt 0 discriminator 1
+ 425 000e 0A21     		movs	r1, #10
+ 426 0010 2000     		movs	r0, r4
+ 427 0012 FFF7FEFF 		bl	__aeabi_idiv
+ 428              	.LVL62:
+ 429              		.loc 1 208 0 is_stmt 1 discriminator 1
+ 430 0016 721C     		adds	r2, r6, #1
+ 431              	.LVL63:
+ 432 0018 0A23     		movs	r3, #10
+ 433 001a 5B42     		rsbs	r3, r3, #0
+ 434 001c 4343     		muls	r3, r0
+ 435 001e E318     		adds	r3, r4, r3
+ 436 0020 2333     		adds	r3, r3, #35
+ 437 0022 0B49     		ldr	r1, .L31
+ 438 0024 CB5C     		ldrb	r3, [r1, r3]
+ 439 0026 3370     		strb	r3, [r6]
+ 209:Source\LwIP\src\core/def.c ****   } while(number);
+ 440              		.loc 1 209 0 discriminator 1
+ 441 0028 0028     		cmp	r0, #0
+ 442 002a EED1     		bne	.L30
+ 210:Source\LwIP\src\core/def.c **** 
+ 211:Source\LwIP\src\core/def.c ****    /* Apply negative sign */
+ 212:Source\LwIP\src\core/def.c ****   if (tmp_value < 0) {
+ 443              		.loc 1 212 0
+ 444 002c 002C     		cmp	r4, #0
+ 445 002e 02DA     		bge	.L27
+ 213:Source\LwIP\src\core/def.c ****      *ptr++ = '-';
+ 446              		.loc 1 213 0
+ 447 0030 B21C     		adds	r2, r6, #2
+ 448              	.LVL64:
+ 449 0032 2D23     		movs	r3, #45
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 13
+
+
+ 450 0034 7370     		strb	r3, [r6, #1]
+ 451              	.L27:
+ 214:Source\LwIP\src\core/def.c ****   }
+ 215:Source\LwIP\src\core/def.c ****   *ptr-- = '\0';
+ 452              		.loc 1 215 0
+ 453 0036 531E     		subs	r3, r2, #1
+ 454              	.LVL65:
+ 455 0038 0021     		movs	r1, #0
+ 456 003a 1170     		strb	r1, [r2]
+ 216:Source\LwIP\src\core/def.c ****   while(ptr1 < ptr) {
+ 457              		.loc 1 216 0
+ 458 003c 05E0     		b	.L28
+ 459              	.LVL66:
+ 460              	.L29:
+ 217:Source\LwIP\src\core/def.c ****     tmp_char = *ptr;
+ 461              		.loc 1 217 0
+ 462 003e 1A78     		ldrb	r2, [r3]
+ 463              	.LVL67:
+ 218:Source\LwIP\src\core/def.c ****     *ptr--= *ptr1;
+ 464              		.loc 1 218 0
+ 465 0040 2978     		ldrb	r1, [r5]
+ 466 0042 1970     		strb	r1, [r3]
+ 467              	.LVL68:
+ 219:Source\LwIP\src\core/def.c ****     *ptr1++ = tmp_char;
+ 468              		.loc 1 219 0
+ 469 0044 2A70     		strb	r2, [r5]
+ 470 0046 0135     		adds	r5, r5, #1
+ 471              	.LVL69:
+ 218:Source\LwIP\src\core/def.c ****     *ptr--= *ptr1;
+ 472              		.loc 1 218 0
+ 473 0048 013B     		subs	r3, r3, #1
+ 474              	.LVL70:
+ 475              	.L28:
+ 216:Source\LwIP\src\core/def.c ****     tmp_char = *ptr;
+ 476              		.loc 1 216 0
+ 477 004a AB42     		cmp	r3, r5
+ 478 004c F7D8     		bhi	.L29
+ 220:Source\LwIP\src\core/def.c ****   }
+ 221:Source\LwIP\src\core/def.c **** }
+ 479              		.loc 1 221 0
+ 480              		@ sp needed
+ 481              	.LVL71:
+ 482              	.LVL72:
+ 483 004e 70BD     		pop	{r4, r5, r6, pc}
+ 484              	.L32:
+ 485              		.align	2
+ 486              	.L31:
+ 487 0050 00000000 		.word	.LC0
+ 488              		.cfi_endproc
+ 489              	.LFE58:
+ 490              		.size	lwip_itoa, .-lwip_itoa
+ 491              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 492              		.align	2
+ 493              	.LC0:
+ 494 0000 7A797877 		.ascii	"zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdef"
+ 494      76757473 
+ 494      7271706F 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 14
+
+
+ 494      6E6D6C6B 
+ 494      6A696867 
+ 495 0033 6768696A 		.ascii	"ghijklmnopqrstuvwxyz\000"
+ 495      6B6C6D6E 
+ 495      6F707172 
+ 495      73747576 
+ 495      7778797A 
+ 496              		.text
+ 497              	.Letext0:
+ 498              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 499              		.file 3 ".\\Source\\LwIP\\src\\include/arch/cc.h"
+ 500              		.file 4 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 501              		.section	.debug_info,"",%progbits
+ 502              	.Ldebug_info0:
+ 503 0000 58030000 		.4byte	0x358
+ 504 0004 0400     		.2byte	0x4
+ 505 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 506 000a 04       		.byte	0x4
+ 507 000b 01       		.uleb128 0x1
+ 508 000c 14020000 		.4byte	.LASF39
+ 509 0010 0C       		.byte	0xc
+ 510 0011 A9000000 		.4byte	.LASF40
+ 511 0015 D0000000 		.4byte	.LASF41
+ 512 0019 60000000 		.4byte	.Ldebug_ranges0+0x60
+ 513 001d 00000000 		.4byte	0
+ 514 0021 00000000 		.4byte	.Ldebug_line0
+ 515 0025 02       		.uleb128 0x2
+ 516 0026 01       		.byte	0x1
+ 517 0027 06       		.byte	0x6
+ 518 0028 A6020000 		.4byte	.LASF0
+ 519 002c 02       		.uleb128 0x2
+ 520 002d 01       		.byte	0x1
+ 521 002e 08       		.byte	0x8
+ 522 002f 51000000 		.4byte	.LASF1
+ 523 0033 02       		.uleb128 0x2
+ 524 0034 02       		.byte	0x2
+ 525 0035 05       		.byte	0x5
+ 526 0036 D4010000 		.4byte	.LASF2
+ 527 003a 02       		.uleb128 0x2
+ 528 003b 02       		.byte	0x2
+ 529 003c 07       		.byte	0x7
+ 530 003d 7B000000 		.4byte	.LASF3
+ 531 0041 02       		.uleb128 0x2
+ 532 0042 04       		.byte	0x4
+ 533 0043 05       		.byte	0x5
+ 534 0044 14000000 		.4byte	.LASF4
+ 535 0048 02       		.uleb128 0x2
+ 536 0049 04       		.byte	0x4
+ 537 004a 07       		.byte	0x7
+ 538 004b 5F000000 		.4byte	.LASF5
+ 539 004f 02       		.uleb128 0x2
+ 540 0050 08       		.byte	0x8
+ 541 0051 05       		.byte	0x5
+ 542 0052 AB010000 		.4byte	.LASF6
+ 543 0056 02       		.uleb128 0x2
+ 544 0057 08       		.byte	0x8
+ 545 0058 07       		.byte	0x7
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 15
+
+
+ 546 0059 75010000 		.4byte	.LASF7
+ 547 005d 03       		.uleb128 0x3
+ 548 005e 04       		.byte	0x4
+ 549 005f 05       		.byte	0x5
+ 550 0060 696E7400 		.ascii	"int\000"
+ 551 0064 02       		.uleb128 0x2
+ 552 0065 04       		.byte	0x4
+ 553 0066 07       		.byte	0x7
+ 554 0067 1D000000 		.4byte	.LASF8
+ 555 006b 04       		.uleb128 0x4
+ 556 006c 00000000 		.4byte	.LASF9
+ 557 0070 02       		.byte	0x2
+ 558 0071 D8       		.byte	0xd8
+ 559 0072 64000000 		.4byte	0x64
+ 560 0076 04       		.uleb128 0x4
+ 561 0077 41000000 		.4byte	.LASF10
+ 562 007b 02       		.byte	0x2
+ 563 007c 95       		.byte	0x95
+ 564 007d 5D000000 		.4byte	0x5d
+ 565 0081 02       		.uleb128 0x2
+ 566 0082 08       		.byte	0x8
+ 567 0083 04       		.byte	0x4
+ 568 0084 08020000 		.4byte	.LASF11
+ 569 0088 02       		.uleb128 0x2
+ 570 0089 04       		.byte	0x4
+ 571 008a 07       		.byte	0x7
+ 572 008b A2010000 		.4byte	.LASF12
+ 573 008f 05       		.uleb128 0x5
+ 574 0090 04       		.byte	0x4
+ 575 0091 95000000 		.4byte	0x95
+ 576 0095 02       		.uleb128 0x2
+ 577 0096 01       		.byte	0x1
+ 578 0097 08       		.byte	0x8
+ 579 0098 B9010000 		.4byte	.LASF13
+ 580 009c 05       		.uleb128 0x5
+ 581 009d 04       		.byte	0x4
+ 582 009e A2000000 		.4byte	0xa2
+ 583 00a2 06       		.uleb128 0x6
+ 584 00a3 95000000 		.4byte	0x95
+ 585 00a7 02       		.uleb128 0x2
+ 586 00a8 04       		.byte	0x4
+ 587 00a9 04       		.byte	0x4
+ 588 00aa 4B000000 		.4byte	.LASF14
+ 589 00ae 02       		.uleb128 0x2
+ 590 00af 08       		.byte	0x8
+ 591 00b0 04       		.byte	0x4
+ 592 00b1 33000000 		.4byte	.LASF15
+ 593 00b5 04       		.uleb128 0x4
+ 594 00b6 99000000 		.4byte	.LASF16
+ 595 00ba 03       		.byte	0x3
+ 596 00bb 33       		.byte	0x33
+ 597 00bc 3A000000 		.4byte	0x3a
+ 598 00c0 04       		.uleb128 0x4
+ 599 00c1 EF010000 		.4byte	.LASF17
+ 600 00c5 03       		.byte	0x3
+ 601 00c6 35       		.byte	0x35
+ 602 00c7 48000000 		.4byte	0x48
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 16
+
+
+ 603 00cb 07       		.uleb128 0x7
+ 604 00cc 8E000000 		.4byte	.LASF18
+ 605 00d0 01       		.byte	0x1
+ 606 00d1 4C       		.byte	0x4c
+ 607 00d2 B5000000 		.4byte	0xb5
+ 608 00d6 00000000 		.4byte	.LFB53
+ 609 00da 06000000 		.4byte	.LFE53-.LFB53
+ 610 00de 01       		.uleb128 0x1
+ 611 00df 9C       		.byte	0x9c
+ 612 00e0 F2000000 		.4byte	0xf2
+ 613 00e4 08       		.uleb128 0x8
+ 614 00e5 6E00     		.ascii	"n\000"
+ 615 00e7 01       		.byte	0x1
+ 616 00e8 4C       		.byte	0x4c
+ 617 00e9 B5000000 		.4byte	0xb5
+ 618 00ed 00000000 		.4byte	.LLST0
+ 619 00f1 00       		.byte	0
+ 620 00f2 07       		.uleb128 0x7
+ 621 00f3 C7020000 		.4byte	.LASF19
+ 622 00f7 01       		.byte	0x1
+ 623 00f8 5A       		.byte	0x5a
+ 624 00f9 C0000000 		.4byte	0xc0
+ 625 00fd 00000000 		.4byte	.LFB54
+ 626 0101 22000000 		.4byte	.LFE54-.LFB54
+ 627 0105 01       		.uleb128 0x1
+ 628 0106 9C       		.byte	0x9c
+ 629 0107 19010000 		.4byte	0x119
+ 630 010b 08       		.uleb128 0x8
+ 631 010c 6E00     		.ascii	"n\000"
+ 632 010e 01       		.byte	0x1
+ 633 010f 5A       		.byte	0x5a
+ 634 0110 C0000000 		.4byte	0xc0
+ 635 0114 21000000 		.4byte	.LLST1
+ 636 0118 00       		.byte	0
+ 637 0119 07       		.uleb128 0x7
+ 638 011a 07000000 		.4byte	.LASF20
+ 639 011e 01       		.byte	0x1
+ 640 011f 69       		.byte	0x69
+ 641 0120 8F000000 		.4byte	0x8f
+ 642 0124 00000000 		.4byte	.LFB55
+ 643 0128 54000000 		.4byte	.LFE55-.LFB55
+ 644 012c 01       		.uleb128 0x1
+ 645 012d 9C       		.byte	0x9c
+ 646 012e AA010000 		.4byte	0x1aa
+ 647 0132 09       		.uleb128 0x9
+ 648 0133 E8010000 		.4byte	.LASF21
+ 649 0137 01       		.byte	0x1
+ 650 0138 69       		.byte	0x69
+ 651 0139 9C000000 		.4byte	0x9c
+ 652 013d 42000000 		.4byte	.LLST2
+ 653 0141 09       		.uleb128 0x9
+ 654 0142 02020000 		.4byte	.LASF22
+ 655 0146 01       		.byte	0x1
+ 656 0147 69       		.byte	0x69
+ 657 0148 9C000000 		.4byte	0x9c
+ 658 014c 6E000000 		.4byte	.LLST3
+ 659 0150 08       		.uleb128 0x8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 17
+
+
+ 660 0151 6E00     		.ascii	"n\000"
+ 661 0153 01       		.byte	0x1
+ 662 0154 69       		.byte	0x69
+ 663 0155 6B000000 		.4byte	0x6b
+ 664 0159 9A000000 		.4byte	.LLST4
+ 665 015d 0A       		.uleb128 0xa
+ 666 015e 7000     		.ascii	"p\000"
+ 667 0160 01       		.byte	0x1
+ 668 0161 6B       		.byte	0x6b
+ 669 0162 9C000000 		.4byte	0x9c
+ 670 0166 C6000000 		.4byte	.LLST5
+ 671 016a 0B       		.uleb128 0xb
+ 672 016b 2A000000 		.4byte	.LASF23
+ 673 016f 01       		.byte	0x1
+ 674 0170 6C       		.byte	0x6c
+ 675 0171 6B000000 		.4byte	0x6b
+ 676 0175 E4000000 		.4byte	.LLST6
+ 677 0179 0C       		.uleb128 0xc
+ 678 017a 12000000 		.4byte	.LVL6
+ 679 017e 45030000 		.4byte	0x345
+ 680 0182 8D010000 		.4byte	0x18d
+ 681 0186 0D       		.uleb128 0xd
+ 682 0187 01       		.uleb128 0x1
+ 683 0188 50       		.byte	0x50
+ 684 0189 02       		.uleb128 0x2
+ 685 018a 76       		.byte	0x76
+ 686 018b 00       		.sleb128 0
+ 687 018c 00       		.byte	0
+ 688 018d 0E       		.uleb128 0xe
+ 689 018e 2A000000 		.4byte	.LVL9
+ 690 0192 50030000 		.4byte	0x350
+ 691 0196 0D       		.uleb128 0xd
+ 692 0197 01       		.uleb128 0x1
+ 693 0198 50       		.byte	0x50
+ 694 0199 02       		.uleb128 0x2
+ 695 019a 74       		.byte	0x74
+ 696 019b 00       		.sleb128 0
+ 697 019c 0D       		.uleb128 0xd
+ 698 019d 01       		.uleb128 0x1
+ 699 019e 51       		.byte	0x51
+ 700 019f 02       		.uleb128 0x2
+ 701 01a0 76       		.byte	0x76
+ 702 01a1 00       		.sleb128 0
+ 703 01a2 0D       		.uleb128 0xd
+ 704 01a3 01       		.uleb128 0x1
+ 705 01a4 52       		.byte	0x52
+ 706 01a5 02       		.uleb128 0x2
+ 707 01a6 75       		.byte	0x75
+ 708 01a7 00       		.sleb128 0
+ 709 01a8 00       		.byte	0
+ 710 01a9 00       		.byte	0
+ 711 01aa 07       		.uleb128 0x7
+ 712 01ab F5010000 		.4byte	.LASF24
+ 713 01af 01       		.byte	0x1
+ 714 01b0 80       		.byte	0x80
+ 715 01b1 5D000000 		.4byte	0x5d
+ 716 01b5 00000000 		.4byte	.LFB56
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 18
+
+
+ 717 01b9 3C000000 		.4byte	.LFE56-.LFB56
+ 718 01bd 01       		.uleb128 0x1
+ 719 01be 9C       		.byte	0x9c
+ 720 01bf 28020000 		.4byte	0x228
+ 721 01c3 09       		.uleb128 0x9
+ 722 01c4 9F000000 		.4byte	.LASF25
+ 723 01c8 01       		.byte	0x1
+ 724 01c9 80       		.byte	0x80
+ 725 01ca 9C000000 		.4byte	0x9c
+ 726 01ce 18010000 		.4byte	.LLST7
+ 727 01d2 09       		.uleb128 0x9
+ 728 01d3 A4000000 		.4byte	.LASF26
+ 729 01d7 01       		.byte	0x1
+ 730 01d8 80       		.byte	0x80
+ 731 01d9 9C000000 		.4byte	0x9c
+ 732 01dd 4C010000 		.4byte	.LLST8
+ 733 01e1 0A       		.uleb128 0xa
+ 734 01e2 633100   		.ascii	"c1\000"
+ 735 01e5 01       		.byte	0x1
+ 736 01e6 82       		.byte	0x82
+ 737 01e7 95000000 		.4byte	0x95
+ 738 01eb 80010000 		.4byte	.LLST9
+ 739 01ef 0A       		.uleb128 0xa
+ 740 01f0 633200   		.ascii	"c2\000"
+ 741 01f3 01       		.byte	0x1
+ 742 01f4 82       		.byte	0x82
+ 743 01f5 95000000 		.4byte	0x95
+ 744 01f9 9F010000 		.4byte	.LLST10
+ 745 01fd 0F       		.uleb128 0xf
+ 746 01fe 00000000 		.4byte	.Ldebug_ranges0+0
+ 747 0202 0B       		.uleb128 0xb
+ 748 0203 BB020000 		.4byte	.LASF27
+ 749 0207 01       		.byte	0x1
+ 750 0208 88       		.byte	0x88
+ 751 0209 95000000 		.4byte	0x95
+ 752 020d F8010000 		.4byte	.LLST11
+ 753 0211 0F       		.uleb128 0xf
+ 754 0212 18000000 		.4byte	.Ldebug_ranges0+0x18
+ 755 0216 0B       		.uleb128 0xb
+ 756 0217 3A000000 		.4byte	.LASF28
+ 757 021b 01       		.byte	0x1
+ 758 021c 8C       		.byte	0x8c
+ 759 021d 95000000 		.4byte	0x95
+ 760 0221 16020000 		.4byte	.LLST12
+ 761 0225 00       		.byte	0
+ 762 0226 00       		.byte	0
+ 763 0227 00       		.byte	0
+ 764 0228 07       		.uleb128 0x7
+ 765 0229 BE010000 		.4byte	.LASF29
+ 766 022d 01       		.byte	0x1
+ 767 022e A3       		.byte	0xa3
+ 768 022f 5D000000 		.4byte	0x5d
+ 769 0233 00000000 		.4byte	.LFB57
+ 770 0237 4A000000 		.4byte	.LFE57-.LFB57
+ 771 023b 01       		.uleb128 0x1
+ 772 023c 9C       		.byte	0x9c
+ 773 023d B5020000 		.4byte	0x2b5
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 19
+
+
+ 774 0241 09       		.uleb128 0x9
+ 775 0242 9F000000 		.4byte	.LASF25
+ 776 0246 01       		.byte	0x1
+ 777 0247 A3       		.byte	0xa3
+ 778 0248 9C000000 		.4byte	0x9c
+ 779 024c 34020000 		.4byte	.LLST13
+ 780 0250 09       		.uleb128 0x9
+ 781 0251 A4000000 		.4byte	.LASF26
+ 782 0255 01       		.byte	0x1
+ 783 0256 A3       		.byte	0xa3
+ 784 0257 9C000000 		.4byte	0x9c
+ 785 025b 68020000 		.4byte	.LLST14
+ 786 025f 08       		.uleb128 0x8
+ 787 0260 6C656E00 		.ascii	"len\000"
+ 788 0264 01       		.byte	0x1
+ 789 0265 A3       		.byte	0xa3
+ 790 0266 6B000000 		.4byte	0x6b
+ 791 026a 9C020000 		.4byte	.LLST15
+ 792 026e 0A       		.uleb128 0xa
+ 793 026f 633100   		.ascii	"c1\000"
+ 794 0272 01       		.byte	0x1
+ 795 0273 A5       		.byte	0xa5
+ 796 0274 95000000 		.4byte	0x95
+ 797 0278 E6020000 		.4byte	.LLST16
+ 798 027c 0A       		.uleb128 0xa
+ 799 027d 633200   		.ascii	"c2\000"
+ 800 0280 01       		.byte	0x1
+ 801 0281 A5       		.byte	0xa5
+ 802 0282 95000000 		.4byte	0x95
+ 803 0286 10030000 		.4byte	.LLST17
+ 804 028a 0F       		.uleb128 0xf
+ 805 028b 30000000 		.4byte	.Ldebug_ranges0+0x30
+ 806 028f 0B       		.uleb128 0xb
+ 807 0290 BB020000 		.4byte	.LASF27
+ 808 0294 01       		.byte	0x1
+ 809 0295 AB       		.byte	0xab
+ 810 0296 95000000 		.4byte	0x95
+ 811 029a 2E030000 		.4byte	.LLST18
+ 812 029e 0F       		.uleb128 0xf
+ 813 029f 48000000 		.4byte	.Ldebug_ranges0+0x48
+ 814 02a3 0B       		.uleb128 0xb
+ 815 02a4 3A000000 		.4byte	.LASF28
+ 816 02a8 01       		.byte	0x1
+ 817 02a9 AF       		.byte	0xaf
+ 818 02aa 95000000 		.4byte	0x95
+ 819 02ae 4C030000 		.4byte	.LLST19
+ 820 02b2 00       		.byte	0
+ 821 02b3 00       		.byte	0
+ 822 02b4 00       		.byte	0
+ 823 02b5 10       		.uleb128 0x10
+ 824 02b6 DE010000 		.4byte	.LASF42
+ 825 02ba 01       		.byte	0x1
+ 826 02bb C6       		.byte	0xc6
+ 827 02bc 00000000 		.4byte	.LFB58
+ 828 02c0 54000000 		.4byte	.LFE58-.LFB58
+ 829 02c4 01       		.uleb128 0x1
+ 830 02c5 9C       		.byte	0x9c
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 20
+
+
+ 831 02c6 40030000 		.4byte	0x340
+ 832 02ca 09       		.uleb128 0x9
+ 833 02cb 8C010000 		.4byte	.LASF30
+ 834 02cf 01       		.byte	0x1
+ 835 02d0 C6       		.byte	0xc6
+ 836 02d1 8F000000 		.4byte	0x8f
+ 837 02d5 6A030000 		.4byte	.LLST20
+ 838 02d9 09       		.uleb128 0x9
+ 839 02da 9A010000 		.4byte	.LASF31
+ 840 02de 01       		.byte	0x1
+ 841 02df C6       		.byte	0xc6
+ 842 02e0 6B000000 		.4byte	0x6b
+ 843 02e4 96030000 		.4byte	.LLST21
+ 844 02e8 09       		.uleb128 0x9
+ 845 02e9 93010000 		.4byte	.LASF32
+ 846 02ed 01       		.byte	0x1
+ 847 02ee C6       		.byte	0xc6
+ 848 02ef 5D000000 		.4byte	0x5d
+ 849 02f3 B7030000 		.4byte	.LLST22
+ 850 02f7 11       		.uleb128 0x11
+ 851 02f8 C4000000 		.4byte	.LASF33
+ 852 02fc 01       		.byte	0x1
+ 853 02fd C8       		.byte	0xc8
+ 854 02fe 40030000 		.4byte	0x340
+ 855 0302 0A       		.byte	0xa
+ 856 0303 0A       		.uleb128 0xa
+ 857 0304 70747200 		.ascii	"ptr\000"
+ 858 0308 01       		.byte	0x1
+ 859 0309 C9       		.byte	0xc9
+ 860 030a 8F000000 		.4byte	0x8f
+ 861 030e EB030000 		.4byte	.LLST23
+ 862 0312 0B       		.uleb128 0xb
+ 863 0313 C2020000 		.4byte	.LASF34
+ 864 0317 01       		.byte	0x1
+ 865 0318 C9       		.byte	0xc9
+ 866 0319 8F000000 		.4byte	0x8f
+ 867 031d 42040000 		.4byte	.LLST24
+ 868 0321 0B       		.uleb128 0xb
+ 869 0322 B2020000 		.4byte	.LASF35
+ 870 0326 01       		.byte	0x1
+ 871 0327 C9       		.byte	0xc9
+ 872 0328 95000000 		.4byte	0x95
+ 873 032c 78040000 		.4byte	.LLST25
+ 874 0330 0B       		.uleb128 0xb
+ 875 0331 71000000 		.4byte	.LASF36
+ 876 0335 01       		.byte	0x1
+ 877 0336 CA       		.byte	0xca
+ 878 0337 5D000000 		.4byte	0x5d
+ 879 033b 8B040000 		.4byte	.LLST26
+ 880 033f 00       		.byte	0
+ 881 0340 06       		.uleb128 0x6
+ 882 0341 5D000000 		.4byte	0x5d
+ 883 0345 12       		.uleb128 0x12
+ 884 0346 C9000000 		.4byte	.LASF37
+ 885 034a C9000000 		.4byte	.LASF37
+ 886 034e 04       		.byte	0x4
+ 887 034f 21       		.byte	0x21
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 21
+
+
+ 888 0350 12       		.uleb128 0x12
+ 889 0351 CC010000 		.4byte	.LASF38
+ 890 0355 CC010000 		.4byte	.LASF38
+ 891 0359 04       		.byte	0x4
+ 892 035a 23       		.byte	0x23
+ 893 035b 00       		.byte	0
+ 894              		.section	.debug_abbrev,"",%progbits
+ 895              	.Ldebug_abbrev0:
+ 896 0000 01       		.uleb128 0x1
+ 897 0001 11       		.uleb128 0x11
+ 898 0002 01       		.byte	0x1
+ 899 0003 25       		.uleb128 0x25
+ 900 0004 0E       		.uleb128 0xe
+ 901 0005 13       		.uleb128 0x13
+ 902 0006 0B       		.uleb128 0xb
+ 903 0007 03       		.uleb128 0x3
+ 904 0008 0E       		.uleb128 0xe
+ 905 0009 1B       		.uleb128 0x1b
+ 906 000a 0E       		.uleb128 0xe
+ 907 000b 55       		.uleb128 0x55
+ 908 000c 17       		.uleb128 0x17
+ 909 000d 11       		.uleb128 0x11
+ 910 000e 01       		.uleb128 0x1
+ 911 000f 10       		.uleb128 0x10
+ 912 0010 17       		.uleb128 0x17
+ 913 0011 00       		.byte	0
+ 914 0012 00       		.byte	0
+ 915 0013 02       		.uleb128 0x2
+ 916 0014 24       		.uleb128 0x24
+ 917 0015 00       		.byte	0
+ 918 0016 0B       		.uleb128 0xb
+ 919 0017 0B       		.uleb128 0xb
+ 920 0018 3E       		.uleb128 0x3e
+ 921 0019 0B       		.uleb128 0xb
+ 922 001a 03       		.uleb128 0x3
+ 923 001b 0E       		.uleb128 0xe
+ 924 001c 00       		.byte	0
+ 925 001d 00       		.byte	0
+ 926 001e 03       		.uleb128 0x3
+ 927 001f 24       		.uleb128 0x24
+ 928 0020 00       		.byte	0
+ 929 0021 0B       		.uleb128 0xb
+ 930 0022 0B       		.uleb128 0xb
+ 931 0023 3E       		.uleb128 0x3e
+ 932 0024 0B       		.uleb128 0xb
+ 933 0025 03       		.uleb128 0x3
+ 934 0026 08       		.uleb128 0x8
+ 935 0027 00       		.byte	0
+ 936 0028 00       		.byte	0
+ 937 0029 04       		.uleb128 0x4
+ 938 002a 16       		.uleb128 0x16
+ 939 002b 00       		.byte	0
+ 940 002c 03       		.uleb128 0x3
+ 941 002d 0E       		.uleb128 0xe
+ 942 002e 3A       		.uleb128 0x3a
+ 943 002f 0B       		.uleb128 0xb
+ 944 0030 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 22
+
+
+ 945 0031 0B       		.uleb128 0xb
+ 946 0032 49       		.uleb128 0x49
+ 947 0033 13       		.uleb128 0x13
+ 948 0034 00       		.byte	0
+ 949 0035 00       		.byte	0
+ 950 0036 05       		.uleb128 0x5
+ 951 0037 0F       		.uleb128 0xf
+ 952 0038 00       		.byte	0
+ 953 0039 0B       		.uleb128 0xb
+ 954 003a 0B       		.uleb128 0xb
+ 955 003b 49       		.uleb128 0x49
+ 956 003c 13       		.uleb128 0x13
+ 957 003d 00       		.byte	0
+ 958 003e 00       		.byte	0
+ 959 003f 06       		.uleb128 0x6
+ 960 0040 26       		.uleb128 0x26
+ 961 0041 00       		.byte	0
+ 962 0042 49       		.uleb128 0x49
+ 963 0043 13       		.uleb128 0x13
+ 964 0044 00       		.byte	0
+ 965 0045 00       		.byte	0
+ 966 0046 07       		.uleb128 0x7
+ 967 0047 2E       		.uleb128 0x2e
+ 968 0048 01       		.byte	0x1
+ 969 0049 3F       		.uleb128 0x3f
+ 970 004a 19       		.uleb128 0x19
+ 971 004b 03       		.uleb128 0x3
+ 972 004c 0E       		.uleb128 0xe
+ 973 004d 3A       		.uleb128 0x3a
+ 974 004e 0B       		.uleb128 0xb
+ 975 004f 3B       		.uleb128 0x3b
+ 976 0050 0B       		.uleb128 0xb
+ 977 0051 27       		.uleb128 0x27
+ 978 0052 19       		.uleb128 0x19
+ 979 0053 49       		.uleb128 0x49
+ 980 0054 13       		.uleb128 0x13
+ 981 0055 11       		.uleb128 0x11
+ 982 0056 01       		.uleb128 0x1
+ 983 0057 12       		.uleb128 0x12
+ 984 0058 06       		.uleb128 0x6
+ 985 0059 40       		.uleb128 0x40
+ 986 005a 18       		.uleb128 0x18
+ 987 005b 9742     		.uleb128 0x2117
+ 988 005d 19       		.uleb128 0x19
+ 989 005e 01       		.uleb128 0x1
+ 990 005f 13       		.uleb128 0x13
+ 991 0060 00       		.byte	0
+ 992 0061 00       		.byte	0
+ 993 0062 08       		.uleb128 0x8
+ 994 0063 05       		.uleb128 0x5
+ 995 0064 00       		.byte	0
+ 996 0065 03       		.uleb128 0x3
+ 997 0066 08       		.uleb128 0x8
+ 998 0067 3A       		.uleb128 0x3a
+ 999 0068 0B       		.uleb128 0xb
+ 1000 0069 3B       		.uleb128 0x3b
+ 1001 006a 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 23
+
+
+ 1002 006b 49       		.uleb128 0x49
+ 1003 006c 13       		.uleb128 0x13
+ 1004 006d 02       		.uleb128 0x2
+ 1005 006e 17       		.uleb128 0x17
+ 1006 006f 00       		.byte	0
+ 1007 0070 00       		.byte	0
+ 1008 0071 09       		.uleb128 0x9
+ 1009 0072 05       		.uleb128 0x5
+ 1010 0073 00       		.byte	0
+ 1011 0074 03       		.uleb128 0x3
+ 1012 0075 0E       		.uleb128 0xe
+ 1013 0076 3A       		.uleb128 0x3a
+ 1014 0077 0B       		.uleb128 0xb
+ 1015 0078 3B       		.uleb128 0x3b
+ 1016 0079 0B       		.uleb128 0xb
+ 1017 007a 49       		.uleb128 0x49
+ 1018 007b 13       		.uleb128 0x13
+ 1019 007c 02       		.uleb128 0x2
+ 1020 007d 17       		.uleb128 0x17
+ 1021 007e 00       		.byte	0
+ 1022 007f 00       		.byte	0
+ 1023 0080 0A       		.uleb128 0xa
+ 1024 0081 34       		.uleb128 0x34
+ 1025 0082 00       		.byte	0
+ 1026 0083 03       		.uleb128 0x3
+ 1027 0084 08       		.uleb128 0x8
+ 1028 0085 3A       		.uleb128 0x3a
+ 1029 0086 0B       		.uleb128 0xb
+ 1030 0087 3B       		.uleb128 0x3b
+ 1031 0088 0B       		.uleb128 0xb
+ 1032 0089 49       		.uleb128 0x49
+ 1033 008a 13       		.uleb128 0x13
+ 1034 008b 02       		.uleb128 0x2
+ 1035 008c 17       		.uleb128 0x17
+ 1036 008d 00       		.byte	0
+ 1037 008e 00       		.byte	0
+ 1038 008f 0B       		.uleb128 0xb
+ 1039 0090 34       		.uleb128 0x34
+ 1040 0091 00       		.byte	0
+ 1041 0092 03       		.uleb128 0x3
+ 1042 0093 0E       		.uleb128 0xe
+ 1043 0094 3A       		.uleb128 0x3a
+ 1044 0095 0B       		.uleb128 0xb
+ 1045 0096 3B       		.uleb128 0x3b
+ 1046 0097 0B       		.uleb128 0xb
+ 1047 0098 49       		.uleb128 0x49
+ 1048 0099 13       		.uleb128 0x13
+ 1049 009a 02       		.uleb128 0x2
+ 1050 009b 17       		.uleb128 0x17
+ 1051 009c 00       		.byte	0
+ 1052 009d 00       		.byte	0
+ 1053 009e 0C       		.uleb128 0xc
+ 1054 009f 898201   		.uleb128 0x4109
+ 1055 00a2 01       		.byte	0x1
+ 1056 00a3 11       		.uleb128 0x11
+ 1057 00a4 01       		.uleb128 0x1
+ 1058 00a5 31       		.uleb128 0x31
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 24
+
+
+ 1059 00a6 13       		.uleb128 0x13
+ 1060 00a7 01       		.uleb128 0x1
+ 1061 00a8 13       		.uleb128 0x13
+ 1062 00a9 00       		.byte	0
+ 1063 00aa 00       		.byte	0
+ 1064 00ab 0D       		.uleb128 0xd
+ 1065 00ac 8A8201   		.uleb128 0x410a
+ 1066 00af 00       		.byte	0
+ 1067 00b0 02       		.uleb128 0x2
+ 1068 00b1 18       		.uleb128 0x18
+ 1069 00b2 9142     		.uleb128 0x2111
+ 1070 00b4 18       		.uleb128 0x18
+ 1071 00b5 00       		.byte	0
+ 1072 00b6 00       		.byte	0
+ 1073 00b7 0E       		.uleb128 0xe
+ 1074 00b8 898201   		.uleb128 0x4109
+ 1075 00bb 01       		.byte	0x1
+ 1076 00bc 11       		.uleb128 0x11
+ 1077 00bd 01       		.uleb128 0x1
+ 1078 00be 31       		.uleb128 0x31
+ 1079 00bf 13       		.uleb128 0x13
+ 1080 00c0 00       		.byte	0
+ 1081 00c1 00       		.byte	0
+ 1082 00c2 0F       		.uleb128 0xf
+ 1083 00c3 0B       		.uleb128 0xb
+ 1084 00c4 01       		.byte	0x1
+ 1085 00c5 55       		.uleb128 0x55
+ 1086 00c6 17       		.uleb128 0x17
+ 1087 00c7 00       		.byte	0
+ 1088 00c8 00       		.byte	0
+ 1089 00c9 10       		.uleb128 0x10
+ 1090 00ca 2E       		.uleb128 0x2e
+ 1091 00cb 01       		.byte	0x1
+ 1092 00cc 3F       		.uleb128 0x3f
+ 1093 00cd 19       		.uleb128 0x19
+ 1094 00ce 03       		.uleb128 0x3
+ 1095 00cf 0E       		.uleb128 0xe
+ 1096 00d0 3A       		.uleb128 0x3a
+ 1097 00d1 0B       		.uleb128 0xb
+ 1098 00d2 3B       		.uleb128 0x3b
+ 1099 00d3 0B       		.uleb128 0xb
+ 1100 00d4 27       		.uleb128 0x27
+ 1101 00d5 19       		.uleb128 0x19
+ 1102 00d6 11       		.uleb128 0x11
+ 1103 00d7 01       		.uleb128 0x1
+ 1104 00d8 12       		.uleb128 0x12
+ 1105 00d9 06       		.uleb128 0x6
+ 1106 00da 40       		.uleb128 0x40
+ 1107 00db 18       		.uleb128 0x18
+ 1108 00dc 9642     		.uleb128 0x2116
+ 1109 00de 19       		.uleb128 0x19
+ 1110 00df 01       		.uleb128 0x1
+ 1111 00e0 13       		.uleb128 0x13
+ 1112 00e1 00       		.byte	0
+ 1113 00e2 00       		.byte	0
+ 1114 00e3 11       		.uleb128 0x11
+ 1115 00e4 34       		.uleb128 0x34
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 25
+
+
+ 1116 00e5 00       		.byte	0
+ 1117 00e6 03       		.uleb128 0x3
+ 1118 00e7 0E       		.uleb128 0xe
+ 1119 00e8 3A       		.uleb128 0x3a
+ 1120 00e9 0B       		.uleb128 0xb
+ 1121 00ea 3B       		.uleb128 0x3b
+ 1122 00eb 0B       		.uleb128 0xb
+ 1123 00ec 49       		.uleb128 0x49
+ 1124 00ed 13       		.uleb128 0x13
+ 1125 00ee 1C       		.uleb128 0x1c
+ 1126 00ef 0B       		.uleb128 0xb
+ 1127 00f0 00       		.byte	0
+ 1128 00f1 00       		.byte	0
+ 1129 00f2 12       		.uleb128 0x12
+ 1130 00f3 2E       		.uleb128 0x2e
+ 1131 00f4 00       		.byte	0
+ 1132 00f5 3F       		.uleb128 0x3f
+ 1133 00f6 19       		.uleb128 0x19
+ 1134 00f7 3C       		.uleb128 0x3c
+ 1135 00f8 19       		.uleb128 0x19
+ 1136 00f9 6E       		.uleb128 0x6e
+ 1137 00fa 0E       		.uleb128 0xe
+ 1138 00fb 03       		.uleb128 0x3
+ 1139 00fc 0E       		.uleb128 0xe
+ 1140 00fd 3A       		.uleb128 0x3a
+ 1141 00fe 0B       		.uleb128 0xb
+ 1142 00ff 3B       		.uleb128 0x3b
+ 1143 0100 0B       		.uleb128 0xb
+ 1144 0101 00       		.byte	0
+ 1145 0102 00       		.byte	0
+ 1146 0103 00       		.byte	0
+ 1147              		.section	.debug_loc,"",%progbits
+ 1148              	.Ldebug_loc0:
+ 1149              	.LLST0:
+ 1150 0000 00000000 		.4byte	.LVL0
+ 1151 0004 02000000 		.4byte	.LVL1
+ 1152 0008 0100     		.2byte	0x1
+ 1153 000a 50       		.byte	0x50
+ 1154 000b 02000000 		.4byte	.LVL1
+ 1155 000f 06000000 		.4byte	.LFE53
+ 1156 0013 0400     		.2byte	0x4
+ 1157 0015 F3       		.byte	0xf3
+ 1158 0016 01       		.uleb128 0x1
+ 1159 0017 50       		.byte	0x50
+ 1160 0018 9F       		.byte	0x9f
+ 1161 0019 00000000 		.4byte	0
+ 1162 001d 00000000 		.4byte	0
+ 1163              	.LLST1:
+ 1164 0021 00000000 		.4byte	.LVL2
+ 1165 0025 1E000000 		.4byte	.LVL3
+ 1166 0029 0100     		.2byte	0x1
+ 1167 002b 50       		.byte	0x50
+ 1168 002c 1E000000 		.4byte	.LVL3
+ 1169 0030 22000000 		.4byte	.LFE54
+ 1170 0034 0400     		.2byte	0x4
+ 1171 0036 F3       		.byte	0xf3
+ 1172 0037 01       		.uleb128 0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 26
+
+
+ 1173 0038 50       		.byte	0x50
+ 1174 0039 9F       		.byte	0x9f
+ 1175 003a 00000000 		.4byte	0
+ 1176 003e 00000000 		.4byte	0
+ 1177              	.LLST2:
+ 1178 0042 00000000 		.4byte	.LVL4
+ 1179 0046 0E000000 		.4byte	.LVL5
+ 1180 004a 0100     		.2byte	0x1
+ 1181 004c 50       		.byte	0x50
+ 1182 004d 0E000000 		.4byte	.LVL5
+ 1183 0051 4E000000 		.4byte	.LVL17
+ 1184 0055 0100     		.2byte	0x1
+ 1185 0057 57       		.byte	0x57
+ 1186 0058 4E000000 		.4byte	.LVL17
+ 1187 005c 54000000 		.4byte	.LFE55
+ 1188 0060 0400     		.2byte	0x4
+ 1189 0062 F3       		.byte	0xf3
+ 1190 0063 01       		.uleb128 0x1
+ 1191 0064 50       		.byte	0x50
+ 1192 0065 9F       		.byte	0x9f
+ 1193 0066 00000000 		.4byte	0
+ 1194 006a 00000000 		.4byte	0
+ 1195              	.LLST3:
+ 1196 006e 00000000 		.4byte	.LVL4
+ 1197 0072 11000000 		.4byte	.LVL6-1
+ 1198 0076 0100     		.2byte	0x1
+ 1199 0078 51       		.byte	0x51
+ 1200 0079 11000000 		.4byte	.LVL6-1
+ 1201 007d 4E000000 		.4byte	.LVL16
+ 1202 0081 0100     		.2byte	0x1
+ 1203 0083 56       		.byte	0x56
+ 1204 0084 4E000000 		.4byte	.LVL16
+ 1205 0088 54000000 		.4byte	.LFE55
+ 1206 008c 0400     		.2byte	0x4
+ 1207 008e F3       		.byte	0xf3
+ 1208 008f 01       		.uleb128 0x1
+ 1209 0090 51       		.byte	0x51
+ 1210 0091 9F       		.byte	0x9f
+ 1211 0092 00000000 		.4byte	0
+ 1212 0096 00000000 		.4byte	0
+ 1213              	.LLST4:
+ 1214 009a 00000000 		.4byte	.LVL4
+ 1215 009e 11000000 		.4byte	.LVL6-1
+ 1216 00a2 0100     		.2byte	0x1
+ 1217 00a4 52       		.byte	0x52
+ 1218 00a5 11000000 		.4byte	.LVL6-1
+ 1219 00a9 4E000000 		.4byte	.LVL18
+ 1220 00ad 0100     		.2byte	0x1
+ 1221 00af 58       		.byte	0x58
+ 1222 00b0 4E000000 		.4byte	.LVL18
+ 1223 00b4 54000000 		.4byte	.LFE55
+ 1224 00b8 0400     		.2byte	0x4
+ 1225 00ba F3       		.byte	0xf3
+ 1226 00bb 01       		.uleb128 0x1
+ 1227 00bc 52       		.byte	0x52
+ 1228 00bd 9F       		.byte	0x9f
+ 1229 00be 00000000 		.4byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 27
+
+
+ 1230 00c2 00000000 		.4byte	0
+ 1231              	.LLST5:
+ 1232 00c6 1A000000 		.4byte	.LVL8
+ 1233 00ca 44000000 		.4byte	.LVL11
+ 1234 00ce 0100     		.2byte	0x1
+ 1235 00d0 54       		.byte	0x54
+ 1236 00d1 48000000 		.4byte	.LVL13
+ 1237 00d5 4E000000 		.4byte	.LVL14
+ 1238 00d9 0100     		.2byte	0x1
+ 1239 00db 54       		.byte	0x54
+ 1240 00dc 00000000 		.4byte	0
+ 1241 00e0 00000000 		.4byte	0
+ 1242              	.LLST6:
+ 1243 00e4 14000000 		.4byte	.LVL7
+ 1244 00e8 1A000000 		.4byte	.LVL8
+ 1245 00ec 0100     		.2byte	0x1
+ 1246 00ee 50       		.byte	0x50
+ 1247 00ef 1A000000 		.4byte	.LVL8
+ 1248 00f3 44000000 		.4byte	.LVL11
+ 1249 00f7 0100     		.2byte	0x1
+ 1250 00f9 55       		.byte	0x55
+ 1251 00fa 44000000 		.4byte	.LVL11
+ 1252 00fe 46000000 		.4byte	.LVL12
+ 1253 0102 0100     		.2byte	0x1
+ 1254 0104 50       		.byte	0x50
+ 1255 0105 46000000 		.4byte	.LVL12
+ 1256 0109 4E000000 		.4byte	.LVL15
+ 1257 010d 0100     		.2byte	0x1
+ 1258 010f 55       		.byte	0x55
+ 1259 0110 00000000 		.4byte	0
+ 1260 0114 00000000 		.4byte	0
+ 1261              	.LLST7:
+ 1262 0118 00000000 		.4byte	.LVL19
+ 1263 011c 04000000 		.4byte	.LVL20
+ 1264 0120 0100     		.2byte	0x1
+ 1265 0122 50       		.byte	0x50
+ 1266 0123 04000000 		.4byte	.LVL20
+ 1267 0127 30000000 		.4byte	.LVL28
+ 1268 012b 0100     		.2byte	0x1
+ 1269 012d 56       		.byte	0x56
+ 1270 012e 30000000 		.4byte	.LVL28
+ 1271 0132 32000000 		.4byte	.LVL29
+ 1272 0136 0100     		.2byte	0x1
+ 1273 0138 50       		.byte	0x50
+ 1274 0139 32000000 		.4byte	.LVL29
+ 1275 013d 3A000000 		.4byte	.LVL36
+ 1276 0141 0100     		.2byte	0x1
+ 1277 0143 56       		.byte	0x56
+ 1278 0144 00000000 		.4byte	0
+ 1279 0148 00000000 		.4byte	0
+ 1280              	.LLST8:
+ 1281 014c 00000000 		.4byte	.LVL19
+ 1282 0150 08000000 		.4byte	.LVL22
+ 1283 0154 0100     		.2byte	0x1
+ 1284 0156 51       		.byte	0x51
+ 1285 0157 08000000 		.4byte	.LVL22
+ 1286 015b 30000000 		.4byte	.LVL28
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 28
+
+
+ 1287 015f 0100     		.2byte	0x1
+ 1288 0161 55       		.byte	0x55
+ 1289 0162 30000000 		.4byte	.LVL28
+ 1290 0166 34000000 		.4byte	.LVL30
+ 1291 016a 0100     		.2byte	0x1
+ 1292 016c 51       		.byte	0x51
+ 1293 016d 34000000 		.4byte	.LVL30
+ 1294 0171 3A000000 		.4byte	.LVL35
+ 1295 0175 0100     		.2byte	0x1
+ 1296 0177 55       		.byte	0x55
+ 1297 0178 00000000 		.4byte	0
+ 1298 017c 00000000 		.4byte	0
+ 1299              	.LLST9:
+ 1300 0180 06000000 		.4byte	.LVL21
+ 1301 0184 3A000000 		.4byte	.LVL34
+ 1302 0188 0100     		.2byte	0x1
+ 1303 018a 54       		.byte	0x54
+ 1304 018b 3A000000 		.4byte	.LVL34
+ 1305 018f 3A000000 		.4byte	.LVL36
+ 1306 0193 0200     		.2byte	0x2
+ 1307 0195 76       		.byte	0x76
+ 1308 0196 7F       		.sleb128 -1
+ 1309 0197 00000000 		.4byte	0
+ 1310 019b 00000000 		.4byte	0
+ 1311              	.LLST10:
+ 1312 019f 0A000000 		.4byte	.LVL23
+ 1313 01a3 2A000000 		.4byte	.LVL27
+ 1314 01a7 0100     		.2byte	0x1
+ 1315 01a9 50       		.byte	0x50
+ 1316 01aa 2A000000 		.4byte	.LVL27
+ 1317 01ae 30000000 		.4byte	.LVL28
+ 1318 01b2 0200     		.2byte	0x2
+ 1319 01b4 75       		.byte	0x75
+ 1320 01b5 7F       		.sleb128 -1
+ 1321 01b6 30000000 		.4byte	.LVL28
+ 1322 01ba 34000000 		.4byte	.LVL30
+ 1323 01be 0200     		.2byte	0x2
+ 1324 01c0 71       		.byte	0x71
+ 1325 01c1 7F       		.sleb128 -1
+ 1326 01c2 34000000 		.4byte	.LVL30
+ 1327 01c6 36000000 		.4byte	.LVL31
+ 1328 01ca 0100     		.2byte	0x1
+ 1329 01cc 50       		.byte	0x50
+ 1330 01cd 36000000 		.4byte	.LVL31
+ 1331 01d1 38000000 		.4byte	.LVL32
+ 1332 01d5 0200     		.2byte	0x2
+ 1333 01d7 75       		.byte	0x75
+ 1334 01d8 7F       		.sleb128 -1
+ 1335 01d9 38000000 		.4byte	.LVL32
+ 1336 01dd 3A000000 		.4byte	.LVL33
+ 1337 01e1 0100     		.2byte	0x1
+ 1338 01e3 50       		.byte	0x50
+ 1339 01e4 3A000000 		.4byte	.LVL33
+ 1340 01e8 3A000000 		.4byte	.LVL35
+ 1341 01ec 0200     		.2byte	0x2
+ 1342 01ee 75       		.byte	0x75
+ 1343 01ef 7F       		.sleb128 -1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 29
+
+
+ 1344 01f0 00000000 		.4byte	0
+ 1345 01f4 00000000 		.4byte	0
+ 1346              	.LLST11:
+ 1347 01f8 14000000 		.4byte	.LVL24
+ 1348 01fc 28000000 		.4byte	.LVL26
+ 1349 0200 0100     		.2byte	0x1
+ 1350 0202 53       		.byte	0x53
+ 1351 0203 34000000 		.4byte	.LVL30
+ 1352 0207 3A000000 		.4byte	.LVL33
+ 1353 020b 0100     		.2byte	0x1
+ 1354 020d 53       		.byte	0x53
+ 1355 020e 00000000 		.4byte	0
+ 1356 0212 00000000 		.4byte	0
+ 1357              	.LLST12:
+ 1358 0216 24000000 		.4byte	.LVL25
+ 1359 021a 28000000 		.4byte	.LVL26
+ 1360 021e 0100     		.2byte	0x1
+ 1361 0220 52       		.byte	0x52
+ 1362 0221 38000000 		.4byte	.LVL32
+ 1363 0225 3A000000 		.4byte	.LVL33
+ 1364 0229 0100     		.2byte	0x1
+ 1365 022b 52       		.byte	0x52
+ 1366 022c 00000000 		.4byte	0
+ 1367 0230 00000000 		.4byte	0
+ 1368              	.LLST13:
+ 1369 0234 00000000 		.4byte	.LVL37
+ 1370 0238 08000000 		.4byte	.LVL40
+ 1371 023c 0100     		.2byte	0x1
+ 1372 023e 50       		.byte	0x50
+ 1373 023f 08000000 		.4byte	.LVL40
+ 1374 0243 3A000000 		.4byte	.LVL48
+ 1375 0247 0100     		.2byte	0x1
+ 1376 0249 56       		.byte	0x56
+ 1377 024a 3A000000 		.4byte	.LVL48
+ 1378 024e 3C000000 		.4byte	.LVL49
+ 1379 0252 0100     		.2byte	0x1
+ 1380 0254 50       		.byte	0x50
+ 1381 0255 3C000000 		.4byte	.LVL49
+ 1382 0259 48000000 		.4byte	.LVL56
+ 1383 025d 0100     		.2byte	0x1
+ 1384 025f 56       		.byte	0x56
+ 1385 0260 00000000 		.4byte	0
+ 1386 0264 00000000 		.4byte	0
+ 1387              	.LLST14:
+ 1388 0268 00000000 		.4byte	.LVL37
+ 1389 026c 0C000000 		.4byte	.LVL42
+ 1390 0270 0100     		.2byte	0x1
+ 1391 0272 51       		.byte	0x51
+ 1392 0273 0C000000 		.4byte	.LVL42
+ 1393 0277 3A000000 		.4byte	.LVL48
+ 1394 027b 0100     		.2byte	0x1
+ 1395 027d 55       		.byte	0x55
+ 1396 027e 3A000000 		.4byte	.LVL48
+ 1397 0282 3E000000 		.4byte	.LVL50
+ 1398 0286 0100     		.2byte	0x1
+ 1399 0288 51       		.byte	0x51
+ 1400 0289 3E000000 		.4byte	.LVL50
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 30
+
+
+ 1401 028d 48000000 		.4byte	.LVL55
+ 1402 0291 0100     		.2byte	0x1
+ 1403 0293 55       		.byte	0x55
+ 1404 0294 00000000 		.4byte	0
+ 1405 0298 00000000 		.4byte	0
+ 1406              	.LLST15:
+ 1407 029c 00000000 		.4byte	.LVL37
+ 1408 02a0 04000000 		.4byte	.LVL38
+ 1409 02a4 0100     		.2byte	0x1
+ 1410 02a6 52       		.byte	0x52
+ 1411 02a7 04000000 		.4byte	.LVL38
+ 1412 02ab 06000000 		.4byte	.LVL39
+ 1413 02af 0100     		.2byte	0x1
+ 1414 02b1 53       		.byte	0x53
+ 1415 02b2 06000000 		.4byte	.LVL39
+ 1416 02b6 2E000000 		.4byte	.LVL47
+ 1417 02ba 0100     		.2byte	0x1
+ 1418 02bc 52       		.byte	0x52
+ 1419 02bd 2E000000 		.4byte	.LVL47
+ 1420 02c1 3E000000 		.4byte	.LVL50
+ 1421 02c5 0100     		.2byte	0x1
+ 1422 02c7 53       		.byte	0x53
+ 1423 02c8 3E000000 		.4byte	.LVL50
+ 1424 02cc 46000000 		.4byte	.LVL52
+ 1425 02d0 0100     		.2byte	0x1
+ 1426 02d2 52       		.byte	0x52
+ 1427 02d3 46000000 		.4byte	.LVL52
+ 1428 02d7 48000000 		.4byte	.LVL53
+ 1429 02db 0100     		.2byte	0x1
+ 1430 02dd 53       		.byte	0x53
+ 1431 02de 00000000 		.4byte	0
+ 1432 02e2 00000000 		.4byte	0
+ 1433              	.LLST16:
+ 1434 02e6 04000000 		.4byte	.LVL38
+ 1435 02ea 06000000 		.4byte	.LVL39
+ 1436 02ee 0100     		.2byte	0x1
+ 1437 02f0 54       		.byte	0x54
+ 1438 02f1 0A000000 		.4byte	.LVL41
+ 1439 02f5 48000000 		.4byte	.LVL54
+ 1440 02f9 0100     		.2byte	0x1
+ 1441 02fb 54       		.byte	0x54
+ 1442 02fc 48000000 		.4byte	.LVL54
+ 1443 0300 48000000 		.4byte	.LVL56
+ 1444 0304 0200     		.2byte	0x2
+ 1445 0306 76       		.byte	0x76
+ 1446 0307 7F       		.sleb128 -1
+ 1447 0308 00000000 		.4byte	0
+ 1448 030c 00000000 		.4byte	0
+ 1449              	.LLST17:
+ 1450 0310 04000000 		.4byte	.LVL38
+ 1451 0314 06000000 		.4byte	.LVL39
+ 1452 0318 0100     		.2byte	0x1
+ 1453 031a 57       		.byte	0x57
+ 1454 031b 0E000000 		.4byte	.LVL43
+ 1455 031f 48000000 		.4byte	.LVL57
+ 1456 0323 0100     		.2byte	0x1
+ 1457 0325 57       		.byte	0x57
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 31
+
+
+ 1458 0326 00000000 		.4byte	0
+ 1459 032a 00000000 		.4byte	0
+ 1460              	.LLST18:
+ 1461 032e 18000000 		.4byte	.LVL44
+ 1462 0332 2C000000 		.4byte	.LVL46
+ 1463 0336 0100     		.2byte	0x1
+ 1464 0338 53       		.byte	0x53
+ 1465 0339 3E000000 		.4byte	.LVL50
+ 1466 033d 46000000 		.4byte	.LVL52
+ 1467 0341 0100     		.2byte	0x1
+ 1468 0343 53       		.byte	0x53
+ 1469 0344 00000000 		.4byte	0
+ 1470 0348 00000000 		.4byte	0
+ 1471              	.LLST19:
+ 1472 034c 28000000 		.4byte	.LVL45
+ 1473 0350 2C000000 		.4byte	.LVL46
+ 1474 0354 0100     		.2byte	0x1
+ 1475 0356 51       		.byte	0x51
+ 1476 0357 42000000 		.4byte	.LVL51
+ 1477 035b 46000000 		.4byte	.LVL52
+ 1478 035f 0100     		.2byte	0x1
+ 1479 0361 51       		.byte	0x51
+ 1480 0362 00000000 		.4byte	0
+ 1481 0366 00000000 		.4byte	0
+ 1482              	.LLST20:
+ 1483 036a 00000000 		.4byte	.LVL58
+ 1484 036e 0A000000 		.4byte	.LVL60
+ 1485 0372 0100     		.2byte	0x1
+ 1486 0374 50       		.byte	0x50
+ 1487 0375 0A000000 		.4byte	.LVL60
+ 1488 0379 3E000000 		.4byte	.LVL66
+ 1489 037d 0100     		.2byte	0x1
+ 1490 037f 55       		.byte	0x55
+ 1491 0380 3E000000 		.4byte	.LVL66
+ 1492 0384 54000000 		.4byte	.LFE58
+ 1493 0388 0400     		.2byte	0x4
+ 1494 038a F3       		.byte	0xf3
+ 1495 038b 01       		.uleb128 0x1
+ 1496 038c 50       		.byte	0x50
+ 1497 038d 9F       		.byte	0x9f
+ 1498 038e 00000000 		.4byte	0
+ 1499 0392 00000000 		.4byte	0
+ 1500              	.LLST21:
+ 1501 0396 00000000 		.4byte	.LVL58
+ 1502 039a 0A000000 		.4byte	.LVL60
+ 1503 039e 0100     		.2byte	0x1
+ 1504 03a0 51       		.byte	0x51
+ 1505 03a1 0A000000 		.4byte	.LVL60
+ 1506 03a5 54000000 		.4byte	.LFE58
+ 1507 03a9 0400     		.2byte	0x4
+ 1508 03ab F3       		.byte	0xf3
+ 1509 03ac 01       		.uleb128 0x1
+ 1510 03ad 51       		.byte	0x51
+ 1511 03ae 9F       		.byte	0x9f
+ 1512 03af 00000000 		.4byte	0
+ 1513 03b3 00000000 		.4byte	0
+ 1514              	.LLST22:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 32
+
+
+ 1515 03b7 00000000 		.4byte	.LVL58
+ 1516 03bb 0A000000 		.4byte	.LVL60
+ 1517 03bf 0100     		.2byte	0x1
+ 1518 03c1 52       		.byte	0x52
+ 1519 03c2 0A000000 		.4byte	.LVL60
+ 1520 03c6 0E000000 		.4byte	.LVL61
+ 1521 03ca 0100     		.2byte	0x1
+ 1522 03cc 50       		.byte	0x50
+ 1523 03cd 0E000000 		.4byte	.LVL61
+ 1524 03d1 16000000 		.4byte	.LVL62
+ 1525 03d5 0100     		.2byte	0x1
+ 1526 03d7 54       		.byte	0x54
+ 1527 03d8 16000000 		.4byte	.LVL62
+ 1528 03dc 54000000 		.4byte	.LFE58
+ 1529 03e0 0100     		.2byte	0x1
+ 1530 03e2 50       		.byte	0x50
+ 1531 03e3 00000000 		.4byte	0
+ 1532 03e7 00000000 		.4byte	0
+ 1533              	.LLST23:
+ 1534 03eb 06000000 		.4byte	.LVL59
+ 1535 03ef 0A000000 		.4byte	.LVL60
+ 1536 03f3 0100     		.2byte	0x1
+ 1537 03f5 50       		.byte	0x50
+ 1538 03f6 0A000000 		.4byte	.LVL60
+ 1539 03fa 0E000000 		.4byte	.LVL61
+ 1540 03fe 0100     		.2byte	0x1
+ 1541 0400 52       		.byte	0x52
+ 1542 0401 0E000000 		.4byte	.LVL61
+ 1543 0405 18000000 		.4byte	.LVL63
+ 1544 0409 0100     		.2byte	0x1
+ 1545 040b 56       		.byte	0x56
+ 1546 040c 18000000 		.4byte	.LVL63
+ 1547 0410 38000000 		.4byte	.LVL65
+ 1548 0414 0100     		.2byte	0x1
+ 1549 0416 52       		.byte	0x52
+ 1550 0417 38000000 		.4byte	.LVL65
+ 1551 041b 40000000 		.4byte	.LVL67
+ 1552 041f 0100     		.2byte	0x1
+ 1553 0421 53       		.byte	0x53
+ 1554 0422 40000000 		.4byte	.LVL67
+ 1555 0426 4A000000 		.4byte	.LVL70
+ 1556 042a 0300     		.2byte	0x3
+ 1557 042c 73       		.byte	0x73
+ 1558 042d 7F       		.sleb128 -1
+ 1559 042e 9F       		.byte	0x9f
+ 1560 042f 4A000000 		.4byte	.LVL70
+ 1561 0433 54000000 		.4byte	.LFE58
+ 1562 0437 0100     		.2byte	0x1
+ 1563 0439 53       		.byte	0x53
+ 1564 043a 00000000 		.4byte	0
+ 1565 043e 00000000 		.4byte	0
+ 1566              	.LLST24:
+ 1567 0442 06000000 		.4byte	.LVL59
+ 1568 0446 0A000000 		.4byte	.LVL60
+ 1569 044a 0100     		.2byte	0x1
+ 1570 044c 50       		.byte	0x50
+ 1571 044d 0A000000 		.4byte	.LVL60
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 33
+
+
+ 1572 0451 44000000 		.4byte	.LVL68
+ 1573 0455 0100     		.2byte	0x1
+ 1574 0457 55       		.byte	0x55
+ 1575 0458 44000000 		.4byte	.LVL68
+ 1576 045c 48000000 		.4byte	.LVL69
+ 1577 0460 0300     		.2byte	0x3
+ 1578 0462 75       		.byte	0x75
+ 1579 0463 01       		.sleb128 1
+ 1580 0464 9F       		.byte	0x9f
+ 1581 0465 48000000 		.4byte	.LVL69
+ 1582 0469 4E000000 		.4byte	.LVL72
+ 1583 046d 0100     		.2byte	0x1
+ 1584 046f 55       		.byte	0x55
+ 1585 0470 00000000 		.4byte	0
+ 1586 0474 00000000 		.4byte	0
+ 1587              	.LLST25:
+ 1588 0478 40000000 		.4byte	.LVL67
+ 1589 047c 4A000000 		.4byte	.LVL70
+ 1590 0480 0100     		.2byte	0x1
+ 1591 0482 52       		.byte	0x52
+ 1592 0483 00000000 		.4byte	0
+ 1593 0487 00000000 		.4byte	0
+ 1594              	.LLST26:
+ 1595 048b 0A000000 		.4byte	.LVL60
+ 1596 048f 4E000000 		.4byte	.LVL71
+ 1597 0493 0100     		.2byte	0x1
+ 1598 0495 54       		.byte	0x54
+ 1599 0496 00000000 		.4byte	0
+ 1600 049a 00000000 		.4byte	0
+ 1601              		.section	.debug_aranges,"",%progbits
+ 1602 0000 44000000 		.4byte	0x44
+ 1603 0004 0200     		.2byte	0x2
+ 1604 0006 00000000 		.4byte	.Ldebug_info0
+ 1605 000a 04       		.byte	0x4
+ 1606 000b 00       		.byte	0
+ 1607 000c 0000     		.2byte	0
+ 1608 000e 0000     		.2byte	0
+ 1609 0010 00000000 		.4byte	.LFB53
+ 1610 0014 06000000 		.4byte	.LFE53-.LFB53
+ 1611 0018 00000000 		.4byte	.LFB54
+ 1612 001c 22000000 		.4byte	.LFE54-.LFB54
+ 1613 0020 00000000 		.4byte	.LFB55
+ 1614 0024 54000000 		.4byte	.LFE55-.LFB55
+ 1615 0028 00000000 		.4byte	.LFB56
+ 1616 002c 3C000000 		.4byte	.LFE56-.LFB56
+ 1617 0030 00000000 		.4byte	.LFB57
+ 1618 0034 4A000000 		.4byte	.LFE57-.LFB57
+ 1619 0038 00000000 		.4byte	.LFB58
+ 1620 003c 54000000 		.4byte	.LFE58-.LFB58
+ 1621 0040 00000000 		.4byte	0
+ 1622 0044 00000000 		.4byte	0
+ 1623              		.section	.debug_ranges,"",%progbits
+ 1624              	.Ldebug_ranges0:
+ 1625 0000 0E000000 		.4byte	.LBB2
+ 1626 0004 28000000 		.4byte	.LBE2
+ 1627 0008 34000000 		.4byte	.LBB5
+ 1628 000c 3A000000 		.4byte	.LBE5
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 34
+
+
+ 1629 0010 00000000 		.4byte	0
+ 1630 0014 00000000 		.4byte	0
+ 1631 0018 1E000000 		.4byte	.LBB3
+ 1632 001c 28000000 		.4byte	.LBE3
+ 1633 0020 38000000 		.4byte	.LBB4
+ 1634 0024 3A000000 		.4byte	.LBE4
+ 1635 0028 00000000 		.4byte	0
+ 1636 002c 00000000 		.4byte	0
+ 1637 0030 12000000 		.4byte	.LBB6
+ 1638 0034 2C000000 		.4byte	.LBE6
+ 1639 0038 3E000000 		.4byte	.LBB9
+ 1640 003c 46000000 		.4byte	.LBE9
+ 1641 0040 00000000 		.4byte	0
+ 1642 0044 00000000 		.4byte	0
+ 1643 0048 22000000 		.4byte	.LBB7
+ 1644 004c 2C000000 		.4byte	.LBE7
+ 1645 0050 42000000 		.4byte	.LBB8
+ 1646 0054 46000000 		.4byte	.LBE8
+ 1647 0058 00000000 		.4byte	0
+ 1648 005c 00000000 		.4byte	0
+ 1649 0060 00000000 		.4byte	.LFB53
+ 1650 0064 06000000 		.4byte	.LFE53
+ 1651 0068 00000000 		.4byte	.LFB54
+ 1652 006c 22000000 		.4byte	.LFE54
+ 1653 0070 00000000 		.4byte	.LFB55
+ 1654 0074 54000000 		.4byte	.LFE55
+ 1655 0078 00000000 		.4byte	.LFB56
+ 1656 007c 3C000000 		.4byte	.LFE56
+ 1657 0080 00000000 		.4byte	.LFB57
+ 1658 0084 4A000000 		.4byte	.LFE57
+ 1659 0088 00000000 		.4byte	.LFB58
+ 1660 008c 54000000 		.4byte	.LFE58
+ 1661 0090 00000000 		.4byte	0
+ 1662 0094 00000000 		.4byte	0
+ 1663              		.section	.debug_line,"",%progbits
+ 1664              	.Ldebug_line0:
+ 1665 0000 33020000 		.section	.debug_str,"MS",%progbits,1
+ 1665      02004E01 
+ 1665      00000201 
+ 1665      FB0E0D00 
+ 1665      01010101 
+ 1666              	.LASF9:
+ 1667 0000 73697A65 		.ascii	"size_t\000"
+ 1667      5F7400
+ 1668              	.LASF20:
+ 1669 0007 6C776970 		.ascii	"lwip_strnstr\000"
+ 1669      5F737472 
+ 1669      6E737472 
+ 1669      00
+ 1670              	.LASF4:
+ 1671 0014 6C6F6E67 		.ascii	"long int\000"
+ 1671      20696E74 
+ 1671      00
+ 1672              	.LASF8:
+ 1673 001d 756E7369 		.ascii	"unsigned int\000"
+ 1673      676E6564 
+ 1673      20696E74 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 35
+
+
+ 1673      00
+ 1674              	.LASF23:
+ 1675 002a 746F6B65 		.ascii	"tokenlen\000"
+ 1675      6E6C656E 
+ 1675      00
+ 1676              	.LASF15:
+ 1677 0033 646F7562 		.ascii	"double\000"
+ 1677      6C6500
+ 1678              	.LASF28:
+ 1679 003a 63325F75 		.ascii	"c2_upc\000"
+ 1679      706300
+ 1680              	.LASF10:
+ 1681 0041 70747264 		.ascii	"ptrdiff_t\000"
+ 1681      6966665F 
+ 1681      7400
+ 1682              	.LASF14:
+ 1683 004b 666C6F61 		.ascii	"float\000"
+ 1683      7400
+ 1684              	.LASF1:
+ 1685 0051 756E7369 		.ascii	"unsigned char\000"
+ 1685      676E6564 
+ 1685      20636861 
+ 1685      7200
+ 1686              	.LASF5:
+ 1687 005f 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1687      20756E73 
+ 1687      69676E65 
+ 1687      6420696E 
+ 1687      7400
+ 1688              	.LASF36:
+ 1689 0071 746D705F 		.ascii	"tmp_value\000"
+ 1689      76616C75 
+ 1689      6500
+ 1690              	.LASF3:
+ 1691 007b 73686F72 		.ascii	"short unsigned int\000"
+ 1691      7420756E 
+ 1691      7369676E 
+ 1691      65642069 
+ 1691      6E7400
+ 1692              	.LASF18:
+ 1693 008e 6C776970 		.ascii	"lwip_htons\000"
+ 1693      5F68746F 
+ 1693      6E7300
+ 1694              	.LASF16:
+ 1695 0099 7531365F 		.ascii	"u16_t\000"
+ 1695      7400
+ 1696              	.LASF25:
+ 1697 009f 73747231 		.ascii	"str1\000"
+ 1697      00
+ 1698              	.LASF26:
+ 1699 00a4 73747232 		.ascii	"str2\000"
+ 1699      00
+ 1700              	.LASF40:
+ 1701 00a9 536F7572 		.ascii	"Source\\LwIP\\src\\core\\def.c\000"
+ 1701      63655C4C 
+ 1701      7749505C 
+ 1701      7372635C 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 36
+
+
+ 1701      636F7265 
+ 1702              	.LASF33:
+ 1703 00c4 62617365 		.ascii	"base\000"
+ 1703      00
+ 1704              	.LASF37:
+ 1705 00c9 7374726C 		.ascii	"strlen\000"
+ 1705      656E00
+ 1706              	.LASF41:
+ 1707 00d0 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 1707      73657273 
+ 1707      5C506875 
+ 1707      6F6E675C 
+ 1707      446F6375 
+ 1708 00fe 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 1708      6F742D73 
+ 1708      646B2D69 
+ 1708      6F742D64 
+ 1708      65765C50 
+ 1709 012f 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 1709      494F542D 
+ 1709      4875622D 
+ 1709      44656D6F 
+ 1709      5C50534F 
+ 1710 0161 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 1710      2D487562 
+ 1710      2D44656D 
+ 1710      6F2E6379 
+ 1710      64736E00 
+ 1711              	.LASF7:
+ 1712 0175 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1712      206C6F6E 
+ 1712      6720756E 
+ 1712      7369676E 
+ 1712      65642069 
+ 1713              	.LASF30:
+ 1714 018c 72657375 		.ascii	"result\000"
+ 1714      6C7400
+ 1715              	.LASF32:
+ 1716 0193 6E756D62 		.ascii	"number\000"
+ 1716      657200
+ 1717              	.LASF31:
+ 1718 019a 62756673 		.ascii	"bufsize\000"
+ 1718      697A6500 
+ 1719              	.LASF12:
+ 1720 01a2 73697A65 		.ascii	"sizetype\000"
+ 1720      74797065 
+ 1720      00
+ 1721              	.LASF6:
+ 1722 01ab 6C6F6E67 		.ascii	"long long int\000"
+ 1722      206C6F6E 
+ 1722      6720696E 
+ 1722      7400
+ 1723              	.LASF13:
+ 1724 01b9 63686172 		.ascii	"char\000"
+ 1724      00
+ 1725              	.LASF29:
+ 1726 01be 6C776970 		.ascii	"lwip_strnicmp\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 37
+
+
+ 1726      5F737472 
+ 1726      6E69636D 
+ 1726      7000
+ 1727              	.LASF38:
+ 1728 01cc 7374726E 		.ascii	"strncmp\000"
+ 1728      636D7000 
+ 1729              	.LASF2:
+ 1730 01d4 73686F72 		.ascii	"short int\000"
+ 1730      7420696E 
+ 1730      7400
+ 1731              	.LASF42:
+ 1732 01de 6C776970 		.ascii	"lwip_itoa\000"
+ 1732      5F69746F 
+ 1732      6100
+ 1733              	.LASF21:
+ 1734 01e8 62756666 		.ascii	"buffer\000"
+ 1734      657200
+ 1735              	.LASF17:
+ 1736 01ef 7533325F 		.ascii	"u32_t\000"
+ 1736      7400
+ 1737              	.LASF24:
+ 1738 01f5 6C776970 		.ascii	"lwip_stricmp\000"
+ 1738      5F737472 
+ 1738      69636D70 
+ 1738      00
+ 1739              	.LASF22:
+ 1740 0202 746F6B65 		.ascii	"token\000"
+ 1740      6E00
+ 1741              	.LASF11:
+ 1742 0208 6C6F6E67 		.ascii	"long double\000"
+ 1742      20646F75 
+ 1742      626C6500 
+ 1743              	.LASF39:
+ 1744 0214 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 1744      43313120 
+ 1744      352E342E 
+ 1744      31203230 
+ 1744      31363036 
+ 1745 0247 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 1745      20726576 
+ 1745      6973696F 
+ 1745      6E203233 
+ 1745      37373135 
+ 1746 027a 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 1746      67202D66 
+ 1746      66756E63 
+ 1746      74696F6E 
+ 1746      2D736563 
+ 1747              	.LASF0:
+ 1748 02a6 7369676E 		.ascii	"signed char\000"
+ 1748      65642063 
+ 1748      68617200 
+ 1749              	.LASF35:
+ 1750 02b2 746D705F 		.ascii	"tmp_char\000"
+ 1750      63686172 
+ 1750      00
+ 1751              	.LASF27:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccpva0DN.s 			page 38
+
+
+ 1752 02bb 63315F75 		.ascii	"c1_upc\000"
+ 1752      706300
+ 1753              	.LASF34:
+ 1754 02c2 70747231 		.ascii	"ptr1\000"
+ 1754      00
+ 1755              	.LASF19:
+ 1756 02c7 6C776970 		.ascii	"lwip_htonl\000"
+ 1756      5F68746F 
+ 1756      6E6C00
+ 1757              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

@@ -1,0 +1,26 @@
+var daemons_2linux_2update_daemon_2system_8h =
+[
+    [ "system_AppUsedInAnySystem", "daemons_2linux_2update_daemon_2system_8h.html#a8afb5c98f0f3c14cab1668606c49ba94", null ],
+    [ "system_CopyAppConfig", "daemons_2linux_2update_daemon_2system_8h.html#ad38a96081a4f763465370a321c8c4d83", null ],
+    [ "system_Exists", "daemons_2linux_2update_daemon_2system_8h.html#ad844d3816d0846e21b88925d99d99eab", null ],
+    [ "system_FinishUpdate", "daemons_2linux_2update_daemon_2system_8h.html#aa0d6a7737d01e5216a303445b31720e1", null ],
+    [ "system_GetAppWriteableFilesDirPath", "daemons_2linux_2update_daemon_2system_8h.html#a5efac20157ac7dc014f7ddb3f0808337", null ],
+    [ "system_GetPreviousSystemIndex", "daemons_2linux_2update_daemon_2system_8h.html#a2806eaa30cb37907014680750f31f5de", null ],
+    [ "system_GetSystemHash", "daemons_2linux_2update_daemon_2system_8h.html#ab198c4acd07848e0559c2e24ee161a9a", null ],
+    [ "system_HasApp", "daemons_2linux_2update_daemon_2system_8h.html#a6e4dea8a5905b9d8df09d71b17cee528", null ],
+    [ "system_Index", "daemons_2linux_2update_daemon_2system_8h.html#ad6d0d438bb8eaa3698aa0b9d02b82410", null ],
+    [ "system_IsModified", "daemons_2linux_2update_daemon_2system_8h.html#aeb4f3fd1139573c363b7542eb31cfbe7", null ],
+    [ "system_KillUnpackDir", "daemons_2linux_2update_daemon_2system_8h.html#ac94e85d94402550e84461177752c2d8a", null ],
+    [ "system_MarkModified", "daemons_2linux_2update_daemon_2system_8h.html#a9372ed45bba69ee465ea771387e4419f", null ],
+    [ "system_PrepUnpackDir", "daemons_2linux_2update_daemon_2system_8h.html#af34f2d5f21e3a37a8869b7aee8986198", null ],
+    [ "system_RemoveApp", "daemons_2linux_2update_daemon_2system_8h.html#ab210d742a4c37b65fdc6818b709b4c28", null ],
+    [ "system_RemoveUnneeded", "daemons_2linux_2update_daemon_2system_8h.html#aee5ebfd37a55328d6144e9e0e75fda69", null ],
+    [ "system_RemoveUnusedApps", "daemons_2linux_2update_daemon_2system_8h.html#aff45119772f13bcf0d59a4e747867a47", null ],
+    [ "system_Snapshot", "daemons_2linux_2update_daemon_2system_8h.html#a153c224f5a2ef11c850901697386bb03", null ],
+    [ "system_SymlinkApp", "daemons_2linux_2update_daemon_2system_8h.html#a90f4c4eb35e3893e96e295987185e623", null ],
+    [ "system_UnlinkApp", "daemons_2linux_2update_daemon_2system_8h.html#ab96628c3a43d33b3be5ba342529f3958", null ],
+    [ "system_UpdateCurrentAppWriteableFiles", "daemons_2linux_2update_daemon_2system_8h.html#a2ac45384977e75e61647d2b2527e6bfb", null ],
+    [ "system_Version", "daemons_2linux_2update_daemon_2system_8h.html#a667252b4e84069ec7a61bfb9328ec8fa", null ],
+    [ "system_CurrentAppsDir", "daemons_2linux_2update_daemon_2system_8h.html#a13eef0955beafede871bf2a64286641c", null ],
+    [ "system_UnpackPath", "daemons_2linux_2update_daemon_2system_8h.html#a183aabda6f0dc9e057c9f0e53654e503", null ]
+];

@@ -1,0 +1,783 @@
+\hypertarget{watchdog_8c}{}\section{framework/daemons/linux/watchdog/watchdog\+Daemon/watchdog.c File Reference}
+\label{watchdog_8c}\index{framework/daemons/linux/watchdog/watchdog\+Daemon/watchdog.\+c@{framework/daemons/linux/watchdog/watchdog\+Daemon/watchdog.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}interfaces.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}user.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}pa\+\_\+wdog.\+h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_watchdog_obj__t}{Watchdog\+Obj\+\_\+t}
+\item 
+struct \hyperlink{struct_app_proc_key__t}{App\+Proc\+Key\+\_\+t}
+\item 
+struct \hyperlink{struct_mandatory_watchdog_obj__t}{Mandatory\+Watchdog\+Obj\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{watchdog_8c_a13e211203a7fa325363f93debb67a41e}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST}~\char`\"{}apps\char`\"{}
+\item 
+\#define \hyperlink{watchdog_8c_ac39cb320faf8fef1418d7ecca3c788e4}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST}~\char`\"{}procs\char`\"{}
+\item 
+\#define \hyperlink{watchdog_8c_ad43fba3ca2236770ad91b3531b71fb84}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+M\+A\+N\+D\+A\+T\+O\+R\+Y\+\_\+\+W\+D\+OG}~\char`\"{}max\+Watchdog\+Timeout\char`\"{}
+\item 
+\#define \hyperlink{watchdog_8c_ad6942b1e779fd0a80e8c4c9982f47404}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+UT}~\char`\"{}watchdog\+Timeout\char`\"{}
+\item 
+\#define \hyperlink{watchdog_8c_aac480fd6ec44d2fa285270ebe3190ef4}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL}~\char`\"{}start\+Manual\char`\"{}
+\item 
+\#define \hyperlink{watchdog_8c_a4cae5aaee8a38d1b49f7eb7280021e41}{L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+H\+A\+S\+T\+A\+B\+L\+E\+\_\+\+W\+I\+D\+TH}~31
+\item 
+\#define \hyperlink{watchdog_8c_ace95fe47a5ec3082146becf44235faaf}{C\+F\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+U\+S\+E\+\_\+\+D\+E\+F\+A\+U\+LT}~-\/2
+\item 
+\#define \hyperlink{watchdog_8c_abc3e09bac59cb83623445fa715353cda}{T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT}~30000
+\item 
+\#define \hyperlink{watchdog_8c_a6da03a64dc1d47a96e2ddcc324e89935}{U\+P\+D\+A\+T\+E\+D\+A\+E\+M\+O\+N\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT}~600000
+\item 
+\#define \hyperlink{watchdog_8c_a43f231bfca5303f6ca66d1693db666f7}{T\+I\+M\+E\+O\+U\+T\+\_\+\+K\+I\+CK}~-\/3
+\item 
+\#define \hyperlink{watchdog_8c_ad334dd8b8ec5c8029048a8af61dc8590}{N\+O\+\_\+\+P\+R\+OC}~-\/1
+\item 
+\#define \hyperlink{watchdog_8c_a81a640101127fd0bae0b265a323941c2}{S\+Y\+S\+T\+E\+M\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+C\+FG}~\char`\"{}/framework\char`\"{}
+\item 
+\#define \hyperlink{watchdog_8c_a5f6aa8edcd99914757600b5d3b259bb7}{T\+R\+A\+CE}(...)~\hyperlink{le__log_8h_a331fb6c78ccddeafc455ad9c64e42008}{L\+E\+\_\+\+T\+R\+A\+CE}(\hyperlink{timer_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref}, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+)
+\item 
+\#define \hyperlink{watchdog_8c_a521df47841ad297abbf2e8ef767a5cb5}{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}~\hyperlink{le__log_8h_a0746e2e37585f61ccdf7ce4976909936}{L\+E\+\_\+\+I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}(\hyperlink{timer_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref})
+\begin{DoxyCompactList}\small\item\em Macro used to query current trace state in this module. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_ace90f54477add54df2f83e941b01e86d}{Delete\+Watchdog} (pid\+\_\+t dog\+Owner)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_ab7ef7f61f7745e569e4d4e6c1959a3c7}{Add\+Watchdog} (\hyperlink{struct_watchdog_obj__t}{Watchdog\+Obj\+\_\+t} $\ast$new\+Dog\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_aa02c6ddf87d609069f6b285ce5d40ddc}{Clean\+Up\+Closed\+Client} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{struct_watchdog_obj__t}{Watchdog\+Obj\+\_\+t} $\ast$ \hyperlink{watchdog_8c_acf491e9d60fa7836c4a3df0c94cea1fd}{Lookup\+Client\+Watchdog\+Ptr\+By\+Id} (pid\+\_\+t client\+Pid)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{watchdog_8c_a4901cb78130bd9533c892aec80d5c18d}{Get\+App\+Name\+From\+Pid} (int32\+\_\+t pid, char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, size\+\_\+t app\+Name\+Num\+Elements)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_acb2567ca16a7f3ade5ef7468d5b3cfb9}{Watchdog\+Handle\+Expiry} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+static \hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t} \hyperlink{watchdog_8c_a7d7e5d55ab408d450025cc7c2088ec5b}{Make\+Timer\+Interval} (uint64\+\_\+t milliseconds)
+\item 
+bool \hyperlink{watchdog_8c_a78214418bc5c5fb98158806f98f798e0}{Check\+Watchdog} (const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$key\+Ptr, const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$value\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+bool \hyperlink{watchdog_8c_ab21aaf4bd08531180519b878136b0d9d}{Check\+Mandatory\+Watchdog} (const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$key\+Ptr, const \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$value\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_ab5ffd30e01f981f1e45736a635086c60}{External\+Watchdog\+Handler} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{watchdog_8c_a6657815cb21215f92c8ac696de91f69a}{Get\+Process\+Name\+From\+Pid} (pid\+\_\+t p\+Id, char $\ast$name, size\+\_\+t length)
+\item 
+static \hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t} \hyperlink{watchdog_8c_a5a6f88368e59ab20ab95c08a086d1bbf}{Get\+Config\+Kick\+Timeout\+Interval} (pid\+\_\+t proc\+Id)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_a71d3f2f6e15311dbb1343424df2ba1f1}{Init\+New\+Watchdog} (\hyperlink{struct_watchdog_obj__t}{Watchdog\+Obj\+\_\+t} $\ast$new\+Dog\+Ptr, pid\+\_\+t client\+Pid, \hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t} kick\+Timeout\+Interval, \hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t} max\+Kick\+Timeout\+Interval)
+\item 
+static \hyperlink{struct_watchdog_obj__t}{Watchdog\+Obj\+\_\+t} $\ast$ \hyperlink{watchdog_8c_ab145abf88d08a02b4d17341e9cdcdd60}{Create\+New\+Watchdog} (pid\+\_\+t client\+Pid)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_a39dadad64a9db5a449cb829f7e7cfa3a}{Create\+Mandatory\+Watchdog} (const char $\ast$app\+Name\+Ptr, const char $\ast$proc\+Name\+Ptr, uint64\+\_\+t max\+Watchdog\+Timeout)
+\item 
+static \hyperlink{struct_mandatory_watchdog_obj__t}{Mandatory\+Watchdog\+Obj\+\_\+t} $\ast$ \hyperlink{watchdog_8c_a62ea170d390484de0cbb5a2140beb037}{Create\+Framework\+Watchdog} (const char $\ast$proc\+Name\+Ptr, uint64\+\_\+t max\+Watchdog\+Timeout)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_a1ce8269d63fb7110e7aec5550b1e1f54}{Cleanup\+Wdog} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$object\+Ptr)
+\item 
+static \hyperlink{struct_watchdog_obj__t}{Watchdog\+Obj\+\_\+t} $\ast$ \hyperlink{watchdog_8c_afed09b3a7a504a4f27bf1dfe963f4e56}{Get\+Client\+Watchdog\+Ptr} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_a3f7840f9b296e5bebf90421ccca8f0da}{Reset\+Client\+Watchdog} (int32\+\_\+t \hyperlink{watchdog_8c_a493b57f443cc38b3d3df9c1e584d9d82}{timeout})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_a4ceef4e658acf181a4979fa26f14b4b4}{Reset\+Framework\+Watchdog} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_a041aed268270e1c3668b6ff28bee8fd7}{le\+\_\+wdog\+\_\+\+Timeout} (int32\+\_\+t milliseconds)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_a43d5abc5c44309942efbe7b9c25d811f}{le\+\_\+wdog\+\_\+\+Kick} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{watchdog_8c_afd05e9ae9f1b2cf111ce7ab060e4dd69}{le\+\_\+wdog\+\_\+\+Get\+Watchdog\+Timeout} (uint64\+\_\+t $\ast$milliseconds\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{watchdog_8c_a8d1e571665da18a9d0ee74311cf95ad6}{le\+\_\+wdog\+\_\+\+Get\+Max\+Watchdog\+Timeout} (uint64\+\_\+t $\ast$milliseconds\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_aa242e64126b6544df60199915cd6e3b1}{System\+Process\+Notify\+Supervisor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{watchdog_8c_a8e8ebe47b5806f57e5b47f1427825225}{Initialize\+Timer\+Container} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_aabea5664e442769098726f54af238eba}{Init\+Mandatory\+Wdog\+For\+App} (\hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} app\+Cfg)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_a5eb3e8c0e1321ef557b74f3885e80188}{Handle\+App\+Install} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_a422082fcbf78395fdd4ef5d877e49c13}{Handle\+App\+Uninstall} (const char $\ast$\hyperlink{app_stop_client_8c_a82301712fcfe26cffbc5da857ac9fcd2}{app\+Name}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_ac28534e94a609d992f5bb35c8ea3f921}{Init\+Framework\+Wdog} (uint64\+\_\+t framework\+Kick\+Timeout)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{watchdog_8c_ac2bc5538793b1fa1caa2dc742d496367}{Init\+Mandatory\+Wdog} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{watchdog_8c_a9d8d3a822660766b47fa0c24d77e73bd}{wdog\+\_\+\+Connect\+Service} ()
+\item 
+\hyperlink{watchdog_8c_a365de15cea7ffa444c86745571971705}{le\+\_\+app\+Info\+\_\+\+Connect\+Service} ()
+\item 
+\hyperlink{watchdog_8c_a78fe74bd2fec521b17f647615795e693}{L\+E\+\_\+\+D\+E\+B\+UG} (\char`\"{}External watchdog kick\+: \%d\char`\"{}, timeout)
+\item 
+\hyperlink{watchdog_8c_ac848a5df32990f358811a5518abbdc2b}{le\+\_\+cfg\+\_\+\+Cancel\+Txn} (\hyperlink{watchdog_8c_a77e3a5a5d413fe9ec45738ef01c65514}{iter\+Ref})
+\item 
+\hyperlink{watchdog_8c_a44e3969e51cb49480fe07f1d3adb5588}{Init\+Framework\+Wdog} (\hyperlink{watchdog_8c_abc3e09bac59cb83623445fa715353cda}{T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT})
+\item 
+\hyperlink{watchdog_8c_ae6534c45ed38d0b1667f015b81d7da7f}{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler} (le\+\_\+wdog\+\_\+\+Get\+Service\+Ref(), \hyperlink{watchdog_8c_aa02c6ddf87d609069f6b285ce5d40ddc}{Clean\+Up\+Closed\+Client}, N\+U\+LL)
+\item 
+\hyperlink{watchdog_8c_acf54bf4fffa7685bb67060ad8780c20f}{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval} (\hyperlink{watchdog_8c_afd1f628bb308f752e9d0a7b3b0416937}{Default\+External\+Wdog\+Timer}, \hyperlink{watchdog_8c_a493b57f443cc38b3d3df9c1e584d9d82}{timeout})
+\item 
+\hyperlink{watchdog_8c_a600f453f6a5c62718059386af2383129}{le\+\_\+timer\+\_\+\+Set\+Handler} (\hyperlink{watchdog_8c_afd1f628bb308f752e9d0a7b3b0416937}{Default\+External\+Wdog\+Timer}, \hyperlink{watchdog_8c_ab5ffd30e01f981f1e45736a635086c60}{External\+Watchdog\+Handler})
+\item 
+\hyperlink{watchdog_8c_aa784fef99700de8ffcb27f49d1145746}{le\+\_\+timer\+\_\+\+Set\+Repeat} (\hyperlink{watchdog_8c_afd1f628bb308f752e9d0a7b3b0416937}{Default\+External\+Wdog\+Timer}, 0)
+\item 
+\hyperlink{watchdog_8c_a1d8c82a5ae9780daa9ec661bb072c3e3}{le\+\_\+timer\+\_\+\+Set\+Wakeup} (\hyperlink{watchdog_8c_afd1f628bb308f752e9d0a7b3b0416937}{Default\+External\+Wdog\+Timer}, false)
+\item 
+\hyperlink{watchdog_8c_a8f0ef9d6af3090467f5a969c799ad25d}{le\+\_\+timer\+\_\+\+Start} (\hyperlink{watchdog_8c_afd1f628bb308f752e9d0a7b3b0416937}{Default\+External\+Wdog\+Timer})
+\item 
+\hyperlink{watchdog_8c_a35a1ffde0f51a9752a5913e99193058a}{pa\+\_\+wdog\+\_\+\+Init} ()
+\item 
+\hyperlink{watchdog_8c_a8bcd6051874abd53123692d2304897d9}{L\+E\+\_\+\+I\+N\+FO} (\char`\"{}The watchdog service is ready\char`\"{})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{le__log_8h_a055e29785e8d1c5bf1b3a230df8d65b7}{le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} \hyperlink{watchdog_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{watchdog_8c_a5136e63d979db9daf2547a9b7703e8eb}{Watchdog\+Pool}
+\begin{DoxyCompactList}\small\item\em The memory pool the watchdogs will come from. \end{DoxyCompactList}\item 
+static \hyperlink{le__hashmap_8h_ae81c60860dbdb8c59beaf25985e5605a}{le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} \hyperlink{watchdog_8c_a9b210feda62f4a35d5f234420e337f60}{Watchdog\+Refs\+Container}
+\begin{DoxyCompactList}\small\item\em The container we use to keep track of wdogs. \end{DoxyCompactList}\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{watchdog_8c_aaa7b24b94537bb5e423626184a69b70c}{Mandatory\+Watchdog\+Pool}
+\item 
+static \hyperlink{le__hashmap_8h_ae81c60860dbdb8c59beaf25985e5605a}{le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} \hyperlink{watchdog_8c_ae231d3235523f7c0d420b77e85fd77bd}{Mandatory\+Watchdog\+Refs}
+\begin{DoxyCompactList}\small\item\em The container used to track mandatory watchdogs. \end{DoxyCompactList}\item 
+static \hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} \hyperlink{watchdog_8c_afd1f628bb308f752e9d0a7b3b0416937}{Default\+External\+Wdog\+Timer} = \hyperlink{timer_8c_aee41169a210378b369f440cf99146522}{le\+\_\+timer\+\_\+\+Create}(\char`\"{}Default\+External\+Wdog\+Timer\char`\"{})
+\begin{DoxyCompactList}\small\item\em Default external wdog timer. \end{DoxyCompactList}\item 
+\hyperlink{watchdog_8c_a0392d452f926ce36c4852de26b5eca12}{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}
+\item 
+\hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} \hyperlink{watchdog_8c_a77e3a5a5d413fe9ec45738ef01c65514}{iter\+Ref} = \hyperlink{le__cfg__interface_8h_ae70663c8b4bd50327bb3771acb694c18}{le\+\_\+cfg\+\_\+\+Create\+Read\+Txn}(\hyperlink{watchdog_8c_a81a640101127fd0bae0b265a323941c2}{S\+Y\+S\+T\+E\+M\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+C\+FG})
+\item 
+int \hyperlink{watchdog_8c_a493b57f443cc38b3d3df9c1e584d9d82}{timeout} = \hyperlink{le__cfg__interface_8h_adf09647cee8da04d1059e2c4853d0f56}{le\+\_\+cfg\+\_\+\+Get\+Int}(\hyperlink{watchdog_8c_a77e3a5a5d413fe9ec45738ef01c65514}{iter\+Ref}, \char`\"{}external\+Watchdog\+Kick\char`\"{}, 30000)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{watchdog_8c_wd_intro}{}\subsection{Introduction}\label{watchdog_8c_wd_intro}
+The watchdog service provides a means of recovering the system if apps or components cease functioning due to infinite loops, deadlocks and waiting on things that never happen. By having a process call the \hyperlink{watchdog_8c_a43d5abc5c44309942efbe7b9c25d811f}{le\+\_\+wdog\+\_\+\+Kick()} method that process now becomes watched and if \hyperlink{watchdog_8c_a43d5abc5c44309942efbe7b9c25d811f}{le\+\_\+wdog\+\_\+\+Kick()} is not called again within the configured time the process will, depending on the configured action, be stopped, terminated or restarted, or the entire app may be restarted.
+
+The watchdog daemon can also be connected to an external watchdog daemon by registering for the External\+Watchdog event. The registered handler will be called periodically if all watchdogs are running. If any watchdog is not running, the system will be rebooted, so the external watchdog period should be set somewhat less than the hardware watchdog period to allow time for the system to shutdown cleanly. 
+
+\subsection{Macro Definition Documentation}
+\index{watchdog.\+c@{watchdog.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST}{CFG_NODE_APPS_LIST}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+P\+P\+S\+\_\+\+L\+I\+ST~\char`\"{}apps\char`\"{}}\hypertarget{watchdog_8c_a13e211203a7fa325363f93debb67a41e}{}\label{watchdog_8c_a13e211203a7fa325363f93debb67a41e}
+\hypertarget{watchdog_8c_wd_tedious_detail}{}\subsection{More involved discussion follows}\label{watchdog_8c_wd_tedious_detail}
+The watchdog runs as a service which monitors critical processes on the system to check if they are alive, and takes corrective action, such as restarting the process, if not.
+
+Apps should configure a default time out and watchdog fault action before they make use of the watchdog. If a timeout is not configured a warning will be issued in the logs on the first use of the le\+\_\+wdog and a timeout of 30 seconds will be used. The following sections in the adef file control watchdog behaviour. \begin{DoxyVerb} watchdogTimeout: <number of millisecond>
+ // TODO: watchdogAction is not yet implemented and will be handled by the supervisor
+ watchdogAction:
+\end{DoxyVerb}
+
+
+Normally a process can change its watchdog timeout by giving a timeout to \hyperlink{watchdog_8c_a43d5abc5c44309942efbe7b9c25d811f}{le\+\_\+wdog\+\_\+\+Kick()}. For critical processes a maximum timeout should be given so the process cannot accidentally disable the watchdog. This can be given in the adef file in a maximum\+Watchdog\+Timeout section.
+
+\begin{DoxyNote}{Note}
+If a maximum\+Watchdog\+Timeout is given the watchdog for the process will always be running, even if the application is stopped. Such applications should be started automatically, and have a fault\+Action and watchdog\+Action which restarts the process.
+\end{DoxyNote}
+Algorithm When a process kicks us, if we have no timer for it we will\+: create a timer, add it to our timer list and set it running with the appropriate time out (for now, that configured for the app). If the timer times out before the next kick then the watchdog will attempt to alert the supervisor that the app has timed out. The supervisor can then apply the configured fault action. delist the timer and dispose of it.
+
+Analysis
+
+case 1\+: A timeout received for a process that no longer exists (died by other means) will notify the the supervisor who will find it to be already dead so no action will be taken. case 2\+: A kick may be received from a process that has just died (race condition) but the dead process won\textquotesingle{}t be around to kick the watchdog again at which time we have case 1. case 3\+: Another race condition -\/ the app times out and we tell the supervisor about it. We delist the timer and destroy it. The supervisor kills the app but between the timeout and the supervisor acting the app sends a kick. We treat the kick as a kick from a new app and create a timer. When the timer times out we have case 1 again.
+
+The analysis assumes that the time between timeouts is significantly shorter than the time expected before p\+I\+Ds are re-\/used.
+
+Besides \hyperlink{watchdog_8c_a43d5abc5c44309942efbe7b9c25d811f}{le\+\_\+wdog\+\_\+\+Kick()}, a command to temporarily change the timeout is provided. le\+\_\+wdog\+\_\+\+Timeout(milliseconds) will adjust the current timeout and restart the timer. This timeout will be effective for one time only reverting to the default value at the next \hyperlink{watchdog_8c_a43d5abc5c44309942efbe7b9c25d811f}{le\+\_\+wdog\+\_\+\+Kick()}.
+
+There are two special timeout values, L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+N\+OW and L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+N\+E\+V\+ER.
+
+L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+N\+E\+V\+ER will cause a timer to never time out. The largest attainable timeout value that does time out is (L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+N\+E\+V\+ER -\/ 1) which gives a timeout of about 49 days. If 49 days is not long enough for your purposes then L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+N\+E\+V\+ER will make sure that the process can live indefinately without calling \hyperlink{watchdog_8c_a43d5abc5c44309942efbe7b9c25d811f}{le\+\_\+wdog\+\_\+\+Kick()}. If you find yourself using this special value often you might want to reconsider whether you really want to use a watchdog timer for your process.
+
+L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+N\+OW could be used in development to see how the app responds to a timeout situation though it could also be abused as a way to restart the app for some reason.
+
+If a watchdog was set to never time out and the process that created it ends without changing the timeout value, either by \hyperlink{watchdog_8c_a43d5abc5c44309942efbe7b9c25d811f}{le\+\_\+wdog\+\_\+\+Kick()} or \hyperlink{watchdog_8c_a041aed268270e1c3668b6ff28bee8fd7}{le\+\_\+wdog\+\_\+\+Timeout()} then the wdog will not be freed. To prevent a pileup of dead dogs the system periodically searches for watchdogs whose processes have gone away and then frees them. The search is triggered when the number of watchdog objects crosses an arbitrary threshhold. If all watchdogs are found to be owned by extant processes then the threshold value is increased until a point at which all allowable watchdog resources have been allocated at which point no more will be be created.
+
+\begin{DoxyNote}{Note}
+Critical systems rely on the watchdog daemon to ensure system liveness, so all unrecoverable errors in the watchdog\+Daemon are considered fatal to the system, and will cause a system reboot by calling L\+E\+\_\+\+F\+A\+T\+AL or L\+E\+\_\+\+A\+S\+S\+E\+RT.
+\end{DoxyNote}
+Copyright (C) Sierra Wireless Inc. The name of the node in the config tree that contains the list of all apps.
+
+If this entry in the config tree is missing or empty then no apps will be launched. \index{watchdog.\+c@{watchdog.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+M\+A\+N\+D\+A\+T\+O\+R\+Y\+\_\+\+W\+D\+OG@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+M\+A\+N\+D\+A\+T\+O\+R\+Y\+\_\+\+W\+D\+OG}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+M\+A\+N\+D\+A\+T\+O\+R\+Y\+\_\+\+W\+D\+OG@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+M\+A\+N\+D\+A\+T\+O\+R\+Y\+\_\+\+W\+D\+OG}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+M\+A\+N\+D\+A\+T\+O\+R\+Y\+\_\+\+W\+D\+OG}{CFG_NODE_MANDATORY_WDOG}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+M\+A\+N\+D\+A\+T\+O\+R\+Y\+\_\+\+W\+D\+OG~\char`\"{}max\+Watchdog\+Timeout\char`\"{}}\hypertarget{watchdog_8c_ad43fba3ca2236770ad91b3531b71fb84}{}\label{watchdog_8c_ad43fba3ca2236770ad91b3531b71fb84}
+The name of the node in the config tree that contains the maximum timeout for processes with mandatory watchdogs.
+
+If this node is empty the process does not have a mandatory watchdog. \index{watchdog.\+c@{watchdog.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST}{CFG_NODE_PROC_LIST}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST~\char`\"{}procs\char`\"{}}\hypertarget{watchdog_8c_ac39cb320faf8fef1418d7ecca3c788e4}{}\label{watchdog_8c_ac39cb320faf8fef1418d7ecca3c788e4}
+The name of the node in the config tree that contains the list of processes for the application.
+
+If this entry in the config tree is missing or empty the application will not be launched. \index{watchdog.\+c@{watchdog.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL}{CFG_NODE_WDOG_START_MANUAL}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+S\+T\+A\+R\+T\+\_\+\+M\+A\+N\+U\+AL~\char`\"{}start\+Manual\char`\"{}}\hypertarget{watchdog_8c_aac480fd6ec44d2fa285270ebe3190ef4}{}\label{watchdog_8c_aac480fd6ec44d2fa285270ebe3190ef4}
+The name of the node in the config tree that contains the default start manual option. \index{watchdog.\+c@{watchdog.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+UT@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+UT}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+UT@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+UT}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+UT}{CFG_NODE_WDOG_TIMEOUT}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+UT~\char`\"{}watchdog\+Timeout\char`\"{}}\hypertarget{watchdog_8c_ad6942b1e779fd0a80e8c4c9982f47404}{}\label{watchdog_8c_ad6942b1e779fd0a80e8c4c9982f47404}
+The name of the node in the config tree that contains the default timeout for processes with a watchdog
+
+If this node is empty the default watchdog timeout is used. \index{watchdog.\+c@{watchdog.\+c}!C\+F\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+U\+S\+E\+\_\+\+D\+E\+F\+A\+U\+LT@{C\+F\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+U\+S\+E\+\_\+\+D\+E\+F\+A\+U\+LT}}
+\index{C\+F\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+U\+S\+E\+\_\+\+D\+E\+F\+A\+U\+LT@{C\+F\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+U\+S\+E\+\_\+\+D\+E\+F\+A\+U\+LT}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+U\+S\+E\+\_\+\+D\+E\+F\+A\+U\+LT}{CFG_TIMEOUT_USE_DEFAULT}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+U\+S\+E\+\_\+\+D\+E\+F\+A\+U\+LT~-\/2}\hypertarget{watchdog_8c_ace95fe47a5ec3082146becf44235faaf}{}\label{watchdog_8c_ace95fe47a5ec3082146becf44235faaf}
+If this value is returned by le\+\_\+cfg when trying to get the watchdog timeout then there is no timeout configured. Use T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT. \index{watchdog.\+c@{watchdog.\+c}!I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED@{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}}
+\index{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED@{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}{IS_TRACE_ENABLED}}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED~{\bf L\+E\+\_\+\+I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}({\bf Trace\+Ref})}\hypertarget{watchdog_8c_a521df47841ad297abbf2e8ef767a5cb5}{}\label{watchdog_8c_a521df47841ad297abbf2e8ef767a5cb5}
+
+
+Macro used to query current trace state in this module. 
+
+\index{watchdog.\+c@{watchdog.\+c}!L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+H\+A\+S\+T\+A\+B\+L\+E\+\_\+\+W\+I\+D\+TH@{L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+H\+A\+S\+T\+A\+B\+L\+E\+\_\+\+W\+I\+D\+TH}}
+\index{L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+H\+A\+S\+T\+A\+B\+L\+E\+\_\+\+W\+I\+D\+TH@{L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+H\+A\+S\+T\+A\+B\+L\+E\+\_\+\+W\+I\+D\+TH}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+H\+A\+S\+T\+A\+B\+L\+E\+\_\+\+W\+I\+D\+TH}{LE_WDOG_HASTABLE_WIDTH}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+H\+A\+S\+T\+A\+B\+L\+E\+\_\+\+W\+I\+D\+TH~31}\hypertarget{watchdog_8c_a4cae5aaee8a38d1b49f7eb7280021e41}{}\label{watchdog_8c_a4cae5aaee8a38d1b49f7eb7280021e41}
+Size of the watchdog hash table. Roughly equal to the expected number of watchdog users (le\+\_\+hashmap will take care of load factors). \index{watchdog.\+c@{watchdog.\+c}!N\+O\+\_\+\+P\+R\+OC@{N\+O\+\_\+\+P\+R\+OC}}
+\index{N\+O\+\_\+\+P\+R\+OC@{N\+O\+\_\+\+P\+R\+OC}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{N\+O\+\_\+\+P\+R\+OC}{NO_PROC}}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\+O\+\_\+\+P\+R\+OC~-\/1}\hypertarget{watchdog_8c_ad334dd8b8ec5c8029048a8af61dc8590}{}\label{watchdog_8c_ad334dd8b8ec5c8029048a8af61dc8590}
+Define a special P\+ID to use for no such process. \index{watchdog.\+c@{watchdog.\+c}!S\+Y\+S\+T\+E\+M\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+C\+FG@{S\+Y\+S\+T\+E\+M\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+C\+FG}}
+\index{S\+Y\+S\+T\+E\+M\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+C\+FG@{S\+Y\+S\+T\+E\+M\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+C\+FG}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{S\+Y\+S\+T\+E\+M\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+C\+FG}{SYSTEM_FRAMEWORK_CFG}}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\+Y\+S\+T\+E\+M\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+C\+FG~\char`\"{}/framework\char`\"{}}\hypertarget{watchdog_8c_a81a640101127fd0bae0b265a323941c2}{}\label{watchdog_8c_a81a640101127fd0bae0b265a323941c2}
+System framework configuration \index{watchdog.\+c@{watchdog.\+c}!T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT@{T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT}}
+\index{T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT@{T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT}{TIMEOUT_DEFAULT}}]{\setlength{\rightskip}{0pt plus 5cm}\#define T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT~30000}\hypertarget{watchdog_8c_abc3e09bac59cb83623445fa715353cda}{}\label{watchdog_8c_abc3e09bac59cb83623445fa715353cda}
+The default timeout to use if no timeout is configured (in milliseconds) \index{watchdog.\+c@{watchdog.\+c}!T\+I\+M\+E\+O\+U\+T\+\_\+\+K\+I\+CK@{T\+I\+M\+E\+O\+U\+T\+\_\+\+K\+I\+CK}}
+\index{T\+I\+M\+E\+O\+U\+T\+\_\+\+K\+I\+CK@{T\+I\+M\+E\+O\+U\+T\+\_\+\+K\+I\+CK}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{T\+I\+M\+E\+O\+U\+T\+\_\+\+K\+I\+CK}{TIMEOUT_KICK}}]{\setlength{\rightskip}{0pt plus 5cm}\#define T\+I\+M\+E\+O\+U\+T\+\_\+\+K\+I\+CK~-\/3}\hypertarget{watchdog_8c_a43f231bfca5303f6ca66d1693db666f7}{}\label{watchdog_8c_a43f231bfca5303f6ca66d1693db666f7}
+Use the watchdog timer\textquotesingle{}s default kick timeout interval. \index{watchdog.\+c@{watchdog.\+c}!T\+R\+A\+CE@{T\+R\+A\+CE}}
+\index{T\+R\+A\+CE@{T\+R\+A\+CE}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{T\+R\+A\+CE}{TRACE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define T\+R\+A\+CE(
+\begin{DoxyParamCaption}
+\item[{}]{...}
+\end{DoxyParamCaption}
+)~{\bf L\+E\+\_\+\+T\+R\+A\+CE}({\bf Trace\+Ref}, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+)}\hypertarget{watchdog_8c_a5f6aa8edcd99914757600b5d3b259bb7}{}\label{watchdog_8c_a5f6aa8edcd99914757600b5d3b259bb7}
+Macro used to generate trace output in this module. Takes the same parameters as \hyperlink{watchdog_8c_a78fe74bd2fec521b17f647615795e693}{L\+E\+\_\+\+D\+E\+B\+U\+G()} et. al. \index{watchdog.\+c@{watchdog.\+c}!U\+P\+D\+A\+T\+E\+D\+A\+E\+M\+O\+N\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT@{U\+P\+D\+A\+T\+E\+D\+A\+E\+M\+O\+N\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT}}
+\index{U\+P\+D\+A\+T\+E\+D\+A\+E\+M\+O\+N\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT@{U\+P\+D\+A\+T\+E\+D\+A\+E\+M\+O\+N\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{U\+P\+D\+A\+T\+E\+D\+A\+E\+M\+O\+N\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT}{UPDATEDAEMON_TIMEOUT_DEFAULT}}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\+P\+D\+A\+T\+E\+D\+A\+E\+M\+O\+N\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT~600000}\hypertarget{watchdog_8c_a6da03a64dc1d47a96e2ddcc324e89935}{}\label{watchdog_8c_a6da03a64dc1d47a96e2ddcc324e89935}
+The default timeout for update\+Daemon (in milliseconds) 
+
+\subsection{Function Documentation}
+\index{watchdog.\+c@{watchdog.\+c}!Add\+Watchdog@{Add\+Watchdog}}
+\index{Add\+Watchdog@{Add\+Watchdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Add\+Watchdog(\+Watchdog\+Obj\+\_\+t $\ast$new\+Dog\+Ptr)}{AddWatchdog(WatchdogObj_t *newDogPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Add\+Watchdog (
+\begin{DoxyParamCaption}
+\item[{{\bf Watchdog\+Obj\+\_\+t} $\ast$}]{new\+Dog\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_ab7ef7f61f7745e569e4d4e6c1959a3c7}{}\label{watchdog_8c_ab7ef7f61f7745e569e4d4e6c1959a3c7}
+Put the watchdog into the container so we can use container methods to look it up again when we need it. 
+\begin{DoxyParams}{Parameters}
+{\em new\+Dog\+Ptr} & A pointer to the watchdog that is to be added to our container \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!Check\+Mandatory\+Watchdog@{Check\+Mandatory\+Watchdog}}
+\index{Check\+Mandatory\+Watchdog@{Check\+Mandatory\+Watchdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Check\+Mandatory\+Watchdog(const void $\ast$key\+Ptr, const void $\ast$value\+Ptr, void $\ast$context\+Ptr)}{CheckMandatoryWatchdog(const void *keyPtr, const void *valuePtr, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}bool Check\+Mandatory\+Watchdog (
+\begin{DoxyParamCaption}
+\item[{const {\bf void} $\ast$}]{key\+Ptr, }
+\item[{const {\bf void} $\ast$}]{value\+Ptr, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_ab21aaf4bd08531180519b878136b0d9d}{}\label{watchdog_8c_ab21aaf4bd08531180519b878136b0d9d}
+Check a mandatory watchdog is running. \index{watchdog.\+c@{watchdog.\+c}!Check\+Watchdog@{Check\+Watchdog}}
+\index{Check\+Watchdog@{Check\+Watchdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Check\+Watchdog(const void $\ast$key\+Ptr, const void $\ast$value\+Ptr, void $\ast$context\+Ptr)}{CheckWatchdog(const void *keyPtr, const void *valuePtr, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}bool Check\+Watchdog (
+\begin{DoxyParamCaption}
+\item[{const {\bf void} $\ast$}]{key\+Ptr, }
+\item[{const {\bf void} $\ast$}]{value\+Ptr, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a78214418bc5c5fb98158806f98f798e0}{}\label{watchdog_8c_a78214418bc5c5fb98158806f98f798e0}
+Check a regular watchdog is running. \index{watchdog.\+c@{watchdog.\+c}!Clean\+Up\+Closed\+Client@{Clean\+Up\+Closed\+Client}}
+\index{Clean\+Up\+Closed\+Client@{Clean\+Up\+Closed\+Client}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Clean\+Up\+Closed\+Client(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, void $\ast$context\+Ptr)}{CleanUpClosedClient(le_msg_SessionRef_t sessionRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Clean\+Up\+Closed\+Client (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_aa02c6ddf87d609069f6b285ce5d40ddc}{}\label{watchdog_8c_aa02c6ddf87d609069f6b285ce5d40ddc}
+When a client connection closes try to find any unexpired timers (or any other currently unreleased resources) used by that session and release them. Timers may have already been released if they have expired. \index{watchdog.\+c@{watchdog.\+c}!Cleanup\+Wdog@{Cleanup\+Wdog}}
+\index{Cleanup\+Wdog@{Cleanup\+Wdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Cleanup\+Wdog(void $\ast$object\+Ptr)}{CleanupWdog(void *objectPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Cleanup\+Wdog (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{object\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a1ce8269d63fb7110e7aec5550b1e1f54}{}\label{watchdog_8c_a1ce8269d63fb7110e7aec5550b1e1f54}
+Clean up an existing watchdog. \index{watchdog.\+c@{watchdog.\+c}!Create\+Framework\+Watchdog@{Create\+Framework\+Watchdog}}
+\index{Create\+Framework\+Watchdog@{Create\+Framework\+Watchdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Framework\+Watchdog(const char $\ast$proc\+Name\+Ptr, uint64\+\_\+t max\+Watchdog\+Timeout)}{CreateFrameworkWatchdog(const char *procNamePtr, uint64_t maxWatchdogTimeout)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Mandatory\+Watchdog\+Obj\+\_\+t}$\ast$ Create\+Framework\+Watchdog (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{proc\+Name\+Ptr, }
+\item[{uint64\+\_\+t}]{max\+Watchdog\+Timeout}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a62ea170d390484de0cbb5a2140beb037}{}\label{watchdog_8c_a62ea170d390484de0cbb5a2140beb037}
+Allocate a new framework watchdog object, construct it, and add it to the list of watchdogs
+
+\begin{DoxyReturn}{Returns}
+Newly created mandatory watchdog 
+\end{DoxyReturn}
+\index{watchdog.\+c@{watchdog.\+c}!Create\+Mandatory\+Watchdog@{Create\+Mandatory\+Watchdog}}
+\index{Create\+Mandatory\+Watchdog@{Create\+Mandatory\+Watchdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Mandatory\+Watchdog(const char $\ast$app\+Name\+Ptr, const char $\ast$proc\+Name\+Ptr, uint64\+\_\+t max\+Watchdog\+Timeout)}{CreateMandatoryWatchdog(const char *appNamePtr, const char *procNamePtr, uint64_t maxWatchdogTimeout)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Create\+Mandatory\+Watchdog (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name\+Ptr, }
+\item[{const char $\ast$}]{proc\+Name\+Ptr, }
+\item[{uint64\+\_\+t}]{max\+Watchdog\+Timeout}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a39dadad64a9db5a449cb829f7e7cfa3a}{}\label{watchdog_8c_a39dadad64a9db5a449cb829f7e7cfa3a}
+Allocate a new manadatory watchdog object, construct it, and add it to the list of mandatory watchdogs. \index{watchdog.\+c@{watchdog.\+c}!Create\+New\+Watchdog@{Create\+New\+Watchdog}}
+\index{Create\+New\+Watchdog@{Create\+New\+Watchdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Create\+New\+Watchdog(pid\+\_\+t client\+Pid)}{CreateNewWatchdog(pid_t clientPid)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Watchdog\+Obj\+\_\+t}$\ast$ Create\+New\+Watchdog (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{client\+Pid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_ab145abf88d08a02b4d17341e9cdcdd60}{}\label{watchdog_8c_ab145abf88d08a02b4d17341e9cdcdd60}
+Allocate a new watchdog object and \char`\"{}construct\char`\"{} it.
+
+\begin{DoxyReturn}{Returns}
+A pointer to a new Watchdog object containing an initialized timer 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em client\+Pid} & The process id of the client \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!Delete\+Watchdog@{Delete\+Watchdog}}
+\index{Delete\+Watchdog@{Delete\+Watchdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Watchdog(pid\+\_\+t dog\+Owner)}{DeleteWatchdog(pid_t dogOwner)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+Watchdog (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{dog\+Owner}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_ace90f54477add54df2f83e941b01e86d}{}\label{watchdog_8c_ace90f54477add54df2f83e941b01e86d}
+Remove the watchdog from our container, free the timer it contains and then free the storage we allocated to hold the watchdog structure. 
+\begin{DoxyParams}{Parameters}
+{\em dog\+Owner} & The client (hash key) of the Watchdog that we want to dispose of \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!External\+Watchdog\+Handler@{External\+Watchdog\+Handler}}
+\index{External\+Watchdog\+Handler@{External\+Watchdog\+Handler}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{External\+Watchdog\+Handler(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{ExternalWatchdogHandler(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} External\+Watchdog\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_ab5ffd30e01f981f1e45736a635086c60}{}\label{watchdog_8c_ab5ffd30e01f981f1e45736a635086c60}
+The handler for external watchdog kicks.
+
+Check to ensure all timers are running, and if so kick the external watchdog(s). \index{watchdog.\+c@{watchdog.\+c}!Get\+App\+Name\+From\+Pid@{Get\+App\+Name\+From\+Pid}}
+\index{Get\+App\+Name\+From\+Pid@{Get\+App\+Name\+From\+Pid}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Get\+App\+Name\+From\+Pid(int32\+\_\+t pid, char $\ast$app\+Name, size\+\_\+t app\+Name\+Num\+Elements)}{GetAppNameFromPid(int32_t pid, char *appName, size_t appNameNumElements)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+App\+Name\+From\+Pid (
+\begin{DoxyParamCaption}
+\item[{int32\+\_\+t}]{pid, }
+\item[{char $\ast$}]{app\+Name, }
+\item[{size\+\_\+t}]{app\+Name\+Num\+Elements}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a4901cb78130bd9533c892aec80d5c18d}{}\label{watchdog_8c_a4901cb78130bd9533c892aec80d5c18d}
+Gets the application name of the process with the specified P\+ID.
+
+Do not depend on the le\+\_\+app\+Info A\+PI as the watchdog must continue to work even if the supervisor has hung or crashed.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if the application name was successfully found. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the application name could not fit in the provided buffer. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the process is not part of an application. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pid} & P\+ID of the process. \\
+\hline
+\mbox{\tt out}  & {\em app\+Name} & Application name \\
+\hline
+\mbox{\tt in}  & {\em app\+Name\+Num\+Elements} & Application name size \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!Get\+Client\+Watchdog\+Ptr@{Get\+Client\+Watchdog\+Ptr}}
+\index{Get\+Client\+Watchdog\+Ptr@{Get\+Client\+Watchdog\+Ptr}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Client\+Watchdog\+Ptr(void)}{GetClientWatchdogPtr(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Watchdog\+Obj\+\_\+t}$\ast$ Get\+Client\+Watchdog\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_afed09b3a7a504a4f27bf1dfe963f4e56}{}\label{watchdog_8c_afed09b3a7a504a4f27bf1dfe963f4e56}
+Returns the timer associated with the client requesting the service. If no timer exists then one is created and associated with the client.
+
+\begin{DoxyReturn}{Returns}
+The pointer to the watchdog associated with the client or a new one if none exists. May return a empty reference if the client has closed already. 
+\end{DoxyReturn}
+\index{watchdog.\+c@{watchdog.\+c}!Get\+Config\+Kick\+Timeout\+Interval@{Get\+Config\+Kick\+Timeout\+Interval}}
+\index{Get\+Config\+Kick\+Timeout\+Interval@{Get\+Config\+Kick\+Timeout\+Interval}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Config\+Kick\+Timeout\+Interval(pid\+\_\+t proc\+Id)}{GetConfigKickTimeoutInterval(pid_t procId)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+clk\+\_\+\+Time\+\_\+t} Get\+Config\+Kick\+Timeout\+Interval (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{proc\+Id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a5a6f88368e59ab20ab95c08a086d1bbf}{}\label{watchdog_8c_a5a6f88368e59ab20ab95c08a086d1bbf}
+Read the configured timeout value for watchdogs belonging to this client process or, if that is not found, read the configured timeout for the application this process belongs to.
+
+\begin{DoxyReturn}{Returns}
+A \hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t} struct representing the configured timeout interval 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em proc\+Id} & The process id of the client \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!Get\+Process\+Name\+From\+Pid@{Get\+Process\+Name\+From\+Pid}}
+\index{Get\+Process\+Name\+From\+Pid@{Get\+Process\+Name\+From\+Pid}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Process\+Name\+From\+Pid(pid\+\_\+t p\+Id, char $\ast$name, size\+\_\+t length)}{GetProcessNameFromPid(pid_t pId, char *name, size_t length)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Process\+Name\+From\+Pid (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{p\+Id, }
+\item[{char $\ast$}]{name, }
+\item[{size\+\_\+t}]{length}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a6657815cb21215f92c8ac696de91f69a}{}\label{watchdog_8c_a6657815cb21215f92c8ac696de91f69a}
+Given the pid, find out what the process name is. The process name, if found, is written to the supplied char$\ast$ buffer \char`\"{}name\char`\"{} up to a number of characters given by size\+\_\+t length. \begin{DoxyVerb} @return LE_NOT_FOUND if no info could be retrieved for the pid
+         LE_FAULT if the buffer pointer is NULL or if the reading of the pid info fails
+         LE_OVERFLOW if the process info doesn't fit in the buffer
+         LE_OK if the process name copied to the buffer is valid and can be safely used.\end{DoxyVerb}
+ 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em p\+Id} & The pid of the process whose name to find \\
+\hline
+\mbox{\tt out}  & {\em name} & A buffer to receive the name of the app \\
+\hline
+\mbox{\tt in}  & {\em length} & The size of the buffer that receives the name \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!Handle\+App\+Install@{Handle\+App\+Install}}
+\index{Handle\+App\+Install@{Handle\+App\+Install}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Handle\+App\+Install(const char $\ast$app\+Name, void $\ast$context\+Ptr)}{HandleAppInstall(const char *appName, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} Handle\+App\+Install (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a5eb3e8c0e1321ef557b74f3885e80188}{}\label{watchdog_8c_a5eb3e8c0e1321ef557b74f3885e80188}
+Handle app install. Create all mandatory watchdogs for this app. \index{watchdog.\+c@{watchdog.\+c}!Handle\+App\+Uninstall@{Handle\+App\+Uninstall}}
+\index{Handle\+App\+Uninstall@{Handle\+App\+Uninstall}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Handle\+App\+Uninstall(const char $\ast$app\+Name, void $\ast$context\+Ptr)}{HandleAppUninstall(const char *appName, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} Handle\+App\+Uninstall (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a422082fcbf78395fdd4ef5d877e49c13}{}\label{watchdog_8c_a422082fcbf78395fdd4ef5d877e49c13}
+Handle app uninstall. Remove all mandatory watchdogs from this app. \index{watchdog.\+c@{watchdog.\+c}!Init\+Framework\+Wdog@{Init\+Framework\+Wdog}}
+\index{Init\+Framework\+Wdog@{Init\+Framework\+Wdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Framework\+Wdog(uint64\+\_\+t framework\+Kick\+Timeout)}{InitFrameworkWdog(uint64_t frameworkKickTimeout)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} Init\+Framework\+Wdog (
+\begin{DoxyParamCaption}
+\item[{uint64\+\_\+t}]{framework\+Kick\+Timeout}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_ac28534e94a609d992f5bb35c8ea3f921}{}\label{watchdog_8c_ac28534e94a609d992f5bb35c8ea3f921}
+Create watchdogs for all framework daemons. \index{watchdog.\+c@{watchdog.\+c}!Init\+Framework\+Wdog@{Init\+Framework\+Wdog}}
+\index{Init\+Framework\+Wdog@{Init\+Framework\+Wdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Framework\+Wdog(\+T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+L\+T)}{InitFrameworkWdog(TIMEOUT_DEFAULT)}}]{\setlength{\rightskip}{0pt plus 5cm}Init\+Framework\+Wdog (
+\begin{DoxyParamCaption}
+\item[{{\bf T\+I\+M\+E\+O\+U\+T\+\_\+\+D\+E\+F\+A\+U\+LT}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a44e3969e51cb49480fe07f1d3adb5588}{}\label{watchdog_8c_a44e3969e51cb49480fe07f1d3adb5588}
+\index{watchdog.\+c@{watchdog.\+c}!Initialize\+Timer\+Container@{Initialize\+Timer\+Container}}
+\index{Initialize\+Timer\+Container@{Initialize\+Timer\+Container}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Initialize\+Timer\+Container(void)}{InitializeTimerContainer(void)}}]{\setlength{\rightskip}{0pt plus 5cm}Initialize\+Timer\+Container (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a8e8ebe47b5806f57e5b47f1427825225}{}\label{watchdog_8c_a8e8ebe47b5806f57e5b47f1427825225}
+Create the memory pool to allocate watchdog objects from and the container to store them in so we can find the ones we want when we want them. Currently that\textquotesingle{}s a hashmap.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK the timer container was successfully initiated Currently no other values can be returned. This function asserts if container can\textquotesingle{}t be initiated. 
+\end{DoxyReturn}
+\index{watchdog.\+c@{watchdog.\+c}!Init\+Mandatory\+Wdog@{Init\+Mandatory\+Wdog}}
+\index{Init\+Mandatory\+Wdog@{Init\+Mandatory\+Wdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Mandatory\+Wdog(void)}{InitMandatoryWdog(void)}}]{\setlength{\rightskip}{0pt plus 5cm}Init\+Mandatory\+Wdog (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_ac2bc5538793b1fa1caa2dc742d496367}{}\label{watchdog_8c_ac2bc5538793b1fa1caa2dc742d496367}
+Initialize apps/processes with mandatory watchdog kicks. \index{watchdog.\+c@{watchdog.\+c}!Init\+Mandatory\+Wdog\+For\+App@{Init\+Mandatory\+Wdog\+For\+App}}
+\index{Init\+Mandatory\+Wdog\+For\+App@{Init\+Mandatory\+Wdog\+For\+App}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Init\+Mandatory\+Wdog\+For\+App(le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t app\+Cfg)}{InitMandatoryWdogForApp(le_cfg_IteratorRef_t appCfg)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Init\+Mandatory\+Wdog\+For\+App (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t}}]{app\+Cfg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_aabea5664e442769098726f54af238eba}{}\label{watchdog_8c_aabea5664e442769098726f54af238eba}
+Initialize all processes in an app with a mandatory watchdog kick \index{watchdog.\+c@{watchdog.\+c}!Init\+New\+Watchdog@{Init\+New\+Watchdog}}
+\index{Init\+New\+Watchdog@{Init\+New\+Watchdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Init\+New\+Watchdog(\+Watchdog\+Obj\+\_\+t $\ast$new\+Dog\+Ptr, pid\+\_\+t client\+Pid, le\+\_\+clk\+\_\+\+Time\+\_\+t kick\+Timeout\+Interval, le\+\_\+clk\+\_\+\+Time\+\_\+t max\+Kick\+Timeout\+Interval)}{InitNewWatchdog(WatchdogObj_t *newDogPtr, pid_t clientPid, le_clk_Time_t kickTimeoutInterval, le_clk_Time_t maxKickTimeoutInterval)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Init\+New\+Watchdog (
+\begin{DoxyParamCaption}
+\item[{{\bf Watchdog\+Obj\+\_\+t} $\ast$}]{new\+Dog\+Ptr, }
+\item[{pid\+\_\+t}]{client\+Pid, }
+\item[{{\bf le\+\_\+clk\+\_\+\+Time\+\_\+t}}]{kick\+Timeout\+Interval, }
+\item[{{\bf le\+\_\+clk\+\_\+\+Time\+\_\+t}}]{max\+Kick\+Timeout\+Interval}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a71d3f2f6e15311dbb1343424df2ba1f1}{}\label{watchdog_8c_a71d3f2f6e15311dbb1343424df2ba1f1}
+Construct a new already allocated watchdog. \index{watchdog.\+c@{watchdog.\+c}!le\+\_\+app\+Info\+\_\+\+Connect\+Service@{le\+\_\+app\+Info\+\_\+\+Connect\+Service}}
+\index{le\+\_\+app\+Info\+\_\+\+Connect\+Service@{le\+\_\+app\+Info\+\_\+\+Connect\+Service}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+app\+Info\+\_\+\+Connect\+Service()}{le_appInfo_ConnectService()}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+app\+Info\+\_\+\+Connect\+Service (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a365de15cea7ffa444c86745571971705}{}\label{watchdog_8c_a365de15cea7ffa444c86745571971705}
+\index{watchdog.\+c@{watchdog.\+c}!le\+\_\+cfg\+\_\+\+Cancel\+Txn@{le\+\_\+cfg\+\_\+\+Cancel\+Txn}}
+\index{le\+\_\+cfg\+\_\+\+Cancel\+Txn@{le\+\_\+cfg\+\_\+\+Cancel\+Txn}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+cfg\+\_\+\+Cancel\+Txn(iter\+Ref)}{le_cfg_CancelTxn(iterRef)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+cfg\+\_\+\+Cancel\+Txn (
+\begin{DoxyParamCaption}
+\item[{{\bf iter\+Ref}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_ac848a5df32990f358811a5518abbdc2b}{}\label{watchdog_8c_ac848a5df32990f358811a5518abbdc2b}
+\index{watchdog.\+c@{watchdog.\+c}!L\+E\+\_\+\+D\+E\+B\+UG@{L\+E\+\_\+\+D\+E\+B\+UG}}
+\index{L\+E\+\_\+\+D\+E\+B\+UG@{L\+E\+\_\+\+D\+E\+B\+UG}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+D\+E\+B\+U\+G(""External watchdog kick\+: \%d"", timeout)}{LE_DEBUG("External watchdog kick: %d", timeout)}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+D\+E\+B\+UG (
+\begin{DoxyParamCaption}
+\item[{\char`\"{}External watchdog kick\+: \%d\char`\"{}}]{, }
+\item[{{\bf timeout}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a78fe74bd2fec521b17f647615795e693}{}\label{watchdog_8c_a78fe74bd2fec521b17f647615795e693}
+\index{watchdog.\+c@{watchdog.\+c}!L\+E\+\_\+\+I\+N\+FO@{L\+E\+\_\+\+I\+N\+FO}}
+\index{L\+E\+\_\+\+I\+N\+FO@{L\+E\+\_\+\+I\+N\+FO}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{L\+E\+\_\+\+I\+N\+F\+O(""The watchdog service is ready"")}{LE_INFO("The watchdog service is ready")}}]{\setlength{\rightskip}{0pt plus 5cm}L\+E\+\_\+\+I\+N\+FO (
+\begin{DoxyParamCaption}
+\item[{\char`\"{}The watchdog service is ready\char`\"{}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a8bcd6051874abd53123692d2304897d9}{}\label{watchdog_8c_a8bcd6051874abd53123692d2304897d9}
+\index{watchdog.\+c@{watchdog.\+c}!le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler@{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler}}
+\index{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler@{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler(le\+\_\+wdog\+\_\+\+Get\+Service\+Ref(), Clean\+Up\+Closed\+Client, N\+U\+L\+L)}{le_msg_AddServiceCloseHandler(le_wdog_GetServiceRef(), CleanUpClosedClient, NULL)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler (
+\begin{DoxyParamCaption}
+\item[{le\+\_\+wdog\+\_\+\+Get\+Service\+Ref()}]{, }
+\item[{{\bf Clean\+Up\+Closed\+Client}}]{, }
+\item[{N\+U\+LL}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_ae6534c45ed38d0b1667f015b81d7da7f}{}\label{watchdog_8c_ae6534c45ed38d0b1667f015b81d7da7f}
+\index{watchdog.\+c@{watchdog.\+c}!le\+\_\+timer\+\_\+\+Set\+Handler@{le\+\_\+timer\+\_\+\+Set\+Handler}}
+\index{le\+\_\+timer\+\_\+\+Set\+Handler@{le\+\_\+timer\+\_\+\+Set\+Handler}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Handler(\+Default\+External\+Wdog\+Timer, External\+Watchdog\+Handler)}{le_timer_SetHandler(DefaultExternalWdogTimer, ExternalWatchdogHandler)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+timer\+\_\+\+Set\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf Default\+External\+Wdog\+Timer}}]{, }
+\item[{{\bf External\+Watchdog\+Handler}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a600f453f6a5c62718059386af2383129}{}\label{watchdog_8c_a600f453f6a5c62718059386af2383129}
+\index{watchdog.\+c@{watchdog.\+c}!le\+\_\+timer\+\_\+\+Set\+Ms\+Interval@{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval}}
+\index{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval@{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval(\+Default\+External\+Wdog\+Timer, timeout)}{le_timer_SetMsInterval(DefaultExternalWdogTimer, timeout)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+timer\+\_\+\+Set\+Ms\+Interval (
+\begin{DoxyParamCaption}
+\item[{{\bf Default\+External\+Wdog\+Timer}}]{, }
+\item[{{\bf timeout}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_acf54bf4fffa7685bb67060ad8780c20f}{}\label{watchdog_8c_acf54bf4fffa7685bb67060ad8780c20f}
+\index{watchdog.\+c@{watchdog.\+c}!le\+\_\+timer\+\_\+\+Set\+Repeat@{le\+\_\+timer\+\_\+\+Set\+Repeat}}
+\index{le\+\_\+timer\+\_\+\+Set\+Repeat@{le\+\_\+timer\+\_\+\+Set\+Repeat}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Repeat(\+Default\+External\+Wdog\+Timer, 0)}{le_timer_SetRepeat(DefaultExternalWdogTimer, 0)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+timer\+\_\+\+Set\+Repeat (
+\begin{DoxyParamCaption}
+\item[{{\bf Default\+External\+Wdog\+Timer}}]{, }
+\item[{0}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_aa784fef99700de8ffcb27f49d1145746}{}\label{watchdog_8c_aa784fef99700de8ffcb27f49d1145746}
+\index{watchdog.\+c@{watchdog.\+c}!le\+\_\+timer\+\_\+\+Set\+Wakeup@{le\+\_\+timer\+\_\+\+Set\+Wakeup}}
+\index{le\+\_\+timer\+\_\+\+Set\+Wakeup@{le\+\_\+timer\+\_\+\+Set\+Wakeup}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Wakeup(\+Default\+External\+Wdog\+Timer, false)}{le_timer_SetWakeup(DefaultExternalWdogTimer, false)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+timer\+\_\+\+Set\+Wakeup (
+\begin{DoxyParamCaption}
+\item[{{\bf Default\+External\+Wdog\+Timer}}]{, }
+\item[{false}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a1d8c82a5ae9780daa9ec661bb072c3e3}{}\label{watchdog_8c_a1d8c82a5ae9780daa9ec661bb072c3e3}
+\index{watchdog.\+c@{watchdog.\+c}!le\+\_\+timer\+\_\+\+Start@{le\+\_\+timer\+\_\+\+Start}}
+\index{le\+\_\+timer\+\_\+\+Start@{le\+\_\+timer\+\_\+\+Start}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Start(\+Default\+External\+Wdog\+Timer)}{le_timer_Start(DefaultExternalWdogTimer)}}]{\setlength{\rightskip}{0pt plus 5cm}le\+\_\+timer\+\_\+\+Start (
+\begin{DoxyParamCaption}
+\item[{{\bf Default\+External\+Wdog\+Timer}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a8f0ef9d6af3090467f5a969c799ad25d}{}\label{watchdog_8c_a8f0ef9d6af3090467f5a969c799ad25d}
+\index{watchdog.\+c@{watchdog.\+c}!le\+\_\+wdog\+\_\+\+Get\+Max\+Watchdog\+Timeout@{le\+\_\+wdog\+\_\+\+Get\+Max\+Watchdog\+Timeout}}
+\index{le\+\_\+wdog\+\_\+\+Get\+Max\+Watchdog\+Timeout@{le\+\_\+wdog\+\_\+\+Get\+Max\+Watchdog\+Timeout}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+wdog\+\_\+\+Get\+Max\+Watchdog\+Timeout(uint64\+\_\+t $\ast$milliseconds\+Ptr)}{le_wdog_GetMaxWatchdogTimeout(uint64_t *millisecondsPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+wdog\+\_\+\+Get\+Max\+Watchdog\+Timeout (
+\begin{DoxyParamCaption}
+\item[{uint64\+\_\+t $\ast$}]{milliseconds\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a8d1e571665da18a9d0ee74311cf95ad6}{}\label{watchdog_8c_a8d1e571665da18a9d0ee74311cf95ad6}
+Get the max watchdog timeout configured for this process
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK The max watchdog timeout is configured and returned
+\item L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND The max watchdog timeout is not set 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em milliseconds\+Ptr} & The max watchdog timeout set for this process \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!le\+\_\+wdog\+\_\+\+Get\+Watchdog\+Timeout@{le\+\_\+wdog\+\_\+\+Get\+Watchdog\+Timeout}}
+\index{le\+\_\+wdog\+\_\+\+Get\+Watchdog\+Timeout@{le\+\_\+wdog\+\_\+\+Get\+Watchdog\+Timeout}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+wdog\+\_\+\+Get\+Watchdog\+Timeout(uint64\+\_\+t $\ast$milliseconds\+Ptr)}{le_wdog_GetWatchdogTimeout(uint64_t *millisecondsPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+wdog\+\_\+\+Get\+Watchdog\+Timeout (
+\begin{DoxyParamCaption}
+\item[{uint64\+\_\+t $\ast$}]{milliseconds\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_afd05e9ae9f1b2cf111ce7ab060e4dd69}{}\label{watchdog_8c_afd05e9ae9f1b2cf111ce7ab060e4dd69}
+Get the watchdog timeout configured for this process
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK The watchdog timeout is configured and returned
+\item L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND The watchdog timeout is not set 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em milliseconds\+Ptr} & The watchdog timeout set for this process \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!le\+\_\+wdog\+\_\+\+Kick@{le\+\_\+wdog\+\_\+\+Kick}}
+\index{le\+\_\+wdog\+\_\+\+Kick@{le\+\_\+wdog\+\_\+\+Kick}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+wdog\+\_\+\+Kick(void)}{le_wdog_Kick(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+wdog\+\_\+\+Kick (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a43d5abc5c44309942efbe7b9c25d811f}{}\label{watchdog_8c_a43d5abc5c44309942efbe7b9c25d811f}
+Calling watchdog kick resets the watchdog expiration timer and briefly cheats death. \index{watchdog.\+c@{watchdog.\+c}!le\+\_\+wdog\+\_\+\+Timeout@{le\+\_\+wdog\+\_\+\+Timeout}}
+\index{le\+\_\+wdog\+\_\+\+Timeout@{le\+\_\+wdog\+\_\+\+Timeout}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+wdog\+\_\+\+Timeout(int32\+\_\+t milliseconds)}{le_wdog_Timeout(int32_t milliseconds)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+wdog\+\_\+\+Timeout (
+\begin{DoxyParamCaption}
+\item[{int32\+\_\+t}]{milliseconds}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a041aed268270e1c3668b6ff28bee8fd7}{}\label{watchdog_8c_a041aed268270e1c3668b6ff28bee8fd7}
+Adjust the timeout. This can be used if you need a different interval for the timeout on a specific occassion. The new value of the timeout lasts until expiry or the next kick. On the next kick, the timeout will revert to the original configured value.
+
+L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+N\+E\+V\+ER disables the watchdog (until it is kicked again or a new timeout is set) L\+E\+\_\+\+W\+D\+O\+G\+\_\+\+T\+I\+M\+E\+O\+U\+T\+\_\+\+N\+OW is a zero length interval and causes the watchdog to expire immediately. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em milliseconds} & number of milliseconds before the watchdog expires. \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!Lookup\+Client\+Watchdog\+Ptr\+By\+Id@{Lookup\+Client\+Watchdog\+Ptr\+By\+Id}}
+\index{Lookup\+Client\+Watchdog\+Ptr\+By\+Id@{Lookup\+Client\+Watchdog\+Ptr\+By\+Id}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Lookup\+Client\+Watchdog\+Ptr\+By\+Id(pid\+\_\+t client\+Pid)}{LookupClientWatchdogPtrById(pid_t clientPid)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Watchdog\+Obj\+\_\+t}$\ast$ Lookup\+Client\+Watchdog\+Ptr\+By\+Id (
+\begin{DoxyParamCaption}
+\item[{pid\+\_\+t}]{client\+Pid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_acf491e9d60fa7836c4a3df0c94cea1fd}{}\label{watchdog_8c_acf491e9d60fa7836c4a3df0c94cea1fd}
+Find the watchdog associated with this ID
+
+\begin{DoxyReturn}{Returns}
+A pointer to the watchdog associated with this client 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em client\+Pid} & Client we want the watchdog for \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!Make\+Timer\+Interval@{Make\+Timer\+Interval}}
+\index{Make\+Timer\+Interval@{Make\+Timer\+Interval}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Make\+Timer\+Interval(uint64\+\_\+t milliseconds)}{MakeTimerInterval(uint64_t milliseconds)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+clk\+\_\+\+Time\+\_\+t} Make\+Timer\+Interval (
+\begin{DoxyParamCaption}
+\item[{uint64\+\_\+t}]{milliseconds}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a7d7e5d55ab408d450025cc7c2088ec5b}{}\label{watchdog_8c_a7d7e5d55ab408d450025cc7c2088ec5b}
+Construct \hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t} object that will give an interval of the provided number of milliseconds. \begin{DoxyVerb}@return the constructed le_clk_Time_t\end{DoxyVerb}
+ \index{watchdog.\+c@{watchdog.\+c}!pa\+\_\+wdog\+\_\+\+Init@{pa\+\_\+wdog\+\_\+\+Init}}
+\index{pa\+\_\+wdog\+\_\+\+Init@{pa\+\_\+wdog\+\_\+\+Init}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{pa\+\_\+wdog\+\_\+\+Init()}{pa_wdog_Init()}}]{\setlength{\rightskip}{0pt plus 5cm}pa\+\_\+wdog\+\_\+\+Init (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a35a1ffde0f51a9752a5913e99193058a}{}\label{watchdog_8c_a35a1ffde0f51a9752a5913e99193058a}
+\index{watchdog.\+c@{watchdog.\+c}!Reset\+Client\+Watchdog@{Reset\+Client\+Watchdog}}
+\index{Reset\+Client\+Watchdog@{Reset\+Client\+Watchdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Reset\+Client\+Watchdog(int32\+\_\+t timeout)}{ResetClientWatchdog(int32_t timeout)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Reset\+Client\+Watchdog (
+\begin{DoxyParamCaption}
+\item[{int32\+\_\+t}]{timeout}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a3f7840f9b296e5bebf90421ccca8f0da}{}\label{watchdog_8c_a3f7840f9b296e5bebf90421ccca8f0da}
+Resets the watchdog for the client that has kicked us. This function must be called from within the watchdog I\+PC events such as \hyperlink{watchdog_8c_a041aed268270e1c3668b6ff28bee8fd7}{le\+\_\+wdog\+\_\+\+Timeout()}, \hyperlink{watchdog_8c_a43d5abc5c44309942efbe7b9c25d811f}{le\+\_\+wdog\+\_\+\+Kick()}. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timeout} & The timeout to reset the watchdog timer to (in milliseconds). \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!Reset\+Framework\+Watchdog@{Reset\+Framework\+Watchdog}}
+\index{Reset\+Framework\+Watchdog@{Reset\+Framework\+Watchdog}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Reset\+Framework\+Watchdog(void $\ast$context\+Ptr)}{ResetFrameworkWatchdog(void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} Reset\+Framework\+Watchdog (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a4ceef4e658acf181a4979fa26f14b4b4}{}\label{watchdog_8c_a4ceef4e658acf181a4979fa26f14b4b4}
+Kick a framework daemon watchdog.
+
+The process of kicking a framework watchdog is somewhat different since kicks from framework daemons go through a different A\+PI. \index{watchdog.\+c@{watchdog.\+c}!System\+Process\+Notify\+Supervisor@{System\+Process\+Notify\+Supervisor}}
+\index{System\+Process\+Notify\+Supervisor@{System\+Process\+Notify\+Supervisor}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{System\+Process\+Notify\+Supervisor(void)}{SystemProcessNotifySupervisor(void)}}]{\setlength{\rightskip}{0pt plus 5cm}System\+Process\+Notify\+Supervisor (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_aa242e64126b6544df60199915cd6e3b1}{}\label{watchdog_8c_aa242e64126b6544df60199915cd6e3b1}
+Signal to the supervisor that we are set up and ready \index{watchdog.\+c@{watchdog.\+c}!Watchdog\+Handle\+Expiry@{Watchdog\+Handle\+Expiry}}
+\index{Watchdog\+Handle\+Expiry@{Watchdog\+Handle\+Expiry}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Watchdog\+Handle\+Expiry(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{WatchdogHandleExpiry(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Watchdog\+Handle\+Expiry (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_acb2567ca16a7f3ade5ef7468d5b3cfb9}{}\label{watchdog_8c_acb2567ca16a7f3ade5ef7468d5b3cfb9}
+The handler for all time outs. No registered application wants to see us get here. Arrival here means that some process has failed to service its watchdog and therefore, we need to tattle to the supervisor who, if the app still exists, will deal with it in the manner proscribed in the book of config. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & The reference to the expired timer \\
+\hline
+\end{DoxyParams}
+\index{watchdog.\+c@{watchdog.\+c}!wdog\+\_\+\+Connect\+Service@{wdog\+\_\+\+Connect\+Service}}
+\index{wdog\+\_\+\+Connect\+Service@{wdog\+\_\+\+Connect\+Service}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{wdog\+\_\+\+Connect\+Service()}{wdog_ConnectService()}}]{\setlength{\rightskip}{0pt plus 5cm}wdog\+\_\+\+Connect\+Service (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{watchdog_8c_a9d8d3a822660766b47fa0c24d77e73bd}{}\label{watchdog_8c_a9d8d3a822660766b47fa0c24d77e73bd}
+
+
+\subsection{Variable Documentation}
+\index{watchdog.\+c@{watchdog.\+c}!C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}}
+\index{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT@{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}{COMPONENT_INIT}}]{\setlength{\rightskip}{0pt plus 5cm}C\+O\+M\+P\+O\+N\+E\+N\+T\+\_\+\+I\+N\+IT}\hypertarget{watchdog_8c_a0392d452f926ce36c4852de26b5eca12}{}\label{watchdog_8c_a0392d452f926ce36c4852de26b5eca12}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+\{
+    
+    \hyperlink{watchdog_8c_a84d541f37420ace8bdf697deca689deb}{TraceRef} = \hyperlink{le__log_8h_a6d99d8147bcdcd1ed3848c9fdb72afe5}{le\_log\_GetTraceRef}(\textcolor{stringliteral}{"wdog"})
+\end{DoxyCode}
+Start up the watchdog server. \index{watchdog.\+c@{watchdog.\+c}!Default\+External\+Wdog\+Timer@{Default\+External\+Wdog\+Timer}}
+\index{Default\+External\+Wdog\+Timer@{Default\+External\+Wdog\+Timer}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Default\+External\+Wdog\+Timer}{DefaultExternalWdogTimer}}]{\setlength{\rightskip}{0pt plus 5cm}Default\+External\+Wdog\+Timer = {\bf le\+\_\+timer\+\_\+\+Create}(\char`\"{}Default\+External\+Wdog\+Timer\char`\"{})\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_afd1f628bb308f752e9d0a7b3b0416937}{}\label{watchdog_8c_afd1f628bb308f752e9d0a7b3b0416937}
+
+
+Default external wdog timer. 
+
+\index{watchdog.\+c@{watchdog.\+c}!iter\+Ref@{iter\+Ref}}
+\index{iter\+Ref@{iter\+Ref}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{iter\+Ref}{iterRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} iter\+Ref = {\bf le\+\_\+cfg\+\_\+\+Create\+Read\+Txn}({\bf S\+Y\+S\+T\+E\+M\+\_\+\+F\+R\+A\+M\+E\+W\+O\+R\+K\+\_\+\+C\+FG})}\hypertarget{watchdog_8c_a77e3a5a5d413fe9ec45738ef01c65514}{}\label{watchdog_8c_a77e3a5a5d413fe9ec45738ef01c65514}
+\index{watchdog.\+c@{watchdog.\+c}!Mandatory\+Watchdog\+Pool@{Mandatory\+Watchdog\+Pool}}
+\index{Mandatory\+Watchdog\+Pool@{Mandatory\+Watchdog\+Pool}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Mandatory\+Watchdog\+Pool}{MandatoryWatchdogPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Mandatory\+Watchdog\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_aaa7b24b94537bb5e423626184a69b70c}{}\label{watchdog_8c_aaa7b24b94537bb5e423626184a69b70c}
+The memory pool the mandatory watchdogs come from \index{watchdog.\+c@{watchdog.\+c}!Mandatory\+Watchdog\+Refs@{Mandatory\+Watchdog\+Refs}}
+\index{Mandatory\+Watchdog\+Refs@{Mandatory\+Watchdog\+Refs}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Mandatory\+Watchdog\+Refs}{MandatoryWatchdogRefs}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} Mandatory\+Watchdog\+Refs\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_ae231d3235523f7c0d420b77e85fd77bd}{}\label{watchdog_8c_ae231d3235523f7c0d420b77e85fd77bd}
+
+
+The container used to track mandatory watchdogs. 
+
+\index{watchdog.\+c@{watchdog.\+c}!timeout@{timeout}}
+\index{timeout@{timeout}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{timeout}{timeout}}]{\setlength{\rightskip}{0pt plus 5cm}int timeout = {\bf le\+\_\+cfg\+\_\+\+Get\+Int}({\bf iter\+Ref}, \char`\"{}external\+Watchdog\+Kick\char`\"{}, 30000)}\hypertarget{watchdog_8c_a493b57f443cc38b3d3df9c1e584d9d82}{}\label{watchdog_8c_a493b57f443cc38b3d3df9c1e584d9d82}
+\index{watchdog.\+c@{watchdog.\+c}!Trace\+Ref@{Trace\+Ref}}
+\index{Trace\+Ref@{Trace\+Ref}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Trace\+Ref}{TraceRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} Trace\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a84d541f37420ace8bdf697deca689deb}{}\label{watchdog_8c_a84d541f37420ace8bdf697deca689deb}
+Trace reference used for controlling tracing in this module. \index{watchdog.\+c@{watchdog.\+c}!Watchdog\+Pool@{Watchdog\+Pool}}
+\index{Watchdog\+Pool@{Watchdog\+Pool}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Watchdog\+Pool}{WatchdogPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Watchdog\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a5136e63d979db9daf2547a9b7703e8eb}{}\label{watchdog_8c_a5136e63d979db9daf2547a9b7703e8eb}
+
+
+The memory pool the watchdogs will come from. 
+
+Define hashing functions for mandatory watchdog key \index{watchdog.\+c@{watchdog.\+c}!Watchdog\+Refs\+Container@{Watchdog\+Refs\+Container}}
+\index{Watchdog\+Refs\+Container@{Watchdog\+Refs\+Container}!watchdog.\+c@{watchdog.\+c}}
+\subsubsection[{\texorpdfstring{Watchdog\+Refs\+Container}{WatchdogRefsContainer}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+hashmap\+\_\+\+Ref\+\_\+t} Watchdog\+Refs\+Container\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{watchdog_8c_a9b210feda62f4a35d5f234420e337f60}{}\label{watchdog_8c_a9b210feda62f4a35d5f234420e337f60}
+
+
+The container we use to keep track of wdogs. 
+

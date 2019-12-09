@@ -1,0 +1,1925 @@
+\hypertarget{supervisor_2app_8c}{}\section{framework/daemons/linux/supervisor/app.c File Reference}
+\label{supervisor_2app_8c}\index{framework/daemons/linux/supervisor/app.\+c@{framework/daemons/linux/supervisor/app.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}watchdog\+Action.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}app.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}proc.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}user.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}le\+\_\+cfg\+\_\+interface.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}resource\+Limits.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}smack.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}supervisor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}cgroups.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kill\+Proc.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}interfaces.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sys\+Paths.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dev\+Smack.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}dir.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+System.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}ima.\+h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_file_link_obj__t}{File\+Link\+Obj\+\_\+t}
+\item 
+struct \hyperlink{struct_app__t}{App\+\_\+t}
+\item 
+struct \hyperlink{struct_file_link_node__t}{File\+Link\+Node\+\_\+t}
+\item 
+struct \hyperlink{struct_proc_container__t}{Proc\+Container\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{supervisor_2app_8c_ac07be121fb3dc69f7fcb1a02bba94a37}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED}~\char`\"{}sandboxed\char`\"{}
+\item 
+\#define \hyperlink{supervisor_2app_8c_ac935677b258d6067f1f457ef5a984333}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+G\+R\+O\+U\+PS}~\char`\"{}groups\char`\"{}
+\item 
+\#define \hyperlink{supervisor_2app_8c_ac39cb320faf8fef1418d7ecca3c788e4}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST}~\char`\"{}procs\char`\"{}
+\item 
+\#define \hyperlink{supervisor_2app_8c_a83ffe12d736fcdd35928b466a69ea183}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+I\+N\+D\+I\+N\+GS}~\char`\"{}bindings\char`\"{}
+\item 
+\#define \hyperlink{supervisor_2app_8c_a08651d777bc179f72000e006c333dc1a}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES}~\char`\"{}requires\char`\"{}
+\item 
+\#define \hyperlink{supervisor_2app_8c_a1acbf1d92f60ccc3b4cbbf3a76c359c5}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES}~\char`\"{}devices\char`\"{}
+\item 
+\#define \hyperlink{supervisor_2app_8c_a8eb774a436c76b569204a30e4c0354a8}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+U\+N\+D\+L\+ES}~\char`\"{}bundles\char`\"{}
+\item 
+\#define \hyperlink{supervisor_2app_8c_a08651d777bc179f72000e006c333dc1a}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES}~\char`\"{}requires\char`\"{}
+\item 
+\#define \hyperlink{supervisor_2app_8c_ab6fef5936c35b132af9663e7a8e5e210}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+I\+L\+ES}~\char`\"{}files\char`\"{}
+\item 
+\#define \hyperlink{supervisor_2app_8c_a08a4d76db23011f2694cca151318f1dc}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+I\+RS}~\char`\"{}dirs\char`\"{}
+\item 
+\#define \hyperlink{supervisor_2app_8c_a1acbf1d92f60ccc3b4cbbf3a76c359c5}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES}~\char`\"{}devices\char`\"{}
+\item 
+\#define \hyperlink{supervisor_2app_8c_ac66f48502bc6b8a72848232a9a296ca9}{M\+A\+X\+\_\+\+D\+E\+V\+I\+C\+E\+\_\+\+P\+E\+R\+M\+\_\+\+S\+T\+R\+\_\+\+B\+Y\+T\+ES}~3
+\item 
+\#define \hyperlink{supervisor_2app_8c_a6120a0a2e2b2f55a05e31bdab7b78cf9}{M\+A\+X\+\_\+\+C\+R\+E\+A\+T\+E\+\_\+\+P\+R\+OC}~32
+\item 
+\#define \hyperlink{supervisor_2app_8c_a678c1937fe9da118ff44171c46b03dcd}{N\+U\+M\+\_\+\+P\+E\+R\+M\+I\+S\+S\+O\+NS}~7
+\item 
+\#define \hyperlink{supervisor_2app_8c_a76e6b1ab9055e46f3bf1d7c5ee8d4b2f}{A\+P\+P\+\_\+\+T\+M\+P\+F\+S\+\_\+\+S\+I\+ZE}~90112
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t}($\ast$ \hyperlink{supervisor_2app_8c_ac80a0c9c9987ce26f3d77d5c7a77b2f9}{Proc\+Stop\+Handler\+\_\+t}) (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{supervisor_2app_8c_af8532deabcd03b5270f18bb027bd5a55}{Kill\+Type\+\_\+t} \{ \hyperlink{supervisor_2app_8c_af8532deabcd03b5270f18bb027bd5a55abe769b0b2072fbfcf58ad2d5f46f6a77}{K\+I\+L\+L\+\_\+\+S\+O\+FT}, 
+\hyperlink{supervisor_2app_8c_af8532deabcd03b5270f18bb027bd5a55ab0e4fdb8d06a4b7723ef7c42142bde8e}{K\+I\+L\+L\+\_\+\+H\+A\+RD}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a82c0e5167d8411b8bc63da9bd23ef18a}{Create\+Supplementary\+Groups} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a25379d616fc9b39bbb48cd0b6b605237}{Create\+User\+And\+Groups} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a30e8f0026b9ffedfe3df7c9323ab49e0}{Get\+Cfg\+Permissions} (\hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} cfg\+Iter, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a116a92f143f5b2b313ad877fc9134ddb}{Get\+Dev\+Src\+Path} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, \hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} cfg\+Iter, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a1e05e2e0aa4ee4f66c0730ba52467209}{Get\+Dev\+ID} (const char $\ast$file\+Name\+Ptr, dev\+\_\+t $\ast$id\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a8442ba2a7d1e2f6b93dbf8f372f981a3}{Set\+Device\+Permissions} (const char $\ast$app\+Smack\+Label\+Ptr, const char $\ast$dev\+Path\+Ptr, const char $\ast$perm\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_ac7da19ad201bf3dc4755e2986b374a07}{Set\+Cfg\+Device\+Permissions} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a560d95beebccebd74bafc6e89aae44c8}{Set\+Smack\+Rules\+For\+Bindings} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$app\+Label\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_aa815d3f132b1c2e22e029bb9994e1404}{Set\+Default\+Smack\+Rules} (const char $\ast$app\+Name\+Ptr, const char $\ast$app\+Label\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a4a53775491af638754df202fafb03df5}{Cleanup\+App\+Smack\+Settings} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a7f3cf9689c7b224fdd6d5de2e7dff900}{Set\+Smack\+Rules} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a8b3a1cf7ead993a91557fd751ff9ad46}{Stopping\+Procs\+In\+List} (\hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} list)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_af977ab3ac367db35bb415b4d7eab11ef}{Kill\+App\+Procs} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, \hyperlink{supervisor_2app_8c_af8532deabcd03b5270f18bb027bd5a55}{Kill\+Type\+\_\+t} kill\+Type)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a36e57b41a46bab9ce5ab2939204a03f7}{Hard\+Kill\+App} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+static \hyperlink{struct_proc_container__t}{Proc\+Container\+\_\+t} $\ast$ \hyperlink{supervisor_2app_8c_ac4d532dd791212719e94859619528603}{Find\+Proc\+Container\+In\+List} (\hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} list, pid\+\_\+t pid)
+\item 
+static \hyperlink{struct_proc_container__t}{Proc\+Container\+\_\+t} $\ast$ \hyperlink{supervisor_2app_8c_af71ca50dd7eea401186bcf70b747c0fb}{Find\+Proc\+Container} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, pid\+\_\+t pid)
+\item 
+static bool \hyperlink{supervisor_2app_8c_a2fa27d2bc6d43bffe6dbb39271dc0083}{Has\+Running\+Proc\+In\+List} (\hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} list)
+\item 
+static bool \hyperlink{supervisor_2app_8c_a6e4a2a46b23b9399376017d8480ad685}{Has\+Running\+Proc} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a964eea1bd68f19757ed53c411a0f523e}{Stop\+Proc} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a58b77e3aed50c18f7936ebfb3c7f3552}{Create\+Tmp\+Fs} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a60ba744495e59f32aedfc4da9bd289fe}{Get\+Abs\+Dest\+Path} (const char $\ast$dest\+Ptr, const char $\ast$src\+Ptr, const char $\ast$app\+Run\+Dir, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a0d1c95039a33b7f61746da83ec0f8fbb}{Create\+Intermediate\+Dirs} (const char $\ast$path\+Ptr, const char $\ast$smack\+Label\+Ptr)
+\item 
+static bool \hyperlink{supervisor_2app_8c_a7abab0c8647aec2baff042d1c5763d5a}{Does\+Link\+Exist} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, struct stat src\+Stat, const char $\ast$dest\+Path)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_ad00c6be55e12b74b7396c180fac91dad}{Create\+Dir\+Link} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr, const char $\ast$src\+Ptr, const char $\ast$dest\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_ae49e84a54c121c89bb597db9426b8694}{Create\+File\+Link} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr, const char $\ast$src\+Ptr, const char $\ast$dest\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a7fd812f8259d43af2016c770d840c9df}{Recursively\+Create\+Links} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr, const char $\ast$src\+Dir\+Ptr, const char $\ast$dest\+Dir\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a88bff7a7302fe573cb603340b5004a42}{Create\+Default\+Tmp\+Links} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a69bbcb4df13baed6ca9735c87791ca77}{Create\+Default\+Links} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a2ed53312bee800733e6f73b0ce72ba15}{Create\+Lib\+Bin\+Links} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a3e076426aceae8f34ec51455410f8ba1}{Get\+Bundled\+Read\+Only\+Src\+Path} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, \hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} cfg\+Iter, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a0ed4faef5a7ac0c4a7072ca9d459609a}{Get\+Dest\+Path} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, \hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} cfg\+Iter, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a6600f469276e2a009f73165624fe43a3}{Get\+Src\+Path} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, \hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} cfg\+Iter, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_abd9ef440c47e7de081bc0425f2ddd068}{Create\+Bundled\+Links} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_af57a7b477d2832693776705925fa1084}{Create\+Required\+File\+Links} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr, \hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} cfg\+Iter)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a1f911d4833894fc09d972905095fa603}{Create\+Required\+Links} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a5d1ba6170d3778cc4db7171204a7ad77}{Setup\+App\+Area} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a3c2b9648493e353835c573b3eaba5327}{Check\+Path\+Conflict} (const char $\ast$dest\+Path\+Ptr, const char $\ast$working\+Dir\+Ptr)
+\item 
+static bool \hyperlink{supervisor_2app_8c_a18afdad8f039975654f3ecb03f5331d1}{Is\+Dir} (const char $\ast$path\+Name\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_ace87734462ffa3d5858decc9ac448905}{Remove\+Links} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$path\+Ptr)
+\item 
+static \hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} \hyperlink{supervisor_2app_8c_a92907ff7ae8cc9dbbdaa0376dabaf0d2}{Find\+Proc\+Container\+By\+Name} (\hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} $\ast$proc\+List\+Ptr, const char $\ast$proc\+Name\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a5dbc888a5dd41603f51c716b47340318}{app\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} \hyperlink{supervisor_2app_8c_aad987266c51b1b747f54a65ed62d2e32}{app\+\_\+\+Get\+Proc\+Container} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$proc\+Name\+Ptr)
+\item 
+static bool \hyperlink{supervisor_2app_8c_ac61fe29dd125294ef8619d0af7a871c6}{Make\+Temp\+Proc\+Name} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, char $\ast$temp\+Proc\+Name\+Ptr, size\+\_\+t temp\+Proc\+Name\+Size, const char $\ast$exe\+Name)
+\item 
+static \hyperlink{struct_proc_container__t}{Proc\+Container\+\_\+t} $\ast$ \hyperlink{supervisor_2app_8c_a955de1e5e4ebfe7c4667e1144ff7d3e7}{Create\+Proc\+Container} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, \hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} \hyperlink{supervisor_2app_8c_a310f3f8434b9be30ea7eee6b5fc3c82c}{app\+\_\+\+Create} (const char $\ast$cfg\+Path\+Root\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a884897936072f4f33251839568e29cba}{Delete\+Proc\+Containers\+List} (\hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} procs\+List)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_ab429a40d970d700d4a945448a5c291ce}{app\+\_\+\+Delete} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_ad99c79c9f720ebbb3ab7424e869108eb}{app\+\_\+\+Start} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a7b83caadf0b85c6053efe0b16639ee29}{app\+\_\+\+Stop} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+\hyperlink{daemons_2linux_2supervisor_2app_8h_ab147e8213c5f5fddb0d0129aa8d98900}{app\+\_\+\+State\+\_\+t} \hyperlink{supervisor_2app_8c_afdcd713d4fc1c372dcc7e66ffb9c3143}{app\+\_\+\+Get\+State} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+\hyperlink{daemons_2linux_2supervisor_2app_8h_a22355cefac6c8015ef6fd14dc0fca0f0}{app\+\_\+\+Proc\+State\+\_\+t} \hyperlink{supervisor_2app_8c_a13f1c2e5652822cb9bbf62465b4a0add}{app\+\_\+\+Get\+Proc\+State} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$proc\+Name)
+\item 
+bool \hyperlink{supervisor_2app_8c_abc1def76cdb6a034d6bfabab9aae2bab}{app\+\_\+\+Has\+Top\+Level\+Proc} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, pid\+\_\+t pid)
+\item 
+const char $\ast$ \hyperlink{supervisor_2app_8c_ab56eddea8fa709eb82eb28ce5a17d805}{app\+\_\+\+Get\+Name} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+uid\+\_\+t \hyperlink{supervisor_2app_8c_a88067dd5e14ceba14725da86487388bf}{app\+\_\+\+Get\+Uid} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+gid\+\_\+t \hyperlink{supervisor_2app_8c_adae9795d2546aa1e9f39f42b6dabf9fb}{app\+\_\+\+Get\+Gid} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+bool \hyperlink{supervisor_2app_8c_a83d4f934c0de0388e9f61ae4c539b99d}{app\+\_\+\+Get\+Is\+Sandboxed} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+const char $\ast$ \hyperlink{supervisor_2app_8c_a104bc81716d5eceaead4daacb2fdda3f}{app\+\_\+\+Get\+Install\+Dir\+Path} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+const char $\ast$ \hyperlink{supervisor_2app_8c_a0dd3eef313eda0302f25ead19085e610}{app\+\_\+\+Get\+Working\+Dir} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+const char $\ast$ \hyperlink{supervisor_2app_8c_a95a6f498e6bbc3ca7dbd14d0c30010a1}{app\+\_\+\+Get\+Config\+Path} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a3c46fe24587c5e4ecd92c8f341b4bc3a}{app\+\_\+\+Get\+Supplementary\+Groups} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, gid\+\_\+t $\ast$groups\+Ptr, size\+\_\+t $\ast$num\+Groups\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_ad13ddd9674822420105e830641c2b63c}{app\+\_\+\+Watchdog\+Timeout\+Handler} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, pid\+\_\+t proc\+Pid, \hyperlink{daemons_2linux_2supervisor_2watchdog_action_8h_a564b482466482512da0352e768e90852}{wdog\+\_\+action\+\_\+\+Watchdog\+Action\+\_\+t} $\ast$watchdog\+Action\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_afaf6919493eba3f3ce69c1d1ca370630}{app\+\_\+\+Sig\+Child\+Handler} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, pid\+\_\+t proc\+Pid, int proc\+Exit\+Status, \hyperlink{class_fault_action__t}{Fault\+Action\+\_\+t} $\ast$fault\+Action\+Ptr)
+\item 
+\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} \hyperlink{supervisor_2app_8c_a4597f90ca97dce0003d6f1f827e4862c}{app\+\_\+\+Create\+Proc} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$proc\+Name\+Ptr, const char $\ast$exec\+Path\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a6fc28bd0cbc1d09fcc6e2aded1b1e7e3}{app\+\_\+\+Set\+Proc\+Std\+In} (\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref, int std\+In\+Fd)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_ad6debb7a2fdd438a45e42d37e738b1ec}{app\+\_\+\+Set\+Proc\+Std\+Out} (\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref, int std\+Out\+Fd)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a178560ba5fff8108d9cc331569b971d0}{app\+\_\+\+Set\+Proc\+Std\+Err} (\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref, int std\+Err\+Fd)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_ad4540f36ce46b8e5d2ce6866c0d241b4}{app\+\_\+\+Set\+Proc\+Stop\+Handler} (\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref, \hyperlink{daemons_2linux_2supervisor_2app_8h_a245045f131afb5d97267fb97a9923840}{app\+\_\+\+Proc\+\_\+\+Stop\+Handler\+Func\+\_\+t} stop\+Handler, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$stop\+Handler\+Context\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_ae4affb3a2da57e75b3e7bf7e17598ff2}{app\+\_\+\+Set\+Proc\+Priority} (\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref, const char $\ast$priority\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a04192a7cb67dbf97ca21a8d41123151e}{app\+\_\+\+Add\+Args} (\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref, const char $\ast$arg\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_ad5532a20e7fee6aa84e29c4b3ffee636}{app\+\_\+\+Clear\+Args} (\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a7f3cd221afd07efe12be478a30df460c}{app\+\_\+\+Set\+Fault\+Action} (\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref, \hyperlink{class_fault_action__t}{Fault\+Action\+\_\+t} fault\+Action)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a251ec9085dfb9b0b04972cad69682aeb}{app\+\_\+\+Set\+Run} (\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref, bool run)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_ab535b262691593d7bee23460edd87f1f}{app\+\_\+\+Set\+Run\+For\+All\+Procs} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, bool run)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_adc574e99da48db1e7bddad53fdbaec62}{app\+\_\+\+Start\+Proc} (\hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a4a7fea224511284cb29fdaab57d0c446}{app\+\_\+\+Delete\+Proc} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, \hyperlink{daemons_2linux_2supervisor_2app_8h_a5a2d72506492a9e0f37d2081ff829bb3}{app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+Proc\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a2a00a0d6fbca2ddc65916afc7bb003a8}{app\+\_\+\+Add\+Link} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$path\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_ac0cbe143869b349d21680ccfc532343f}{app\+\_\+\+Remove\+All\+Links} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_a21510d1a89695ec43304fe75d0cfbdc0}{app\+\_\+\+Set\+Dev\+Perm} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$path\+Ptr, const char $\ast$permission\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_a21b059b2bda02ed4ffaa6f18900f01da}{app\+\_\+\+Set\+Block\+Callback} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, \hyperlink{daemons_2linux_2supervisor_2app_8h_a1e7a2fb3e46eae7e5186e300803985db}{app\+\_\+\+Block\+Func\+\_\+t} block\+Callback, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{supervisor_2app_8c_afa4ec0317c2d0ce2cfb3c20149e08b55}{app\+\_\+\+Unblock} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, pid\+\_\+t pid)
+\item 
+bool \hyperlink{supervisor_2app_8c_a93135cfd6c0bdf227e41c9cc5e96f037}{app\+\_\+\+Has\+Conf\+Running\+Proc} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{supervisor_2app_8c_ad11060aa30992b74ae9103588692532e}{app\+\_\+\+Stop\+Complete} (\hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static const \hyperlink{struct_file_link_obj__t}{File\+Link\+Obj\+\_\+t} \hyperlink{supervisor_2app_8c_a708b62106c8118066eda918a8eeb8125}{Default\+Links} \mbox{[}$\,$\mbox{]}
+\item 
+static const \hyperlink{struct_file_link_obj__t}{File\+Link\+Obj\+\_\+t} \hyperlink{supervisor_2app_8c_af32c608e1c047d73393ce9d691c9b9c1}{Default\+Tmp\+Links} \mbox{[}$\,$\mbox{]}
+\item 
+static const \hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t} \hyperlink{supervisor_2app_8c_a56067bbfae78483346a5bf8bc8e123ea}{Kill\+Timeout}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{supervisor_2app_8c_ab79eb624fae9693502e15c47b9a34f2f}{App\+Pool}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{supervisor_2app_8c_a6be2f4e671f0673f7d471625b555c442}{File\+Link\+Node\+Pool}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{supervisor_2app_8c_a729009a2d06e82ca2d2ae1e896c007b1}{Proc\+Container\+Pool}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This is the Supervisor application class.
+
+To instantiate an application object of this class use the \hyperlink{supervisor_2app_8c_a310f3f8434b9be30ea7eee6b5fc3c82c}{app\+\_\+\+Create()} A\+PI.
+
+When an app object is created it sets up the working area for the application. The working area for an application is under the directory C\+U\+R\+R\+E\+N\+T\+\_\+\+S\+Y\+S\+T\+E\+M\+\_\+\+P\+A\+T\+H/apps\+Writeable/$<$app\+Name$>$.
+
+Links to files that are needed by the app are created in the working area. Bind mounts are used to create links for sandboxed apps. Symlinks are used to create links for unsandboxed apps.
+
+For sandboxed apps links are created to default libs/files, required dirs/files and readonly bundled files. A tmpfs is also mounted under C\+U\+R\+R\+E\+N\+T\+\_\+\+S\+Y\+S\+T\+E\+M\+\_\+\+P\+A\+T\+H/apps\+Writeable/$<$app\+Name$>$/tmp. This working area is the sandbox for the app.
+
+For unsandboxed apps links are created to required dirs/files and readonly bundled files.
+
+The reason that only readonly bundled files are linked into the working area is because the writable bundled files are already copied into the working area by the app installer.
+
+Generally, only links to files are created because links to directories can lead to unexpected behaviours. For instance, if a link to a directory is created and then a link to a file under that directory is created. The linked file will not show up in the linked directory both inside the app\textquotesingle{}s working area and the in the directory\textquotesingle{}s original location. So, instead when a directory is required or bundled, all files in the directory are individually linked.
+
+The working area is not cleaned up by the Supervisor, rather it is left to the installer to clean up.
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000008}{Todo}]Implement support for dynamic files.\end{DoxyRefDesc}
+
+
+The application objects instantiated by this class contains a list of process object containers that belong to the application. This list of processes is used to manage all processes that need to be started for the application. However, an application may contain other processes not in this list, processes that were forked by processes within the app.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!A\+P\+P\+\_\+\+T\+M\+P\+F\+S\+\_\+\+S\+I\+ZE@{A\+P\+P\+\_\+\+T\+M\+P\+F\+S\+\_\+\+S\+I\+ZE}}
+\index{A\+P\+P\+\_\+\+T\+M\+P\+F\+S\+\_\+\+S\+I\+ZE@{A\+P\+P\+\_\+\+T\+M\+P\+F\+S\+\_\+\+S\+I\+ZE}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{A\+P\+P\+\_\+\+T\+M\+P\+F\+S\+\_\+\+S\+I\+ZE}{APP_TMPFS_SIZE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define A\+P\+P\+\_\+\+T\+M\+P\+F\+S\+\_\+\+S\+I\+ZE~90112}\hypertarget{supervisor_2app_8c_a76e6b1ab9055e46f3bf1d7c5ee8d4b2f}{}\label{supervisor_2app_8c_a76e6b1ab9055e46f3bf1d7c5ee8d4b2f}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+I\+N\+D\+I\+N\+GS@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+I\+N\+D\+I\+N\+GS}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+I\+N\+D\+I\+N\+GS@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+I\+N\+D\+I\+N\+GS}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+I\+N\+D\+I\+N\+GS}{CFG_NODE_BINDINGS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+I\+N\+D\+I\+N\+GS~\char`\"{}bindings\char`\"{}}\hypertarget{supervisor_2app_8c_a83ffe12d736fcdd35928b466a69ea183}{}\label{supervisor_2app_8c_a83ffe12d736fcdd35928b466a69ea183}
+The name of the node in the config tree that contains the list of bindings for the application. \index{supervisor/app.\+c@{supervisor/app.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+U\+N\+D\+L\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+U\+N\+D\+L\+ES}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+U\+N\+D\+L\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+U\+N\+D\+L\+ES}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+U\+N\+D\+L\+ES}{CFG_NODE_BUNDLES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+B\+U\+N\+D\+L\+ES~\char`\"{}bundles\char`\"{}}\hypertarget{supervisor_2app_8c_a8eb774a436c76b569204a30e4c0354a8}{}\label{supervisor_2app_8c_a8eb774a436c76b569204a30e4c0354a8}
+The name of the node in the config tree that contains the list of bundled files and directories. \index{supervisor/app.\+c@{supervisor/app.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES}{CFG_NODE_DEVICES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES~\char`\"{}devices\char`\"{}}\hypertarget{supervisor_2app_8c_a1acbf1d92f60ccc3b4cbbf3a76c359c5}{}\label{supervisor_2app_8c_a1acbf1d92f60ccc3b4cbbf3a76c359c5}
+The name of the node in the config tree that contains the list of import directives for devices that an application needs. \index{supervisor/app.\+c@{supervisor/app.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES}{CFG_NODE_DEVICES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+E\+V\+I\+C\+ES~\char`\"{}devices\char`\"{}}\hypertarget{supervisor_2app_8c_a1acbf1d92f60ccc3b4cbbf3a76c359c5}{}\label{supervisor_2app_8c_a1acbf1d92f60ccc3b4cbbf3a76c359c5}
+The name of the node in the config tree that contains the list of import directives for devices that an application needs. \index{supervisor/app.\+c@{supervisor/app.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+I\+RS@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+I\+RS}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+I\+RS@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+I\+RS}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+I\+RS}{CFG_NODE_DIRS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+D\+I\+RS~\char`\"{}dirs\char`\"{}}\hypertarget{supervisor_2app_8c_a08a4d76db23011f2694cca151318f1dc}{}\label{supervisor_2app_8c_a08a4d76db23011f2694cca151318f1dc}
+The name of the node in the config tree that contains the list of import directives for directories that an application needs. \index{supervisor/app.\+c@{supervisor/app.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+I\+L\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+I\+L\+ES}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+I\+L\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+I\+L\+ES}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+I\+L\+ES}{CFG_NODE_FILES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+I\+L\+ES~\char`\"{}files\char`\"{}}\hypertarget{supervisor_2app_8c_ab6fef5936c35b132af9663e7a8e5e210}{}\label{supervisor_2app_8c_ab6fef5936c35b132af9663e7a8e5e210}
+The name of the node in the config tree that contains the list of import directives for files that an application needs. \index{supervisor/app.\+c@{supervisor/app.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+G\+R\+O\+U\+PS@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+G\+R\+O\+U\+PS}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+G\+R\+O\+U\+PS@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+G\+R\+O\+U\+PS}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+G\+R\+O\+U\+PS}{CFG_NODE_GROUPS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+G\+R\+O\+U\+PS~\char`\"{}groups\char`\"{}}\hypertarget{supervisor_2app_8c_ac935677b258d6067f1f457ef5a984333}{}\label{supervisor_2app_8c_ac935677b258d6067f1f457ef5a984333}
+The name of the node in the config tree that contains a process\textquotesingle{}s supplementary groups list.
+
+Supplementary groups list is only available for non-\/sandboxed apps. \index{supervisor/app.\+c@{supervisor/app.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST}{CFG_NODE_PROC_LIST}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+O\+C\+\_\+\+L\+I\+ST~\char`\"{}procs\char`\"{}}\hypertarget{supervisor_2app_8c_ac39cb320faf8fef1418d7ecca3c788e4}{}\label{supervisor_2app_8c_ac39cb320faf8fef1418d7ecca3c788e4}
+The name of the node in the config tree that contains the list of processes for the application.
+
+If this entry in the config tree is missing or empty the application will not be launched. \index{supervisor/app.\+c@{supervisor/app.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES}{CFG_NODE_REQUIRES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES~\char`\"{}requires\char`\"{}}\hypertarget{supervisor_2app_8c_a08651d777bc179f72000e006c333dc1a}{}\label{supervisor_2app_8c_a08651d777bc179f72000e006c333dc1a}
+The name of the node in the config tree that contains the list of required files and directories. \index{supervisor/app.\+c@{supervisor/app.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES}{CFG_NODE_REQUIRES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+R\+E\+Q\+U\+I\+R\+ES~\char`\"{}requires\char`\"{}}\hypertarget{supervisor_2app_8c_a08651d777bc179f72000e006c333dc1a}{}\label{supervisor_2app_8c_a08651d777bc179f72000e006c333dc1a}
+The name of the node in the config tree that contains the list of required files and directories. \index{supervisor/app.\+c@{supervisor/app.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED}{CFG_NODE_SANDBOXED}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+S\+A\+N\+D\+B\+O\+X\+ED~\char`\"{}sandboxed\char`\"{}}\hypertarget{supervisor_2app_8c_ac07be121fb3dc69f7fcb1a02bba94a37}{}\label{supervisor_2app_8c_ac07be121fb3dc69f7fcb1a02bba94a37}
+The name of the node in the config tree that specifies whether the app should be in a sandbox.
+
+If this entry in the config tree is missing or empty the application will be sandboxed. \index{supervisor/app.\+c@{supervisor/app.\+c}!M\+A\+X\+\_\+\+C\+R\+E\+A\+T\+E\+\_\+\+P\+R\+OC@{M\+A\+X\+\_\+\+C\+R\+E\+A\+T\+E\+\_\+\+P\+R\+OC}}
+\index{M\+A\+X\+\_\+\+C\+R\+E\+A\+T\+E\+\_\+\+P\+R\+OC@{M\+A\+X\+\_\+\+C\+R\+E\+A\+T\+E\+\_\+\+P\+R\+OC}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+C\+R\+E\+A\+T\+E\+\_\+\+P\+R\+OC}{MAX_CREATE_PROC}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+C\+R\+E\+A\+T\+E\+\_\+\+P\+R\+OC~32}\hypertarget{supervisor_2app_8c_a6120a0a2e2b2f55a05e31bdab7b78cf9}{}\label{supervisor_2app_8c_a6120a0a2e2b2f55a05e31bdab7b78cf9}
+Maximum number of processes created with Create\+Proc from one executable.
+
+\begin{DoxyNote}{Note}
+Create\+Proc code assumes this is a two-\/digit number. 
+\end{DoxyNote}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!M\+A\+X\+\_\+\+D\+E\+V\+I\+C\+E\+\_\+\+P\+E\+R\+M\+\_\+\+S\+T\+R\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+D\+E\+V\+I\+C\+E\+\_\+\+P\+E\+R\+M\+\_\+\+S\+T\+R\+\_\+\+B\+Y\+T\+ES}}
+\index{M\+A\+X\+\_\+\+D\+E\+V\+I\+C\+E\+\_\+\+P\+E\+R\+M\+\_\+\+S\+T\+R\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+D\+E\+V\+I\+C\+E\+\_\+\+P\+E\+R\+M\+\_\+\+S\+T\+R\+\_\+\+B\+Y\+T\+ES}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+D\+E\+V\+I\+C\+E\+\_\+\+P\+E\+R\+M\+\_\+\+S\+T\+R\+\_\+\+B\+Y\+T\+ES}{MAX_DEVICE_PERM_STR_BYTES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+D\+E\+V\+I\+C\+E\+\_\+\+P\+E\+R\+M\+\_\+\+S\+T\+R\+\_\+\+B\+Y\+T\+ES~3}\hypertarget{supervisor_2app_8c_ac66f48502bc6b8a72848232a9a296ca9}{}\label{supervisor_2app_8c_ac66f48502bc6b8a72848232a9a296ca9}
+Maximum number of bytes in a permission string for devices. \index{supervisor/app.\+c@{supervisor/app.\+c}!N\+U\+M\+\_\+\+P\+E\+R\+M\+I\+S\+S\+O\+NS@{N\+U\+M\+\_\+\+P\+E\+R\+M\+I\+S\+S\+O\+NS}}
+\index{N\+U\+M\+\_\+\+P\+E\+R\+M\+I\+S\+S\+O\+NS@{N\+U\+M\+\_\+\+P\+E\+R\+M\+I\+S\+S\+O\+NS}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{N\+U\+M\+\_\+\+P\+E\+R\+M\+I\+S\+S\+O\+NS}{NUM_PERMISSONS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\+U\+M\+\_\+\+P\+E\+R\+M\+I\+S\+S\+O\+NS~7}\hypertarget{supervisor_2app_8c_a678c1937fe9da118ff44171c46b03dcd}{}\label{supervisor_2app_8c_a678c1937fe9da118ff44171c46b03dcd}
+
+
+\subsection{Typedef Documentation}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Proc\+Stop\+Handler\+\_\+t@{Proc\+Stop\+Handler\+\_\+t}}
+\index{Proc\+Stop\+Handler\+\_\+t@{Proc\+Stop\+Handler\+\_\+t}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Proc\+Stop\+Handler\+\_\+t}{ProcStopHandler_t}}]{\setlength{\rightskip}{0pt plus 5cm}typedef {\bf le\+\_\+result\+\_\+t}($\ast$ Proc\+Stop\+Handler\+\_\+t) ({\bf proc\+\_\+\+Ref\+\_\+t} proc\+Ref)}\hypertarget{supervisor_2app_8c_ac80a0c9c9987ce26f3d77d5c7a77b2f9}{}\label{supervisor_2app_8c_ac80a0c9c9987ce26f3d77d5c7a77b2f9}
+Prototype for process stopped handler. 
+
+\subsection{Enumeration Type Documentation}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Kill\+Type\+\_\+t@{Kill\+Type\+\_\+t}}
+\index{Kill\+Type\+\_\+t@{Kill\+Type\+\_\+t}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Kill\+Type\+\_\+t}{KillType_t}}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf Kill\+Type\+\_\+t}}\hypertarget{supervisor_2app_8c_af8532deabcd03b5270f18bb027bd5a55}{}\label{supervisor_2app_8c_af8532deabcd03b5270f18bb027bd5a55}
+Application kill type. \begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{K\+I\+L\+L\+\_\+\+S\+O\+FT@{K\+I\+L\+L\+\_\+\+S\+O\+FT}!supervisor/app.\+c@{supervisor/app.\+c}}\index{supervisor/app.\+c@{supervisor/app.\+c}!K\+I\+L\+L\+\_\+\+S\+O\+FT@{K\+I\+L\+L\+\_\+\+S\+O\+FT}}\item[{\em 
+K\+I\+L\+L\+\_\+\+S\+O\+FT\hypertarget{supervisor_2app_8c_af8532deabcd03b5270f18bb027bd5a55abe769b0b2072fbfcf58ad2d5f46f6a77}{}\label{supervisor_2app_8c_af8532deabcd03b5270f18bb027bd5a55abe769b0b2072fbfcf58ad2d5f46f6a77}
+}]Requests the application to clean up and shutdown. \index{K\+I\+L\+L\+\_\+\+H\+A\+RD@{K\+I\+L\+L\+\_\+\+H\+A\+RD}!supervisor/app.\+c@{supervisor/app.\+c}}\index{supervisor/app.\+c@{supervisor/app.\+c}!K\+I\+L\+L\+\_\+\+H\+A\+RD@{K\+I\+L\+L\+\_\+\+H\+A\+RD}}\item[{\em 
+K\+I\+L\+L\+\_\+\+H\+A\+RD\hypertarget{supervisor_2app_8c_af8532deabcd03b5270f18bb027bd5a55ab0e4fdb8d06a4b7723ef7c42142bde8e}{}\label{supervisor_2app_8c_af8532deabcd03b5270f18bb027bd5a55ab0e4fdb8d06a4b7723ef7c42142bde8e}
+}]Kills the application A\+S\+AP. \end{description}
+\end{Desc}
+
+
+\subsection{Function Documentation}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Add\+Args@{app\+\_\+\+Add\+Args}}
+\index{app\+\_\+\+Add\+Args@{app\+\_\+\+Add\+Args}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Add\+Args(app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref, const char $\ast$arg\+Ptr)}{app_AddArgs(app_Proc_Ref_t appProcRef, const char *argPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} app\+\_\+\+Add\+Args (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref, }
+\item[{const char $\ast$}]{arg\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a04192a7cb67dbf97ca21a8d41123151e}{}\label{supervisor_2app_8c_a04192a7cb67dbf97ca21a8d41123151e}
+Adds a cmd-\/line argument to a process. Adding a N\+U\+LL arg\+Ptr is valid and can be used to validate the args list without actually adding an argument. This is useful for overriding the configured arguments with an empty list.
+
+This overrides the configured arguments if available.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the argument string is too long. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Process reference. \\
+\hline
+\mbox{\tt in}  & {\em arg\+Ptr} & Argument string. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Add\+Link@{app\+\_\+\+Add\+Link}}
+\index{app\+\_\+\+Add\+Link@{app\+\_\+\+Add\+Link}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Add\+Link(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$path\+Ptr)}{app_AddLink(app_Ref_t appRef, const char *pathPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} app\+\_\+\+Add\+Link (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{path\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a2a00a0d6fbca2ddc65916afc7bb003a8}{}\label{supervisor_2app_8c_a2a00a0d6fbca2ddc65916afc7bb003a8}
+Adds a new link to a file for the app. A link to the file will be created in the app\textquotesingle{}s working directory under the same path. For example, if the path is /bin/ls then a link to the file will be created at apps\+Sandbox\+Root/bin/ls.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE if the link could not be created because the path conflicts with an existing item already in the app. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the source path does not point to a valid file. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & App reference. \\
+\hline
+\mbox{\tt in}  & {\em path\+Ptr} & Absolute path to the file. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Clear\+Args@{app\+\_\+\+Clear\+Args}}
+\index{app\+\_\+\+Clear\+Args@{app\+\_\+\+Clear\+Args}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Clear\+Args(app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref)}{app_ClearArgs(app_Proc_Ref_t appProcRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Clear\+Args (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_ad5532a20e7fee6aa84e29c4b3ffee636}{}\label{supervisor_2app_8c_ad5532a20e7fee6aa84e29c4b3ffee636}
+Deletes and invalidates the cmd-\/line arguments to a process. This means the process will only use arguments from the config if available. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Process reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Create@{app\+\_\+\+Create}}
+\index{app\+\_\+\+Create@{app\+\_\+\+Create}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Create(const char $\ast$cfg\+Path\+Root\+Ptr)}{app_Create(const char *cfgPathRootPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf app\+\_\+\+Ref\+\_\+t} app\+\_\+\+Create (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{cfg\+Path\+Root\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a310f3f8434b9be30ea7eee6b5fc3c82c}{}\label{supervisor_2app_8c_a310f3f8434b9be30ea7eee6b5fc3c82c}
+Creates an application object.
+
+\begin{DoxyNote}{Note}
+The name of the application is the node name (last part) of the cfg\+Path\+Root\+Ptr.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+A reference to the application object if success. N\+U\+LL if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cfg\+Path\+Root\+Ptr} & The path in the config tree for this application. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Create\+Proc@{app\+\_\+\+Create\+Proc}}
+\index{app\+\_\+\+Create\+Proc@{app\+\_\+\+Create\+Proc}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Create\+Proc(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$proc\+Name\+Ptr, const char $\ast$exec\+Path\+Ptr)}{app_CreateProc(app_Ref_t appRef, const char *procNamePtr, const char *execPathPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+\_\+\+Create\+Proc (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{proc\+Name\+Ptr, }
+\item[{const char $\ast$}]{exec\+Path\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a4597f90ca97dce0003d6f1f827e4862c}{}\label{supervisor_2app_8c_a4597f90ca97dce0003d6f1f827e4862c}
+Creates a reference to an application process.
+
+If the process name refers to an existing configured application process then a reference to that process is simply returned. In this case an executable path may be specified to override the configured executable.
+
+If the process name does not match any configured application processes then a new process is created. In this case an executable path must be specified.
+
+Configured processes take their runtime parameters, such as environment variables, priority, etc. from the configuration database while non-\/configured processes use default parameters.
+
+Parameters can be overridden by the other functions in this A\+PI such as app\+\_\+\+Add\+Proc\+Arg(), \hyperlink{supervisor_2app_8c_ae4affb3a2da57e75b3e7bf7e17598ff2}{app\+\_\+\+Set\+Proc\+Priority()}, etc.
+
+It is an error to call this function on a configured process that is already running.
+
+\begin{DoxyReturn}{Returns}
+Reference to the application process if successful. N\+U\+LL if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name\+Ptr} & Name of the process. \\
+\hline
+\mbox{\tt in}  & {\em exec\+Path\+Ptr} & Path to the executable file. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Delete@{app\+\_\+\+Delete}}
+\index{app\+\_\+\+Delete@{app\+\_\+\+Delete}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Delete(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_Delete(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Delete (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_ab429a40d970d700d4a945448a5c291ce}{}\label{supervisor_2app_8c_ab429a40d970d700d4a945448a5c291ce}
+Deletes an application. The application must be stopped before it is deleted.
+
+\begin{DoxyNote}{Note}
+If this function fails it will kill the calling process. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application to delete. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Delete\+Proc@{app\+\_\+\+Delete\+Proc}}
+\index{app\+\_\+\+Delete\+Proc@{app\+\_\+\+Delete\+Proc}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Delete\+Proc(app\+\_\+\+Ref\+\_\+t app\+Ref, app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref)}{app_DeleteProc(app_Ref_t appRef, app_Proc_Ref_t appProcRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Delete\+Proc (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a4a7fea224511284cb29fdaab57d0c446}{}\label{supervisor_2app_8c_a4a7fea224511284cb29fdaab57d0c446}
+Deletes an application process from an app.
+
+If the process is running stop it first.
+
+If the process is a configured process the overriden parameters are cleared but the process is not actually deleted. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & App reference. \\
+\hline
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Process reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Get\+Config\+Path@{app\+\_\+\+Get\+Config\+Path}}
+\index{app\+\_\+\+Get\+Config\+Path@{app\+\_\+\+Get\+Config\+Path}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Get\+Config\+Path(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_GetConfigPath(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ app\+\_\+\+Get\+Config\+Path (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a95a6f498e6bbc3ca7dbd14d0c30010a1}{}\label{supervisor_2app_8c_a95a6f498e6bbc3ca7dbd14d0c30010a1}
+Gets an application\textquotesingle{}s configuration path.
+
+\begin{DoxyReturn}{Returns}
+The application\textquotesingle{}s configuration path. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Get\+Gid@{app\+\_\+\+Get\+Gid}}
+\index{app\+\_\+\+Get\+Gid@{app\+\_\+\+Get\+Gid}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Get\+Gid(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_GetGid(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}gid\+\_\+t app\+\_\+\+Get\+Gid (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_adae9795d2546aa1e9f39f42b6dabf9fb}{}\label{supervisor_2app_8c_adae9795d2546aa1e9f39f42b6dabf9fb}
+Gets an application\textquotesingle{}s G\+ID.
+
+\begin{DoxyReturn}{Returns}
+The application\textquotesingle{}s G\+ID. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Get\+Install\+Dir\+Path@{app\+\_\+\+Get\+Install\+Dir\+Path}}
+\index{app\+\_\+\+Get\+Install\+Dir\+Path@{app\+\_\+\+Get\+Install\+Dir\+Path}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Get\+Install\+Dir\+Path(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_GetInstallDirPath(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ app\+\_\+\+Get\+Install\+Dir\+Path (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a104bc81716d5eceaead4daacb2fdda3f}{}\label{supervisor_2app_8c_a104bc81716d5eceaead4daacb2fdda3f}
+Gets the directory path for an app\textquotesingle{}s installation directory in the current running system.
+
+\begin{DoxyReturn}{Returns}
+The absolute directory path. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Get\+Is\+Sandboxed@{app\+\_\+\+Get\+Is\+Sandboxed}}
+\index{app\+\_\+\+Get\+Is\+Sandboxed@{app\+\_\+\+Get\+Is\+Sandboxed}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Get\+Is\+Sandboxed(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_GetIsSandboxed(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}bool app\+\_\+\+Get\+Is\+Sandboxed (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a83d4f934c0de0388e9f61ae4c539b99d}{}\label{supervisor_2app_8c_a83d4f934c0de0388e9f61ae4c539b99d}
+Check to see if the application is sandboxed or not.
+
+\begin{DoxyReturn}{Returns}
+True if the app is sandboxed, false if not. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Get\+Name@{app\+\_\+\+Get\+Name}}
+\index{app\+\_\+\+Get\+Name@{app\+\_\+\+Get\+Name}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Get\+Name(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_GetName(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ app\+\_\+\+Get\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_ab56eddea8fa709eb82eb28ce5a17d805}{}\label{supervisor_2app_8c_ab56eddea8fa709eb82eb28ce5a17d805}
+Gets an application\textquotesingle{}s name.
+
+\begin{DoxyReturn}{Returns}
+The application\textquotesingle{}s name. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Get\+Proc\+Container@{app\+\_\+\+Get\+Proc\+Container}}
+\index{app\+\_\+\+Get\+Proc\+Container@{app\+\_\+\+Get\+Proc\+Container}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Get\+Proc\+Container(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$proc\+Name\+Ptr)}{app_GetProcContainer(app_Ref_t appRef, const char *procNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} app\+\_\+\+Get\+Proc\+Container (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{proc\+Name\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_aad987266c51b1b747f54a65ed62d2e32}{}\label{supervisor_2app_8c_aad987266c51b1b747f54a65ed62d2e32}
+Gets a process container for the app by name.
+
+\begin{DoxyReturn}{Returns}
+The pointer to a process container if successful. N\+U\+LL if the process container could not be found. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application to search in. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name\+Ptr} & The process name to get for. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Get\+Proc\+State@{app\+\_\+\+Get\+Proc\+State}}
+\index{app\+\_\+\+Get\+Proc\+State@{app\+\_\+\+Get\+Proc\+State}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Get\+Proc\+State(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$proc\+Name)}{app_GetProcState(app_Ref_t appRef, const char *procName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf app\+\_\+\+Proc\+State\+\_\+t} app\+\_\+\+Get\+Proc\+State (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{proc\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a13f1c2e5652822cb9bbf62465b4a0add}{}\label{supervisor_2app_8c_a13f1c2e5652822cb9bbf62465b4a0add}
+Gets the state of a process belonging to an application.
+
+\begin{DoxyReturn}{Returns}
+The process\textquotesingle{}s state. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application to stop. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name} & Name of the process. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Get\+State@{app\+\_\+\+Get\+State}}
+\index{app\+\_\+\+Get\+State@{app\+\_\+\+Get\+State}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Get\+State(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_GetState(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf app\+\_\+\+State\+\_\+t} app\+\_\+\+Get\+State (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_afdcd713d4fc1c372dcc7e66ffb9c3143}{}\label{supervisor_2app_8c_afdcd713d4fc1c372dcc7e66ffb9c3143}
+Gets an application\textquotesingle{}s state.
+
+\begin{DoxyReturn}{Returns}
+The application\textquotesingle{}s state. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application to stop. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Get\+Supplementary\+Groups@{app\+\_\+\+Get\+Supplementary\+Groups}}
+\index{app\+\_\+\+Get\+Supplementary\+Groups@{app\+\_\+\+Get\+Supplementary\+Groups}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Get\+Supplementary\+Groups(app\+\_\+\+Ref\+\_\+t app\+Ref, gid\+\_\+t $\ast$groups\+Ptr, size\+\_\+t $\ast$num\+Groups\+Ptr)}{app_GetSupplementaryGroups(app_Ref_t appRef, gid_t *groupsPtr, size_t *numGroupsPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} app\+\_\+\+Get\+Supplementary\+Groups (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{gid\+\_\+t $\ast$}]{groups\+Ptr, }
+\item[{size\+\_\+t $\ast$}]{num\+Groups\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a3c46fe24587c5e4ecd92c8f341b4bc3a}{}\label{supervisor_2app_8c_a3c46fe24587c5e4ecd92c8f341b4bc3a}
+Gets an application\textquotesingle{}s supplementary groups list.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the buffer was too small to hold all the gids. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\mbox{\tt out}  & {\em groups\+Ptr} & List of group I\+Ds. \\
+\hline
+\mbox{\tt in,out}  & {\em num\+Groups\+Ptr} & Size of groups\+Ptr buffer on input. Number of groups in groups\+Ptr on output. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Get\+Uid@{app\+\_\+\+Get\+Uid}}
+\index{app\+\_\+\+Get\+Uid@{app\+\_\+\+Get\+Uid}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Get\+Uid(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_GetUid(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}uid\+\_\+t app\+\_\+\+Get\+Uid (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a88067dd5e14ceba14725da86487388bf}{}\label{supervisor_2app_8c_a88067dd5e14ceba14725da86487388bf}
+Gets an application\textquotesingle{}s U\+ID.
+
+\begin{DoxyReturn}{Returns}
+The application\textquotesingle{}s U\+ID. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Get\+Working\+Dir@{app\+\_\+\+Get\+Working\+Dir}}
+\index{app\+\_\+\+Get\+Working\+Dir@{app\+\_\+\+Get\+Working\+Dir}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Get\+Working\+Dir(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_GetWorkingDir(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ app\+\_\+\+Get\+Working\+Dir (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a0dd3eef313eda0302f25ead19085e610}{}\label{supervisor_2app_8c_a0dd3eef313eda0302f25ead19085e610}
+Gets an application\textquotesingle{}s working directory.
+
+\begin{DoxyReturn}{Returns}
+The application\textquotesingle{}s sandbox path. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Has\+Conf\+Running\+Proc@{app\+\_\+\+Has\+Conf\+Running\+Proc}}
+\index{app\+\_\+\+Has\+Conf\+Running\+Proc@{app\+\_\+\+Has\+Conf\+Running\+Proc}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Has\+Conf\+Running\+Proc(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_HasConfRunningProc(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}bool app\+\_\+\+Has\+Conf\+Running\+Proc (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a93135cfd6c0bdf227e41c9cc5e96f037}{}\label{supervisor_2app_8c_a93135cfd6c0bdf227e41c9cc5e96f037}
+Checks if the application has any configured processes running.
+
+\begin{DoxyReturn}{Returns}
+true if there is at least one configured running process for the application. false if there are no configured running processes for the application. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Has\+Top\+Level\+Proc@{app\+\_\+\+Has\+Top\+Level\+Proc}}
+\index{app\+\_\+\+Has\+Top\+Level\+Proc@{app\+\_\+\+Has\+Top\+Level\+Proc}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Has\+Top\+Level\+Proc(app\+\_\+\+Ref\+\_\+t app\+Ref, pid\+\_\+t pid)}{app_HasTopLevelProc(app_Ref_t appRef, pid_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}bool app\+\_\+\+Has\+Top\+Level\+Proc (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{pid\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_abc1def76cdb6a034d6bfabab9aae2bab}{}\label{supervisor_2app_8c_abc1def76cdb6a034d6bfabab9aae2bab}
+Checks if a given app is running a top-\/level process with given P\+ID.
+
+An app\textquotesingle{}s top-\/level processes are those that are started by the Supervisor directly. If the Supervisor starts a process and that process starts another process, this function will not find that second process.
+
+\begin{DoxyReturn}{Returns}
+true if the process is one of this app\textquotesingle{}s top-\/level processes, false if not. 
+\end{DoxyReturn}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Init@{app\+\_\+\+Init}}
+\index{app\+\_\+\+Init@{app\+\_\+\+Init}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Init(void)}{app_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a5dbc888a5dd41603f51c716b47340318}{}\label{supervisor_2app_8c_a5dbc888a5dd41603f51c716b47340318}
+Initialize the application system. \index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Remove\+All\+Links@{app\+\_\+\+Remove\+All\+Links}}
+\index{app\+\_\+\+Remove\+All\+Links@{app\+\_\+\+Remove\+All\+Links}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Remove\+All\+Links(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_RemoveAllLinks(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Remove\+All\+Links (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_ac0cbe143869b349d21680ccfc532343f}{}\label{supervisor_2app_8c_ac0cbe143869b349d21680ccfc532343f}
+Remove all links added using \hyperlink{supervisor_2app_8c_a2a00a0d6fbca2ddc65916afc7bb003a8}{app\+\_\+\+Add\+Link()}. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & App reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Set\+Block\+Callback@{app\+\_\+\+Set\+Block\+Callback}}
+\index{app\+\_\+\+Set\+Block\+Callback@{app\+\_\+\+Set\+Block\+Callback}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Set\+Block\+Callback(app\+\_\+\+Ref\+\_\+t app\+Ref, app\+\_\+\+Block\+Func\+\_\+t block\+Callback, void $\ast$context\+Ptr)}{app_SetBlockCallback(app_Ref_t appRef, app_BlockFunc_t blockCallback, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Set\+Block\+Callback (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{{\bf app\+\_\+\+Block\+Func\+\_\+t}}]{block\+Callback, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a21b059b2bda02ed4ffaa6f18900f01da}{}\label{supervisor_2app_8c_a21b059b2bda02ed4ffaa6f18900f01da}
+Blocks each app process on startup, after the process is forked and initialized but before it has execed. The specified callback function will be called when the process has blocked. Clearing the callback function means processes should not block on startup. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & App reference. \\
+\hline
+\mbox{\tt in}  & {\em block\+Callback} & Callback function. N\+U\+LL to clear. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Context pointer. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Set\+Dev\+Perm@{app\+\_\+\+Set\+Dev\+Perm}}
+\index{app\+\_\+\+Set\+Dev\+Perm@{app\+\_\+\+Set\+Dev\+Perm}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Set\+Dev\+Perm(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$path\+Ptr, const char $\ast$permission\+Ptr)}{app_SetDevPerm(app_Ref_t appRef, const char *pathPtr, const char *permissionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} app\+\_\+\+Set\+Dev\+Perm (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{path\+Ptr, }
+\item[{const char $\ast$}]{permission\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a21510d1a89695ec43304fe75d0cfbdc0}{}\label{supervisor_2app_8c_a21510d1a89695ec43304fe75d0cfbdc0}
+Sets the permissions for a device file.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the source path does not point to a valid device. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & App reference. \\
+\hline
+\mbox{\tt in}  & {\em path\+Ptr} & Absolute path to the device. \\
+\hline
+\mbox{\tt in}  & {\em permission\+Ptr} & Permission string, \char`\"{}r\char`\"{}, \char`\"{}w\char`\"{}, \char`\"{}rw\char`\"{}. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Set\+Fault\+Action@{app\+\_\+\+Set\+Fault\+Action}}
+\index{app\+\_\+\+Set\+Fault\+Action@{app\+\_\+\+Set\+Fault\+Action}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Set\+Fault\+Action(app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref, Fault\+Action\+\_\+t fault\+Action)}{app_SetFaultAction(app_Proc_Ref_t appProcRef, FaultAction_t faultAction)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Set\+Fault\+Action (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref, }
+\item[{{\bf Fault\+Action\+\_\+t}}]{fault\+Action}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a7f3cd221afd07efe12be478a30df460c}{}\label{supervisor_2app_8c_a7f3cd221afd07efe12be478a30df460c}
+Sets fault action for a process.
+
+This overrides the configured fault action if available.
+
+The fault action can be set to F\+A\+U\+L\+T\+\_\+\+A\+C\+T\+I\+O\+N\+\_\+\+N\+O\+NE to indicate that the configured fault action should be used if available. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Process reference. \\
+\hline
+\mbox{\tt in}  & {\em fault\+Action} & Fault action. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Set\+Proc\+Priority@{app\+\_\+\+Set\+Proc\+Priority}}
+\index{app\+\_\+\+Set\+Proc\+Priority@{app\+\_\+\+Set\+Proc\+Priority}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Set\+Proc\+Priority(app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref, const char $\ast$priority\+Ptr)}{app_SetProcPriority(app_Proc_Ref_t appProcRef, const char *priorityPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} app\+\_\+\+Set\+Proc\+Priority (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref, }
+\item[{const char $\ast$}]{priority\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_ae4affb3a2da57e75b3e7bf7e17598ff2}{}\label{supervisor_2app_8c_ae4affb3a2da57e75b3e7bf7e17598ff2}
+Sets the process\textquotesingle{}s priority.
+
+This overrides the configured priority if available.
+
+The priority level string can be either \char`\"{}idle\char`\"{}, \char`\"{}low\char`\"{}, \char`\"{}medium\char`\"{}, \char`\"{}high\char`\"{}, \char`\"{}rt1\char`\"{} ... \char`\"{}rt32\char`\"{}.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the priority string is too long. L\+E\+\_\+\+F\+A\+U\+LT if the priority string is not valid. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Process reference. \\
+\hline
+\mbox{\tt in}  & {\em priority\+Ptr} & Priority string. N\+U\+LL to clear the priority. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Set\+Proc\+Std\+Err@{app\+\_\+\+Set\+Proc\+Std\+Err}}
+\index{app\+\_\+\+Set\+Proc\+Std\+Err@{app\+\_\+\+Set\+Proc\+Std\+Err}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Set\+Proc\+Std\+Err(app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref, int std\+Err\+Fd)}{app_SetProcStdErr(app_Proc_Ref_t appProcRef, int stdErrFd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Set\+Proc\+Std\+Err (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref, }
+\item[{int}]{std\+Err\+Fd}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a178560ba5fff8108d9cc331569b971d0}{}\label{supervisor_2app_8c_a178560ba5fff8108d9cc331569b971d0}
+Sets the standard error of an application process. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Process reference. \\
+\hline
+\mbox{\tt in}  & {\em std\+Err\+Fd} & File descriptor to use as the app proc\textquotesingle{}s standard error. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Set\+Proc\+Std\+In@{app\+\_\+\+Set\+Proc\+Std\+In}}
+\index{app\+\_\+\+Set\+Proc\+Std\+In@{app\+\_\+\+Set\+Proc\+Std\+In}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Set\+Proc\+Std\+In(app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref, int std\+In\+Fd)}{app_SetProcStdIn(app_Proc_Ref_t appProcRef, int stdInFd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Set\+Proc\+Std\+In (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref, }
+\item[{int}]{std\+In\+Fd}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a6fc28bd0cbc1d09fcc6e2aded1b1e7e3}{}\label{supervisor_2app_8c_a6fc28bd0cbc1d09fcc6e2aded1b1e7e3}
+Sets the standard in of an application process. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Process reference. \\
+\hline
+\mbox{\tt in}  & {\em std\+In\+Fd} & File descriptor to use as the app proc\textquotesingle{}s standard in. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Set\+Proc\+Std\+Out@{app\+\_\+\+Set\+Proc\+Std\+Out}}
+\index{app\+\_\+\+Set\+Proc\+Std\+Out@{app\+\_\+\+Set\+Proc\+Std\+Out}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Set\+Proc\+Std\+Out(app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref, int std\+Out\+Fd)}{app_SetProcStdOut(app_Proc_Ref_t appProcRef, int stdOutFd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Set\+Proc\+Std\+Out (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref, }
+\item[{int}]{std\+Out\+Fd}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_ad6debb7a2fdd438a45e42d37e738b1ec}{}\label{supervisor_2app_8c_ad6debb7a2fdd438a45e42d37e738b1ec}
+Sets the standard out of an application process. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Process reference. \\
+\hline
+\mbox{\tt in}  & {\em std\+Out\+Fd} & File descriptor to use as the app proc\textquotesingle{}s standard out. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Set\+Proc\+Stop\+Handler@{app\+\_\+\+Set\+Proc\+Stop\+Handler}}
+\index{app\+\_\+\+Set\+Proc\+Stop\+Handler@{app\+\_\+\+Set\+Proc\+Stop\+Handler}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Set\+Proc\+Stop\+Handler(app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref, app\+\_\+\+Proc\+\_\+\+Stop\+Handler\+Func\+\_\+t stop\+Handler, void $\ast$stop\+Handler\+Context\+Ptr)}{app_SetProcStopHandler(app_Proc_Ref_t appProcRef, app_Proc_StopHandlerFunc_t stopHandler, void *stopHandlerContextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Set\+Proc\+Stop\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref, }
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Stop\+Handler\+Func\+\_\+t}}]{stop\+Handler, }
+\item[{{\bf void} $\ast$}]{stop\+Handler\+Context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_ad4540f36ce46b8e5d2ce6866c0d241b4}{}\label{supervisor_2app_8c_ad4540f36ce46b8e5d2ce6866c0d241b4}
+Sets a stop handler to be called when the specified process stops. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Process reference. \\
+\hline
+\mbox{\tt in}  & {\em stop\+Handler} & Handler to call when the process exits. \\
+\hline
+\mbox{\tt in}  & {\em stop\+Handler\+Context\+Ptr} & Context data for the stop handler. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Set\+Run@{app\+\_\+\+Set\+Run}}
+\index{app\+\_\+\+Set\+Run@{app\+\_\+\+Set\+Run}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Set\+Run(app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref, bool run)}{app_SetRun(app_Proc_Ref_t appProcRef, bool run)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Set\+Run (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref, }
+\item[{bool}]{run}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a251ec9085dfb9b0b04972cad69682aeb}{}\label{supervisor_2app_8c_a251ec9085dfb9b0b04972cad69682aeb}
+Sets the run flag of a process. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Process reference. \\
+\hline
+\mbox{\tt in}  & {\em run} & Run flag. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Set\+Run\+For\+All\+Procs@{app\+\_\+\+Set\+Run\+For\+All\+Procs}}
+\index{app\+\_\+\+Set\+Run\+For\+All\+Procs@{app\+\_\+\+Set\+Run\+For\+All\+Procs}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Set\+Run\+For\+All\+Procs(app\+\_\+\+Ref\+\_\+t app\+Ref, bool run)}{app_SetRunForAllProcs(app_Ref_t appRef, bool run)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Set\+Run\+For\+All\+Procs (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{bool}]{run}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_ab535b262691593d7bee23460edd87f1f}{}\label{supervisor_2app_8c_ab535b262691593d7bee23460edd87f1f}
+Sets the run flag of all processes in an app. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & App reference. \\
+\hline
+\mbox{\tt in}  & {\em run} & Run flag. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Sig\+Child\+Handler@{app\+\_\+\+Sig\+Child\+Handler}}
+\index{app\+\_\+\+Sig\+Child\+Handler@{app\+\_\+\+Sig\+Child\+Handler}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Sig\+Child\+Handler(app\+\_\+\+Ref\+\_\+t app\+Ref, pid\+\_\+t proc\+Pid, int proc\+Exit\+Status, Fault\+Action\+\_\+t $\ast$fault\+Action\+Ptr)}{app_SigChildHandler(app_Ref_t appRef, pid_t procPid, int procExitStatus, FaultAction_t *faultActionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Sig\+Child\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{pid\+\_\+t}]{proc\+Pid, }
+\item[{int}]{proc\+Exit\+Status, }
+\item[{{\bf Fault\+Action\+\_\+t} $\ast$}]{fault\+Action\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_afaf6919493eba3f3ce69c1d1ca370630}{}\label{supervisor_2app_8c_afaf6919493eba3f3ce69c1d1ca370630}
+This handler must be called when a S\+I\+G\+C\+H\+I\+LD is received for a process that belongs to the specified application. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Pid} & The pid of the process that changed state. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Exit\+Status} & The return status of the process given by wait(). \\
+\hline
+\mbox{\tt out}  & {\em fault\+Action\+Ptr} & The fault action that should be taken. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Start@{app\+\_\+\+Start}}
+\index{app\+\_\+\+Start@{app\+\_\+\+Start}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Start(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_Start(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} app\+\_\+\+Start (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_ad99c79c9f720ebbb3ab7424e869108eb}{}\label{supervisor_2app_8c_ad99c79c9f720ebbb3ab7424e869108eb}
+Starts an application.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application to start. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Start\+Proc@{app\+\_\+\+Start\+Proc}}
+\index{app\+\_\+\+Start\+Proc@{app\+\_\+\+Start\+Proc}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Start\+Proc(app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t app\+Proc\+Ref)}{app_StartProc(app_Proc_Ref_t appProcRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} app\+\_\+\+Start\+Proc (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t}}]{app\+Proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_adc574e99da48db1e7bddad53fdbaec62}{}\label{supervisor_2app_8c_adc574e99da48db1e7bddad53fdbaec62}
+Starts an application process. This function assumes that the app has already started.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was some other error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Proc\+Ref} & Process reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Stop@{app\+\_\+\+Stop}}
+\index{app\+\_\+\+Stop@{app\+\_\+\+Stop}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Stop(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_Stop(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Stop (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_a7b83caadf0b85c6053efe0b16639ee29}{}\label{supervisor_2app_8c_a7b83caadf0b85c6053efe0b16639ee29}
+Stops an application. This is an asynchronous function call that returns immediately but the application may not stop right away. Check the application\textquotesingle{}s state with \hyperlink{supervisor_2app_8c_afdcd713d4fc1c372dcc7e66ffb9c3143}{app\+\_\+\+Get\+State()} to see when the application actually stops. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application to stop. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Stop\+Complete@{app\+\_\+\+Stop\+Complete}}
+\index{app\+\_\+\+Stop\+Complete@{app\+\_\+\+Stop\+Complete}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Stop\+Complete(app\+\_\+\+Ref\+\_\+t app\+Ref)}{app_StopComplete(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} app\+\_\+\+Stop\+Complete (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_ad11060aa30992b74ae9103588692532e}{}\label{supervisor_2app_8c_ad11060aa30992b74ae9103588692532e}
+Performs tasks after an app has been stopped. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Unblock@{app\+\_\+\+Unblock}}
+\index{app\+\_\+\+Unblock@{app\+\_\+\+Unblock}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Unblock(app\+\_\+\+Ref\+\_\+t app\+Ref, pid\+\_\+t pid)}{app_Unblock(app_Ref_t appRef, pid_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} app\+\_\+\+Unblock (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{pid\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_afa4ec0317c2d0ce2cfb3c20149e08b55}{}\label{supervisor_2app_8c_afa4ec0317c2d0ce2cfb3c20149e08b55}
+Unblocks a process that was blocked on startup.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the process could not be found in the app. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & App reference. \\
+\hline
+\mbox{\tt in}  & {\em pid} & Process to unblock. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!app\+\_\+\+Watchdog\+Timeout\+Handler@{app\+\_\+\+Watchdog\+Timeout\+Handler}}
+\index{app\+\_\+\+Watchdog\+Timeout\+Handler@{app\+\_\+\+Watchdog\+Timeout\+Handler}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{app\+\_\+\+Watchdog\+Timeout\+Handler(app\+\_\+\+Ref\+\_\+t app\+Ref, pid\+\_\+t proc\+Pid, wdog\+\_\+action\+\_\+\+Watchdog\+Action\+\_\+t $\ast$watchdog\+Action\+Ptr)}{app_WatchdogTimeoutHandler(app_Ref_t appRef, pid_t procPid, wdog_action_WatchdogAction_t *watchdogActionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} app\+\_\+\+Watchdog\+Timeout\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{pid\+\_\+t}]{proc\+Pid, }
+\item[{{\bf wdog\+\_\+action\+\_\+\+Watchdog\+Action\+\_\+t} $\ast$}]{watchdog\+Action\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{supervisor_2app_8c_ad13ddd9674822420105e830641c2b63c}{}\label{supervisor_2app_8c_ad13ddd9674822420105e830641c2b63c}
+This handler must be called when the watchdog expires for a process that belongs to the specified application.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if the proc\+Pid was not found for the specified app.
+\end{DoxyReturn}
+The watchdog action passed in will be set to the action that should be taken for this process or one of the following\+: W\+A\+T\+C\+H\+D\+O\+G\+\_\+\+A\+C\+T\+I\+O\+N\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND -\/ no action was configured for this process W\+A\+T\+C\+H\+D\+O\+G\+\_\+\+A\+C\+T\+I\+O\+N\+\_\+\+E\+R\+R\+OR -\/ the action could not be read or is unknown W\+A\+T\+C\+H\+D\+O\+G\+\_\+\+A\+C\+T\+I\+O\+N\+\_\+\+H\+A\+N\+D\+L\+ED -\/ no further action is required, it is already handled. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Pid} & The pid of the process that changed state. \\
+\hline
+\mbox{\tt out}  & {\em watchdog\+Action\+Ptr} & The fault action that should be taken. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Check\+Path\+Conflict@{Check\+Path\+Conflict}}
+\index{Check\+Path\+Conflict@{Check\+Path\+Conflict}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Check\+Path\+Conflict(const char $\ast$dest\+Path\+Ptr, const char $\ast$working\+Dir\+Ptr)}{CheckPathConflict(const char *destPathPtr, const char *workingDirPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Check\+Path\+Conflict (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{dest\+Path\+Ptr, }
+\item[{const char $\ast$}]{working\+Dir\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a3c2b9648493e353835c573b3eaba5327}{}\label{supervisor_2app_8c_a3c2b9648493e353835c573b3eaba5327}
+Checks whether the destination path conflicts with anything under the specified working directory.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if there are no conflicts. L\+E\+\_\+\+D\+U\+P\+L\+I\+C\+A\+TE if there is a conflict. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em dest\+Path\+Ptr} & Dest path relative to the working directory. \\
+\hline
+\mbox{\tt in}  & {\em working\+Dir\+Ptr} & Working directory to check. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Cleanup\+App\+Smack\+Settings@{Cleanup\+App\+Smack\+Settings}}
+\index{Cleanup\+App\+Smack\+Settings@{Cleanup\+App\+Smack\+Settings}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Cleanup\+App\+Smack\+Settings(app\+\_\+\+Ref\+\_\+t app\+Ref)}{CleanupAppSmackSettings(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Cleanup\+App\+Smack\+Settings (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a4a53775491af638754df202fafb03df5}{}\label{supervisor_2app_8c_a4a53775491af638754df202fafb03df5}
+Cleans up all S\+M\+A\+CK permissions for a given app. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+Bundled\+Links@{Create\+Bundled\+Links}}
+\index{Create\+Bundled\+Links@{Create\+Bundled\+Links}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Bundled\+Links(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)}{CreateBundledLinks(app_Ref_t appRef, const char *appDirLabelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+Bundled\+Links (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{app\+Dir\+Label\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_abd9ef440c47e7de081bc0425f2ddd068}{}\label{supervisor_2app_8c_abd9ef440c47e7de081bc0425f2ddd068}
+Create links to the app\textquotesingle{}s read only bundled files.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em app\+Dir\+Label\+Ptr} & S\+M\+A\+CK label to use for created directories. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+Default\+Links@{Create\+Default\+Links}}
+\index{Create\+Default\+Links@{Create\+Default\+Links}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Default\+Links(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)}{CreateDefaultLinks(app_Ref_t appRef, const char *appDirLabelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+Default\+Links (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{app\+Dir\+Label\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a69bbcb4df13baed6ca9735c87791ca77}{}\label{supervisor_2app_8c_a69bbcb4df13baed6ca9735c87791ca77}
+Create links to the default libs and files that all app\textquotesingle{}s will likely need.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em app\+Dir\+Label\+Ptr} & S\+M\+A\+CK label to use for created directories. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+Default\+Tmp\+Links@{Create\+Default\+Tmp\+Links}}
+\index{Create\+Default\+Tmp\+Links@{Create\+Default\+Tmp\+Links}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Default\+Tmp\+Links(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)}{CreateDefaultTmpLinks(app_Ref_t appRef, const char *appDirLabelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+Default\+Tmp\+Links (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{app\+Dir\+Label\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a88bff7a7302fe573cb603340b5004a42}{}\label{supervisor_2app_8c_a88bff7a7302fe573cb603340b5004a42}
+Create links to the default temporary files that all app\textquotesingle{}s will likely need.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em app\+Dir\+Label\+Ptr} & S\+M\+A\+CK label to use for created directories. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+Dir\+Link@{Create\+Dir\+Link}}
+\index{Create\+Dir\+Link@{Create\+Dir\+Link}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Dir\+Link(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr, const char $\ast$src\+Ptr, const char $\ast$dest\+Ptr)}{CreateDirLink(app_Ref_t appRef, const char *appDirLabelPtr, const char *srcPtr, const char *destPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+Dir\+Link (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{app\+Dir\+Label\+Ptr, }
+\item[{const char $\ast$}]{src\+Ptr, }
+\item[{const char $\ast$}]{dest\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_ad00c6be55e12b74b7396c180fac91dad}{}\label{supervisor_2app_8c_ad00c6be55e12b74b7396c180fac91dad}
+Create a directory link from the source to the destination. The source is always assumed to be an absolute path while the destination is relative to the application runtime area. If the destination includes directories that do not exist then those directories are created.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em app\+Dir\+Label\+Ptr} & S\+M\+A\+CK label to use for created directories. \\
+\hline
+\mbox{\tt in}  & {\em src\+Ptr} & Source path. \\
+\hline
+\mbox{\tt in}  & {\em dest\+Ptr} & Destination path. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+File\+Link@{Create\+File\+Link}}
+\index{Create\+File\+Link@{Create\+File\+Link}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+File\+Link(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr, const char $\ast$src\+Ptr, const char $\ast$dest\+Ptr)}{CreateFileLink(app_Ref_t appRef, const char *appDirLabelPtr, const char *srcPtr, const char *destPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+File\+Link (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{app\+Dir\+Label\+Ptr, }
+\item[{const char $\ast$}]{src\+Ptr, }
+\item[{const char $\ast$}]{dest\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_ae49e84a54c121c89bb597db9426b8694}{}\label{supervisor_2app_8c_ae49e84a54c121c89bb597db9426b8694}
+Create a file link from the source to the destination. The source is always assumed to be an absolute path while the destination is relative to the application runtime area. If the destination includes directories that do not exist then those directories are created.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em app\+Dir\+Label\+Ptr} & S\+M\+A\+CK label to use for created directories. \\
+\hline
+\mbox{\tt in}  & {\em src\+Ptr} & Source path. \\
+\hline
+\mbox{\tt in}  & {\em dest\+Ptr} & Destination path. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+Intermediate\+Dirs@{Create\+Intermediate\+Dirs}}
+\index{Create\+Intermediate\+Dirs@{Create\+Intermediate\+Dirs}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Intermediate\+Dirs(const char $\ast$path\+Ptr, const char $\ast$smack\+Label\+Ptr)}{CreateIntermediateDirs(const char *pathPtr, const char *smackLabelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+Intermediate\+Dirs (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path\+Ptr, }
+\item[{const char $\ast$}]{smack\+Label\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a0d1c95039a33b7f61746da83ec0f8fbb}{}\label{supervisor_2app_8c_a0d1c95039a33b7f61746da83ec0f8fbb}
+Creates all intermediate directories along the path.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em path\+Ptr} & Path. \\
+\hline
+\mbox{\tt in}  & {\em smack\+Label\+Ptr} & S\+M\+A\+CK label to use for the created dirs. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+Lib\+Bin\+Links@{Create\+Lib\+Bin\+Links}}
+\index{Create\+Lib\+Bin\+Links@{Create\+Lib\+Bin\+Links}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Lib\+Bin\+Links(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)}{CreateLibBinLinks(app_Ref_t appRef, const char *appDirLabelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+Lib\+Bin\+Links (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{app\+Dir\+Label\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a2ed53312bee800733e6f73b0ce72ba15}{}\label{supervisor_2app_8c_a2ed53312bee800733e6f73b0ce72ba15}
+Create links to the app\textquotesingle{}s lib and bin files.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em app\+Dir\+Label\+Ptr} & S\+M\+A\+CK label to use for created directories. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+Proc\+Container@{Create\+Proc\+Container}}
+\index{Create\+Proc\+Container@{Create\+Proc\+Container}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Proc\+Container(app\+\_\+\+Ref\+\_\+t app\+Ref, proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{CreateProcContainer(app_Ref_t appRef, proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Proc\+Container\+\_\+t}$\ast$ Create\+Proc\+Container (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a955de1e5e4ebfe7c4667e1144ff7d3e7}{}\label{supervisor_2app_8c_a955de1e5e4ebfe7c4667e1144ff7d3e7}
+Creates a new process container.
+
+\begin{DoxyReturn}{Returns}
+Process container reference. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application this process belongs to. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Ref} & Process reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+Required\+File\+Links@{Create\+Required\+File\+Links}}
+\index{Create\+Required\+File\+Links@{Create\+Required\+File\+Links}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Required\+File\+Links(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr, le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t cfg\+Iter)}{CreateRequiredFileLinks(app_Ref_t appRef, const char *appDirLabelPtr, le_cfg_IteratorRef_t cfgIter)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+Required\+File\+Links (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{app\+Dir\+Label\+Ptr, }
+\item[{{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t}}]{cfg\+Iter}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_af57a7b477d2832693776705925fa1084}{}\label{supervisor_2app_8c_af57a7b477d2832693776705925fa1084}
+Create links to the app\textquotesingle{}s required files under the current node in the configuration iterator.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em app\+Dir\+Label\+Ptr} & S\+M\+A\+CK label to use for created directories. \\
+\hline
+\mbox{\tt in}  & {\em cfg\+Iter} & Config iterator. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+Required\+Links@{Create\+Required\+Links}}
+\index{Create\+Required\+Links@{Create\+Required\+Links}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Required\+Links(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)}{CreateRequiredLinks(app_Ref_t appRef, const char *appDirLabelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+Required\+Links (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{app\+Dir\+Label\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a1f911d4833894fc09d972905095fa603}{}\label{supervisor_2app_8c_a1f911d4833894fc09d972905095fa603}
+Create links to the app\textquotesingle{}s required directories, files and devices.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em app\+Dir\+Label\+Ptr} & S\+M\+A\+CK label to use for created directories. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+Supplementary\+Groups@{Create\+Supplementary\+Groups}}
+\index{Create\+Supplementary\+Groups@{Create\+Supplementary\+Groups}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Supplementary\+Groups(app\+\_\+\+Ref\+\_\+t app\+Ref)}{CreateSupplementaryGroups(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+Supplementary\+Groups (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a82c0e5167d8411b8bc63da9bd23ef18a}{}\label{supervisor_2app_8c_a82c0e5167d8411b8bc63da9bd23ef18a}
+Create the supplementary groups for an application.
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000009}{Todo}]Move creation of the groups to the installer. Make this function just read the groups list into the app object. \end{DoxyRefDesc}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+Tmp\+Fs@{Create\+Tmp\+Fs}}
+\index{Create\+Tmp\+Fs@{Create\+Tmp\+Fs}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Tmp\+Fs(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr)}{CreateTmpFs(app_Ref_t appRef, const char *appDirLabelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+Tmp\+Fs (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{app\+Dir\+Label\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a58b77e3aed50c18f7936ebfb3c7f3552}{}\label{supervisor_2app_8c_a58b77e3aed50c18f7936ebfb3c7f3552}
+Create the sandbox app\textquotesingle{}s /tmp folder and mount a tmpfs at that location.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em app\+Dir\+Label\+Ptr} & S\+M\+A\+CK label to use for created directories. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Create\+User\+And\+Groups@{Create\+User\+And\+Groups}}
+\index{Create\+User\+And\+Groups@{Create\+User\+And\+Groups}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Create\+User\+And\+Groups(app\+\_\+\+Ref\+\_\+t app\+Ref)}{CreateUserAndGroups(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Create\+User\+And\+Groups (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a25379d616fc9b39bbb48cd0b6b605237}{}\label{supervisor_2app_8c_a25379d616fc9b39bbb48cd0b6b605237}
+Creates the user and groups in the /etc/passwd and /etc/groups files for an application. This function sets the uid and primary gid for the app\+Ref and also populates the app\+Ref\textquotesingle{}s supplementary groups list for non-\/sandboxed apps.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Delete\+Proc\+Containers\+List@{Delete\+Proc\+Containers\+List}}
+\index{Delete\+Proc\+Containers\+List@{Delete\+Proc\+Containers\+List}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Proc\+Containers\+List(le\+\_\+dls\+\_\+\+List\+\_\+t procs\+List)}{DeleteProcContainersList(le_dls_List_t procsList)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+Proc\+Containers\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+List\+\_\+t}}]{procs\+List}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a884897936072f4f33251839568e29cba}{}\label{supervisor_2app_8c_a884897936072f4f33251839568e29cba}
+Deletes all process containers from the specified list 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em procs\+List} & List of proc containers to delete. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Does\+Link\+Exist@{Does\+Link\+Exist}}
+\index{Does\+Link\+Exist@{Does\+Link\+Exist}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Does\+Link\+Exist(app\+\_\+\+Ref\+\_\+t app\+Ref, struct stat src\+Stat, const char $\ast$dest\+Path)}{DoesLinkExist(app_Ref_t appRef, struct stat srcStat, const char *destPath)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Does\+Link\+Exist (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{struct stat}]{src\+Stat, }
+\item[{const char $\ast$}]{dest\+Path}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a7abab0c8647aec2baff042d1c5763d5a}{}\label{supervisor_2app_8c_a7abab0c8647aec2baff042d1c5763d5a}
+Check if the link already exists.
+
+If there is a link to a different file then attempt to delete it.
+
+\begin{DoxyReturn}{Returns}
+true if link already exists. false otherwise. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em src\+Stat} & Status of the source. \\
+\hline
+\mbox{\tt in}  & {\em dest\+Path} & Destination path. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Find\+Proc\+Container@{Find\+Proc\+Container}}
+\index{Find\+Proc\+Container@{Find\+Proc\+Container}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Proc\+Container(app\+\_\+\+Ref\+\_\+t app\+Ref, pid\+\_\+t pid)}{FindProcContainer(app_Ref_t appRef, pid_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Proc\+Container\+\_\+t}$\ast$ Find\+Proc\+Container (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{pid\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_af71ca50dd7eea401186bcf70b747c0fb}{}\label{supervisor_2app_8c_af71ca50dd7eea401186bcf70b747c0fb}
+Finds a process container for the app by pid.
+
+\begin{DoxyReturn}{Returns}
+The pointer to a process container if successful. N\+U\+LL if the process could not be found. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application to search in. \\
+\hline
+\mbox{\tt in}  & {\em pid} & The pid to search for. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Find\+Proc\+Container\+By\+Name@{Find\+Proc\+Container\+By\+Name}}
+\index{Find\+Proc\+Container\+By\+Name@{Find\+Proc\+Container\+By\+Name}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Proc\+Container\+By\+Name(le\+\_\+dls\+\_\+\+List\+\_\+t $\ast$proc\+List\+Ptr, const char $\ast$proc\+Name\+Ptr)}{FindProcContainerByName(le_dls_List_t *procListPtr, const char *procNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf app\+\_\+\+Proc\+\_\+\+Ref\+\_\+t} Find\+Proc\+Container\+By\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+List\+\_\+t} $\ast$}]{proc\+List\+Ptr, }
+\item[{const char $\ast$}]{proc\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a92907ff7ae8cc9dbbdaa0376dabaf0d2}{}\label{supervisor_2app_8c_a92907ff7ae8cc9dbbdaa0376dabaf0d2}
+Gets a process container for the app by name from the given process list
+
+\begin{DoxyReturn}{Returns}
+The pointer to a process container if successful. N\+U\+LL if the process container could not be found. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+List\+Ptr} & The process list to search in. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Name\+Ptr} & The process name to get for. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Find\+Proc\+Container\+In\+List@{Find\+Proc\+Container\+In\+List}}
+\index{Find\+Proc\+Container\+In\+List@{Find\+Proc\+Container\+In\+List}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Find\+Proc\+Container\+In\+List(le\+\_\+dls\+\_\+\+List\+\_\+t list, pid\+\_\+t pid)}{FindProcContainerInList(le_dls_List_t list, pid_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Proc\+Container\+\_\+t}$\ast$ Find\+Proc\+Container\+In\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+List\+\_\+t}}]{list, }
+\item[{pid\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_ac4d532dd791212719e94859619528603}{}\label{supervisor_2app_8c_ac4d532dd791212719e94859619528603}
+Finds a process container with this pid in the specified list.
+
+\begin{DoxyReturn}{Returns}
+The pointer to a process container if successful. N\+U\+LL if the process could not be found. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em list} & List of process containers. \\
+\hline
+\mbox{\tt in}  & {\em pid} & The pid to search for. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Get\+Abs\+Dest\+Path@{Get\+Abs\+Dest\+Path}}
+\index{Get\+Abs\+Dest\+Path@{Get\+Abs\+Dest\+Path}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Abs\+Dest\+Path(const char $\ast$dest\+Ptr, const char $\ast$src\+Ptr, const char $\ast$app\+Run\+Dir, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)}{GetAbsDestPath(const char *destPtr, const char *srcPtr, const char *appRunDir, char *bufPtr, size_t bufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Abs\+Dest\+Path (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{dest\+Ptr, }
+\item[{const char $\ast$}]{src\+Ptr, }
+\item[{const char $\ast$}]{app\+Run\+Dir, }
+\item[{char $\ast$}]{buf\+Ptr, }
+\item[{size\+\_\+t}]{buf\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a60ba744495e59f32aedfc4da9bd289fe}{}\label{supervisor_2app_8c_a60ba744495e59f32aedfc4da9bd289fe}
+Gets the absolute destination path. If the destination path ends with a \textquotesingle{}/\textquotesingle{} then the last node of the source is appended to the destination.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW the provided buffer is too small. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em dest\+Ptr} & Relative destination path. \\
+\hline
+\mbox{\tt in}  & {\em src\+Ptr} & Source path. \\
+\hline
+\mbox{\tt in}  & {\em app\+Run\+Dir} & Path to the app\textquotesingle{}s runtime area. \\
+\hline
+\mbox{\tt out}  & {\em buf\+Ptr} & Buffer to store the final destination path. \\
+\hline
+\mbox{\tt in}  & {\em buf\+Size} & Size of the buffer. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Get\+Bundled\+Read\+Only\+Src\+Path@{Get\+Bundled\+Read\+Only\+Src\+Path}}
+\index{Get\+Bundled\+Read\+Only\+Src\+Path@{Get\+Bundled\+Read\+Only\+Src\+Path}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Bundled\+Read\+Only\+Src\+Path(app\+\_\+\+Ref\+\_\+t app\+Ref, le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t cfg\+Iter, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)}{GetBundledReadOnlySrcPath(app_Ref_t appRef, le_cfg_IteratorRef_t cfgIter, char *bufPtr, size_t bufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Bundled\+Read\+Only\+Src\+Path (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t}}]{cfg\+Iter, }
+\item[{char $\ast$}]{buf\+Ptr, }
+\item[{size\+\_\+t}]{buf\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a3e076426aceae8f34ec51455410f8ba1}{}\label{supervisor_2app_8c_a3e076426aceae8f34ec51455410f8ba1}
+Get the source path for read only bundled files at the current node in the config iterator.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application object. \\
+\hline
+\mbox{\tt in}  & {\em cfg\+Iter} & Config iterator. \\
+\hline
+\mbox{\tt out}  & {\em buf\+Ptr} & Buffer to store the source path. \\
+\hline
+\mbox{\tt in}  & {\em buf\+Size} & Size of the buffer. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Get\+Cfg\+Permissions@{Get\+Cfg\+Permissions}}
+\index{Get\+Cfg\+Permissions@{Get\+Cfg\+Permissions}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Cfg\+Permissions(le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t cfg\+Iter, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)}{GetCfgPermissions(le_cfg_IteratorRef_t cfgIter, char *bufPtr, size_t bufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Get\+Cfg\+Permissions (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t}}]{cfg\+Iter, }
+\item[{char $\ast$}]{buf\+Ptr, }
+\item[{size\+\_\+t}]{buf\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a30e8f0026b9ffedfe3df7c9323ab49e0}{}\label{supervisor_2app_8c_a30e8f0026b9ffedfe3df7c9323ab49e0}
+Get the configured permissions for a device. The permissions will be returned in the provided buffer as a string (either \char`\"{}r\char`\"{}, \char`\"{}w\char`\"{} or \char`\"{}rw\char`\"{}). The provided buffer must be greater than or equal to M\+A\+X\+\_\+\+D\+E\+V\+I\+C\+E\+\_\+\+P\+E\+R\+M\+\_\+\+S\+T\+R\+\_\+\+B\+Y\+T\+ES bytes long. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em cfg\+Iter} & Config iterator pointing to the device file. \\
+\hline
+\mbox{\tt out}  & {\em buf\+Ptr} & Buffer to hold the permission string. \\
+\hline
+\mbox{\tt in}  & {\em buf\+Size} & Size of the buffer. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Get\+Dest\+Path@{Get\+Dest\+Path}}
+\index{Get\+Dest\+Path@{Get\+Dest\+Path}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Dest\+Path(app\+\_\+\+Ref\+\_\+t app\+Ref, le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t cfg\+Iter, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)}{GetDestPath(app_Ref_t appRef, le_cfg_IteratorRef_t cfgIter, char *bufPtr, size_t bufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Dest\+Path (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t}}]{cfg\+Iter, }
+\item[{char $\ast$}]{buf\+Ptr, }
+\item[{size\+\_\+t}]{buf\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a0ed4faef5a7ac0c4a7072ca9d459609a}{}\label{supervisor_2app_8c_a0ed4faef5a7ac0c4a7072ca9d459609a}
+Get the destination path for the app at the current node in the config iterator.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application object. \\
+\hline
+\mbox{\tt in}  & {\em cfg\+Iter} & Config iterator. \\
+\hline
+\mbox{\tt out}  & {\em buf\+Ptr} & Buffer to store the path. \\
+\hline
+\mbox{\tt in}  & {\em buf\+Size} & Size of the buffer. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Get\+Dev\+ID@{Get\+Dev\+ID}}
+\index{Get\+Dev\+ID@{Get\+Dev\+ID}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Dev\+I\+D(const char $\ast$file\+Name\+Ptr, dev\+\_\+t $\ast$id\+Ptr)}{GetDevID(const char *fileNamePtr, dev_t *idPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Dev\+ID (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{file\+Name\+Ptr, }
+\item[{dev\+\_\+t $\ast$}]{id\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a1e05e2e0aa4ee4f66c0730ba52467209}{}\label{supervisor_2app_8c_a1e05e2e0aa4ee4f66c0730ba52467209}
+Gets the device ID of a device file.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Name\+Ptr} & Absolute path of the file. \\
+\hline
+\mbox{\tt out}  & {\em id\+Ptr} & Device ID. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Get\+Dev\+Src\+Path@{Get\+Dev\+Src\+Path}}
+\index{Get\+Dev\+Src\+Path@{Get\+Dev\+Src\+Path}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Dev\+Src\+Path(app\+\_\+\+Ref\+\_\+t app\+Ref, le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t cfg\+Iter, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)}{GetDevSrcPath(app_Ref_t appRef, le_cfg_IteratorRef_t cfgIter, char *bufPtr, size_t bufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Dev\+Src\+Path (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t}}]{cfg\+Iter, }
+\item[{char $\ast$}]{buf\+Ptr, }
+\item[{size\+\_\+t}]{buf\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a116a92f143f5b2b313ad877fc9134ddb}{}\label{supervisor_2app_8c_a116a92f143f5b2b313ad877fc9134ddb}
+Get the source path for the device file at the current node in the config iterator.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application object. \\
+\hline
+\mbox{\tt in}  & {\em cfg\+Iter} & Config iterator for the import. \\
+\hline
+\mbox{\tt out}  & {\em buf\+Ptr} & Buffer to store the source path. \\
+\hline
+\mbox{\tt in}  & {\em buf\+Size} & Size of the buffer. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Get\+Src\+Path@{Get\+Src\+Path}}
+\index{Get\+Src\+Path@{Get\+Src\+Path}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Src\+Path(app\+\_\+\+Ref\+\_\+t app\+Ref, le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t cfg\+Iter, char $\ast$buf\+Ptr, size\+\_\+t buf\+Size)}{GetSrcPath(app_Ref_t appRef, le_cfg_IteratorRef_t cfgIter, char *bufPtr, size_t bufSize)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Src\+Path (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t}}]{cfg\+Iter, }
+\item[{char $\ast$}]{buf\+Ptr, }
+\item[{size\+\_\+t}]{buf\+Size}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a6600f469276e2a009f73165624fe43a3}{}\label{supervisor_2app_8c_a6600f469276e2a009f73165624fe43a3}
+Get the source path for the app at the current node in the config iterator.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application object. \\
+\hline
+\mbox{\tt in}  & {\em cfg\+Iter} & Config iterator. \\
+\hline
+\mbox{\tt out}  & {\em buf\+Ptr} & Buffer to store the path. \\
+\hline
+\mbox{\tt in}  & {\em buf\+Size} & Size of the buffer. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Hard\+Kill\+App@{Hard\+Kill\+App}}
+\index{Hard\+Kill\+App@{Hard\+Kill\+App}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Hard\+Kill\+App(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{HardKillApp(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Hard\+Kill\+App (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a36e57b41a46bab9ce5ab2939204a03f7}{}\label{supervisor_2app_8c_a36e57b41a46bab9ce5ab2939204a03f7}
+Performs a hard kill of all the processes in the specified application. This function should be called when the soft kill timeout expires. \index{supervisor/app.\+c@{supervisor/app.\+c}!Has\+Running\+Proc@{Has\+Running\+Proc}}
+\index{Has\+Running\+Proc@{Has\+Running\+Proc}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Has\+Running\+Proc(app\+\_\+\+Ref\+\_\+t app\+Ref)}{HasRunningProc(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Has\+Running\+Proc (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a6e4a2a46b23b9399376017d8480ad685}{}\label{supervisor_2app_8c_a6e4a2a46b23b9399376017d8480ad685}
+Checks if the application has any processes running.
+
+\begin{DoxyReturn}{Returns}
+true if there is at least one running process for the application. false if there are no running processes for the application. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Has\+Running\+Proc\+In\+List@{Has\+Running\+Proc\+In\+List}}
+\index{Has\+Running\+Proc\+In\+List@{Has\+Running\+Proc\+In\+List}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Has\+Running\+Proc\+In\+List(le\+\_\+dls\+\_\+\+List\+\_\+t list)}{HasRunningProcInList(le_dls_List_t list)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Has\+Running\+Proc\+In\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+List\+\_\+t}}]{list}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a2fa27d2bc6d43bffe6dbb39271dc0083}{}\label{supervisor_2app_8c_a2fa27d2bc6d43bffe6dbb39271dc0083}
+Checks if the there is a running process in the specified list.
+
+\begin{DoxyNote}{Note}
+This only applies to child processes. Forked processes in the application are not monitored.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+true if there is at least one running process for in the list. false if there are no running processes in the list. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em list} & List of process containers. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Is\+Dir@{Is\+Dir}}
+\index{Is\+Dir@{Is\+Dir}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Dir(const char $\ast$path\+Name\+Ptr)}{IsDir(const char *pathNamePtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Is\+Dir (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{path\+Name\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a18afdad8f039975654f3ecb03f5331d1}{}\label{supervisor_2app_8c_a18afdad8f039975654f3ecb03f5331d1}
+Checks if the path refers to a directory.
+
+\begin{DoxyReturn}{Returns}
+true if the path refers to a directory. false otherwise. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em path\+Name\+Ptr} & The path to the directory. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Kill\+App\+Procs@{Kill\+App\+Procs}}
+\index{Kill\+App\+Procs@{Kill\+App\+Procs}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Kill\+App\+Procs(app\+\_\+\+Ref\+\_\+t app\+Ref, Kill\+Type\+\_\+t kill\+Type)}{KillAppProcs(app_Ref_t appRef, KillType_t killType)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Kill\+App\+Procs (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{{\bf Kill\+Type\+\_\+t}}]{kill\+Type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_af977ab3ac367db35bb415b4d7eab11ef}{}\label{supervisor_2app_8c_af977ab3ac367db35bb415b4d7eab11ef}
+Kills all the processes in the specified application.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND if there are no running processes in the app. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application whose processes should be killed. \\
+\hline
+\mbox{\tt in}  & {\em kill\+Type} & The type of kill to perform. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Make\+Temp\+Proc\+Name@{Make\+Temp\+Proc\+Name}}
+\index{Make\+Temp\+Proc\+Name@{Make\+Temp\+Proc\+Name}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Make\+Temp\+Proc\+Name(app\+\_\+\+Ref\+\_\+t app\+Ref, char $\ast$temp\+Proc\+Name\+Ptr, size\+\_\+t temp\+Proc\+Name\+Size, const char $\ast$exe\+Name)}{MakeTempProcName(app_Ref_t appRef, char *tempProcNamePtr, size_t tempProcNameSize, const char *exeName)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Make\+Temp\+Proc\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{char $\ast$}]{temp\+Proc\+Name\+Ptr, }
+\item[{size\+\_\+t}]{temp\+Proc\+Name\+Size, }
+\item[{const char $\ast$}]{exe\+Name}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_ac61fe29dd125294ef8619d0af7a871c6}{}\label{supervisor_2app_8c_ac61fe29dd125294ef8619d0af7a871c6}
+Create a new temporary process name, based on the executable name.
+
+Temporary process name is guaranteed to be unique among currently running processes of an app. This is done by adding @N to the end of the name, where N is a number from 0 -\/ M\+A\+X\+\_\+\+C\+R\+E\+A\+T\+E\+\_\+\+P\+R\+OC which is not used by another process with the same name. If this would create a name longer than the maximum allowed process name, the last few characters at the end of the exe\+Name are overwritten. \index{supervisor/app.\+c@{supervisor/app.\+c}!Recursively\+Create\+Links@{Recursively\+Create\+Links}}
+\index{Recursively\+Create\+Links@{Recursively\+Create\+Links}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Recursively\+Create\+Links(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$app\+Dir\+Label\+Ptr, const char $\ast$src\+Dir\+Ptr, const char $\ast$dest\+Dir\+Ptr)}{RecursivelyCreateLinks(app_Ref_t appRef, const char *appDirLabelPtr, const char *srcDirPtr, const char *destDirPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Recursively\+Create\+Links (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{app\+Dir\+Label\+Ptr, }
+\item[{const char $\ast$}]{src\+Dir\+Ptr, }
+\item[{const char $\ast$}]{dest\+Dir\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a7fd812f8259d43af2016c770d840c9df}{}\label{supervisor_2app_8c_a7fd812f8259d43af2016c770d840c9df}
+Recursively create links from all files under the source directory to corresponding files under the destination directory.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em app\+Dir\+Label\+Ptr} & S\+M\+A\+CK label to use for created directories. \\
+\hline
+\mbox{\tt in}  & {\em src\+Dir\+Ptr} & Source directory. \\
+\hline
+\mbox{\tt in}  & {\em dest\+Dir\+Ptr} & Destination directory. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Remove\+Links@{Remove\+Links}}
+\index{Remove\+Links@{Remove\+Links}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Remove\+Links(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$path\+Ptr)}{RemoveLinks(app_Ref_t appRef, const char *pathPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Remove\+Links (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{path\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_ace87734462ffa3d5858decc9ac448905}{}\label{supervisor_2app_8c_ace87734462ffa3d5858decc9ac448905}
+Recursively removes all links under the specified path. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Application reference. \\
+\hline
+\mbox{\tt in}  & {\em path\+Ptr} & Path to link to remove. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Set\+Cfg\+Device\+Permissions@{Set\+Cfg\+Device\+Permissions}}
+\index{Set\+Cfg\+Device\+Permissions@{Set\+Cfg\+Device\+Permissions}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Cfg\+Device\+Permissions(app\+\_\+\+Ref\+\_\+t app\+Ref)}{SetCfgDevicePermissions(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Set\+Cfg\+Device\+Permissions (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_ac7da19ad201bf3dc4755e2986b374a07}{}\label{supervisor_2app_8c_ac7da19ad201bf3dc4755e2986b374a07}
+Sets D\+AC and S\+M\+A\+CK permissions for device files in the app\textquotesingle{}s configuration.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Set\+Default\+Smack\+Rules@{Set\+Default\+Smack\+Rules}}
+\index{Set\+Default\+Smack\+Rules@{Set\+Default\+Smack\+Rules}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Default\+Smack\+Rules(const char $\ast$app\+Name\+Ptr, const char $\ast$app\+Label\+Ptr)}{SetDefaultSmackRules(const char *appNamePtr, const char *appLabelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Default\+Smack\+Rules (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Name\+Ptr, }
+\item[{const char $\ast$}]{app\+Label\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_aa815d3f132b1c2e22e029bb9994e1404}{}\label{supervisor_2app_8c_aa815d3f132b1c2e22e029bb9994e1404}
+Sets S\+M\+A\+CK rules for an application and its folders. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Name\+Ptr} & App name. \\
+\hline
+\mbox{\tt in}  & {\em app\+Label\+Ptr} & Smack label for the app. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Set\+Device\+Permissions@{Set\+Device\+Permissions}}
+\index{Set\+Device\+Permissions@{Set\+Device\+Permissions}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Device\+Permissions(const char $\ast$app\+Smack\+Label\+Ptr, const char $\ast$dev\+Path\+Ptr, const char $\ast$perm\+Ptr)}{SetDevicePermissions(const char *appSmackLabelPtr, const char *devPathPtr, const char *permPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Set\+Device\+Permissions (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{app\+Smack\+Label\+Ptr, }
+\item[{const char $\ast$}]{dev\+Path\+Ptr, }
+\item[{const char $\ast$}]{perm\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a8442ba2a7d1e2f6b93dbf8f372f981a3}{}\label{supervisor_2app_8c_a8442ba2a7d1e2f6b93dbf8f372f981a3}
+Sets D\+AC and S\+M\+A\+CK permissions for a device file.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Smack\+Label\+Ptr} & S\+M\+A\+CK label of the app. \\
+\hline
+\mbox{\tt in}  & {\em dev\+Path\+Ptr} & Source path. \\
+\hline
+\mbox{\tt in}  & {\em perm\+Ptr} & Permissions. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Set\+Smack\+Rules@{Set\+Smack\+Rules}}
+\index{Set\+Smack\+Rules@{Set\+Smack\+Rules}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Smack\+Rules(app\+\_\+\+Ref\+\_\+t app\+Ref)}{SetSmackRules(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Set\+Smack\+Rules (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a7f3cf9689c7b224fdd6d5de2e7dff900}{}\label{supervisor_2app_8c_a7f3cf9689c7b224fdd6d5de2e7dff900}
+Sets S\+M\+A\+CK rules for an application.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Set\+Smack\+Rules\+For\+Bindings@{Set\+Smack\+Rules\+For\+Bindings}}
+\index{Set\+Smack\+Rules\+For\+Bindings@{Set\+Smack\+Rules\+For\+Bindings}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Smack\+Rules\+For\+Bindings(app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$app\+Label\+Ptr)}{SetSmackRulesForBindings(app_Ref_t appRef, const char *appLabelPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Smack\+Rules\+For\+Bindings (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{app\+Label\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a560d95beebccebd74bafc6e89aae44c8}{}\label{supervisor_2app_8c_a560d95beebccebd74bafc6e89aae44c8}
+Sets S\+M\+A\+CK rules for an application based on its bindings. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the application. \\
+\hline
+\mbox{\tt in}  & {\em app\+Label\+Ptr} & Smack label for the app. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Setup\+App\+Area@{Setup\+App\+Area}}
+\index{Setup\+App\+Area@{Setup\+App\+Area}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Setup\+App\+Area(app\+\_\+\+Ref\+\_\+t app\+Ref)}{SetupAppArea(app_Ref_t appRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Setup\+App\+Area (
+\begin{DoxyParamCaption}
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a5d1ba6170d3778cc4db7171204a7ad77}{}\label{supervisor_2app_8c_a5d1ba6170d3778cc4db7171204a7ad77}
+Sets up the application execution area in the file system. For a sandboxed app this will be the sandbox. For an unsandboxed app this will be the app\textquotesingle{}s current working directory..
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em app\+Ref} & The application reference. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Stopping\+Procs\+In\+List@{Stopping\+Procs\+In\+List}}
+\index{Stopping\+Procs\+In\+List@{Stopping\+Procs\+In\+List}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Stopping\+Procs\+In\+List(le\+\_\+dls\+\_\+\+List\+\_\+t list)}{StoppingProcsInList(le_dls_List_t list)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Stopping\+Procs\+In\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+List\+\_\+t}}]{list}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a8b3a1cf7ead993a91557fd751ff9ad46}{}\label{supervisor_2app_8c_a8b3a1cf7ead993a91557fd751ff9ad46}
+Tells all the child processes in the list that we are going to kill them. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em list} & List of process containers. \\
+\hline
+\end{DoxyParams}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!Stop\+Proc@{Stop\+Proc}}
+\index{Stop\+Proc@{Stop\+Proc}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Stop\+Proc(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{StopProc(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Stop\+Proc (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a964eea1bd68f19757ed53c411a0f523e}{}\label{supervisor_2app_8c_a964eea1bd68f19757ed53c411a0f523e}
+Stops the specified process. 
+
+\subsection{Variable Documentation}
+\index{supervisor/app.\+c@{supervisor/app.\+c}!App\+Pool@{App\+Pool}}
+\index{App\+Pool@{App\+Pool}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{App\+Pool}{AppPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} App\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_ab79eb624fae9693502e15c47b9a34f2f}{}\label{supervisor_2app_8c_ab79eb624fae9693502e15c47b9a34f2f}
+The memory pool for application objects. \index{supervisor/app.\+c@{supervisor/app.\+c}!Default\+Links@{Default\+Links}}
+\index{Default\+Links@{Default\+Links}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Default\+Links}{DefaultLinks}}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf File\+Link\+Obj\+\_\+t} Default\+Links\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a708b62106c8118066eda918a8eeb8125}{}\label{supervisor_2app_8c_a708b62106c8118066eda918a8eeb8125}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{.src = \textcolor{stringliteral}{"/dev/log"}, .dest = \textcolor{stringliteral}{"/dev/"}\},
+    \{.src = \textcolor{stringliteral}{"/dev/null"}, .dest = \textcolor{stringliteral}{"/dev/"}\},
+    \{.src = \textcolor{stringliteral}{"/dev/zero"}, .dest = \textcolor{stringliteral}{"/dev/"}\},
+    \{.src = \hyperlink{sys_paths_8h_a9285d2ec5322a9e23d72df98aa34a845}{CURRENT\_SYSTEM\_PATH}\textcolor{stringliteral}{"/lib/liblegato.so"}, .dest = \textcolor{stringliteral}{"/lib/"}\}
+\}
+\end{DoxyCode}
+Files to link into all sandboxed applications by default. \index{supervisor/app.\+c@{supervisor/app.\+c}!Default\+Tmp\+Links@{Default\+Tmp\+Links}}
+\index{Default\+Tmp\+Links@{Default\+Tmp\+Links}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Default\+Tmp\+Links}{DefaultTmpLinks}}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf File\+Link\+Obj\+\_\+t} Default\+Tmp\+Links\mbox{[}$\,$\mbox{]}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_af32c608e1c047d73393ce9d691c9b9c1}{}\label{supervisor_2app_8c_af32c608e1c047d73393ce9d691c9b9c1}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    \{.src = \hyperlink{le__basics_8h_a3428692efe6051ef30016ffde1a9f7bb}{STRINGIZE}(LE\_SVCDIR\_SERVER\_SOCKET\_NAME), .dest = \textcolor{stringliteral}{"/tmp/legato/"}\},
+    \{.src = \hyperlink{le__basics_8h_a3428692efe6051ef30016ffde1a9f7bb}{STRINGIZE}(LE\_SVCDIR\_CLIENT\_SOCKET\_NAME), .dest = \textcolor{stringliteral}{"/tmp/legato/"}\}
+\}
+\end{DoxyCode}
+Files to link into all sandboxed applications\textquotesingle{} /tmp directory by default. \index{supervisor/app.\+c@{supervisor/app.\+c}!File\+Link\+Node\+Pool@{File\+Link\+Node\+Pool}}
+\index{File\+Link\+Node\+Pool@{File\+Link\+Node\+Pool}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{File\+Link\+Node\+Pool}{FileLinkNodePool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} File\+Link\+Node\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a6be2f4e671f0673f7d471625b555c442}{}\label{supervisor_2app_8c_a6be2f4e671f0673f7d471625b555c442}
+The memory pool for file link nodes. \index{supervisor/app.\+c@{supervisor/app.\+c}!Kill\+Timeout@{Kill\+Timeout}}
+\index{Kill\+Timeout@{Kill\+Timeout}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Kill\+Timeout}{KillTimeout}}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf le\+\_\+clk\+\_\+\+Time\+\_\+t} Kill\+Timeout\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a56067bbfae78483346a5bf8bc8e123ea}{}\label{supervisor_2app_8c_a56067bbfae78483346a5bf8bc8e123ea}
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+=
+\{
+    .sec = 1,
+    .usec = 0
+\}
+\end{DoxyCode}
+Timeout value for killing processes in an app. \index{supervisor/app.\+c@{supervisor/app.\+c}!Proc\+Container\+Pool@{Proc\+Container\+Pool}}
+\index{Proc\+Container\+Pool@{Proc\+Container\+Pool}!supervisor/app.\+c@{supervisor/app.\+c}}
+\subsubsection[{\texorpdfstring{Proc\+Container\+Pool}{ProcContainerPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Proc\+Container\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{supervisor_2app_8c_a729009a2d06e82ca2d2ae1e896c007b1}{}\label{supervisor_2app_8c_a729009a2d06e82ca2d2ae1e896c007b1}
+The memory pool for process container objects. 

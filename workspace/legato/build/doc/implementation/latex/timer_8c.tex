@@ -1,0 +1,820 @@
+\hypertarget{timer_8c}{}\section{framework/liblegato/linux/timer.c File Reference}
+\label{timer_8c}\index{framework/liblegato/linux/timer.\+c@{framework/liblegato/linux/timer.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}clock.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}timer.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}thread.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$sys/timerfd.\+h$>$}\\*
+{\ttfamily \#include \char`\"{}le\+\_\+print.\+h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{timer_8c_a2d019ead5871900394e7e440409f7823}{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}~\char`\"{}Default Timer Pool\char`\"{}
+\item 
+\#define \hyperlink{timer_8c_adba546f967c491d7664e895e69da9a2a}{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+I\+N\+I\+T\+I\+A\+L\+\_\+\+S\+I\+ZE}~1
+\item 
+\#define \hyperlink{timer_8c_a7a8c0df6c5a3393ffe61a9a5984fc048}{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+N\+A\+ME}~\char`\"{}Default Timer Safe\+Refs\char`\"{}
+\item 
+\#define \hyperlink{timer_8c_aefffbcddde8221dba453788878163ccc}{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+M\+A\+X\+S\+I\+ZE}~23
+\item 
+\#define \hyperlink{timer_8c_a5f6aa8edcd99914757600b5d3b259bb7}{T\+R\+A\+CE}(...)~\hyperlink{le__log_8h_a331fb6c78ccddeafc455ad9c64e42008}{L\+E\+\_\+\+T\+R\+A\+CE}(\hyperlink{timer_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref}, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+)
+\item 
+\#define \hyperlink{timer_8c_a521df47841ad297abbf2e8ef767a5cb5}{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}~\hyperlink{le__log_8h_a0746e2e37585f61ccdf7ce4976909936}{L\+E\+\_\+\+I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}(\hyperlink{timer_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref})
+\begin{DoxyCompactList}\small\item\em Macro used to query current trace state in this module. \end{DoxyCompactList}\item 
+\#define \hyperlink{timer_8c_a178a9965a4481e583b0b4a559c950567}{C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+ME}~7
+\item 
+\#define \hyperlink{timer_8c_aab2693d9b979b68ebf71f6bb801331f0}{C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+M\+E\+\_\+\+A\+L\+A\+RM}~9
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$ \hyperlink{timer_8c_a7dca159d3245645d78cfd20bda111844}{Create\+Timer} (const char $\ast$name\+Str)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_a340d69f6adfe363198f8f66a9b34efa7}{Add\+To\+Timer\+List} (\hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} $\ast$list\+Ptr, \hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$new\+Timer\+Ptr)
+\item 
+static \hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$ \hyperlink{timer_8c_ad46c08a285c80159e787f941287b77f4}{Peek\+From\+Timer\+List} (\hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} $\ast$list\+Ptr)
+\item 
+static \hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$ \hyperlink{timer_8c_a14acefcfe77df161fa047690bd5f339f}{Pop\+From\+Timer\+List} (\hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} $\ast$list\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_afa2a3684a5fe3264b1352588ef56cf88}{Remove\+From\+Timer\+List} (\hyperlink{structle__dls___list__t}{le\+\_\+dls\+\_\+\+List\+\_\+t} $\ast$list\+Ptr, \hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$timer\+Ptr)
+\item 
+static \hyperlink{structtimer___thread_rec__t}{timer\+\_\+\+Thread\+Rec\+\_\+t} $\ast$ \hyperlink{timer_8c_a736a34fd91879936399bb13c45896351}{Get\+Thread\+Timer\+Rec} (\hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$timer\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_ad2ac7f8b6607f8d103dc3fe9dea3dc61}{Restart\+Timer\+FD} (\hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$timer\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_a45af72cf5b76b7c7119cf06077e31595}{Stop\+Timer\+FD} (\hyperlink{structtimer___thread_rec__t}{timer\+\_\+\+Thread\+Rec\+\_\+t} $\ast$thread\+Rec\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_ac053b1245cd9bb589b05a2367682fffd}{Run\+Timer} (\hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$timer\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_a2fc8c5717f78cbec595a129fc26dfb34}{Stop\+Timer} (\hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$timer\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_abcc03cb32dbbf7744d5da0b02fae9b97}{Process\+Expired\+Timer} (\hyperlink{struct_timer__t}{Timer\+\_\+t} $\ast$expired\+Timer)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_a928b0cace89d65d1f03050ae52b3b848}{Timer\+Fd\+Handler} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, short events)
+\item 
+size\+\_\+t $\ast$$\ast$ \hyperlink{timer_8c_aa2d11682bde3468127be3104abac572a}{timer\+\_\+\+Get\+Timer\+List\+Chg\+Cnt\+Ref} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_a2bd5b786cb86ef8527a27e28be90e071}{timer\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_a51c1ee0b0f5af07cc39b05961f7737bd}{timer\+\_\+\+Init\+Thread} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+int \hyperlink{timer_8c_a929c908ea7dfafea46067a310e482dce}{timer\+\_\+\+Get\+Clock\+Type} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_a0bf65554f98d2d2e90fff404da3bd967}{timer\+\_\+\+Destruct\+Thread} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} \hyperlink{timer_8c_aee41169a210378b369f440cf99146522}{le\+\_\+timer\+\_\+\+Create} (const char $\ast$name\+Str)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_ae103f6736bf855e77e5e59bbad1e27a7}{le\+\_\+timer\+\_\+\+Delete} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{timer_8c_abbf8d4c3c78d7bf5801b94071adcb6c6}{le\+\_\+timer\+\_\+\+Set\+Handler} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref, \hyperlink{le__timer_8h_a81ec5f8df2fbde873566e55489d8cedd}{le\+\_\+timer\+\_\+\+Expiry\+Handler\+\_\+t} handler\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{timer_8c_a0a103d5cef5e83fc9088859d527bbd43}{le\+\_\+timer\+\_\+\+Set\+Interval} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref, \hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t} interval)
+\item 
+\hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t} \hyperlink{timer_8c_a2036a01925bc85b3c477b45e6c3703aa}{le\+\_\+timer\+\_\+\+Get\+Interval} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{timer_8c_a5c66591a4b8e90bbe8a4a72c500e194b}{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref, uint32\+\_\+t interval)
+\item 
+uint32\+\_\+t \hyperlink{timer_8c_aa9defca5b3334e1d002b2386b11ae72b}{le\+\_\+timer\+\_\+\+Get\+Ms\+Interval} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{timer_8c_a292b0a7d6dc0796a36a54fd04c6a7eeb}{le\+\_\+timer\+\_\+\+Set\+Repeat} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref, uint32\+\_\+t repeat\+Count)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{timer_8c_a1fa3f608038fabf828677beb66cdd6ef}{le\+\_\+timer\+\_\+\+Set\+Wakeup} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref, bool wakeup\+Enabled)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{timer_8c_af6900bdb4653ff95f7f7be918b9e482d}{le\+\_\+timer\+\_\+\+Set\+Context\+Ptr} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$ \hyperlink{timer_8c_aa0432dbabb32b546c0c0e6ced5ba9d3d}{le\+\_\+timer\+\_\+\+Get\+Context\+Ptr} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+uint32\+\_\+t \hyperlink{timer_8c_a554cff1d11525bb60115291248f3ff53}{le\+\_\+timer\+\_\+\+Get\+Expiry\+Count} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+\hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t} \hyperlink{timer_8c_a0eeee8aaae982b43bc8b3cb46d1c6c9d}{le\+\_\+timer\+\_\+\+Get\+Time\+Remaining} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+uint32\+\_\+t \hyperlink{timer_8c_a08968a04f934e650b40ee496010ed6bb}{le\+\_\+timer\+\_\+\+Get\+Ms\+Time\+Remaining} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{timer_8c_ada2ce7f8cb1e76ed959e323ae94bbfc0}{le\+\_\+timer\+\_\+\+Start} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{timer_8c_af310daa378bd6ca39373a47e073f2243}{le\+\_\+timer\+\_\+\+Stop} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{timer_8c_ab6b83d6302095a46b6046160c0a479bb}{le\+\_\+timer\+\_\+\+Restart} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\item 
+bool \hyperlink{timer_8c_ab33b8568fd394d38274b778130111f70}{le\+\_\+timer\+\_\+\+Is\+Running} (\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\+\_\+timer\+\_\+\+Ref\+\_\+t} timer\+Ref)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static size\+\_\+t \hyperlink{timer_8c_a763b2186109436515ea7005715cecf33}{Timer\+List\+Change\+Count} = 0
+\item 
+static size\+\_\+t $\ast$ \hyperlink{timer_8c_a9e73ebfd092ab00cb69f8f0bf04ce629}{Timer\+List\+Change\+Count\+Ref} = \&\hyperlink{timer_8c_a763b2186109436515ea7005715cecf33}{Timer\+List\+Change\+Count}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{timer_8c_aede83adef47b2d40525af66a330990b9}{Timer\+Mem\+Pool\+Ref} = N\+U\+LL
+\item 
+static \hyperlink{le__safe_ref_8h_aaf8fb3412fb840cb50366856affaf69b}{le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} \hyperlink{timer_8c_aec98c2b5ddcee6bb9d733dbd0e57feb7}{Safe\+Ref\+Map} = N\+U\+LL
+\item 
+static int \hyperlink{timer_8c_a639dd43a7e0639a56c7d374ca764a079}{Timer\+Clock\+Type} = C\+L\+O\+C\+K\+\_\+\+M\+O\+N\+O\+T\+O\+N\+IC
+\item 
+static int \hyperlink{timer_8c_a1e3409eb720a91d612a72e3632404968}{Clock\+Clock\+Type} = C\+L\+O\+C\+K\+\_\+\+M\+O\+N\+O\+T\+O\+N\+IC
+\item 
+static bool \hyperlink{timer_8c_ae5394aacc38e20492e605623ac38165d}{Is\+Wakeup\+Supported} = false
+\item 
+static \hyperlink{le__log_8h_a055e29785e8d1c5bf1b3a230df8d65b7}{le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} \hyperlink{timer_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Implementation of the \hyperlink{c_timer}{Timer A\+PI}.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{timer.\+c@{timer.\+c}!C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+ME@{C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+ME}}
+\index{C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+ME@{C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+ME}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+ME}{CLOCK_BOOTTIME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+ME~7}\hypertarget{timer_8c_a178a9965a4481e583b0b4a559c950567}{}\label{timer_8c_a178a9965a4481e583b0b4a559c950567}
+Workaround to C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+ME \& C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+M\+E\+\_\+\+A\+L\+A\+RM not being defined on older versions of the glibc. Values are extracted from $<$linux/time.\+h$>$ and are provided by $<$time.\+h$>$ in more recent glibc. \index{timer.\+c@{timer.\+c}!C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+M\+E\+\_\+\+A\+L\+A\+RM@{C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+M\+E\+\_\+\+A\+L\+A\+RM}}
+\index{C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+M\+E\+\_\+\+A\+L\+A\+RM@{C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+M\+E\+\_\+\+A\+L\+A\+RM}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+M\+E\+\_\+\+A\+L\+A\+RM}{CLOCK_BOOTTIME_ALARM}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+L\+O\+C\+K\+\_\+\+B\+O\+O\+T\+T\+I\+M\+E\+\_\+\+A\+L\+A\+RM~9}\hypertarget{timer_8c_aab2693d9b979b68ebf71f6bb801331f0}{}\label{timer_8c_aab2693d9b979b68ebf71f6bb801331f0}
+\index{timer.\+c@{timer.\+c}!D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+I\+N\+I\+T\+I\+A\+L\+\_\+\+S\+I\+ZE@{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+I\+N\+I\+T\+I\+A\+L\+\_\+\+S\+I\+ZE}}
+\index{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+I\+N\+I\+T\+I\+A\+L\+\_\+\+S\+I\+ZE@{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+I\+N\+I\+T\+I\+A\+L\+\_\+\+S\+I\+ZE}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+I\+N\+I\+T\+I\+A\+L\+\_\+\+S\+I\+ZE}{DEFAULT_POOL_INITIAL_SIZE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+I\+N\+I\+T\+I\+A\+L\+\_\+\+S\+I\+ZE~1}\hypertarget{timer_8c_adba546f967c491d7664e895e69da9a2a}{}\label{timer_8c_adba546f967c491d7664e895e69da9a2a}
+\index{timer.\+c@{timer.\+c}!D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME@{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}}
+\index{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME@{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME}{DEFAULT_POOL_NAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+ME~\char`\"{}Default Timer Pool\char`\"{}}\hypertarget{timer_8c_a2d019ead5871900394e7e440409f7823}{}\label{timer_8c_a2d019ead5871900394e7e440409f7823}
+\index{timer.\+c@{timer.\+c}!D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+M\+A\+X\+S\+I\+ZE@{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+M\+A\+X\+S\+I\+ZE}}
+\index{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+M\+A\+X\+S\+I\+ZE@{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+M\+A\+X\+S\+I\+ZE}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+M\+A\+X\+S\+I\+ZE}{DEFAULT_REFMAP_MAXSIZE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+M\+A\+X\+S\+I\+ZE~23}\hypertarget{timer_8c_aefffbcddde8221dba453788878163ccc}{}\label{timer_8c_aefffbcddde8221dba453788878163ccc}
+\index{timer.\+c@{timer.\+c}!D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+N\+A\+ME@{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+N\+A\+ME}}
+\index{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+N\+A\+ME@{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+N\+A\+ME}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+N\+A\+ME}{DEFAULT_REFMAP_NAME}}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+E\+F\+A\+U\+L\+T\+\_\+\+R\+E\+F\+M\+A\+P\+\_\+\+N\+A\+ME~\char`\"{}Default Timer Safe\+Refs\char`\"{}}\hypertarget{timer_8c_a7a8c0df6c5a3393ffe61a9a5984fc048}{}\label{timer_8c_a7a8c0df6c5a3393ffe61a9a5984fc048}
+\index{timer.\+c@{timer.\+c}!I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED@{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}}
+\index{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED@{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}{IS_TRACE_ENABLED}}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED~{\bf L\+E\+\_\+\+I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}({\bf Trace\+Ref})}\hypertarget{timer_8c_a521df47841ad297abbf2e8ef767a5cb5}{}\label{timer_8c_a521df47841ad297abbf2e8ef767a5cb5}
+
+
+Macro used to query current trace state in this module. 
+
+\index{timer.\+c@{timer.\+c}!T\+R\+A\+CE@{T\+R\+A\+CE}}
+\index{T\+R\+A\+CE@{T\+R\+A\+CE}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{T\+R\+A\+CE}{TRACE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define T\+R\+A\+CE(
+\begin{DoxyParamCaption}
+\item[{}]{...}
+\end{DoxyParamCaption}
+)~{\bf L\+E\+\_\+\+T\+R\+A\+CE}({\bf Trace\+Ref}, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+)}\hypertarget{timer_8c_a5f6aa8edcd99914757600b5d3b259bb7}{}\label{timer_8c_a5f6aa8edcd99914757600b5d3b259bb7}
+Macro used to generate trace output in this module. Takes the same parameters as \hyperlink{le__log_8h_a2a91ea8857cf190fde71d85ba930a498}{L\+E\+\_\+\+D\+E\+B\+U\+G()} et. al. 
+
+\subsection{Function Documentation}
+\index{timer.\+c@{timer.\+c}!Add\+To\+Timer\+List@{Add\+To\+Timer\+List}}
+\index{Add\+To\+Timer\+List@{Add\+To\+Timer\+List}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Add\+To\+Timer\+List(le\+\_\+dls\+\_\+\+List\+\_\+t $\ast$list\+Ptr, Timer\+\_\+t $\ast$new\+Timer\+Ptr)}{AddToTimerList(le_dls_List_t *listPtr, Timer_t *newTimerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Add\+To\+Timer\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+List\+\_\+t} $\ast$}]{list\+Ptr, }
+\item[{{\bf Timer\+\_\+t} $\ast$}]{new\+Timer\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a340d69f6adfe363198f8f66a9b34efa7}{}\label{timer_8c_a340d69f6adfe363198f8f66a9b34efa7}
+Add the timer record to the given list, sorted according to the timer value 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em list\+Ptr} & The list to add to. \\
+\hline
+\mbox{\tt in}  & {\em new\+Timer\+Ptr} & The timer to add \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!Create\+Timer@{Create\+Timer}}
+\index{Create\+Timer@{Create\+Timer}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Timer(const char $\ast$name\+Str)}{CreateTimer(const char *nameStr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Timer\+\_\+t}$\ast$ Create\+Timer (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{name\+Str}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a7dca159d3245645d78cfd20bda111844}{}\label{timer_8c_a7dca159d3245645d78cfd20bda111844}
+Allocate and initialize the named timer with default values.
+
+\begin{DoxyReturn}{Returns}
+A pointer to the timer object. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em name\+Str} & Name of the timer. \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!Get\+Thread\+Timer\+Rec@{Get\+Thread\+Timer\+Rec}}
+\index{Get\+Thread\+Timer\+Rec@{Get\+Thread\+Timer\+Rec}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Thread\+Timer\+Rec(\+Timer\+\_\+t $\ast$timer\+Ptr)}{GetThreadTimerRec(Timer_t *timerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf timer\+\_\+\+Thread\+Rec\+\_\+t}$\ast$ Get\+Thread\+Timer\+Rec (
+\begin{DoxyParamCaption}
+\item[{{\bf Timer\+\_\+t} $\ast$}]{timer\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a736a34fd91879936399bb13c45896351}{}\label{timer_8c_a736a34fd91879936399bb13c45896351}
+Get thread timer record depending on what is specified by the timer and what is supported by the device. \index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Create@{le\+\_\+timer\+\_\+\+Create}}
+\index{le\+\_\+timer\+\_\+\+Create@{le\+\_\+timer\+\_\+\+Create}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Create(const char $\ast$name\+Str)}{le_timer_Create(const char *nameStr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t} le\+\_\+timer\+\_\+\+Create (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{name\+Str}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_aee41169a210378b369f440cf99146522}{}\label{timer_8c_aee41169a210378b369f440cf99146522}
+Create the timer object.
+
+\begin{DoxyReturn}{Returns}
+A reference to the timer object. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em name\+Str} & Name of this timer for logging and debug \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Delete@{le\+\_\+timer\+\_\+\+Delete}}
+\index{le\+\_\+timer\+\_\+\+Delete@{le\+\_\+timer\+\_\+\+Delete}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Delete(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{le_timer_Delete(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+timer\+\_\+\+Delete (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_ae103f6736bf855e77e5e59bbad1e27a7}{}\label{timer_8c_ae103f6736bf855e77e5e59bbad1e27a7}
+Delete the timer object
+
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Delete this timer object \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Get\+Context\+Ptr@{le\+\_\+timer\+\_\+\+Get\+Context\+Ptr}}
+\index{le\+\_\+timer\+\_\+\+Get\+Context\+Ptr@{le\+\_\+timer\+\_\+\+Get\+Context\+Ptr}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Get\+Context\+Ptr(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{le_timer_GetContextPtr(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void}$\ast$ le\+\_\+timer\+\_\+\+Get\+Context\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_aa0432dbabb32b546c0c0e6ced5ba9d3d}{}\label{timer_8c_aa0432dbabb32b546c0c0e6ced5ba9d3d}
+Get context pointer for the timer
+
+This can be used when the timer expires to retrieve data that was previously set.
+
+\begin{DoxyReturn}{Returns}
+Context pointer, which could be N\+U\+LL if it was not set
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Get context pointer for this timer object \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Get\+Expiry\+Count@{le\+\_\+timer\+\_\+\+Get\+Expiry\+Count}}
+\index{le\+\_\+timer\+\_\+\+Get\+Expiry\+Count@{le\+\_\+timer\+\_\+\+Get\+Expiry\+Count}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Get\+Expiry\+Count(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{le_timer_GetExpiryCount(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}uint32\+\_\+t le\+\_\+timer\+\_\+\+Get\+Expiry\+Count (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a554cff1d11525bb60115291248f3ff53}{}\label{timer_8c_a554cff1d11525bb60115291248f3ff53}
+Get the expiry count of a timer
+
+The count is returned for both currently running and idle timers. The expiry count is reset every time the timer is (re)started.
+
+\begin{DoxyReturn}{Returns}
+Expiry count, or zero if the timer has never expired.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Get expiry count for this timer object \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Get\+Interval@{le\+\_\+timer\+\_\+\+Get\+Interval}}
+\index{le\+\_\+timer\+\_\+\+Get\+Interval@{le\+\_\+timer\+\_\+\+Get\+Interval}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Get\+Interval(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{le_timer_GetInterval(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+clk\+\_\+\+Time\+\_\+t} le\+\_\+timer\+\_\+\+Get\+Interval (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a2036a01925bc85b3c477b45e6c3703aa}{}\label{timer_8c_a2036a01925bc85b3c477b45e6c3703aa}
+Get the timer interval.
+
+\begin{DoxyReturn}{Returns}
+The timer interval. If it hasn\textquotesingle{}t been set yet, (\hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t})\{0, 0\} will be returned.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Timer object. \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Get\+Ms\+Interval@{le\+\_\+timer\+\_\+\+Get\+Ms\+Interval}}
+\index{le\+\_\+timer\+\_\+\+Get\+Ms\+Interval@{le\+\_\+timer\+\_\+\+Get\+Ms\+Interval}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Get\+Ms\+Interval(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{le_timer_GetMsInterval(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}uint32\+\_\+t le\+\_\+timer\+\_\+\+Get\+Ms\+Interval (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_aa9defca5b3334e1d002b2386b11ae72b}{}\label{timer_8c_aa9defca5b3334e1d002b2386b11ae72b}
+Get the timer interval in milliseconds.
+
+\begin{DoxyReturn}{Returns}
+The timer interval (ms). If it hasn\textquotesingle{}t been set yet, 0 will be returned.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Timer object. \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Get\+Ms\+Time\+Remaining@{le\+\_\+timer\+\_\+\+Get\+Ms\+Time\+Remaining}}
+\index{le\+\_\+timer\+\_\+\+Get\+Ms\+Time\+Remaining@{le\+\_\+timer\+\_\+\+Get\+Ms\+Time\+Remaining}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Get\+Ms\+Time\+Remaining(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{le_timer_GetMsTimeRemaining(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}uint32\+\_\+t le\+\_\+timer\+\_\+\+Get\+Ms\+Time\+Remaining (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a08968a04f934e650b40ee496010ed6bb}{}\label{timer_8c_a08968a04f934e650b40ee496010ed6bb}
+Get the time remaining (in milliseconds) until the next scheduled expiry.
+
+\begin{DoxyReturn}{Returns}
+Time remaining (in milliseconds). 0 if the timer is stopped or if it has reached its expiry time.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Get expiry count for this timer object \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Get\+Time\+Remaining@{le\+\_\+timer\+\_\+\+Get\+Time\+Remaining}}
+\index{le\+\_\+timer\+\_\+\+Get\+Time\+Remaining@{le\+\_\+timer\+\_\+\+Get\+Time\+Remaining}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Get\+Time\+Remaining(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{le_timer_GetTimeRemaining(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+clk\+\_\+\+Time\+\_\+t} le\+\_\+timer\+\_\+\+Get\+Time\+Remaining (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a0eeee8aaae982b43bc8b3cb46d1c6c9d}{}\label{timer_8c_a0eeee8aaae982b43bc8b3cb46d1c6c9d}
+Get the time remaining until the next scheduled expiry.
+
+\begin{DoxyReturn}{Returns}
+Time remaining (in milliseconds). (\hyperlink{structle__clk___time__t}{le\+\_\+clk\+\_\+\+Time\+\_\+t})\{0, 0\} if the timer is stopped or if it has reached its expiry time.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Get expiry count for this timer object \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Is\+Running@{le\+\_\+timer\+\_\+\+Is\+Running}}
+\index{le\+\_\+timer\+\_\+\+Is\+Running@{le\+\_\+timer\+\_\+\+Is\+Running}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Is\+Running(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{le_timer_IsRunning(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}bool le\+\_\+timer\+\_\+\+Is\+Running (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_ab33b8568fd394d38274b778130111f70}{}\label{timer_8c_ab33b8568fd394d38274b778130111f70}
+Is the timer currently running.
+
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Is this timer object currently running \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Restart@{le\+\_\+timer\+\_\+\+Restart}}
+\index{le\+\_\+timer\+\_\+\+Restart@{le\+\_\+timer\+\_\+\+Restart}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Restart(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{le_timer_Restart(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+timer\+\_\+\+Restart (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_ab6b83d6302095a46b6046160c0a479bb}{}\label{timer_8c_ab6b83d6302095a46b6046160c0a479bb}
+Re-\/start the timer
+
+Start the given timer. If the timer is currently running, it will be stopped and then started. If the timer is not currently running, it will be started.
+
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & (Re)start this timer object \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Set\+Context\+Ptr@{le\+\_\+timer\+\_\+\+Set\+Context\+Ptr}}
+\index{le\+\_\+timer\+\_\+\+Set\+Context\+Ptr@{le\+\_\+timer\+\_\+\+Set\+Context\+Ptr}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Context\+Ptr(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref, void $\ast$context\+Ptr)}{le_timer_SetContextPtr(le_timer_Ref_t timerRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+timer\+\_\+\+Set\+Context\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_af6900bdb4653ff95f7f7be918b9e482d}{}\label{timer_8c_af6900bdb4653ff95f7f7be918b9e482d}
+Set context pointer for the timer
+
+This can be used to pass data to the timer when it expires
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK on success
+\item L\+E\+\_\+\+B\+U\+SY if the timer is currently running
+\end{DoxyItemize}
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Set context pointer for this timer object \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Context Pointer \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Set\+Handler@{le\+\_\+timer\+\_\+\+Set\+Handler}}
+\index{le\+\_\+timer\+\_\+\+Set\+Handler@{le\+\_\+timer\+\_\+\+Set\+Handler}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Handler(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref, le\+\_\+timer\+\_\+\+Expiry\+Handler\+\_\+t handler\+Ref)}{le_timer_SetHandler(le_timer_Ref_t timerRef, le_timer_ExpiryHandler_t handlerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+timer\+\_\+\+Set\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref, }
+\item[{{\bf le\+\_\+timer\+\_\+\+Expiry\+Handler\+\_\+t}}]{handler\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_abbf8d4c3c78d7bf5801b94071adcb6c6}{}\label{timer_8c_abbf8d4c3c78d7bf5801b94071adcb6c6}
+Set the timer expiry handler function
+
+If the handler is N\+U\+LL, then the previous handler will be removed.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK on success
+\item L\+E\+\_\+\+B\+U\+SY if the timer is currently running
+\end{DoxyItemize}
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Set expiry handler for this timer object \\
+\hline
+\mbox{\tt in}  & {\em handler\+Ref} & Handler function to call on expiry \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Set\+Interval@{le\+\_\+timer\+\_\+\+Set\+Interval}}
+\index{le\+\_\+timer\+\_\+\+Set\+Interval@{le\+\_\+timer\+\_\+\+Set\+Interval}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Interval(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref, le\+\_\+clk\+\_\+\+Time\+\_\+t interval)}{le_timer_SetInterval(le_timer_Ref_t timerRef, le_clk_Time_t interval)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+timer\+\_\+\+Set\+Interval (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref, }
+\item[{{\bf le\+\_\+clk\+\_\+\+Time\+\_\+t}}]{interval}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a0a103d5cef5e83fc9088859d527bbd43}{}\label{timer_8c_a0a103d5cef5e83fc9088859d527bbd43}
+Set the timer interval
+
+Timer will expire after the interval has elapsed since it was last started or restarted.
+
+If the timer is running when the interval is changed and the new interval is shorter than the period of time since the timer last (re)started, the timer will expire immediately.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK on success
+\end{DoxyItemize}
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Set interval for this timer object \\
+\hline
+\mbox{\tt in}  & {\em interval} & Timer interval \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Set\+Ms\+Interval@{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval}}
+\index{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval@{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Ms\+Interval(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref, uint32\+\_\+t interval)}{le_timer_SetMsInterval(le_timer_Ref_t timerRef, uint32_t interval)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+timer\+\_\+\+Set\+Ms\+Interval (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref, }
+\item[{uint32\+\_\+t}]{interval}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a5c66591a4b8e90bbe8a4a72c500e194b}{}\label{timer_8c_a5c66591a4b8e90bbe8a4a72c500e194b}
+Set the timer interval using milliseconds.
+
+Timer will expire after the interval has elapsed since it was last started or restarted.
+
+If the timer is running when the interval is changed and the new interval is shorter than the period of time since the timer last (re)started, the timer will expire immediately.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK on success
+\end{DoxyItemize}
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Set interval for this timer object. \\
+\hline
+\mbox{\tt in}  & {\em interval} & Timer interval in milliseconds. \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Set\+Repeat@{le\+\_\+timer\+\_\+\+Set\+Repeat}}
+\index{le\+\_\+timer\+\_\+\+Set\+Repeat@{le\+\_\+timer\+\_\+\+Set\+Repeat}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Repeat(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref, uint32\+\_\+t repeat\+Count)}{le_timer_SetRepeat(le_timer_Ref_t timerRef, uint32_t repeatCount)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+timer\+\_\+\+Set\+Repeat (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref, }
+\item[{uint32\+\_\+t}]{repeat\+Count}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a292b0a7d6dc0796a36a54fd04c6a7eeb}{}\label{timer_8c_a292b0a7d6dc0796a36a54fd04c6a7eeb}
+Set how many times the timer will repeat
+
+The timer will repeat the given number of times. A value of 0 means repeat indefinitely. The default is 1, so that a one-\/shot timer is the default.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK on success
+\item L\+E\+\_\+\+B\+U\+SY if the timer is currently running
+\end{DoxyItemize}
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Set repeat count for this timer object \\
+\hline
+\mbox{\tt in}  & {\em repeat\+Count} & Number of times the timer will repeat (0 = forever). \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Set\+Wakeup@{le\+\_\+timer\+\_\+\+Set\+Wakeup}}
+\index{le\+\_\+timer\+\_\+\+Set\+Wakeup@{le\+\_\+timer\+\_\+\+Set\+Wakeup}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Set\+Wakeup(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref, bool wakeup\+Enabled)}{le_timer_SetWakeup(le_timer_Ref_t timerRef, bool wakeupEnabled)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+timer\+\_\+\+Set\+Wakeup (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref, }
+\item[{bool}]{wakeup\+Enabled}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a1fa3f608038fabf828677beb66cdd6ef}{}\label{timer_8c_a1fa3f608038fabf828677beb66cdd6ef}
+Configure if timer expiry will wake up a suspended system.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK on success
+\item L\+E\+\_\+\+B\+U\+SY if the timer is currently running
+\end{DoxyItemize}
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+The default timer expiry behaviour will wake up the system. If an invalid timer object is given, the process exits. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Disable system wake up for this timer object \\
+\hline
+\mbox{\tt in}  & {\em wakeup\+Enabled} & Flag to determine timer will wakeup or not \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Start@{le\+\_\+timer\+\_\+\+Start}}
+\index{le\+\_\+timer\+\_\+\+Start@{le\+\_\+timer\+\_\+\+Start}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Start(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{le_timer_Start(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+timer\+\_\+\+Start (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_ada2ce7f8cb1e76ed959e323ae94bbfc0}{}\label{timer_8c_ada2ce7f8cb1e76ed959e323ae94bbfc0}
+Start the timer
+
+Start the given timer. The timer must not be currently running.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK on success
+\item L\+E\+\_\+\+B\+U\+SY if the timer is already running
+\end{DoxyItemize}
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Start this timer object \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!le\+\_\+timer\+\_\+\+Stop@{le\+\_\+timer\+\_\+\+Stop}}
+\index{le\+\_\+timer\+\_\+\+Stop@{le\+\_\+timer\+\_\+\+Stop}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+timer\+\_\+\+Stop(le\+\_\+timer\+\_\+\+Ref\+\_\+t timer\+Ref)}{le_timer_Stop(le_timer_Ref_t timerRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+timer\+\_\+\+Stop (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+timer\+\_\+\+Ref\+\_\+t}}]{timer\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_af310daa378bd6ca39373a47e073f2243}{}\label{timer_8c_af310daa378bd6ca39373a47e073f2243}
+Stop the timer
+
+Stop the given timer. The timer must be running.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK on success
+\item L\+E\+\_\+\+F\+A\+U\+LT if the timer is not currently running
+\end{DoxyItemize}
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+If an invalid timer object is given, the process exits 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ref} & Stop this timer object \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!Peek\+From\+Timer\+List@{Peek\+From\+Timer\+List}}
+\index{Peek\+From\+Timer\+List@{Peek\+From\+Timer\+List}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Peek\+From\+Timer\+List(le\+\_\+dls\+\_\+\+List\+\_\+t $\ast$list\+Ptr)}{PeekFromTimerList(le_dls_List_t *listPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Timer\+\_\+t}$\ast$ Peek\+From\+Timer\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+List\+\_\+t} $\ast$}]{list\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_ad46c08a285c80159e787f941287b77f4}{}\label{timer_8c_ad46c08a285c80159e787f941287b77f4}
+Peek at the first timer from the given timer list
+
+\begin{DoxyReturn}{Returns}
+\+:
+\begin{DoxyItemize}
+\item pointer to the first timer on the list
+\item N\+U\+LL if the list is empty 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em list\+Ptr} & The list to look at. \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!Pop\+From\+Timer\+List@{Pop\+From\+Timer\+List}}
+\index{Pop\+From\+Timer\+List@{Pop\+From\+Timer\+List}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Pop\+From\+Timer\+List(le\+\_\+dls\+\_\+\+List\+\_\+t $\ast$list\+Ptr)}{PopFromTimerList(le_dls_List_t *listPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf Timer\+\_\+t}$\ast$ Pop\+From\+Timer\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+List\+\_\+t} $\ast$}]{list\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a14acefcfe77df161fa047690bd5f339f}{}\label{timer_8c_a14acefcfe77df161fa047690bd5f339f}
+Pop the first timer from the given timer list
+
+\begin{DoxyReturn}{Returns}
+\+:
+\begin{DoxyItemize}
+\item pointer to the first timer on the list
+\item N\+U\+LL if the list is empty 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em list\+Ptr} & The list to look at. \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!Process\+Expired\+Timer@{Process\+Expired\+Timer}}
+\index{Process\+Expired\+Timer@{Process\+Expired\+Timer}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Expired\+Timer(\+Timer\+\_\+t $\ast$expired\+Timer)}{ProcessExpiredTimer(Timer_t *expiredTimer)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Process\+Expired\+Timer (
+\begin{DoxyParamCaption}
+\item[{{\bf Timer\+\_\+t} $\ast$}]{expired\+Timer}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_abcc03cb32dbbf7744d5da0b02fae9b97}{}\label{timer_8c_abcc03cb32dbbf7744d5da0b02fae9b97}
+Process a single expired timer \index{timer.\+c@{timer.\+c}!Remove\+From\+Timer\+List@{Remove\+From\+Timer\+List}}
+\index{Remove\+From\+Timer\+List@{Remove\+From\+Timer\+List}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Remove\+From\+Timer\+List(le\+\_\+dls\+\_\+\+List\+\_\+t $\ast$list\+Ptr, Timer\+\_\+t $\ast$timer\+Ptr)}{RemoveFromTimerList(le_dls_List_t *listPtr, Timer_t *timerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Remove\+From\+Timer\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+List\+\_\+t} $\ast$}]{list\+Ptr, }
+\item[{{\bf Timer\+\_\+t} $\ast$}]{timer\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_afa2a3684a5fe3264b1352588ef56cf88}{}\label{timer_8c_afa2a3684a5fe3264b1352588ef56cf88}
+Remove the timer from the given timer list 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em list\+Ptr} & The list to look at. \\
+\hline
+\mbox{\tt in}  & {\em timer\+Ptr} & The timer to remove \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!Restart\+Timer\+FD@{Restart\+Timer\+FD}}
+\index{Restart\+Timer\+FD@{Restart\+Timer\+FD}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Restart\+Timer\+F\+D(\+Timer\+\_\+t $\ast$timer\+Ptr)}{RestartTimerFD(Timer_t *timerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Restart\+Timer\+FD (
+\begin{DoxyParamCaption}
+\item[{{\bf Timer\+\_\+t} $\ast$}]{timer\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_ad2ac7f8b6607f8d103dc3fe9dea3dc61}{}\label{timer_8c_ad2ac7f8b6607f8d103dc3fe9dea3dc61}
+Arm and (re)start the timer\+FD 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em timer\+Ptr} & (Re)start this timer object \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!Run\+Timer@{Run\+Timer}}
+\index{Run\+Timer@{Run\+Timer}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Run\+Timer(\+Timer\+\_\+t $\ast$timer\+Ptr)}{RunTimer(Timer_t *timerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Run\+Timer (
+\begin{DoxyParamCaption}
+\item[{{\bf Timer\+\_\+t} $\ast$}]{timer\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_ac053b1245cd9bb589b05a2367682fffd}{}\label{timer_8c_ac053b1245cd9bb589b05a2367682fffd}
+Run a given timer, by adding it to the Timer List and restarting the Timer FD, if necessary.
+
+\begin{DoxyWarning}{Warning}
+The timer must not be currently on the Timer List. 
+\end{DoxyWarning}
+
+\begin{DoxyParams}{Parameters}
+{\em timer\+Ptr} & Timer that has its expiry\+Time member set, but is not on the timer list. \\
+\hline
+\end{DoxyParams}
+\index{timer.\+c@{timer.\+c}!Stop\+Timer@{Stop\+Timer}}
+\index{Stop\+Timer@{Stop\+Timer}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Stop\+Timer(\+Timer\+\_\+t $\ast$timer\+Ptr)}{StopTimer(Timer_t *timerPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Stop\+Timer (
+\begin{DoxyParamCaption}
+\item[{{\bf Timer\+\_\+t} $\ast$}]{timer\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a2fc8c5717f78cbec595a129fc26dfb34}{}\label{timer_8c_a2fc8c5717f78cbec595a129fc26dfb34}
+Stop a given timer.
+
+\begin{DoxyWarning}{Warning}
+The timer must be running. 
+\end{DoxyWarning}
+\index{timer.\+c@{timer.\+c}!Stop\+Timer\+FD@{Stop\+Timer\+FD}}
+\index{Stop\+Timer\+FD@{Stop\+Timer\+FD}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Stop\+Timer\+F\+D(timer\+\_\+\+Thread\+Rec\+\_\+t $\ast$thread\+Rec\+Ptr)}{StopTimerFD(timer_ThreadRec_t *threadRecPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Stop\+Timer\+FD (
+\begin{DoxyParamCaption}
+\item[{{\bf timer\+\_\+\+Thread\+Rec\+\_\+t} $\ast$}]{thread\+Rec\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a45af72cf5b76b7c7119cf06077e31595}{}\label{timer_8c_a45af72cf5b76b7c7119cf06077e31595}
+Stop the timer\+FD \index{timer.\+c@{timer.\+c}!timer\+\_\+\+Destruct\+Thread@{timer\+\_\+\+Destruct\+Thread}}
+\index{timer\+\_\+\+Destruct\+Thread@{timer\+\_\+\+Destruct\+Thread}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{timer\+\_\+\+Destruct\+Thread(void)}{timer_DestructThread(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} timer\+\_\+\+Destruct\+Thread (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a0bf65554f98d2d2e90fff404da3bd967}{}\label{timer_8c_a0bf65554f98d2d2e90fff404da3bd967}
+Destruct timer resources for a given thread.
+
+This function must be called exactly once at thread shutdown, and before the Thread object is deleted. \index{timer.\+c@{timer.\+c}!timer\+\_\+\+Get\+Clock\+Type@{timer\+\_\+\+Get\+Clock\+Type}}
+\index{timer\+\_\+\+Get\+Clock\+Type@{timer\+\_\+\+Get\+Clock\+Type}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{timer\+\_\+\+Get\+Clock\+Type(void)}{timer_GetClockType(void)}}]{\setlength{\rightskip}{0pt plus 5cm}int timer\+\_\+\+Get\+Clock\+Type (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a929c908ea7dfafea46067a310e482dce}{}\label{timer_8c_a929c908ea7dfafea46067a310e482dce}
+Accessor for clock type negotiated between clock and timerfd routines.
+
+Used by clock functions to ensure clock coherence. \index{timer.\+c@{timer.\+c}!timer\+\_\+\+Get\+Timer\+List\+Chg\+Cnt\+Ref@{timer\+\_\+\+Get\+Timer\+List\+Chg\+Cnt\+Ref}}
+\index{timer\+\_\+\+Get\+Timer\+List\+Chg\+Cnt\+Ref@{timer\+\_\+\+Get\+Timer\+List\+Chg\+Cnt\+Ref}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{timer\+\_\+\+Get\+Timer\+List\+Chg\+Cnt\+Ref(void)}{timer_GetTimerListChgCntRef(void)}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t$\ast$$\ast$ timer\+\_\+\+Get\+Timer\+List\+Chg\+Cnt\+Ref (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_aa2d11682bde3468127be3104abac572a}{}\label{timer_8c_aa2d11682bde3468127be3104abac572a}
+Exposing the timer list change counter; mainly for the Inspect tool. \index{timer.\+c@{timer.\+c}!timer\+\_\+\+Init@{timer\+\_\+\+Init}}
+\index{timer\+\_\+\+Init@{timer\+\_\+\+Init}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{timer\+\_\+\+Init(void)}{timer_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} timer\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a2bd5b786cb86ef8527a27e28be90e071}{}\label{timer_8c_a2bd5b786cb86ef8527a27e28be90e071}
+Initialize the Timer module.
+
+This function must be called exactly once at process start-\/up before any other timer module functions are called. \index{timer.\+c@{timer.\+c}!timer\+\_\+\+Init\+Thread@{timer\+\_\+\+Init\+Thread}}
+\index{timer\+\_\+\+Init\+Thread@{timer\+\_\+\+Init\+Thread}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{timer\+\_\+\+Init\+Thread(void)}{timer_InitThread(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} timer\+\_\+\+Init\+Thread (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{timer_8c_a51c1ee0b0f5af07cc39b05961f7737bd}{}\label{timer_8c_a51c1ee0b0f5af07cc39b05961f7737bd}
+Initialize the thread-\/specific parts of the timer module.
+
+This function must be called once by each thread when it starts, before any other timer module functions are called by that thread. \index{timer.\+c@{timer.\+c}!Timer\+Fd\+Handler@{Timer\+Fd\+Handler}}
+\index{Timer\+Fd\+Handler@{Timer\+Fd\+Handler}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Timer\+Fd\+Handler(int fd, short events)}{TimerFdHandler(int fd, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Timer\+Fd\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a928b0cace89d65d1f03050ae52b3b848}{}\label{timer_8c_a928b0cace89d65d1f03050ae52b3b848}
+Handler for timer\+FD expiry 
+\begin{DoxyParams}{Parameters}
+{\em fd} & The timer FD for reading \\
+\hline
+{\em events} & The event bit map. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Variable Documentation}
+\index{timer.\+c@{timer.\+c}!Clock\+Clock\+Type@{Clock\+Clock\+Type}}
+\index{Clock\+Clock\+Type@{Clock\+Clock\+Type}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Clock\+Clock\+Type}{ClockClockType}}]{\setlength{\rightskip}{0pt plus 5cm}int Clock\+Clock\+Type = C\+L\+O\+C\+K\+\_\+\+M\+O\+N\+O\+T\+O\+N\+IC\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a1e3409eb720a91d612a72e3632404968}{}\label{timer_8c_a1e3409eb720a91d612a72e3632404968}
+\index{timer.\+c@{timer.\+c}!Is\+Wakeup\+Supported@{Is\+Wakeup\+Supported}}
+\index{Is\+Wakeup\+Supported@{Is\+Wakeup\+Supported}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Is\+Wakeup\+Supported}{IsWakeupSupported}}]{\setlength{\rightskip}{0pt plus 5cm}bool Is\+Wakeup\+Supported = false\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_ae5394aacc38e20492e605623ac38165d}{}\label{timer_8c_ae5394aacc38e20492e605623ac38165d}
+Determines whether the target supports suspended system wake up using timers. \index{timer.\+c@{timer.\+c}!Safe\+Ref\+Map@{Safe\+Ref\+Map}}
+\index{Safe\+Ref\+Map@{Safe\+Ref\+Map}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Safe\+Ref\+Map}{SafeRefMap}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} Safe\+Ref\+Map = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_aec98c2b5ddcee6bb9d733dbd0e57feb7}{}\label{timer_8c_aec98c2b5ddcee6bb9d733dbd0e57feb7}
+\index{timer.\+c@{timer.\+c}!Timer\+Clock\+Type@{Timer\+Clock\+Type}}
+\index{Timer\+Clock\+Type@{Timer\+Clock\+Type}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Timer\+Clock\+Type}{TimerClockType}}]{\setlength{\rightskip}{0pt plus 5cm}int Timer\+Clock\+Type = C\+L\+O\+C\+K\+\_\+\+M\+O\+N\+O\+T\+O\+N\+IC\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a639dd43a7e0639a56c7d374ca764a079}{}\label{timer_8c_a639dd43a7e0639a56c7d374ca764a079}
+Clocks to be used by timerfd and clock routines. Defaults to C\+L\+O\+C\+K\+\_\+\+M\+O\+N\+O\+T\+O\+N\+IC. Initialized in \hyperlink{timer_8c_a2bd5b786cb86ef8527a27e28be90e071}{timer\+\_\+\+Init()}. \index{timer.\+c@{timer.\+c}!Timer\+List\+Change\+Count@{Timer\+List\+Change\+Count}}
+\index{Timer\+List\+Change\+Count@{Timer\+List\+Change\+Count}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Timer\+List\+Change\+Count}{TimerListChangeCount}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Timer\+List\+Change\+Count = 0\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a763b2186109436515ea7005715cecf33}{}\label{timer_8c_a763b2186109436515ea7005715cecf33}
+A counter that increments every time a change is made to the timer list. \index{timer.\+c@{timer.\+c}!Timer\+List\+Change\+Count\+Ref@{Timer\+List\+Change\+Count\+Ref}}
+\index{Timer\+List\+Change\+Count\+Ref@{Timer\+List\+Change\+Count\+Ref}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Timer\+List\+Change\+Count\+Ref}{TimerListChangeCountRef}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t$\ast$ Timer\+List\+Change\+Count\+Ref = \&{\bf Timer\+List\+Change\+Count}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a9e73ebfd092ab00cb69f8f0bf04ce629}{}\label{timer_8c_a9e73ebfd092ab00cb69f8f0bf04ce629}
+\index{timer.\+c@{timer.\+c}!Timer\+Mem\+Pool\+Ref@{Timer\+Mem\+Pool\+Ref}}
+\index{Timer\+Mem\+Pool\+Ref@{Timer\+Mem\+Pool\+Ref}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Timer\+Mem\+Pool\+Ref}{TimerMemPoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Timer\+Mem\+Pool\+Ref = N\+U\+LL\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_aede83adef47b2d40525af66a330990b9}{}\label{timer_8c_aede83adef47b2d40525af66a330990b9}
+The default timer memory pool. Initialized in \hyperlink{timer_8c_a2bd5b786cb86ef8527a27e28be90e071}{timer\+\_\+\+Init()}. \index{timer.\+c@{timer.\+c}!Trace\+Ref@{Trace\+Ref}}
+\index{Trace\+Ref@{Trace\+Ref}!timer.\+c@{timer.\+c}}
+\subsubsection[{\texorpdfstring{Trace\+Ref}{TraceRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} Trace\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{timer_8c_a84d541f37420ace8bdf697deca689deb}{}\label{timer_8c_a84d541f37420ace8bdf697deca689deb}
+Trace reference used for controlling tracing in this module. 

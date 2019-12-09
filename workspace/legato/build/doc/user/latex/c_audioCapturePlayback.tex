@@ -1,0 +1,1438 @@
+
+\begin{DoxyCodeInclude}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * This module is for unit of the audio playback/recorder}
+\textcolor{comment}{ *}
+\textcolor{comment}{* You must issue the following commands:}
+\textcolor{comment}{* @verbatim}
+\textcolor{comment}{  $ app runProc audioPlaybackRec --exe=audioPlaybackRecTest --}
+\textcolor{comment}{  $     <test case> [main audio path] [file's name] [option]}
+\textcolor{comment}{}
+\textcolor{comment}{  Example:}
+\textcolor{comment}{  $ wm8940\_demo --i2s}
+\textcolor{comment}{  $ app runProc audioPlaybackRec --exe=audioPlaybackRecTest --}
+\textcolor{comment}{  $     REC I2S /record/remote.wav WAV STOP=10}
+\textcolor{comment}{  $ app runProc audioPlaybackRec --exe=audioPlaybackRecTest -- PB I2S /usr/share/sounds/0-to-9.wav}
+\textcolor{comment}{  $ app runProc audioPlaybackRec --exe=audioPlaybackRecTest -- PB I2S /usr/share/sounds/0-to-9.wav}
+\textcolor{comment}{  $     PAUSE=2 RESUME=3}
+\textcolor{comment}{ @endverbatim}
+\textcolor{comment}{ * Copyright (C) Sierra Wireless Inc.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+
+\textcolor{preprocessor}{#include "\hyperlink{legato_8h}{legato.h}"}
+\textcolor{preprocessor}{#include <stdio.h>}
+\textcolor{preprocessor}{#include <pthread.h>}
+\textcolor{preprocessor}{#include <unistd.h>}
+
+\textcolor{preprocessor}{#include "interfaces.h"}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{comment}{// Symbol and Enum definitions.}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{preprocessor}{#define ID\_RIFF    0x46464952}
+\textcolor{preprocessor}{#define ID\_WAVE    0x45564157}
+\textcolor{preprocessor}{#define ID\_FMT     0x20746d66}
+\textcolor{preprocessor}{#define ID\_DATA    0x61746164}
+\textcolor{preprocessor}{#define FORMAT\_PCM 1}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{comment}{// Data structures.}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+
+\textcolor{keyword}{struct}
+\{
+    \textcolor{keyword}{enum}
+    \{
+        STOP,
+        PLAY,
+        PAUSE,
+        RESUME,
+        RECORD,
+        DISCONNECT
+    \} typeOption;
+\} OptionContext;
+
+\textcolor{keyword}{typedef} \textcolor{keyword}{struct }\{
+    uint32\_t riffId;         \textcolor{comment}{///< "RIFF" constant. Marks the file as a riff file.}
+\textcolor{comment}{}    uint32\_t riffSize;       \textcolor{comment}{///< Size of the overall file - 8 bytes}
+\textcolor{comment}{}    uint32\_t riffFmt;        \textcolor{comment}{///< File Type Header. For our purposes, it always equals "WAVE".}
+\textcolor{comment}{}    uint32\_t fmtId;          \textcolor{comment}{///< Equals "fmt ". Format chunk marker. Includes trailing null}
+\textcolor{comment}{}    uint32\_t fmtSize;        \textcolor{comment}{///< Length of format data as listed above}
+\textcolor{comment}{}    uint16\_t audioFormat;    \textcolor{comment}{///< Audio format (PCM)}
+\textcolor{comment}{}    uint16\_t channelsCount;  \textcolor{comment}{///< Number of channels}
+\textcolor{comment}{}    uint32\_t sampleRate;     \textcolor{comment}{///< Sample frequency in Hertz}
+\textcolor{comment}{}    uint32\_t byteRate;       \textcolor{comment}{///< sampleRate * channelsCount * bps / 8}
+\textcolor{comment}{}    uint16\_t blockAlign;     \textcolor{comment}{///< channelsCount * bps / 8}
+\textcolor{comment}{}    uint16\_t bitsPerSample;  \textcolor{comment}{///< Bits per sample}
+\textcolor{comment}{}    uint32\_t dataId;         \textcolor{comment}{///< "data" chunk header. Marks the beginning of the data section.}
+\textcolor{comment}{}    uint32\_t dataSize;       \textcolor{comment}{///< Data size}
+\textcolor{comment}{}\} WavHeader\_t;
+
+\textcolor{keyword}{typedef} \textcolor{keyword}{struct}
+\{
+    WavHeader\_t hd;
+    uint32\_t wroteLen;
+    \textcolor{keywordtype}{int} pipefd[2];
+    \hyperlink{le__thread_8h_a32121104c6b4ca39008eb79a4d6862f2}{le\_thread\_Ref\_t} mainThreadRef;
+    \textcolor{keywordtype}{bool} playDone;
+\}
+PbRecSamplesThreadCtx\_t;
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{comment}{//                                       Static declarations}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} MdmRxAudioRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} MdmTxAudioRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} FeInRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} FeOutRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t} FileAudioRef = NULL;
+
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_ab819480f4ce3f36e62b6a4e327668304}{le\_audio\_ConnectorRef\_t} AudioInputConnectorRef = NULL;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_ab819480f4ce3f36e62b6a4e327668304}{le\_audio\_ConnectorRef\_t} AudioOutputConnectorRef = NULL;
+
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a390b011cbb6f745c46e861d315af0bbe}{le\_audio\_MediaHandlerRef\_t} MediaHandlerRef = NULL;
+
+\textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{char}* AudioTestCase;
+\textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{char}* MainAudioSoundPath;
+\textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{char}* AudioFilePath;
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{int}   AudioFileFd = -1;
+\textcolor{keyword}{static} \textcolor{keywordtype}{bool} PlayInLoop = \textcolor{keyword}{false};
+
+\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\_timer\_Ref\_t} OptionTimerRef;
+\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\_timer\_Ref\_t}  GainTimerRef = NULL;
+\hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\_timer\_Ref\_t}  MuteTimerRef = NULL;
+
+\textcolor{keyword}{static} PbRecSamplesThreadCtx\_t PbRecSamplesThreadCtx;
+\textcolor{keyword}{static} \hyperlink{le__thread_8h_a32121104c6b4ca39008eb79a4d6862f2}{le\_thread\_Ref\_t} RecPbThreadRef = NULL;
+
+\textcolor{keyword}{static} uint32\_t ChannelsCount;
+\textcolor{keyword}{static} uint32\_t SampleRate;
+\textcolor{keyword}{static} uint32\_t BitsPerSample;
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} DisconnectAllAudio(\textcolor{keywordtype}{void});
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} PlaySamples(\textcolor{keywordtype}{void}* param1Ptr,\textcolor{keywordtype}{void}* param2Ptr);
+\textcolor{keyword}{static} uint8\_t NextOptionArg;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_a0ad2f5012ed700af1892f82e4af5989d}{le\_audio\_Format\_t} AudioFormat;
+\textcolor{keyword}{static} \textcolor{keywordtype}{bool} DtxActivation;
+\textcolor{keyword}{static} \hyperlink{le__audio__interface_8h_accd7fae61b50dcd68bf722e243bc5cb7}{le\_audio\_AmrMode\_t} AmrMode;
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Timer handler function for volume playback test.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} GainTimerHandler
+(
+    \hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\_timer\_Ref\_t} timerRef
+)
+\{
+    \textcolor{keyword}{static} int32\_t vol = 0, getVol = 0;
+    \textcolor{keyword}{static} \textcolor{keywordtype}{bool} increase = \textcolor{keyword}{true};
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result;
+
+    \textcolor{keywordflow}{if} ( increase )
+    \{
+        vol+=1;
+
+        \textcolor{keywordflow}{if} (vol == 100)
+        \{
+            increase = \textcolor{keyword}{false};
+        \}
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        vol-=1;
+
+        \textcolor{keywordflow}{if} (vol == 0)
+        \{
+            increase = \textcolor{keyword}{true};
+        \}
+    \}
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Playback volume: vol %d"}, vol);
+    result = \hyperlink{le__audio__interface_8h_a65f11540e6af03a3494b6b9be76ba5fc}{le\_audio\_SetGain}(FileAudioRef, vol);
+
+    \textcolor{keywordflow}{if} (result != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a54b4b07f5396e19a8d9fca74238f4795}{LE\_FATAL}(\textcolor{stringliteral}{"le\_audio\_SetGain error : %d"}, result);
+    \}
+
+    result = \hyperlink{le__audio__interface_8h_a365dede3aa7e895755f5812d89368f9f}{le\_audio\_GetGain}(FileAudioRef, &getVol);
+
+    \textcolor{keywordflow}{if} ((result != LE\_OK) || (vol != getVol))
+    \{
+        \hyperlink{le__log_8h_a54b4b07f5396e19a8d9fca74238f4795}{LE\_FATAL}(\textcolor{stringliteral}{"le\_audio\_GetGain error : %d read volume: %d"}, result, getVol);
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Timer handler function for volume playback MUTE test.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} MuteTimerHandler
+(
+    \hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\_timer\_Ref\_t} timerRef
+)
+\{
+    \textcolor{keyword}{static} \textcolor{keywordtype}{bool} mute = \textcolor{keyword}{false};
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result;
+
+    \textcolor{keywordflow}{if} ( mute )
+    \{
+        result = \hyperlink{le__audio__interface_8h_adad24547293481964039efe56bc14e2b}{le\_audio\_Unmute}(FileAudioRef);
+        mute = \textcolor{keyword}{false};
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Unmute audio Playback"});
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        result = \hyperlink{le__audio__interface_8h_a147e97c49dbc003f63df78f97d5fca32}{le\_audio\_Mute}(FileAudioRef);
+        mute = \textcolor{keyword}{true};
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Mute audio Playback"});
+    \}
+
+    \textcolor{keywordflow}{if} (result != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a54b4b07f5396e19a8d9fca74238f4795}{LE\_FATAL}(\textcolor{stringliteral}{"le\_audio\_Mute/le\_audio\_Unmute Failed %d"}, result);
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Rec Samples thread destructor.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} DestroyRecThread
+(
+    \textcolor{keywordtype}{void} *contextPtr
+)
+\{
+    PbRecSamplesThreadCtx\_t *threadCtxPtr = (PbRecSamplesThreadCtx\_t*) contextPtr;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"wroteLen %d"}, threadCtxPtr->wroteLen);
+
+    \textcolor{comment}{// Closing AudioFileFd is unnecessary since the messaging infrastructure underneath}
+    \textcolor{comment}{// le\_audio\_xxx APIs that use it would close it.}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Rec Samples thread.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{void}* RecSamplesThread
+(
+    \textcolor{keywordtype}{void}* contextPtr
+)
+\{
+    \textcolor{keywordtype}{int} pipefd[2];
+    int32\_t len = 1024;
+    \textcolor{keywordtype}{char} data[len];
+    uint32\_t channelsCount;
+    uint32\_t sampleRate;
+    uint32\_t bitsPerSample;
+    PbRecSamplesThreadCtx\_t *threadCtxPtr = (PbRecSamplesThreadCtx\_t*) contextPtr;
+
+    \hyperlink{le__audio__interface_8h_a65a8844fc6d2e1b7ed78f33bef1b9990}{le\_audio\_ConnectService}();
+
+    lseek(AudioFileFd, 0, SEEK\_SET);
+
+    \textcolor{keywordflow}{if} (pipe(pipefd) == -1)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to create the pipe"});
+        \textcolor{keywordflow}{return} NULL;
+    \}
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_aae7db9f0933119fb5a61162722b3274a}{le\_audio\_SetSamplePcmChannelNumber}(FileAudioRef, 
+      ChannelsCount) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_a04adfcc0e8f5796eca53c31cd5dd6528}{le\_audio\_SetSamplePcmSamplingRate}(FileAudioRef, 
+      SampleRate) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_aae37b46c13f76144dd94c48bfe94998b}{le\_audio\_SetSamplePcmSamplingResolution}(
+      FileAudioRef, BitsPerSample) == LE\_OK);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_a40bf3633c3050a7526a100562edc97f9}{le\_audio\_GetSamplePcmChannelNumber}(FileAudioRef, &
+      channelsCount) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(channelsCount == ChannelsCount);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_a80fb48632ce8f638cea4a3e5d333d66f}{le\_audio\_GetSamplePcmSamplingRate}(FileAudioRef, &
+      sampleRate) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(sampleRate == SampleRate);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_a70b9f904ce225aad4fb80b8b24a1f92a}{le\_audio\_GetSamplePcmSamplingResolution}(
+      FileAudioRef, &bitsPerSample) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(bitsPerSample == BitsPerSample);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_a9c55a59849afcbb2ccef88cd4265782e}{le\_audio\_GetSamples}(FileAudioRef, pipefd[1]) == LE\_OK);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start getting samples..."});
+
+    int32\_t readLen;
+    int32\_t writeLen;
+
+    \textcolor{keywordflow}{while} ((readLen = read( pipefd[0], data, len )))
+    \{
+        \textcolor{keywordflow}{if} (readLen < 0)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"read error %d %d"}, len, readLen);
+            \textcolor{keywordflow}{break};
+        \}
+
+        writeLen = write( AudioFileFd, data, readLen );
+
+        \textcolor{keywordflow}{if} (writeLen < 0)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"write error %d %d"}, readLen, writeLen);
+            \textcolor{keywordflow}{break};
+        \}
+
+        threadCtxPtr->wroteLen += writeLen;
+    \}
+
+    \textcolor{keywordflow}{return} NULL;
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Rec Samples.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} RecSamples
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    memset(&PbRecSamplesThreadCtx,0,\textcolor{keyword}{sizeof}(PbRecSamplesThreadCtx\_t));
+
+    RecPbThreadRef = \hyperlink{le__thread_8h_a87e02a46f92e9e3e11ed28a2b265872f}{le\_thread\_Create}(\textcolor{stringliteral}{"RecSamples"}, RecSamplesThread, &
+      PbRecSamplesThreadCtx);
+
+    \hyperlink{le__thread_8h_a671dbe2927a3b2a13c5150476398f34f}{le\_thread\_AddChildDestructor}(RecPbThreadRef,
+                                DestroyRecThread,
+                                &PbRecSamplesThreadCtx);
+
+    \hyperlink{le__thread_8h_a38df3877ee5ab9fac17b2fc0be46c27e}{le\_thread\_Start}(RecPbThreadRef);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  Play Samples thread destructor.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} DestroyPlayThread
+(
+    \textcolor{keywordtype}{void} *contextPtr
+)
+\{
+    PbRecSamplesThreadCtx\_t *threadCtxPtr = (PbRecSamplesThreadCtx\_t*) contextPtr;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"DestroyPlayThread playDone %d PlayInLoop %d"}, threadCtxPtr->playDone, PlayInLoop);
+
+    \textcolor{keywordflow}{if} (RecPbThreadRef != NULL)
+    \{
+        \hyperlink{le__thread_8h_a0f1c1b98f354a96e6e31e55a71b58f6a}{le\_thread\_Cancel}(RecPbThreadRef);
+        RecPbThreadRef = NULL;
+
+        \textcolor{comment}{// Restart in case of looping playback}
+        \textcolor{keywordflow}{if} (threadCtxPtr->playDone && PlayInLoop)
+        \{
+            \hyperlink{le__event_loop_8h_a228da2d1f53ffa74517f108b0dcfa4d9}{le\_event\_QueueFunctionToThread}(threadCtxPtr->mainThreadRef,
+                                           PlaySamples,
+                                           contextPtr,
+                                           NULL);
+        \}
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  Play Samples thread.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void}* PlaySamplesThread
+(
+    \textcolor{keywordtype}{void}* contextPtr
+)
+\{
+    \textcolor{keywordtype}{char} data[1024];
+    int32\_t len = 1;
+    uint32\_t channelsCount;
+    uint32\_t sampleRate;
+    uint32\_t bitsPerSample;
+    PbRecSamplesThreadCtx\_t *threadCtxPtr = (PbRecSamplesThreadCtx\_t*) contextPtr;
+
+    \hyperlink{le__audio__interface_8h_a65a8844fc6d2e1b7ed78f33bef1b9990}{le\_audio\_ConnectService}();
+
+    lseek(AudioFileFd, 0, SEEK\_SET);
+
+    \textcolor{keywordflow}{if} ( ( threadCtxPtr->pipefd[0] == -1 ) && ( threadCtxPtr->pipefd[1] == -1 ) )
+    \{
+        \textcolor{keywordflow}{if} (pipe(threadCtxPtr->pipefd) == -1)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to create the pipe"});
+            \textcolor{keywordflow}{return} NULL;
+        \}
+
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_aae7db9f0933119fb5a61162722b3274a}{le\_audio\_SetSamplePcmChannelNumber}(
+      FileAudioRef, ChannelsCount) == LE\_OK);
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_a04adfcc0e8f5796eca53c31cd5dd6528}{le\_audio\_SetSamplePcmSamplingRate}(FileAudioRef,
+       SampleRate) == LE\_OK);
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_aae37b46c13f76144dd94c48bfe94998b}{le\_audio\_SetSamplePcmSamplingResolution}(
+      FileAudioRef, BitsPerSample) == LE\_OK);
+
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_a40bf3633c3050a7526a100562edc97f9}{le\_audio\_GetSamplePcmChannelNumber}(
+      FileAudioRef, &channelsCount) == LE\_OK);
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(channelsCount == ChannelsCount);
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_a80fb48632ce8f638cea4a3e5d333d66f}{le\_audio\_GetSamplePcmSamplingRate}(FileAudioRef,
+       &sampleRate) == LE\_OK);
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(sampleRate == SampleRate);
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_a70b9f904ce225aad4fb80b8b24a1f92a}{le\_audio\_GetSamplePcmSamplingResolution}(
+      FileAudioRef, &bitsPerSample) == LE\_OK);
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(bitsPerSample == BitsPerSample);
+
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_afd37d59ab8207338da197554f49d7ff0}{le\_audio\_PlaySamples}(FileAudioRef, threadCtxPtr->pipefd[0]) 
+      == LE\_OK);
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start playing samples..."});
+    \}
+
+    \textcolor{keywordflow}{while} ((len = read(AudioFileFd, data, 1024)) > 0)
+    \{
+        int32\_t wroteLen = write( threadCtxPtr->pipefd[1], data, len );
+
+        \textcolor{keywordflow}{if} (wroteLen <= 0)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"write error %d"}, wroteLen);
+            \textcolor{keywordflow}{return} NULL;
+        \}
+    \}
+
+    threadCtxPtr->playDone = \textcolor{keyword}{true};
+
+    \textcolor{keywordflow}{return} NULL;
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ *  Play Samples thread.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} PlaySamples
+(
+    \textcolor{keywordtype}{void}* param1Ptr,
+    \textcolor{keywordtype}{void}* param2Ptr
+)
+\{
+    \textcolor{keywordflow}{if} (RecPbThreadRef == NULL)
+    \{
+        RecPbThreadRef = \hyperlink{le__thread_8h_a87e02a46f92e9e3e11ed28a2b265872f}{le\_thread\_Create}(\textcolor{stringliteral}{"PlaySamples"}, PlaySamplesThread, param1Ptr);
+
+        \hyperlink{le__thread_8h_a671dbe2927a3b2a13c5150476398f34f}{le\_thread\_AddChildDestructor}(RecPbThreadRef,
+                                    DestroyPlayThread,
+                                    param1Ptr);
+
+        \hyperlink{le__thread_8h_a38df3877ee5ab9fac17b2fc0be46c27e}{le\_thread\_Start}(RecPbThreadRef);
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Execute next optional parameters}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ExecuteNextOption
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordtype}{bool} nextOption = \textcolor{keyword}{false};
+
+    \textcolor{keywordflow}{if} ( NextOptionArg < \hyperlink{le__args_8h_a6fbbeb423104e6eb92fe47ef42b7310a}{le\_arg\_NumArgs}() )
+    \{
+        \textcolor{keyword}{const} \textcolor{keywordtype}{char}* nextOptionArgPtr = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(NextOptionArg);
+        \textcolor{keywordflow}{if} (NULL == nextOptionArgPtr)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"nextOptionArgPtr is NULL"});
+            exit(EXIT\_FAILURE);
+        \}
+        \textcolor{keywordflow}{if} ( strncmp(nextOptionArgPtr, \textcolor{stringliteral}{"STOP"}, 4) == 0 )
+        \{
+            \hyperlink{structle__clk___time__t}{le\_clk\_Time\_t} interval=\{0\};
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* stop = nextOptionArgPtr;
+
+            \textcolor{keywordflow}{if} (strlen(stop) > 5) \textcolor{comment}{// higher than "STOP="}
+            \{
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"STOP will be done in %d seconds"}, atoi(stop+5));
+                interval.\hyperlink{structle__clk___time__t_ae28e527dbd551b3537edc1737611782f}{sec} = atoi(stop+5);
+                \hyperlink{le__timer_8h_a0a103d5cef5e83fc9088859d527bbd43}{le\_timer\_SetInterval}(OptionTimerRef, interval);
+                OptionContext.typeOption = STOP;
+                \hyperlink{le__timer_8h_ada2ce7f8cb1e76ed959e323ae94bbfc0}{le\_timer\_Start}(OptionTimerRef);
+            \}
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( strncmp(nextOptionArgPtr, \textcolor{stringliteral}{"PLAY"}, 4) == 0 )
+        \{
+            \hyperlink{structle__clk___time__t}{le\_clk\_Time\_t} interval=\{0\};
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* play = nextOptionArgPtr;
+            \textcolor{keywordflow}{if} (strlen(play) > 5) \textcolor{comment}{// higher than "PLAY="}
+            \{
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"PLAY will be done in %d seconds"}, atoi(play+5));
+                interval.\hyperlink{structle__clk___time__t_ae28e527dbd551b3537edc1737611782f}{sec} = atoi(play+5);
+                \hyperlink{le__timer_8h_a0a103d5cef5e83fc9088859d527bbd43}{le\_timer\_SetInterval}(OptionTimerRef, interval);
+                OptionContext.typeOption = PLAY;
+                \hyperlink{le__timer_8h_ada2ce7f8cb1e76ed959e323ae94bbfc0}{le\_timer\_Start}(OptionTimerRef);
+            \}
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( strncmp(nextOptionArgPtr, \textcolor{stringliteral}{"RECORD"}, 6) == 0 )
+        \{
+            \hyperlink{structle__clk___time__t}{le\_clk\_Time\_t} interval=\{0\};
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* play = nextOptionArgPtr;
+            \textcolor{keywordflow}{if} (strlen(play) > 7) \textcolor{comment}{// higher than "RECORD="}
+            \{
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"RECORD will be done in %d seconds"}, atoi(play+7));
+                interval.\hyperlink{structle__clk___time__t_ae28e527dbd551b3537edc1737611782f}{sec} = atoi(play+7);
+                \hyperlink{le__timer_8h_a0a103d5cef5e83fc9088859d527bbd43}{le\_timer\_SetInterval}(OptionTimerRef, interval);
+                OptionContext.typeOption = RECORD;
+                \hyperlink{le__timer_8h_ada2ce7f8cb1e76ed959e323ae94bbfc0}{le\_timer\_Start}(OptionTimerRef);
+            \}
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( strncmp(nextOptionArgPtr, \textcolor{stringliteral}{"PAUSE"}, 5) == 0 )
+        \{
+            \hyperlink{structle__clk___time__t}{le\_clk\_Time\_t} interval=\{0\};
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* pause = nextOptionArgPtr;
+
+            \textcolor{keywordflow}{if} (strlen(pause) > 6) \textcolor{comment}{// higher than "PAUSE="}
+            \{
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"PAUSE will be done in %d seconds"}, atoi(pause+6));
+                interval.\hyperlink{structle__clk___time__t_ae28e527dbd551b3537edc1737611782f}{sec} = atoi(pause+6);
+                \hyperlink{le__timer_8h_a0a103d5cef5e83fc9088859d527bbd43}{le\_timer\_SetInterval}(OptionTimerRef, interval);
+                OptionContext.typeOption = PAUSE;
+                \hyperlink{le__timer_8h_ada2ce7f8cb1e76ed959e323ae94bbfc0}{le\_timer\_Start}(OptionTimerRef);
+            \}
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( strncmp(nextOptionArgPtr, \textcolor{stringliteral}{"RESUME"}, 6) == 0 )
+        \{
+            \hyperlink{structle__clk___time__t}{le\_clk\_Time\_t} interval=\{0\};
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* resume = nextOptionArgPtr;
+
+            \textcolor{keywordflow}{if} (strlen(resume) > 7) \textcolor{comment}{// higher than "RESUME="}
+            \{
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"RESUME will be done in %d seconds"}, atoi(resume+7));
+                interval.\hyperlink{structle__clk___time__t_ae28e527dbd551b3537edc1737611782f}{sec} = atoi(resume+7);
+                \hyperlink{le__timer_8h_a0a103d5cef5e83fc9088859d527bbd43}{le\_timer\_SetInterval}(OptionTimerRef, interval);
+                OptionContext.typeOption = RESUME;
+                \hyperlink{le__timer_8h_ada2ce7f8cb1e76ed959e323ae94bbfc0}{le\_timer\_Start}(OptionTimerRef);
+            \}
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( strncmp(nextOptionArgPtr, \textcolor{stringliteral}{"DISCONNECT"}, 10) == 0 )
+        \{
+            \hyperlink{structle__clk___time__t}{le\_clk\_Time\_t} interval=\{0\};
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* resume = nextOptionArgPtr;
+
+            \textcolor{keywordflow}{if} (strlen(resume) > 11) \textcolor{comment}{// higher than "DISCONNECT="}
+            \{
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"DISCONNECT will be done in %d seconds"}, atoi(resume+11));
+                interval.\hyperlink{structle__clk___time__t_ae28e527dbd551b3537edc1737611782f}{sec} = atoi(resume+11);
+                \hyperlink{le__timer_8h_a0a103d5cef5e83fc9088859d527bbd43}{le\_timer\_SetInterval}(OptionTimerRef, interval);
+                OptionContext.typeOption = DISCONNECT;
+                \hyperlink{le__timer_8h_ada2ce7f8cb1e76ed959e323ae94bbfc0}{le\_timer\_Start}(OptionTimerRef);
+            \}
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( strncmp(nextOptionArgPtr, \textcolor{stringliteral}{"LOOP"}, 4) == 0 )
+        \{
+            PlayInLoop = \textcolor{keyword}{true};
+            nextOption = \textcolor{keyword}{true};
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( strncmp(nextOptionArgPtr, \textcolor{stringliteral}{"MUTE"}, 4) == 0 )
+        \{
+
+            \hyperlink{structle__clk___time__t}{le\_clk\_Time\_t} interval;
+            interval.\hyperlink{structle__clk___time__t_ae28e527dbd551b3537edc1737611782f}{sec} = 1;
+            interval.\hyperlink{structle__clk___time__t_a8324bdde9199a09a47489a3f246f184c}{usec} = 0;
+
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Test the MUTE function"});
+
+            MuteTimerRef = \hyperlink{le__timer_8h_aee41169a210378b369f440cf99146522}{le\_timer\_Create}  ( \textcolor{stringliteral}{"Mute timer"} );
+            \hyperlink{le__timer_8h_a8fb341f11e0da2692453df997613cb8e}{le\_timer\_SetHandler}(MuteTimerRef, MuteTimerHandler);
+
+            \hyperlink{le__timer_8h_a0a103d5cef5e83fc9088859d527bbd43}{le\_timer\_SetInterval}(MuteTimerRef, interval);
+            \hyperlink{le__timer_8h_a292b0a7d6dc0796a36a54fd04c6a7eeb}{le\_timer\_SetRepeat}(MuteTimerRef,0);
+            \hyperlink{le__timer_8h_ada2ce7f8cb1e76ed959e323ae94bbfc0}{le\_timer\_Start}(MuteTimerRef);
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( strncmp(nextOptionArgPtr,\textcolor{stringliteral}{"GAIN"},4) == 0 )
+        \{
+            \hyperlink{structle__clk___time__t}{le\_clk\_Time\_t} interval;
+            interval.\hyperlink{structle__clk___time__t_ae28e527dbd551b3537edc1737611782f}{sec} = 0;
+            interval.\hyperlink{structle__clk___time__t_a8324bdde9199a09a47489a3f246f184c}{usec} = 100000;
+
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Test the playback volume"});
+
+            GainTimerRef = \hyperlink{le__timer_8h_aee41169a210378b369f440cf99146522}{le\_timer\_Create}  ( \textcolor{stringliteral}{"Gain timer"} );
+            \hyperlink{le__timer_8h_a8fb341f11e0da2692453df997613cb8e}{le\_timer\_SetHandler}(GainTimerRef, GainTimerHandler);
+
+            \hyperlink{le__audio__interface_8h_a65f11540e6af03a3494b6b9be76ba5fc}{le\_audio\_SetGain}(FileAudioRef, 0);
+            \hyperlink{le__timer_8h_a0a103d5cef5e83fc9088859d527bbd43}{le\_timer\_SetInterval}(GainTimerRef, interval);
+            \hyperlink{le__timer_8h_a292b0a7d6dc0796a36a54fd04c6a7eeb}{le\_timer\_SetRepeat}(GainTimerRef,0);
+            \hyperlink{le__timer_8h_ada2ce7f8cb1e76ed959e323ae94bbfc0}{le\_timer\_Start}(GainTimerRef);
+        \}
+
+        NextOptionArg++;
+    \}
+
+    \textcolor{keywordflow}{if} (nextOption)
+    \{
+        ExecuteNextOption();
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Timer handler for optional parameters}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keywordtype}{void} OptionTimerHandler
+(
+    \hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\_timer\_Ref\_t} timerRef
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"timeout for %d"}, OptionContext.typeOption);
+
+    \textcolor{keywordflow}{switch} (OptionContext.typeOption)
+    \{
+        \textcolor{keywordflow}{case} STOP:
+            result = \hyperlink{le__audio__interface_8h_a4aebc6e8cdc4389c375e93418823af71}{le\_audio\_Stop}(FileAudioRef);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Stop result %d"}, result);
+
+            \textcolor{keywordflow}{if} (RecPbThreadRef)
+            \{
+                \hyperlink{le__thread_8h_a0f1c1b98f354a96e6e31e55a71b58f6a}{le\_thread\_Cancel}(RecPbThreadRef);
+                RecPbThreadRef = NULL;
+            \}
+
+            \textcolor{keywordflow}{if} ( strncmp(AudioTestCase,\textcolor{stringliteral}{"PB\_SAMPLES"},10)==0 )
+            \{
+                \textcolor{comment}{// Closing PbRecSamplesThreadCtx.pipefd[] is unnecessary since the messaging}
+                \textcolor{comment}{// infrastructure underneath le\_audio\_xxx APIs that use it would close it.}
+
+                PbRecSamplesThreadCtx.pipefd[0] = -1;
+                PbRecSamplesThreadCtx.pipefd[1] = -1;
+                PbRecSamplesThreadCtx.playDone = 0;
+            \}
+        \textcolor{keywordflow}{break};
+        \textcolor{keywordflow}{case} PLAY:
+            \textcolor{keywordflow}{if} ( strncmp(AudioTestCase,\textcolor{stringliteral}{"PB\_SAMPLES"},10)==0 )
+            \{
+                PlaySamples(&PbRecSamplesThreadCtx, NULL);
+            \}
+            \textcolor{keywordflow}{else}
+            \{
+                result = \hyperlink{le__audio__interface_8h_aea2c5d0b394cfab87503639c534300c9}{le\_audio\_PlayFile}(FileAudioRef,
+      \hyperlink{le__audio__interface_8h_a374c2f62ec5b8a92dd1de6fcb449fafe}{LE\_AUDIO\_NO\_FD});
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Play result %d"}, result);
+            \}
+        \textcolor{keywordflow}{break};
+        \textcolor{keywordflow}{case} RECORD:
+        \textcolor{keywordflow}{if} ( strncmp(AudioTestCase,\textcolor{stringliteral}{"REC\_SAMPLES"},11)==0 )
+        \{
+            RecSamples();
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            result = \hyperlink{le__audio__interface_8h_a393a26f6cff7fe05c1813fcafeef50f3}{le\_audio\_RecordFile}(FileAudioRef,
+      \hyperlink{le__audio__interface_8h_a374c2f62ec5b8a92dd1de6fcb449fafe}{LE\_AUDIO\_NO\_FD});
+
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Record result %d"}, result);
+        \}
+        \textcolor{keywordflow}{break};
+        \textcolor{keywordflow}{case} PAUSE:
+            result = \hyperlink{le__audio__interface_8h_a80343ca9800ab80f818bbe0361bb226b}{le\_audio\_Pause}(FileAudioRef);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Pause result %d"}, result);
+        \textcolor{keywordflow}{break};
+        \textcolor{keywordflow}{case} RESUME:
+            result = \hyperlink{le__audio__interface_8h_a1dba6618bd8fc9835869ee72c3fbd850}{le\_audio\_Resume}(FileAudioRef);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Resume result %d"}, result);
+        \textcolor{keywordflow}{break};
+        \textcolor{keywordflow}{case} DISCONNECT:
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"disconnect all audio"});
+            DisconnectAllAudio();
+        \textcolor{keywordflow}{break};
+        \textcolor{keywordflow}{default}:
+        \textcolor{keywordflow}{break};
+    \}
+
+    ExecuteNextOption();
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Handler function for Stream Event Notifications.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} MyMediaEventHandler
+(
+    \hyperlink{le__audio__interface_8h_a9a46ff5a5afa61f1bc76120ab9e4da0a}{le\_audio\_StreamRef\_t}          streamRef,
+    \hyperlink{le__audio__interface_8h_aaf870f5f30f4f6f65efb873c5d0cb5f1}{le\_audio\_MediaEvent\_t}          event,
+    \textcolor{keywordtype}{void}*                         contextPtr
+)
+\{
+    \textcolor{keywordflow}{if} (!streamRef)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Bad streamRef"});
+        \textcolor{keywordflow}{return};
+    \}
+
+
+    \textcolor{keywordflow}{switch}(event)
+    \{
+        \textcolor{keywordflow}{case} \hyperlink{le__audio__interface_8h_aaf870f5f30f4f6f65efb873c5d0cb5f1a7dbc0c9a2c3839d3db974c5aa5be344d}{LE\_AUDIO\_MEDIA\_ENDED}:
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"File event is LE\_AUDIO\_MEDIA\_ENDED."});
+            \textcolor{keywordflow}{if} (PlayInLoop)
+            \{
+                \hyperlink{le__audio__interface_8h_aea2c5d0b394cfab87503639c534300c9}{le\_audio\_PlayFile}(streamRef, \hyperlink{le__audio__interface_8h_a374c2f62ec5b8a92dd1de6fcb449fafe}{LE\_AUDIO\_NO\_FD});
+            \}
+            \textcolor{keywordflow}{break};
+
+        \textcolor{keywordflow}{case} \hyperlink{le__audio__interface_8h_aaf870f5f30f4f6f65efb873c5d0cb5f1a5f7de6714ea54f09d036a87dd1c63a50}{LE\_AUDIO\_MEDIA\_ERROR}:
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"File event is LE\_AUDIO\_MEDIA\_ERROR."});
+        \textcolor{keywordflow}{break};
+
+        \textcolor{keywordflow}{case} \hyperlink{le__audio__interface_8h_aaf870f5f30f4f6f65efb873c5d0cb5f1a06883432159e9e69637fbe5eefd59159}{LE\_AUDIO\_MEDIA\_NO\_MORE\_SAMPLES}:
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"File event is LE\_AUDIO\_MEDIA\_NO\_MORE\_SAMPLES."});
+        \textcolor{keywordflow}{break};
+        \textcolor{keywordflow}{default}:
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"File event is %d."}, event);
+        \textcolor{keywordflow}{break};
+    \}
+
+    \textcolor{keywordflow}{if} (GainTimerRef)
+    \{
+        \hyperlink{le__timer_8h_af310daa378bd6ca39373a47e073f2243}{le\_timer\_Stop} (GainTimerRef);
+        \hyperlink{le__timer_8h_ae103f6736bf855e77e5e59bbad1e27a7}{le\_timer\_Delete} (GainTimerRef);
+        GainTimerRef = NULL;
+    \}
+
+    \textcolor{keywordflow}{if} (MuteTimerRef)
+    \{
+        \hyperlink{le__timer_8h_af310daa378bd6ca39373a47e073f2243}{le\_timer\_Stop} (MuteTimerRef);
+        \hyperlink{le__timer_8h_ae103f6736bf855e77e5e59bbad1e27a7}{le\_timer\_Delete} (MuteTimerRef);
+        \hyperlink{le__audio__interface_8h_adad24547293481964039efe56bc14e2b}{le\_audio\_Unmute}(FileAudioRef);
+        MuteTimerRef = NULL;
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect USB audio class to connectors}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToUsb
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    \textcolor{comment}{// Redirect audio to the USB.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_adb38f11ac78cf99160c19f69b4db0eb8}{le\_audio\_OpenUsbTx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef==NULL), \textcolor{stringliteral}{"OpenUsbTx returns NULL!"});
+    FeInRef = \hyperlink{le__audio__interface_8h_acd8be89289067cef9441a8ed1d891146}{le\_audio\_OpenUsbRx}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeInRef==NULL), \textcolor{stringliteral}{"OpenUsbRx returns NULL!"});
+
+    AudioInputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioInputConnectorRef==NULL), \textcolor{stringliteral}{"AudioInputConnectorRef is NULL!"});
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef==NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FeInRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect USB Rx on Input connector (%s)!"},
+                    \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{LE\_RESULT\_TXT}(res));
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect USB Tx on Output connector (%s)!"},
+                    \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{LE\_RESULT\_TXT}(res));
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect player to connector}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToFileLocalPlay
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+    \textcolor{keywordflow}{if} ((AudioFileFd=open(AudioFilePath, O\_RDONLY)) == -1)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Open file %s failure: errno.%d (%s)"},  AudioFilePath, errno, strerror(errno));
+        DisconnectAllAudio();
+        exit(0);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Open file %s with AudioFileFd.%d"},  AudioFilePath, AudioFileFd);
+    \}
+
+    \textcolor{comment}{// Play local on output connector.}
+    FileAudioRef = \hyperlink{le__audio__interface_8h_a92eb1b6377f50ff07b97c5b8546f01ec}{le\_audio\_OpenPlayer}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FileAudioRef==NULL), \textcolor{stringliteral}{"OpenFilePlayback returns NULL!"});
+
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((\hyperlink{le__audio__interface_8h_a65f11540e6af03a3494b6b9be76ba5fc}{le\_audio\_SetGain}(FileAudioRef, 0x3000) != LE\_OK), \textcolor{stringliteral}{"Cannot set
+       multimedia gain"});
+
+
+    \hyperlink{le__audio__interface_8h_adad24547293481964039efe56bc14e2b}{le\_audio\_Unmute}(FileAudioRef);
+
+    MediaHandlerRef = \hyperlink{le__audio__interface_8h_a9996ac9d23333cf8219f28b69cac4f81}{le\_audio\_AddMediaHandler}(FileAudioRef, MyMediaEventHandler, 
+      NULL);
+
+    \textcolor{keywordflow}{if} (FileAudioRef && AudioOutputConnectorRef)
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FileAudioRef);
+        \textcolor{keywordflow}{if}(res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to connect FilePlayback on output connector (%s)!"},
+                     \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{LE\_RESULT\_TXT}(res));
+            \textcolor{keywordflow}{return};
+        \}
+
+        \textcolor{keywordflow}{if} (strncmp(AudioTestCase,\textcolor{stringliteral}{"PB\_SAMPLES"},10)==0)
+        \{
+            memset(&PbRecSamplesThreadCtx,0,\textcolor{keyword}{sizeof}(PbRecSamplesThreadCtx\_t));
+            PbRecSamplesThreadCtx.pipefd[0] = -1;
+            PbRecSamplesThreadCtx.pipefd[1] = -1;
+            PbRecSamplesThreadCtx.mainThreadRef = \hyperlink{le__thread_8h_a90a9d67db26f816fd1e1032d74a24fcd}{le\_thread\_GetCurrent}();
+
+            PlaySamples(&PbRecSamplesThreadCtx, NULL);
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"FilePlayback is now connected."});
+            res = \hyperlink{le__audio__interface_8h_aea2c5d0b394cfab87503639c534300c9}{le\_audio\_PlayFile}(FileAudioRef, AudioFileFd);
+
+            \textcolor{keywordflow}{if}(res != LE\_OK)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to play the file!"});
+                \textcolor{keywordflow}{return};
+            \}
+            \textcolor{keywordflow}{else}
+            \{
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"File is now playing"});
+            \}
+        \}
+
+        ExecuteNextOption();
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect recorder to connector}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToFileLocalRec
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    \textcolor{keywordflow}{if} ((AudioFileFd=open(AudioFilePath, O\_WRONLY | O\_CREAT | O\_TRUNC)) == -1)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Open file %s failure: errno.%d (%s)"},  AudioFilePath, errno, strerror(errno));
+        DisconnectAllAudio();
+        exit(0);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Open file %s with AudioFileFd.%d"},  AudioFilePath, AudioFileFd);
+    \}
+
+    \textcolor{comment}{// Capture local on input connector.}
+    FileAudioRef = \hyperlink{le__audio__interface_8h_aeac35459c36748a4471b6d45f1ebeb24}{le\_audio\_OpenRecorder}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FileAudioRef==NULL), \textcolor{stringliteral}{"OpenFileRecording returns NULL!"});
+
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((\hyperlink{le__audio__interface_8h_a65f11540e6af03a3494b6b9be76ba5fc}{le\_audio\_SetGain}(FileAudioRef, 0x3000) != LE\_OK), \textcolor{stringliteral}{"Cannot set
+       multimedia gain"});
+
+
+    MediaHandlerRef = \hyperlink{le__audio__interface_8h_a9996ac9d23333cf8219f28b69cac4f81}{le\_audio\_AddMediaHandler}(FileAudioRef, MyMediaEventHandler, 
+      NULL);
+
+    \textcolor{keywordflow}{if} (FileAudioRef && AudioInputConnectorRef)
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FileAudioRef);
+        \textcolor{keywordflow}{if}(res!=LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to connect FileRecording on input connector (%s)!"},
+                     \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{LE\_RESULT\_TXT}(res));
+            \textcolor{keywordflow}{return};
+        \}
+
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Recorder is now connected."});
+
+        \textcolor{keywordflow}{if} ( strncmp(AudioTestCase,\textcolor{stringliteral}{"REC\_SAMPLES"},11)==0 )
+        \{
+            memset(&PbRecSamplesThreadCtx,0,\textcolor{keyword}{sizeof}(PbRecSamplesThreadCtx\_t));
+
+            RecSamples();
+
+            ExecuteNextOption();
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            res = \hyperlink{le__audio__interface_8h_aead87ec16d317bb4e4a8e7e9ea37550b}{le\_audio\_SetEncodingFormat}(FileAudioRef, AudioFormat);
+
+            \textcolor{keywordflow}{if}(res!=LE\_OK)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to set audio format"});
+                \textcolor{keywordflow}{return};
+            \}
+
+            \textcolor{keywordflow}{if} (AudioFormat == \hyperlink{le__audio__interface_8h_a0ad2f5012ed700af1892f82e4af5989da51bd6de676a1d6a82923c7383b047893}{LE\_AUDIO\_AMR})
+            \{
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Set AMR mode %d"}, AmrMode);
+                res = \hyperlink{le__audio__interface_8h_a18600cdbd3995c9c2ca24f9b15991f7d}{le\_audio\_SetSampleAmrMode}(FileAudioRef, AmrMode);
+
+                \textcolor{keywordflow}{if}(res!=LE\_OK)
+                \{
+                    \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to set AMR bitrate"});
+                    \textcolor{keywordflow}{return};
+                \}
+
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Set AMR DTX %d"}, DtxActivation);
+                res = \hyperlink{le__audio__interface_8h_a5932f51fb1398cc2442c8bb765ca4071}{le\_audio\_SetSampleAmrDtx}(FileAudioRef, DtxActivation);
+
+                \textcolor{keywordflow}{if}(res!=LE\_OK)
+                \{
+                    \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to set DTX"});
+                    \textcolor{keywordflow}{return};
+                \}
+            \}
+
+            res = \hyperlink{le__audio__interface_8h_a393a26f6cff7fe05c1813fcafeef50f3}{le\_audio\_RecordFile}(FileAudioRef, AudioFileFd);
+
+            \textcolor{keywordflow}{if}(res!=LE\_OK)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to record the file"});
+                \textcolor{keywordflow}{return};
+            \}
+            \textcolor{keywordflow}{else}
+            \{
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"File is now recording."});
+            \}
+
+            sleep(1);
+
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Try again to record"});
+
+            \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__audio__interface_8h_a393a26f6cff7fe05c1813fcafeef50f3}{le\_audio\_RecordFile}(FileAudioRef, 
+      \hyperlink{le__audio__interface_8h_a374c2f62ec5b8a92dd1de6fcb449fafe}{LE\_AUDIO\_NO\_FD}) != LE\_OK);
+
+            ExecuteNextOption();
+        \}
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect speaker and MIC to connectors}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToCodec
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    \textcolor{comment}{// Redirect audio to the in-built Microphone and Speaker.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_a5c19afce44021c4abf6193707317f8de}{le\_audio\_OpenSpeaker}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef==NULL), \textcolor{stringliteral}{"OpenSpeaker returns NULL!"});
+    FeInRef = \hyperlink{le__audio__interface_8h_a74f1ef979329f6c2bd56ea622f4d05b2}{le\_audio\_OpenMic}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeInRef==NULL), \textcolor{stringliteral}{"OpenMic returns NULL!"});
+
+    AudioInputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioInputConnectorRef==NULL), \textcolor{stringliteral}{"AudioInputConnectorRef is NULL!"});
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef==NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FeInRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect Mic on Input connector (%s)!"},
+                    \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{LE\_RESULT\_TXT}(res));
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect Speaker on Output connector (res %s)!"},
+                    \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{LE\_RESULT\_TXT}(res));
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect PCM to connectors}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToPcm
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+
+    \textcolor{comment}{// Redirect audio to the PCM interface.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_a5e112543e8525775aa670dc71b320766}{le\_audio\_OpenPcmTx}(0);
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef==NULL), \textcolor{stringliteral}{"OpenPcmTx returns NULL!"});
+    FeInRef = \hyperlink{le__audio__interface_8h_aa0f0b5fcab8844c67a936d88fa050cf5}{le\_audio\_OpenPcmRx}(0);
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeInRef==NULL), \textcolor{stringliteral}{"OpenPcmRx returns NULL!"});
+
+    AudioInputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioInputConnectorRef==NULL), \textcolor{stringliteral}{"AudioInputConnectorRef is NULL!"});
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef==NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FeInRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect PCM RX on Input connector (%s)!"},
+                    \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{LE\_RESULT\_TXT}(res));
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect PCM TX on Output connector (%s)!"},
+                    \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{LE\_RESULT\_TXT}(res));
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect I2S to the connectors}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudioToI2s
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    \textcolor{comment}{// Redirect audio to the I2S interface.}
+    FeOutRef = \hyperlink{le__audio__interface_8h_a2633c1368adf60e342d7cadbbfa6278b}{le\_audio\_OpenI2sTx}(\hyperlink{le__audio__interface_8h_a94794180ed71a84bd26a1f525858f252a6ce77f5f956b203e15f662900a5103dd}{LE\_AUDIO\_I2S\_STEREO});
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeOutRef==NULL), \textcolor{stringliteral}{"OpenI2sTx returns NULL!"});
+    FeInRef = \hyperlink{le__audio__interface_8h_a9e7d0042c4f422554eb10d64535608e5}{le\_audio\_OpenI2sRx}(\hyperlink{le__audio__interface_8h_a94794180ed71a84bd26a1f525858f252a6ce77f5f956b203e15f662900a5103dd}{LE\_AUDIO\_I2S\_STEREO});
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((FeInRef==NULL), \textcolor{stringliteral}{"OpenI2sRx returns NULL!"});
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Open I2s: FeInRef.%p FeOutRef.%p"}, FeInRef, FeOutRef);
+
+    AudioInputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioInputConnectorRef==NULL), \textcolor{stringliteral}{"AudioInputConnectorRef is NULL!"});
+    AudioOutputConnectorRef = \hyperlink{le__audio__interface_8h_a570aaf85086f00aca592acfbaaa237be}{le\_audio\_CreateConnector}();
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((AudioOutputConnectorRef==NULL), \textcolor{stringliteral}{"AudioOutputConnectorRef is NULL!"});
+    \{
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioInputConnectorRef, FeInRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect I2S RX on Input connector (%s)!"},
+                    \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{LE\_RESULT\_TXT}(res));
+        res = \hyperlink{le__audio__interface_8h_a338df65b2fb1ae0140d86880adbcf0de}{le\_audio\_Connect}(AudioOutputConnectorRef, FeOutRef);
+        \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((res!=LE\_OK), \textcolor{stringliteral}{"Failed to connect I2S TX on Output connector (%s)!"},
+                    \hyperlink{le__log_8h_a99402d6a983f318e5b8bfcdf5dfe9024}{LE\_RESULT\_TXT}(res));
+    \}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Open I2s: FeInRef.%p FeOutRef.%p"}, FeInRef, FeOutRef);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Connect audio}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} ConnectAudio
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordflow}{if} ((strncmp(AudioTestCase,\textcolor{stringliteral}{"PB"},2)==0) || (strncmp(AudioTestCase,\textcolor{stringliteral}{"REC"},3)==0))
+    \{
+        \textcolor{keywordflow}{if} (strcmp(MainAudioSoundPath,\textcolor{stringliteral}{"MIC"})==0)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Connect MIC and SPEAKER "});
+            ConnectAudioToCodec();
+        \}
+        \textcolor{keywordflow}{else}
+        \textcolor{keywordflow}{if} (strcmp(MainAudioSoundPath,\textcolor{stringliteral}{"PCM"})==0)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Connect PCM "});
+            ConnectAudioToPcm();
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (strcmp(MainAudioSoundPath,\textcolor{stringliteral}{"I2S"})==0)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Connect I2S"});
+            ConnectAudioToI2s();
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (strcmp(MainAudioSoundPath,\textcolor{stringliteral}{"USB"})==0)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Connect USB "});
+            ConnectAudioToUsb();
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Error in format could not connect audio"});
+        \}
+
+        \textcolor{comment}{// Connect SW-PCM}
+        \textcolor{keywordflow}{if} (strncmp(AudioTestCase,\textcolor{stringliteral}{"PB"},2)==0)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Connect Local Play"});
+            ConnectAudioToFileLocalPlay();
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (strncmp(AudioTestCase,\textcolor{stringliteral}{"REC"},3)==0)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Connect Local Rec "});
+            ConnectAudioToFileLocalRec();
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Error in format could not connect audio"});
+        \}
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Error in format could not connect audio"});
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Disconnect all streams and connectors}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} DisconnectAllAudio
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordflow}{if} (AudioInputConnectorRef)
+    \{
+        \textcolor{keywordflow}{if}(FileAudioRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, FileAudioRef, AudioInputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioInputConnectorRef, FileAudioRef);
+        \}
+        \textcolor{keywordflow}{if} (FeInRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, FeInRef, AudioInputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioInputConnectorRef, FeInRef);
+        \}
+        \textcolor{keywordflow}{if}(MdmTxAudioRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, MdmTxAudioRef, AudioInputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioInputConnectorRef, MdmTxAudioRef);
+        \}
+    \}
+    \textcolor{keywordflow}{if}(AudioOutputConnectorRef)
+    \{
+        \textcolor{keywordflow}{if}(FileAudioRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, FileAudioRef, AudioOutputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioOutputConnectorRef, FileAudioRef);
+        \}
+        \textcolor{keywordflow}{if}(FeOutRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, FeOutRef, AudioOutputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioOutputConnectorRef, FeOutRef);
+        \}
+        \textcolor{keywordflow}{if}(MdmRxAudioRef)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect %p from connector.%p"}, MdmRxAudioRef, AudioOutputConnectorRef);
+            \hyperlink{le__audio__interface_8h_a6b88df9301038375701e4c15a4c8aaf0}{le\_audio\_Disconnect}(AudioOutputConnectorRef, MdmRxAudioRef);
+        \}
+    \}
+
+    \textcolor{keywordflow}{if}(AudioInputConnectorRef)
+    \{
+        \hyperlink{le__audio__interface_8h_a3f40b13ff980040503927f59bb3e86a9}{le\_audio\_DeleteConnector}(AudioInputConnectorRef);
+        AudioInputConnectorRef = NULL;
+    \}
+    \textcolor{keywordflow}{if}(AudioOutputConnectorRef)
+    \{
+        \hyperlink{le__audio__interface_8h_a3f40b13ff980040503927f59bb3e86a9}{le\_audio\_DeleteConnector}(AudioOutputConnectorRef);
+        AudioOutputConnectorRef = NULL;
+    \}
+
+    \textcolor{keywordflow}{if}(FileAudioRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(FileAudioRef);
+        FeOutRef = NULL;
+    \}
+    \textcolor{keywordflow}{if}(FeInRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(FeInRef);
+        FeInRef = NULL;
+    \}
+    \textcolor{keywordflow}{if}(FeOutRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(FeOutRef);
+        FeOutRef = NULL;
+    \}
+    \textcolor{keywordflow}{if}(MdmRxAudioRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(MdmRxAudioRef);
+        FeOutRef = NULL;
+    \}
+    \textcolor{keywordflow}{if}(MdmTxAudioRef)
+    \{
+        \hyperlink{le__audio__interface_8h_abafeb411da7b1a14b2d5777fc1d3e394}{le\_audio\_Close}(MdmTxAudioRef);
+        FeOutRef = NULL;
+    \}
+
+    \textcolor{comment}{// Closing AudioFileFd is unnecessary since the messaging infrastructure underneath}
+    \textcolor{comment}{// le\_audio\_xxx APIs that use it would close it.}
+
+    exit(0);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Helper.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintUsage
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordtype}{int} idx;
+    \textcolor{keywordtype}{bool} sandboxed = (getuid() != 0);
+    \textcolor{keyword}{const} \textcolor{keywordtype}{char} * usagePtr[] = \{
+            \textcolor{stringliteral}{"Usage of the audioPlaybackRec test is:"},
+            \textcolor{stringliteral}{"   app runProc audioPlaybackRec --exe=audioPlaybackRecTest -- <test case>"}
+              \textcolor{stringliteral}{"[main audio path] [file's name] [option]"},
+            \textcolor{stringliteral}{""},
+            \textcolor{stringliteral}{"Test cases are:"},
+            \textcolor{stringliteral}{" - PB (for Local playback)"},
+            \textcolor{stringliteral}{" - REC (for Local recording)"},
+            \textcolor{stringliteral}{" - PB\_SAMPLES (for Local samples play)"},
+            \textcolor{stringliteral}{" - REC\_SAMPLES (for Local samples recording) [option]"},
+            \textcolor{stringliteral}{""},
+            \textcolor{stringliteral}{"Main audio paths are: (for file playback/recording only)"},
+            \textcolor{stringliteral}{" - MIC (for mic/speaker)"},
+            \textcolor{stringliteral}{" - PCM (not supported on mangOH board - for AR755x, AR8652 devkit's codec use, "}
+                \textcolor{stringliteral}{"execute 'wm8940\_demo --pcm' command)"},
+            \textcolor{stringliteral}{" - I2S (not supported on mangOH board - for AR755x, AR8652 devkit's codec use, "}
+                \textcolor{stringliteral}{"execute 'wm8940\_demo --i2s' command)"},
+            \textcolor{stringliteral}{" - USB (for USB)"},
+            \textcolor{stringliteral}{""},
+            \textcolor{stringliteral}{"Options are:"},
+            \textcolor{stringliteral}{" - ChannelNmbr SampleRate BitsPerSample (for REC\_SAMPLES)"},
+            \textcolor{stringliteral}{" - AMR AmrMode DTX (for REC in AMR Narrowband format)"},
+            \textcolor{stringliteral}{" - WAV (for REC in WAV format)"},
+            \textcolor{stringliteral}{" - GAIN (for playback gain testing)"},
+            \textcolor{stringliteral}{" - LOOP (to replay a file in loop) (optional)"},
+            \textcolor{stringliteral}{" - PLAY=<timer value> (to replay a file after a delay) (optional)"},
+            \textcolor{stringliteral}{" - RECORD=<timer value> (to record a file after a delay) (optional)"},
+            \textcolor{stringliteral}{" - STOP=<timer value> (to stop a file playback/capture after a delay) (optional)"},
+            \textcolor{stringliteral}{" - PAUSE=<timer value> (to pause a file playback/capture after a delay) (optional)"},
+            \textcolor{stringliteral}{" - RESUME=<timer value> (to resume a file playback/capture after a delay) (optional)"},
+            \textcolor{stringliteral}{" - DISCONNECT=<timer value> (to disconnect connectors and streams"}
+              \textcolor{stringliteral}{" after a delay) (optional)"},
+            \textcolor{stringliteral}{" - MUTE (for playback MUTE testing)"},
+            \textcolor{stringliteral}{""},
+            \textcolor{stringliteral}{"File's name can be the complete file's path."},
+    \};
+
+    \textcolor{keywordflow}{for}(idx = 0; idx < \hyperlink{le__basics_8h_a8d8f28a045f43b477cafb67a99894c07}{NUM\_ARRAY\_MEMBERS}(usagePtr); idx++)
+    \{
+        \textcolor{keywordflow}{if}(sandboxed)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"%s"}, usagePtr[idx]);
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            fprintf(stderr, \textcolor{stringliteral}{"%s\(\backslash\)n"}, usagePtr[idx]);
+        \}
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * The signal event handler function for SIGINT/SIGTERM when process dies.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} SigHandler
+(
+    \textcolor{keywordtype}{int} sigNum
+)
+\{
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Disconnect All Audio and end test"});
+    \textcolor{keywordflow}{if} (RecPbThreadRef)
+    \{
+        \hyperlink{le__thread_8h_a0f1c1b98f354a96e6e31e55a71b58f6a}{le\_thread\_Cancel}(RecPbThreadRef);
+        RecPbThreadRef = NULL;
+    \}
+    DisconnectAllAudio();
+    exit(EXIT\_SUCCESS);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Initialize the test component.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ * Execute application with 'app runProc audioPlaybackRec --exe=audioPlaybackRecTest -- [options]}
+\textcolor{comment}{ * (see PrintUsage())'}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\hyperlink{le__event_loop_8h_abdb9187a56836a93d19cc793cbd4b7ec}{COMPONENT\_INIT}
+\{
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Init"});
+
+    \textcolor{keywordflow}{if} (\hyperlink{le__args_8h_a6fbbeb423104e6eb92fe47ef42b7310a}{le\_arg\_NumArgs}() >= 1)
+    \{
+        \textcolor{comment}{// Register a signal event handler for SIGINT when user interrupts/terminates process}
+        signal(SIGINT, SigHandler);
+
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== Start Audio implementation Test (audioPlaybackRecTest) ========"});
+
+        AudioTestCase = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(0);
+        \textcolor{keywordflow}{if} (NULL == AudioTestCase)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"AudioTestCase is NULL"});
+            exit(EXIT\_FAILURE);
+        \}
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Test case.%s"}, AudioTestCase);
+
+        \textcolor{keywordflow}{if}(\hyperlink{le__args_8h_a6fbbeb423104e6eb92fe47ef42b7310a}{le\_arg\_NumArgs}() >= 3)
+        \{
+            MainAudioSoundPath = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(1);
+            AudioFilePath = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(2);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Main audio path.%s"}, MainAudioSoundPath);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Audio file [%s]"}, AudioFilePath);
+        \}
+
+        \textcolor{keywordflow}{if} ( (strncmp(AudioTestCase,\textcolor{stringliteral}{"REC\_SAMPLES"},11)==0) ||
+             (strncmp(AudioTestCase,\textcolor{stringliteral}{"PB\_SAMPLES"},10)==0) )
+        \{
+            \textcolor{keywordflow}{if}(\hyperlink{le__args_8h_a6fbbeb423104e6eb92fe47ef42b7310a}{le\_arg\_NumArgs}() < 6)
+            \{
+                PrintUsage();
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"EXIT audioPlaybackRec"});
+                exit(EXIT\_FAILURE);
+            \}
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* channelsCountPtr  = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(3);
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* sampleRatePtr    = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(4);
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* bitsPerSamplePtr = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(5);
+
+            \textcolor{keywordflow}{if} (NULL == channelsCountPtr)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"channelsCountPtr is NULL"});
+                exit(EXIT\_FAILURE);
+            \}
+            \textcolor{keywordflow}{if} (NULL == sampleRatePtr)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"sampleRatePtr is NULL"});
+                exit(EXIT\_FAILURE);
+            \}
+            \textcolor{keywordflow}{if} (NULL == bitsPerSamplePtr)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"bitsPerSamplePtr is NULL"});
+                exit(EXIT\_FAILURE);
+            \}
+            ChannelsCount = atoi(channelsCountPtr);
+            SampleRate = atoi(sampleRatePtr);
+            BitsPerSample = atoi(bitsPerSamplePtr);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"   Get/Play PCM samples with ChannelsCount.%d SampleRate.%d BitsPerSample.%d"},
+                    ChannelsCount, SampleRate, BitsPerSample);
+            NextOptionArg = 6;
+        \}
+        \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (strncmp(AudioTestCase,\textcolor{stringliteral}{"REC"}, 3)==0)
+        \{
+            \textcolor{keyword}{const} \textcolor{keywordtype}{char}* recFormat = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(3);
+
+            \textcolor{keywordflow}{if} (NULL == recFormat)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"recFormat is NULL"});
+                exit(EXIT\_FAILURE);
+            \}
+            \textcolor{keywordflow}{if} (strncmp(recFormat,\textcolor{stringliteral}{"WAV"}, 3)==0)
+            \{
+                AudioFormat = \hyperlink{le__audio__interface_8h_a0ad2f5012ed700af1892f82e4af5989daacfeef297c63db7626c586ebe4d5e1c2}{LE\_AUDIO\_WAVE};
+            \}
+            \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (strncmp(recFormat,\textcolor{stringliteral}{"AMR"}, 3)==0)
+            \{
+                AudioFormat = \hyperlink{le__audio__interface_8h_a0ad2f5012ed700af1892f82e4af5989da51bd6de676a1d6a82923c7383b047893}{LE\_AUDIO\_AMR};
+            \}
+            \textcolor{keywordflow}{else}
+            \{
+                PrintUsage();
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"EXIT audioPlaybackRec"});
+                exit(EXIT\_FAILURE);
+            \}
+
+            \textcolor{keywordflow}{if} (AudioFormat == \hyperlink{le__audio__interface_8h_a0ad2f5012ed700af1892f82e4af5989daacfeef297c63db7626c586ebe4d5e1c2}{LE\_AUDIO\_WAVE})
+            \{
+                NextOptionArg = 4;
+            \}
+            \textcolor{keywordflow}{else}
+            \{
+                \textcolor{keyword}{const} \textcolor{keywordtype}{char}* amrModePtr       = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(4);
+                \textcolor{keyword}{const} \textcolor{keywordtype}{char}* dtxActivationPtr = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(5);
+                \textcolor{keywordflow}{if} (NULL == amrModePtr)
+                \{
+                    \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"amrModePtr is NULL"});
+                    exit(EXIT\_FAILURE);
+                \}
+                \textcolor{keywordflow}{if} (NULL == dtxActivationPtr)
+                \{
+                    \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"dtxActivationPtr is NULL"});
+                    exit(EXIT\_FAILURE);
+                \}
+
+                AmrMode = atoi(amrModePtr);
+                DtxActivation = atoi(dtxActivationPtr);
+                NextOptionArg = 6;
+            \}
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            NextOptionArg = 3;
+        \}
+
+
+        OptionTimerRef = \hyperlink{le__timer_8h_aee41169a210378b369f440cf99146522}{le\_timer\_Create}(\textcolor{stringliteral}{"OptionTimer"});
+        \hyperlink{le__timer_8h_a8fb341f11e0da2692453df997613cb8e}{le\_timer\_SetHandler}(OptionTimerRef, OptionTimerHandler);
+
+        ConnectAudio();
+
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== Audio implementation Test (audioPlaybackRec) started successfully ========
+      "});
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        PrintUsage();
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"EXIT audioPlaybackRec"});
+        exit(EXIT\_FAILURE);
+    \}
+\}
+
+\end{DoxyCodeInclude}
+ 

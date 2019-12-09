@@ -1,0 +1,1030 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"init.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.lwip_init,"ax",%progbits
+  20              		.align	2
+  21              		.global	lwip_init
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	lwip_init, %function
+  25              	lwip_init:
+  26              	.LFB53:
+  27              		.file 1 "Source\\LwIP\\src\\core\\init.c"
+   1:Source\LwIP\src\core/init.c **** /**
+   2:Source\LwIP\src\core/init.c ****  * @file
+   3:Source\LwIP\src\core/init.c ****  * Modules initialization
+   4:Source\LwIP\src\core/init.c ****  *
+   5:Source\LwIP\src\core/init.c ****  */
+   6:Source\LwIP\src\core/init.c **** 
+   7:Source\LwIP\src\core/init.c **** /*
+   8:Source\LwIP\src\core/init.c ****  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
+   9:Source\LwIP\src\core/init.c ****  * All rights reserved.
+  10:Source\LwIP\src\core/init.c ****  *
+  11:Source\LwIP\src\core/init.c ****  * Redistribution and use in source and binary forms, with or without modification,
+  12:Source\LwIP\src\core/init.c ****  * are permitted provided that the following conditions are met:
+  13:Source\LwIP\src\core/init.c ****  *
+  14:Source\LwIP\src\core/init.c ****  * 1. Redistributions of source code must retain the above copyright notice,
+  15:Source\LwIP\src\core/init.c ****  *    this list of conditions and the following disclaimer.
+  16:Source\LwIP\src\core/init.c ****  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  17:Source\LwIP\src\core/init.c ****  *    this list of conditions and the following disclaimer in the documentation
+  18:Source\LwIP\src\core/init.c ****  *    and/or other materials provided with the distribution.
+  19:Source\LwIP\src\core/init.c ****  * 3. The name of the author may not be used to endorse or promote products
+  20:Source\LwIP\src\core/init.c ****  *    derived from this software without specific prior written permission.
+  21:Source\LwIP\src\core/init.c ****  *
+  22:Source\LwIP\src\core/init.c ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+  23:Source\LwIP\src\core/init.c ****  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+  24:Source\LwIP\src\core/init.c ****  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+  25:Source\LwIP\src\core/init.c ****  * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  26:Source\LwIP\src\core/init.c ****  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+  27:Source\LwIP\src\core/init.c ****  * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:Source\LwIP\src\core/init.c ****  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:Source\LwIP\src\core/init.c ****  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+  30:Source\LwIP\src\core/init.c ****  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 2
+
+
+  31:Source\LwIP\src\core/init.c ****  * OF SUCH DAMAGE.
+  32:Source\LwIP\src\core/init.c ****  *
+  33:Source\LwIP\src\core/init.c ****  * This file is part of the lwIP TCP/IP stack.
+  34:Source\LwIP\src\core/init.c ****  *
+  35:Source\LwIP\src\core/init.c ****  * Author: Adam Dunkels <adam@sics.se>
+  36:Source\LwIP\src\core/init.c ****  */
+  37:Source\LwIP\src\core/init.c **** 
+  38:Source\LwIP\src\core/init.c **** #include "lwip/opt.h"
+  39:Source\LwIP\src\core/init.c **** 
+  40:Source\LwIP\src\core/init.c **** #include "lwip/init.h"
+  41:Source\LwIP\src\core/init.c **** #include "lwip/stats.h"
+  42:Source\LwIP\src\core/init.c **** #include "lwip/sys.h"
+  43:Source\LwIP\src\core/init.c **** #include "lwip/mem.h"
+  44:Source\LwIP\src\core/init.c **** #include "lwip/memp.h"
+  45:Source\LwIP\src\core/init.c **** #include "lwip/pbuf.h"
+  46:Source\LwIP\src\core/init.c **** #include "lwip/netif.h"
+  47:Source\LwIP\src\core/init.c **** #include "lwip/sockets.h"
+  48:Source\LwIP\src\core/init.c **** #include "lwip/ip.h"
+  49:Source\LwIP\src\core/init.c **** #include "lwip/raw.h"
+  50:Source\LwIP\src\core/init.c **** #include "lwip/udp.h"
+  51:Source\LwIP\src\core/init.c **** #include "lwip/priv/tcp_priv.h"
+  52:Source\LwIP\src\core/init.c **** #include "lwip/igmp.h"
+  53:Source\LwIP\src\core/init.c **** #include "lwip/dns.h"
+  54:Source\LwIP\src\core/init.c **** #include "lwip/timeouts.h"
+  55:Source\LwIP\src\core/init.c **** #include "lwip/etharp.h"
+  56:Source\LwIP\src\core/init.c **** #include "lwip/ip6.h"
+  57:Source\LwIP\src\core/init.c **** #include "lwip/nd6.h"
+  58:Source\LwIP\src\core/init.c **** #include "lwip/mld6.h"
+  59:Source\LwIP\src\core/init.c **** #include "lwip/api.h"
+  60:Source\LwIP\src\core/init.c **** 
+  61:Source\LwIP\src\core/init.c **** #include "netif/ppp/ppp_opts.h"
+  62:Source\LwIP\src\core/init.c **** 
+  63:Source\LwIP\src\core/init.c **** #ifndef LWIP_SKIP_PACKING_CHECK
+  64:Source\LwIP\src\core/init.c **** 
+  65:Source\LwIP\src\core/init.c **** #ifdef PACK_STRUCT_USE_INCLUDES
+  66:Source\LwIP\src\core/init.c **** #  include "arch/bpstruct.h"
+  67:Source\LwIP\src\core/init.c **** #endif
+  68:Source\LwIP\src\core/init.c **** PACK_STRUCT_BEGIN
+  69:Source\LwIP\src\core/init.c **** struct packed_struct_test
+  70:Source\LwIP\src\core/init.c **** {
+  71:Source\LwIP\src\core/init.c ****   PACK_STRUCT_FLD_8(u8_t  dummy1);
+  72:Source\LwIP\src\core/init.c ****   PACK_STRUCT_FIELD(u32_t dummy2);
+  73:Source\LwIP\src\core/init.c **** } PACK_STRUCT_STRUCT;
+  74:Source\LwIP\src\core/init.c **** PACK_STRUCT_END
+  75:Source\LwIP\src\core/init.c **** #ifdef PACK_STRUCT_USE_INCLUDES
+  76:Source\LwIP\src\core/init.c **** #  include "arch/epstruct.h"
+  77:Source\LwIP\src\core/init.c **** #endif
+  78:Source\LwIP\src\core/init.c **** #define PACKED_STRUCT_TEST_EXPECTED_SIZE 5
+  79:Source\LwIP\src\core/init.c **** 
+  80:Source\LwIP\src\core/init.c **** #endif
+  81:Source\LwIP\src\core/init.c **** 
+  82:Source\LwIP\src\core/init.c **** /* Compile-time sanity checks for configuration errors.
+  83:Source\LwIP\src\core/init.c ****  * These can be done independently of LWIP_DEBUG, without penalty.
+  84:Source\LwIP\src\core/init.c ****  */
+  85:Source\LwIP\src\core/init.c **** #ifndef BYTE_ORDER
+  86:Source\LwIP\src\core/init.c ****   #error "BYTE_ORDER is not defined, you have to define it in your cc.h"
+  87:Source\LwIP\src\core/init.c **** #endif
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 3
+
+
+  88:Source\LwIP\src\core/init.c **** #if (!IP_SOF_BROADCAST && IP_SOF_BROADCAST_RECV)
+  89:Source\LwIP\src\core/init.c ****   #error "If you want to use broadcast filter per pcb on recv operations, you have to define IP_SOF
+  90:Source\LwIP\src\core/init.c **** #endif
+  91:Source\LwIP\src\core/init.c **** #if (!LWIP_UDP && LWIP_UDPLITE)
+  92:Source\LwIP\src\core/init.c ****   #error "If you want to use UDP Lite, you have to define LWIP_UDP=1 in your lwipopts.h"
+  93:Source\LwIP\src\core/init.c **** #endif
+  94:Source\LwIP\src\core/init.c **** #if (!LWIP_UDP && LWIP_DHCP)
+  95:Source\LwIP\src\core/init.c ****   #error "If you want to use DHCP, you have to define LWIP_UDP=1 in your lwipopts.h"
+  96:Source\LwIP\src\core/init.c **** #endif
+  97:Source\LwIP\src\core/init.c **** #if (!LWIP_UDP && LWIP_MULTICAST_TX_OPTIONS)
+  98:Source\LwIP\src\core/init.c ****   #error "If you want to use IGMP/LWIP_MULTICAST_TX_OPTIONS, you have to define LWIP_UDP=1 in your 
+  99:Source\LwIP\src\core/init.c **** #endif
+ 100:Source\LwIP\src\core/init.c **** #if (!LWIP_UDP && LWIP_DNS)
+ 101:Source\LwIP\src\core/init.c ****   #error "If you want to use DNS, you have to define LWIP_UDP=1 in your lwipopts.h"
+ 102:Source\LwIP\src\core/init.c **** #endif
+ 103:Source\LwIP\src\core/init.c **** #if !MEMP_MEM_MALLOC /* MEMP_NUM_* checks are disabled when not using the pool allocator */
+ 104:Source\LwIP\src\core/init.c **** #if (LWIP_ARP && ARP_QUEUEING && (MEMP_NUM_ARP_QUEUE<=0))
+ 105:Source\LwIP\src\core/init.c ****   #error "If you want to use ARP Queueing, you have to define MEMP_NUM_ARP_QUEUE>=1 in your lwipopt
+ 106:Source\LwIP\src\core/init.c **** #endif
+ 107:Source\LwIP\src\core/init.c **** #if (LWIP_RAW && (MEMP_NUM_RAW_PCB<=0))
+ 108:Source\LwIP\src\core/init.c ****   #error "If you want to use RAW, you have to define MEMP_NUM_RAW_PCB>=1 in your lwipopts.h"
+ 109:Source\LwIP\src\core/init.c **** #endif
+ 110:Source\LwIP\src\core/init.c **** #if (LWIP_UDP && (MEMP_NUM_UDP_PCB<=0))
+ 111:Source\LwIP\src\core/init.c ****   #error "If you want to use UDP, you have to define MEMP_NUM_UDP_PCB>=1 in your lwipopts.h"
+ 112:Source\LwIP\src\core/init.c **** #endif
+ 113:Source\LwIP\src\core/init.c **** #if (LWIP_TCP && (MEMP_NUM_TCP_PCB<=0))
+ 114:Source\LwIP\src\core/init.c ****   #error "If you want to use TCP, you have to define MEMP_NUM_TCP_PCB>=1 in your lwipopts.h"
+ 115:Source\LwIP\src\core/init.c **** #endif
+ 116:Source\LwIP\src\core/init.c **** #if (LWIP_IGMP && (MEMP_NUM_IGMP_GROUP<=1))
+ 117:Source\LwIP\src\core/init.c ****   #error "If you want to use IGMP, you have to define MEMP_NUM_IGMP_GROUP>1 in your lwipopts.h"
+ 118:Source\LwIP\src\core/init.c **** #endif
+ 119:Source\LwIP\src\core/init.c **** #if (LWIP_IGMP && !LWIP_MULTICAST_TX_OPTIONS)
+ 120:Source\LwIP\src\core/init.c ****   #error "If you want to use IGMP, you have to define LWIP_MULTICAST_TX_OPTIONS==1 in your lwipopts
+ 121:Source\LwIP\src\core/init.c **** #endif
+ 122:Source\LwIP\src\core/init.c **** #if (LWIP_IGMP && !LWIP_IPV4)
+ 123:Source\LwIP\src\core/init.c ****   #error "IGMP needs LWIP_IPV4 enabled in your lwipopts.h"
+ 124:Source\LwIP\src\core/init.c **** #endif
+ 125:Source\LwIP\src\core/init.c **** #if (LWIP_MULTICAST_TX_OPTIONS && !LWIP_IPV4)
+ 126:Source\LwIP\src\core/init.c ****   #error "LWIP_MULTICAST_TX_OPTIONS needs LWIP_IPV4 enabled in your lwipopts.h"
+ 127:Source\LwIP\src\core/init.c **** #endif
+ 128:Source\LwIP\src\core/init.c **** #if ((LWIP_NETCONN || LWIP_SOCKET) && (MEMP_NUM_TCPIP_MSG_API<=0))
+ 129:Source\LwIP\src\core/init.c ****   #error "If you want to use Sequential API, you have to define MEMP_NUM_TCPIP_MSG_API>=1 in your l
+ 130:Source\LwIP\src\core/init.c **** #endif
+ 131:Source\LwIP\src\core/init.c **** /* There must be sufficient timeouts, taking into account requirements of the subsystems. */
+ 132:Source\LwIP\src\core/init.c **** #if LWIP_TIMERS && (MEMP_NUM_SYS_TIMEOUT < (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + L
+ 133:Source\LwIP\src\core/init.c ****   #error "MEMP_NUM_SYS_TIMEOUT is too low to accomodate all required timeouts"
+ 134:Source\LwIP\src\core/init.c **** #endif
+ 135:Source\LwIP\src\core/init.c **** #if (IP_REASSEMBLY && (MEMP_NUM_REASSDATA > IP_REASS_MAX_PBUFS))
+ 136:Source\LwIP\src\core/init.c ****   #error "MEMP_NUM_REASSDATA > IP_REASS_MAX_PBUFS doesn't make sense since each struct ip_reassdata
+ 137:Source\LwIP\src\core/init.c **** #endif
+ 138:Source\LwIP\src\core/init.c **** #endif /* !MEMP_MEM_MALLOC */
+ 139:Source\LwIP\src\core/init.c **** #if LWIP_WND_SCALE
+ 140:Source\LwIP\src\core/init.c **** #if (LWIP_TCP && (TCP_WND > 0xffffffff))
+ 141:Source\LwIP\src\core/init.c ****   #error "If you want to use TCP, TCP_WND must fit in an u32_t, so, you have to reduce it in your l
+ 142:Source\LwIP\src\core/init.c **** #endif
+ 143:Source\LwIP\src\core/init.c **** #if (LWIP_TCP && (TCP_RCV_SCALE > 14))
+ 144:Source\LwIP\src\core/init.c ****   #error "The maximum valid window scale value is 14!"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 4
+
+
+ 145:Source\LwIP\src\core/init.c **** #endif
+ 146:Source\LwIP\src\core/init.c **** #if (LWIP_TCP && (TCP_WND > (0xFFFFU << TCP_RCV_SCALE)))
+ 147:Source\LwIP\src\core/init.c ****   #error "TCP_WND is bigger than the configured LWIP_WND_SCALE allows!"
+ 148:Source\LwIP\src\core/init.c **** #endif
+ 149:Source\LwIP\src\core/init.c **** #if (LWIP_TCP && ((TCP_WND >> TCP_RCV_SCALE) == 0))
+ 150:Source\LwIP\src\core/init.c ****   #error "TCP_WND is too small for the configured LWIP_WND_SCALE (results in zero window)!"
+ 151:Source\LwIP\src\core/init.c **** #endif
+ 152:Source\LwIP\src\core/init.c **** #else /* LWIP_WND_SCALE */
+ 153:Source\LwIP\src\core/init.c **** #if (LWIP_TCP && (TCP_WND > 0xffff))
+ 154:Source\LwIP\src\core/init.c ****   #error "If you want to use TCP, TCP_WND must fit in an u16_t, so, you have to reduce it in your l
+ 155:Source\LwIP\src\core/init.c **** #endif
+ 156:Source\LwIP\src\core/init.c **** #endif /* LWIP_WND_SCALE */
+ 157:Source\LwIP\src\core/init.c **** #if (LWIP_TCP && (TCP_SND_QUEUELEN > 0xffff))
+ 158:Source\LwIP\src\core/init.c ****   #error "If you want to use TCP, TCP_SND_QUEUELEN must fit in an u16_t, so, you have to reduce it 
+ 159:Source\LwIP\src\core/init.c **** #endif
+ 160:Source\LwIP\src\core/init.c **** #if (LWIP_TCP && (TCP_SND_QUEUELEN < 2))
+ 161:Source\LwIP\src\core/init.c ****   #error "TCP_SND_QUEUELEN must be at least 2 for no-copy TCP writes to work"
+ 162:Source\LwIP\src\core/init.c **** #endif
+ 163:Source\LwIP\src\core/init.c **** #if (LWIP_TCP && ((TCP_MAXRTX > 12) || (TCP_SYNMAXRTX > 12)))
+ 164:Source\LwIP\src\core/init.c ****   #error "If you want to use TCP, TCP_MAXRTX and TCP_SYNMAXRTX must less or equal to 12 (due to tcp
+ 165:Source\LwIP\src\core/init.c **** #endif
+ 166:Source\LwIP\src\core/init.c **** #if (LWIP_TCP && TCP_LISTEN_BACKLOG && ((TCP_DEFAULT_LISTEN_BACKLOG < 0) || (TCP_DEFAULT_LISTEN_BAC
+ 167:Source\LwIP\src\core/init.c ****   #error "If you want to use TCP backlog, TCP_DEFAULT_LISTEN_BACKLOG must fit into an u8_t"
+ 168:Source\LwIP\src\core/init.c **** #endif
+ 169:Source\LwIP\src\core/init.c **** #if (LWIP_NETIF_API && (NO_SYS==1))
+ 170:Source\LwIP\src\core/init.c ****   #error "If you want to use NETIF API, you have to define NO_SYS=0 in your lwipopts.h"
+ 171:Source\LwIP\src\core/init.c **** #endif
+ 172:Source\LwIP\src\core/init.c **** #if ((LWIP_SOCKET || LWIP_NETCONN) && (NO_SYS==1))
+ 173:Source\LwIP\src\core/init.c ****   #error "If you want to use Sequential API, you have to define NO_SYS=0 in your lwipopts.h"
+ 174:Source\LwIP\src\core/init.c **** #endif
+ 175:Source\LwIP\src\core/init.c **** #if (LWIP_PPP_API && (NO_SYS==1))
+ 176:Source\LwIP\src\core/init.c ****   #error "If you want to use PPP API, you have to define NO_SYS=0 in your lwipopts.h"
+ 177:Source\LwIP\src\core/init.c **** #endif
+ 178:Source\LwIP\src\core/init.c **** #if (LWIP_PPP_API && (PPP_SUPPORT==0))
+ 179:Source\LwIP\src\core/init.c ****   #error "If you want to use PPP API, you have to enable PPP_SUPPORT in your lwipopts.h"
+ 180:Source\LwIP\src\core/init.c **** #endif
+ 181:Source\LwIP\src\core/init.c **** #if (((!LWIP_DHCP) || (!LWIP_AUTOIP)) && LWIP_DHCP_AUTOIP_COOP)
+ 182:Source\LwIP\src\core/init.c ****   #error "If you want to use DHCP/AUTOIP cooperation mode, you have to define LWIP_DHCP=1 and LWIP_
+ 183:Source\LwIP\src\core/init.c **** #endif
+ 184:Source\LwIP\src\core/init.c **** #if (((!LWIP_DHCP) || (!LWIP_ARP)) && DHCP_DOES_ARP_CHECK)
+ 185:Source\LwIP\src\core/init.c ****   #error "If you want to use DHCP ARP checking, you have to define LWIP_DHCP=1 and LWIP_ARP=1 in yo
+ 186:Source\LwIP\src\core/init.c **** #endif
+ 187:Source\LwIP\src\core/init.c **** #if (!LWIP_ARP && LWIP_AUTOIP)
+ 188:Source\LwIP\src\core/init.c ****   #error "If you want to use AUTOIP, you have to define LWIP_ARP=1 in your lwipopts.h"
+ 189:Source\LwIP\src\core/init.c **** #endif
+ 190:Source\LwIP\src\core/init.c **** #if (LWIP_TCP && ((LWIP_EVENT_API && LWIP_CALLBACK_API) || (!LWIP_EVENT_API && !LWIP_CALLBACK_API))
+ 191:Source\LwIP\src\core/init.c ****   #error "One and exactly one of LWIP_EVENT_API and LWIP_CALLBACK_API has to be enabled in your lwi
+ 192:Source\LwIP\src\core/init.c **** #endif
+ 193:Source\LwIP\src\core/init.c **** #if (MEM_LIBC_MALLOC && MEM_USE_POOLS)
+ 194:Source\LwIP\src\core/init.c ****   #error "MEM_LIBC_MALLOC and MEM_USE_POOLS may not both be simultaneously enabled in your lwipopts
+ 195:Source\LwIP\src\core/init.c **** #endif
+ 196:Source\LwIP\src\core/init.c **** #if (MEM_USE_POOLS && !MEMP_USE_CUSTOM_POOLS)
+ 197:Source\LwIP\src\core/init.c ****   #error "MEM_USE_POOLS requires custom pools (MEMP_USE_CUSTOM_POOLS) to be enabled in your lwipopt
+ 198:Source\LwIP\src\core/init.c **** #endif
+ 199:Source\LwIP\src\core/init.c **** //#if (PBUF_POOL_BUFSIZE <= MEM_ALIGNMENT)
+ 200:Source\LwIP\src\core/init.c **** //  #error "PBUF_POOL_BUFSIZE must be greater than MEM_ALIGNMENT or the offset may take the full fi
+ 201:Source\LwIP\src\core/init.c **** //#endif
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 5
+
+
+ 202:Source\LwIP\src\core/init.c **** #if (DNS_LOCAL_HOSTLIST && !DNS_LOCAL_HOSTLIST_IS_DYNAMIC && !(defined(DNS_LOCAL_HOSTLIST_INIT)))
+ 203:Source\LwIP\src\core/init.c ****   #error "you have to define define DNS_LOCAL_HOSTLIST_INIT {{'host1', 0x123}, {'host2', 0x234}} to
+ 204:Source\LwIP\src\core/init.c **** #endif
+ 205:Source\LwIP\src\core/init.c **** #if PPP_SUPPORT && !PPPOS_SUPPORT && !PPPOE_SUPPORT && !PPPOL2TP_SUPPORT
+ 206:Source\LwIP\src\core/init.c ****   #error "PPP_SUPPORT needs at least one of PPPOS_SUPPORT, PPPOE_SUPPORT or PPPOL2TP_SUPPORT turned
+ 207:Source\LwIP\src\core/init.c **** #endif
+ 208:Source\LwIP\src\core/init.c **** #if PPP_SUPPORT && !PPP_IPV4_SUPPORT && !PPP_IPV6_SUPPORT
+ 209:Source\LwIP\src\core/init.c ****   #error "PPP_SUPPORT needs PPP_IPV4_SUPPORT and/or PPP_IPV6_SUPPORT turned on"
+ 210:Source\LwIP\src\core/init.c **** #endif
+ 211:Source\LwIP\src\core/init.c **** #if PPP_SUPPORT && PPP_IPV4_SUPPORT && !LWIP_IPV4
+ 212:Source\LwIP\src\core/init.c ****   #error "PPP_IPV4_SUPPORT needs LWIP_IPV4 turned on"
+ 213:Source\LwIP\src\core/init.c **** #endif
+ 214:Source\LwIP\src\core/init.c **** #if PPP_SUPPORT && PPP_IPV6_SUPPORT && !LWIP_IPV6
+ 215:Source\LwIP\src\core/init.c ****   #error "PPP_IPV6_SUPPORT needs LWIP_IPV6 turned on"
+ 216:Source\LwIP\src\core/init.c **** #endif
+ 217:Source\LwIP\src\core/init.c **** #if !LWIP_ETHERNET && (LWIP_ARP || PPPOE_SUPPORT)
+ 218:Source\LwIP\src\core/init.c ****   #error "LWIP_ETHERNET needs to be turned on for LWIP_ARP or PPPOE_SUPPORT"
+ 219:Source\LwIP\src\core/init.c **** #endif
+ 220:Source\LwIP\src\core/init.c **** #if LWIP_TCPIP_CORE_LOCKING_INPUT && !LWIP_TCPIP_CORE_LOCKING
+ 221:Source\LwIP\src\core/init.c ****   #error "When using LWIP_TCPIP_CORE_LOCKING_INPUT, LWIP_TCPIP_CORE_LOCKING must be enabled, too"
+ 222:Source\LwIP\src\core/init.c **** #endif
+ 223:Source\LwIP\src\core/init.c **** #if LWIP_TCP && LWIP_NETIF_TX_SINGLE_PBUF && !TCP_OVERSIZE
+ 224:Source\LwIP\src\core/init.c ****   #error "LWIP_NETIF_TX_SINGLE_PBUF needs TCP_OVERSIZE enabled to create single-pbuf TCP packets"
+ 225:Source\LwIP\src\core/init.c **** #endif
+ 226:Source\LwIP\src\core/init.c **** #if LWIP_NETCONN && LWIP_TCP
+ 227:Source\LwIP\src\core/init.c **** #if NETCONN_COPY != TCP_WRITE_FLAG_COPY
+ 228:Source\LwIP\src\core/init.c ****   #error "NETCONN_COPY != TCP_WRITE_FLAG_COPY"
+ 229:Source\LwIP\src\core/init.c **** #endif
+ 230:Source\LwIP\src\core/init.c **** #if NETCONN_MORE != TCP_WRITE_FLAG_MORE
+ 231:Source\LwIP\src\core/init.c ****   #error "NETCONN_MORE != TCP_WRITE_FLAG_MORE"
+ 232:Source\LwIP\src\core/init.c **** #endif
+ 233:Source\LwIP\src\core/init.c **** #endif /* LWIP_NETCONN && LWIP_TCP */
+ 234:Source\LwIP\src\core/init.c **** #if LWIP_SOCKET
+ 235:Source\LwIP\src\core/init.c **** /* Check that the SO_* socket options and SOF_* lwIP-internal flags match */
+ 236:Source\LwIP\src\core/init.c **** #if SO_REUSEADDR != SOF_REUSEADDR
+ 237:Source\LwIP\src\core/init.c ****   #error "WARNING: SO_REUSEADDR != SOF_REUSEADDR"
+ 238:Source\LwIP\src\core/init.c **** #endif
+ 239:Source\LwIP\src\core/init.c **** #if SO_KEEPALIVE != SOF_KEEPALIVE
+ 240:Source\LwIP\src\core/init.c ****   #error "WARNING: SO_KEEPALIVE != SOF_KEEPALIVE"
+ 241:Source\LwIP\src\core/init.c **** #endif
+ 242:Source\LwIP\src\core/init.c **** #if SO_BROADCAST != SOF_BROADCAST
+ 243:Source\LwIP\src\core/init.c ****   #error "WARNING: SO_BROADCAST != SOF_BROADCAST"
+ 244:Source\LwIP\src\core/init.c **** #endif
+ 245:Source\LwIP\src\core/init.c **** #endif /* LWIP_SOCKET */
+ 246:Source\LwIP\src\core/init.c **** 
+ 247:Source\LwIP\src\core/init.c **** 
+ 248:Source\LwIP\src\core/init.c **** /* Compile-time checks for deprecated options.
+ 249:Source\LwIP\src\core/init.c ****  */
+ 250:Source\LwIP\src\core/init.c **** #ifdef MEMP_NUM_TCPIP_MSG
+ 251:Source\LwIP\src\core/init.c ****   #error "MEMP_NUM_TCPIP_MSG option is deprecated. Remove it from your lwipopts.h."
+ 252:Source\LwIP\src\core/init.c **** #endif
+ 253:Source\LwIP\src\core/init.c **** #ifdef TCP_REXMIT_DEBUG
+ 254:Source\LwIP\src\core/init.c ****   #error "TCP_REXMIT_DEBUG option is deprecated. Remove it from your lwipopts.h."
+ 255:Source\LwIP\src\core/init.c **** #endif
+ 256:Source\LwIP\src\core/init.c **** #ifdef RAW_STATS
+ 257:Source\LwIP\src\core/init.c ****   #error "RAW_STATS option is deprecated. Remove it from your lwipopts.h."
+ 258:Source\LwIP\src\core/init.c **** #endif
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 6
+
+
+ 259:Source\LwIP\src\core/init.c **** #ifdef ETHARP_QUEUE_FIRST
+ 260:Source\LwIP\src\core/init.c ****   #error "ETHARP_QUEUE_FIRST option is deprecated. Remove it from your lwipopts.h."
+ 261:Source\LwIP\src\core/init.c **** #endif
+ 262:Source\LwIP\src\core/init.c **** #ifdef ETHARP_ALWAYS_INSERT
+ 263:Source\LwIP\src\core/init.c ****   #error "ETHARP_ALWAYS_INSERT option is deprecated. Remove it from your lwipopts.h."
+ 264:Source\LwIP\src\core/init.c **** #endif
+ 265:Source\LwIP\src\core/init.c **** #if !NO_SYS && LWIP_TCPIP_CORE_LOCKING && LWIP_COMPAT_MUTEX && !defined(LWIP_COMPAT_MUTEX_ALLOWED)
+ 266:Source\LwIP\src\core/init.c ****   #error "LWIP_COMPAT_MUTEX cannot prevent priority inversion. It is recommended to implement prior
+ 267:Source\LwIP\src\core/init.c **** #endif
+ 268:Source\LwIP\src\core/init.c **** 
+ 269:Source\LwIP\src\core/init.c **** #ifndef LWIP_DISABLE_TCP_SANITY_CHECKS
+ 270:Source\LwIP\src\core/init.c **** #define LWIP_DISABLE_TCP_SANITY_CHECKS  0
+ 271:Source\LwIP\src\core/init.c **** #endif
+ 272:Source\LwIP\src\core/init.c **** #ifndef LWIP_DISABLE_MEMP_SANITY_CHECKS
+ 273:Source\LwIP\src\core/init.c **** #define LWIP_DISABLE_MEMP_SANITY_CHECKS 0
+ 274:Source\LwIP\src\core/init.c **** #endif
+ 275:Source\LwIP\src\core/init.c **** 
+ 276:Source\LwIP\src\core/init.c **** /* MEMP sanity checks */
+ 277:Source\LwIP\src\core/init.c **** #if MEMP_MEM_MALLOC
+ 278:Source\LwIP\src\core/init.c **** #if !LWIP_DISABLE_MEMP_SANITY_CHECKS
+ 279:Source\LwIP\src\core/init.c **** #if LWIP_NETCONN || LWIP_SOCKET
+ 280:Source\LwIP\src\core/init.c **** #if !MEMP_NUM_NETCONN && LWIP_SOCKET
+ 281:Source\LwIP\src\core/init.c **** #error "lwip_sanity_check: WARNING: MEMP_NUM_NETCONN cannot be 0 when using sockets!"
+ 282:Source\LwIP\src\core/init.c **** #endif
+ 283:Source\LwIP\src\core/init.c **** #else /* MEMP_MEM_MALLOC */
+ 284:Source\LwIP\src\core/init.c **** #if MEMP_NUM_NETCONN > (MEMP_NUM_TCP_PCB+MEMP_NUM_TCP_PCB_LISTEN+MEMP_NUM_UDP_PCB+MEMP_NUM_RAW_PCB)
+ 285:Source\LwIP\src\core/init.c **** #error "lwip_sanity_check: WARNING: MEMP_NUM_NETCONN should be less than the sum of MEMP_NUM_{TCP,R
+ 286:Source\LwIP\src\core/init.c **** #endif
+ 287:Source\LwIP\src\core/init.c **** #endif /* LWIP_NETCONN || LWIP_SOCKET */
+ 288:Source\LwIP\src\core/init.c **** #endif /* !LWIP_DISABLE_MEMP_SANITY_CHECKS */
+ 289:Source\LwIP\src\core/init.c **** #if MEM_USE_POOLS
+ 290:Source\LwIP\src\core/init.c **** #error "MEMP_MEM_MALLOC and MEM_USE_POOLS cannot be enabled at the same time"
+ 291:Source\LwIP\src\core/init.c **** #endif
+ 292:Source\LwIP\src\core/init.c **** #ifdef LWIP_HOOK_MEMP_AVAILABLE
+ 293:Source\LwIP\src\core/init.c **** #error "LWIP_HOOK_MEMP_AVAILABLE doesn't make sense with MEMP_MEM_MALLOC"
+ 294:Source\LwIP\src\core/init.c **** #endif
+ 295:Source\LwIP\src\core/init.c **** #endif /* MEMP_MEM_MALLOC */
+ 296:Source\LwIP\src\core/init.c **** 
+ 297:Source\LwIP\src\core/init.c **** /* TCP sanity checks */
+ 298:Source\LwIP\src\core/init.c **** #if !LWIP_DISABLE_TCP_SANITY_CHECKS
+ 299:Source\LwIP\src\core/init.c **** #if LWIP_TCP
+ 300:Source\LwIP\src\core/init.c **** #if !MEMP_MEM_MALLOC && (MEMP_NUM_TCP_SEG < TCP_SND_QUEUELEN)
+ 301:Source\LwIP\src\core/init.c ****   #error "lwip_sanity_check: WARNING: MEMP_NUM_TCP_SEG should be at least as big as TCP_SND_QUEUELE
+ 302:Source\LwIP\src\core/init.c **** #endif
+ 303:Source\LwIP\src\core/init.c **** #if TCP_SND_BUF < (2 * TCP_MSS)
+ 304:Source\LwIP\src\core/init.c ****   #error "lwip_sanity_check: WARNING: TCP_SND_BUF must be at least as much as (2 * TCP_MSS) for thi
+ 305:Source\LwIP\src\core/init.c **** #endif
+ 306:Source\LwIP\src\core/init.c **** #if TCP_SND_QUEUELEN < (2 * (TCP_SND_BUF / TCP_MSS))
+ 307:Source\LwIP\src\core/init.c ****   #error "lwip_sanity_check: WARNING: TCP_SND_QUEUELEN must be at least as much as (2 * TCP_SND_BUF
+ 308:Source\LwIP\src\core/init.c **** #endif
+ 309:Source\LwIP\src\core/init.c **** #if TCP_SNDLOWAT >= TCP_SND_BUF
+ 310:Source\LwIP\src\core/init.c ****   #error "lwip_sanity_check: WARNING: TCP_SNDLOWAT must be less than TCP_SND_BUF. If you know what 
+ 311:Source\LwIP\src\core/init.c **** #endif
+ 312:Source\LwIP\src\core/init.c **** #if TCP_SNDLOWAT >= (0xFFFF - (4 * TCP_MSS))
+ 313:Source\LwIP\src\core/init.c ****   #error "lwip_sanity_check: WARNING: TCP_SNDLOWAT must at least be 4*MSS below u16_t overflow!"
+ 314:Source\LwIP\src\core/init.c **** #endif
+ 315:Source\LwIP\src\core/init.c **** #if TCP_SNDQUEUELOWAT >= TCP_SND_QUEUELEN
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 7
+
+
+ 316:Source\LwIP\src\core/init.c ****   #error "lwip_sanity_check: WARNING: TCP_SNDQUEUELOWAT must be less than TCP_SND_QUEUELEN. If you 
+ 317:Source\LwIP\src\core/init.c **** #endif
+ 318:Source\LwIP\src\core/init.c **** #if !MEMP_MEM_MALLOC && PBUF_POOL_SIZE && (PBUF_POOL_BUFSIZE <= (PBUF_LINK_ENCAPSULATION_HLEN + PBU
+ 319:Source\LwIP\src\core/init.c ****   #error "lwip_sanity_check: WARNING: PBUF_POOL_BUFSIZE does not provide enough space for protocol 
+ 320:Source\LwIP\src\core/init.c **** #endif
+ 321:Source\LwIP\src\core/init.c **** #if !MEMP_MEM_MALLOC && PBUF_POOL_SIZE && (TCP_WND > (PBUF_POOL_SIZE * (PBUF_POOL_BUFSIZE - (PBUF_L
+ 322:Source\LwIP\src\core/init.c ****   #error "lwip_sanity_check: WARNING: TCP_WND is larger than space provided by PBUF_POOL_SIZE * (PB
+ 323:Source\LwIP\src\core/init.c **** #endif
+ 324:Source\LwIP\src\core/init.c **** #if TCP_WND < TCP_MSS
+ 325:Source\LwIP\src\core/init.c ****   #error "lwip_sanity_check: WARNING: TCP_WND is smaller than MSS. If you know what you are doing, 
+ 326:Source\LwIP\src\core/init.c **** #endif
+ 327:Source\LwIP\src\core/init.c **** #endif /* LWIP_TCP */
+ 328:Source\LwIP\src\core/init.c **** #endif /* !LWIP_DISABLE_TCP_SANITY_CHECKS */
+ 329:Source\LwIP\src\core/init.c **** 
+ 330:Source\LwIP\src\core/init.c **** /**
+ 331:Source\LwIP\src\core/init.c ****  * @ingroup lwip_nosys
+ 332:Source\LwIP\src\core/init.c ****  * Initialize all modules.
+ 333:Source\LwIP\src\core/init.c ****  * Use this in NO_SYS mode. Use tcpip_init() otherwise.
+ 334:Source\LwIP\src\core/init.c ****  */
+ 335:Source\LwIP\src\core/init.c **** void
+ 336:Source\LwIP\src\core/init.c **** lwip_init(void)
+ 337:Source\LwIP\src\core/init.c **** {
+  28              		.loc 1 337 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 4, -8
+  35              		.cfi_offset 14, -4
+  36              	.LVL0:
+ 338:Source\LwIP\src\core/init.c **** #ifndef LWIP_SKIP_CONST_CHECK
+ 339:Source\LwIP\src\core/init.c ****   int a = 0;
+ 340:Source\LwIP\src\core/init.c ****   LWIP_UNUSED_ARG(a);
+ 341:Source\LwIP\src\core/init.c ****   LWIP_ASSERT("LWIP_CONST_CAST not implemented correctly. Check your lwIP port.", LWIP_CONST_CAST(v
+ 342:Source\LwIP\src\core/init.c **** #endif
+ 343:Source\LwIP\src\core/init.c **** #ifndef LWIP_SKIP_PACKING_CHECK
+ 344:Source\LwIP\src\core/init.c ****   LWIP_ASSERT("Struct packing not implemented correctly. Check your lwIP port.", sizeof(struct pack
+ 345:Source\LwIP\src\core/init.c **** #endif
+ 346:Source\LwIP\src\core/init.c **** 
+ 347:Source\LwIP\src\core/init.c ****   /* Modules initialization */
+ 348:Source\LwIP\src\core/init.c ****   stats_init();
+  37              		.loc 1 348 0
+  38 0002 FFF7FEFF 		bl	stats_init
+  39              	.LVL1:
+ 349:Source\LwIP\src\core/init.c **** #if !NO_SYS
+ 350:Source\LwIP\src\core/init.c ****   sys_init();
+  40              		.loc 1 350 0
+  41 0006 FFF7FEFF 		bl	sys_init
+  42              	.LVL2:
+ 351:Source\LwIP\src\core/init.c **** #endif /* !NO_SYS */
+ 352:Source\LwIP\src\core/init.c ****   mem_init();
+  43              		.loc 1 352 0
+  44 000a FFF7FEFF 		bl	mem_init
+  45              	.LVL3:
+ 353:Source\LwIP\src\core/init.c ****   memp_init();
+  46              		.loc 1 353 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 8
+
+
+  47 000e FFF7FEFF 		bl	memp_init
+  48              	.LVL4:
+ 354:Source\LwIP\src\core/init.c ****   pbuf_init();
+ 355:Source\LwIP\src\core/init.c ****   netif_init();
+  49              		.loc 1 355 0
+  50 0012 FFF7FEFF 		bl	netif_init
+  51              	.LVL5:
+ 356:Source\LwIP\src\core/init.c **** #if LWIP_IPV4
+ 357:Source\LwIP\src\core/init.c ****   ip_init();
+ 358:Source\LwIP\src\core/init.c **** #if LWIP_ARP
+ 359:Source\LwIP\src\core/init.c ****   etharp_init();
+ 360:Source\LwIP\src\core/init.c **** #endif /* LWIP_ARP */
+ 361:Source\LwIP\src\core/init.c **** #endif /* LWIP_IPV4 */
+ 362:Source\LwIP\src\core/init.c **** #if LWIP_RAW
+ 363:Source\LwIP\src\core/init.c ****   raw_init();
+ 364:Source\LwIP\src\core/init.c **** #endif /* LWIP_RAW */
+ 365:Source\LwIP\src\core/init.c **** #if LWIP_UDP
+ 366:Source\LwIP\src\core/init.c ****   udp_init();
+  52              		.loc 1 366 0
+  53 0016 FFF7FEFF 		bl	udp_init
+  54              	.LVL6:
+ 367:Source\LwIP\src\core/init.c **** #endif /* LWIP_UDP */
+ 368:Source\LwIP\src\core/init.c **** #if LWIP_TCP
+ 369:Source\LwIP\src\core/init.c ****   tcp_init();
+  55              		.loc 1 369 0
+  56 001a FFF7FEFF 		bl	tcp_init
+  57              	.LVL7:
+ 370:Source\LwIP\src\core/init.c **** #endif /* LWIP_TCP */
+ 371:Source\LwIP\src\core/init.c **** #if LWIP_IGMP
+ 372:Source\LwIP\src\core/init.c ****   igmp_init();
+  58              		.loc 1 372 0
+  59 001e FFF7FEFF 		bl	igmp_init
+  60              	.LVL8:
+ 373:Source\LwIP\src\core/init.c **** #endif /* LWIP_IGMP */
+ 374:Source\LwIP\src\core/init.c **** #if LWIP_DNS
+ 375:Source\LwIP\src\core/init.c ****   dns_init();
+  61              		.loc 1 375 0
+  62 0022 FFF7FEFF 		bl	dns_init
+  63              	.LVL9:
+ 376:Source\LwIP\src\core/init.c **** #endif /* LWIP_DNS */
+ 377:Source\LwIP\src\core/init.c **** #if PPP_SUPPORT
+ 378:Source\LwIP\src\core/init.c ****   ppp_init();
+ 379:Source\LwIP\src\core/init.c **** #endif
+ 380:Source\LwIP\src\core/init.c ****  
+ 381:Source\LwIP\src\core/init.c **** #if LWIP_TIMERS
+ 382:Source\LwIP\src\core/init.c ****   sys_timeouts_init();
+  64              		.loc 1 382 0
+  65 0026 FFF7FEFF 		bl	sys_timeouts_init
+  66              	.LVL10:
+ 383:Source\LwIP\src\core/init.c **** #endif /* LWIP_TIMERS */
+ 384:Source\LwIP\src\core/init.c **** }
+  67              		.loc 1 384 0
+  68              		@ sp needed
+  69 002a 10BD     		pop	{r4, pc}
+  70              		.cfi_endproc
+  71              	.LFE53:
+  72              		.size	lwip_init, .-lwip_init
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 9
+
+
+  73              		.text
+  74              	.Letext0:
+  75              		.file 2 ".\\Source\\LwIP\\src\\include/lwip/stats.h"
+  76              		.file 3 ".\\Source\\LwIP\\src\\include/lwip/sys.h"
+  77              		.file 4 ".\\Source\\LwIP\\src\\include/lwip/mem.h"
+  78              		.file 5 ".\\Source\\LwIP\\src\\include/lwip/memp.h"
+  79              		.file 6 ".\\Source\\LwIP\\src\\include/lwip/netif.h"
+  80              		.file 7 ".\\Source\\LwIP\\src\\include/lwip/udp.h"
+  81              		.file 8 ".\\Source\\LwIP\\src\\include/lwip/priv/tcp_priv.h"
+  82              		.file 9 ".\\Source\\LwIP\\src\\include/lwip/igmp.h"
+  83              		.file 10 ".\\Source\\LwIP\\src\\include/lwip/dns.h"
+  84              		.file 11 ".\\Source\\LwIP\\src\\include/lwip/timeouts.h"
+  85              		.file 12 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4
+  86              		.section	.debug_info,"",%progbits
+  87              	.Ldebug_info0:
+  88 0000 86010000 		.4byte	0x186
+  89 0004 0400     		.2byte	0x4
+  90 0006 00000000 		.4byte	.Ldebug_abbrev0
+  91 000a 04       		.byte	0x4
+  92 000b 01       		.uleb128 0x1
+  93 000c CB010000 		.4byte	.LASF24
+  94 0010 0C       		.byte	0xc
+  95 0011 1C000000 		.4byte	.LASF25
+  96 0015 BA000000 		.4byte	.LASF26
+  97 0019 00000000 		.4byte	.Ldebug_ranges0+0
+  98 001d 00000000 		.4byte	0
+  99 0021 00000000 		.4byte	.Ldebug_line0
+ 100 0025 02       		.uleb128 0x2
+ 101 0026 01       		.byte	0x1
+ 102 0027 06       		.byte	0x6
+ 103 0028 5D020000 		.4byte	.LASF0
+ 104 002c 02       		.uleb128 0x2
+ 105 002d 01       		.byte	0x1
+ 106 002e 08       		.byte	0x8
+ 107 002f 55000000 		.4byte	.LASF1
+ 108 0033 02       		.uleb128 0x2
+ 109 0034 02       		.byte	0x2
+ 110 0035 05       		.byte	0x5
+ 111 0036 8D010000 		.4byte	.LASF2
+ 112 003a 02       		.uleb128 0x2
+ 113 003b 02       		.byte	0x2
+ 114 003c 07       		.byte	0x7
+ 115 003d 75000000 		.4byte	.LASF3
+ 116 0041 02       		.uleb128 0x2
+ 117 0042 04       		.byte	0x4
+ 118 0043 05       		.byte	0x5
+ 119 0044 B6010000 		.4byte	.LASF4
+ 120 0048 02       		.uleb128 0x2
+ 121 0049 04       		.byte	0x4
+ 122 004a 07       		.byte	0x7
+ 123 004b 63000000 		.4byte	.LASF5
+ 124 004f 02       		.uleb128 0x2
+ 125 0050 08       		.byte	0x8
+ 126 0051 05       		.byte	0x5
+ 127 0052 7A010000 		.4byte	.LASF6
+ 128 0056 02       		.uleb128 0x2
+ 129 0057 08       		.byte	0x8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 10
+
+
+ 130 0058 07       		.byte	0x7
+ 131 0059 3E000000 		.4byte	.LASF7
+ 132 005d 03       		.uleb128 0x3
+ 133 005e 04       		.byte	0x4
+ 134 005f 05       		.byte	0x5
+ 135 0060 696E7400 		.ascii	"int\000"
+ 136 0064 02       		.uleb128 0x2
+ 137 0065 04       		.byte	0x4
+ 138 0066 07       		.byte	0x7
+ 139 0067 AD000000 		.4byte	.LASF8
+ 140 006b 04       		.uleb128 0x4
+ 141 006c 8F000000 		.4byte	.LASF27
+ 142 0070 0C       		.byte	0xc
+ 143 0071 95       		.byte	0x95
+ 144 0072 5D000000 		.4byte	0x5d
+ 145 0076 02       		.uleb128 0x2
+ 146 0077 08       		.byte	0x8
+ 147 0078 04       		.byte	0x4
+ 148 0079 BF010000 		.4byte	.LASF9
+ 149 007d 02       		.uleb128 0x2
+ 150 007e 04       		.byte	0x4
+ 151 007f 07       		.byte	0x7
+ 152 0080 71010000 		.4byte	.LASF10
+ 153 0084 02       		.uleb128 0x2
+ 154 0085 01       		.byte	0x1
+ 155 0086 08       		.byte	0x8
+ 156 0087 88010000 		.4byte	.LASF11
+ 157 008b 02       		.uleb128 0x2
+ 158 008c 04       		.byte	0x4
+ 159 008d 04       		.byte	0x4
+ 160 008e 38000000 		.4byte	.LASF12
+ 161 0092 02       		.uleb128 0x2
+ 162 0093 08       		.byte	0x8
+ 163 0094 04       		.byte	0x4
+ 164 0095 88000000 		.4byte	.LASF13
+ 165 0099 05       		.uleb128 0x5
+ 166 009a 09000000 		.4byte	.LASF28
+ 167 009e 01       		.byte	0x1
+ 168 009f 5001     		.2byte	0x150
+ 169 00a1 00000000 		.4byte	.LFB53
+ 170 00a5 2C000000 		.4byte	.LFE53-.LFB53
+ 171 00a9 01       		.uleb128 0x1
+ 172 00aa 9C       		.byte	0x9c
+ 173 00ab 18010000 		.4byte	0x118
+ 174 00af 06       		.uleb128 0x6
+ 175 00b0 6100     		.ascii	"a\000"
+ 176 00b2 01       		.byte	0x1
+ 177 00b3 5301     		.2byte	0x153
+ 178 00b5 5D000000 		.4byte	0x5d
+ 179 00b9 00000000 		.4byte	.LLST0
+ 180 00bd 07       		.uleb128 0x7
+ 181 00be 06000000 		.4byte	.LVL1
+ 182 00c2 18010000 		.4byte	0x118
+ 183 00c6 07       		.uleb128 0x7
+ 184 00c7 0A000000 		.4byte	.LVL2
+ 185 00cb 24010000 		.4byte	0x124
+ 186 00cf 07       		.uleb128 0x7
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 11
+
+
+ 187 00d0 0E000000 		.4byte	.LVL3
+ 188 00d4 30010000 		.4byte	0x130
+ 189 00d8 07       		.uleb128 0x7
+ 190 00d9 12000000 		.4byte	.LVL4
+ 191 00dd 3B010000 		.4byte	0x13b
+ 192 00e1 07       		.uleb128 0x7
+ 193 00e2 16000000 		.4byte	.LVL5
+ 194 00e6 46010000 		.4byte	0x146
+ 195 00ea 07       		.uleb128 0x7
+ 196 00eb 1A000000 		.4byte	.LVL6
+ 197 00ef 52010000 		.4byte	0x152
+ 198 00f3 07       		.uleb128 0x7
+ 199 00f4 1E000000 		.4byte	.LVL7
+ 200 00f8 5D010000 		.4byte	0x15d
+ 201 00fc 07       		.uleb128 0x7
+ 202 00fd 22000000 		.4byte	.LVL8
+ 203 0101 68010000 		.4byte	0x168
+ 204 0105 07       		.uleb128 0x7
+ 205 0106 26000000 		.4byte	.LVL9
+ 206 010a 73010000 		.4byte	0x173
+ 207 010e 07       		.uleb128 0x7
+ 208 010f 2A000000 		.4byte	.LVL10
+ 209 0113 7E010000 		.4byte	0x17e
+ 210 0117 00       		.byte	0
+ 211 0118 08       		.uleb128 0x8
+ 212 0119 A2000000 		.4byte	.LASF14
+ 213 011d A2000000 		.4byte	.LASF14
+ 214 0121 02       		.byte	0x2
+ 215 0122 3301     		.2byte	0x133
+ 216 0124 08       		.uleb128 0x8
+ 217 0125 68010000 		.4byte	.LASF15
+ 218 0129 68010000 		.4byte	.LASF15
+ 219 012d 03       		.byte	0x3
+ 220 012e 5401     		.2byte	0x154
+ 221 0130 09       		.uleb128 0x9
+ 222 0131 13000000 		.4byte	.LASF16
+ 223 0135 13000000 		.4byte	.LASF16
+ 224 0139 04       		.byte	0x4
+ 225 013a 48       		.byte	0x48
+ 226 013b 09       		.uleb128 0x9
+ 227 013c AC010000 		.4byte	.LASF17
+ 228 0140 AC010000 		.4byte	.LASF17
+ 229 0144 05       		.byte	0x5
+ 230 0145 8D       		.byte	0x8d
+ 231 0146 08       		.uleb128 0x8
+ 232 0147 97010000 		.4byte	.LASF18
+ 233 014b 97010000 		.4byte	.LASF18
+ 234 014f 06       		.byte	0x6
+ 235 0150 6501     		.2byte	0x165
+ 236 0152 09       		.uleb128 0x9
+ 237 0153 99000000 		.4byte	.LASF19
+ 238 0157 99000000 		.4byte	.LASF19
+ 239 015b 07       		.byte	0x7
+ 240 015c 9C       		.byte	0x9c
+ 241 015d 09       		.uleb128 0x9
+ 242 015e 00000000 		.4byte	.LASF20
+ 243 0162 00000000 		.4byte	.LASF20
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 12
+
+
+ 244 0166 08       		.byte	0x8
+ 245 0167 3D       		.byte	0x3d
+ 246 0168 09       		.uleb128 0x9
+ 247 0169 A2010000 		.4byte	.LASF21
+ 248 016d A2010000 		.4byte	.LASF21
+ 249 0171 09       		.byte	0x9
+ 250 0172 5A       		.byte	0x5a
+ 251 0173 09       		.uleb128 0x9
+ 252 0174 5F010000 		.4byte	.LASF22
+ 253 0178 5F010000 		.4byte	.LASF22
+ 254 017c 0A       		.byte	0xa
+ 255 017d 68       		.byte	0x68
+ 256 017e 09       		.uleb128 0x9
+ 257 017f 69020000 		.4byte	.LASF23
+ 258 0183 69020000 		.4byte	.LASF23
+ 259 0187 0B       		.byte	0xb
+ 260 0188 60       		.byte	0x60
+ 261 0189 00       		.byte	0
+ 262              		.section	.debug_abbrev,"",%progbits
+ 263              	.Ldebug_abbrev0:
+ 264 0000 01       		.uleb128 0x1
+ 265 0001 11       		.uleb128 0x11
+ 266 0002 01       		.byte	0x1
+ 267 0003 25       		.uleb128 0x25
+ 268 0004 0E       		.uleb128 0xe
+ 269 0005 13       		.uleb128 0x13
+ 270 0006 0B       		.uleb128 0xb
+ 271 0007 03       		.uleb128 0x3
+ 272 0008 0E       		.uleb128 0xe
+ 273 0009 1B       		.uleb128 0x1b
+ 274 000a 0E       		.uleb128 0xe
+ 275 000b 55       		.uleb128 0x55
+ 276 000c 17       		.uleb128 0x17
+ 277 000d 11       		.uleb128 0x11
+ 278 000e 01       		.uleb128 0x1
+ 279 000f 10       		.uleb128 0x10
+ 280 0010 17       		.uleb128 0x17
+ 281 0011 00       		.byte	0
+ 282 0012 00       		.byte	0
+ 283 0013 02       		.uleb128 0x2
+ 284 0014 24       		.uleb128 0x24
+ 285 0015 00       		.byte	0
+ 286 0016 0B       		.uleb128 0xb
+ 287 0017 0B       		.uleb128 0xb
+ 288 0018 3E       		.uleb128 0x3e
+ 289 0019 0B       		.uleb128 0xb
+ 290 001a 03       		.uleb128 0x3
+ 291 001b 0E       		.uleb128 0xe
+ 292 001c 00       		.byte	0
+ 293 001d 00       		.byte	0
+ 294 001e 03       		.uleb128 0x3
+ 295 001f 24       		.uleb128 0x24
+ 296 0020 00       		.byte	0
+ 297 0021 0B       		.uleb128 0xb
+ 298 0022 0B       		.uleb128 0xb
+ 299 0023 3E       		.uleb128 0x3e
+ 300 0024 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 13
+
+
+ 301 0025 03       		.uleb128 0x3
+ 302 0026 08       		.uleb128 0x8
+ 303 0027 00       		.byte	0
+ 304 0028 00       		.byte	0
+ 305 0029 04       		.uleb128 0x4
+ 306 002a 16       		.uleb128 0x16
+ 307 002b 00       		.byte	0
+ 308 002c 03       		.uleb128 0x3
+ 309 002d 0E       		.uleb128 0xe
+ 310 002e 3A       		.uleb128 0x3a
+ 311 002f 0B       		.uleb128 0xb
+ 312 0030 3B       		.uleb128 0x3b
+ 313 0031 0B       		.uleb128 0xb
+ 314 0032 49       		.uleb128 0x49
+ 315 0033 13       		.uleb128 0x13
+ 316 0034 00       		.byte	0
+ 317 0035 00       		.byte	0
+ 318 0036 05       		.uleb128 0x5
+ 319 0037 2E       		.uleb128 0x2e
+ 320 0038 01       		.byte	0x1
+ 321 0039 3F       		.uleb128 0x3f
+ 322 003a 19       		.uleb128 0x19
+ 323 003b 03       		.uleb128 0x3
+ 324 003c 0E       		.uleb128 0xe
+ 325 003d 3A       		.uleb128 0x3a
+ 326 003e 0B       		.uleb128 0xb
+ 327 003f 3B       		.uleb128 0x3b
+ 328 0040 05       		.uleb128 0x5
+ 329 0041 27       		.uleb128 0x27
+ 330 0042 19       		.uleb128 0x19
+ 331 0043 11       		.uleb128 0x11
+ 332 0044 01       		.uleb128 0x1
+ 333 0045 12       		.uleb128 0x12
+ 334 0046 06       		.uleb128 0x6
+ 335 0047 40       		.uleb128 0x40
+ 336 0048 18       		.uleb128 0x18
+ 337 0049 9742     		.uleb128 0x2117
+ 338 004b 19       		.uleb128 0x19
+ 339 004c 01       		.uleb128 0x1
+ 340 004d 13       		.uleb128 0x13
+ 341 004e 00       		.byte	0
+ 342 004f 00       		.byte	0
+ 343 0050 06       		.uleb128 0x6
+ 344 0051 34       		.uleb128 0x34
+ 345 0052 00       		.byte	0
+ 346 0053 03       		.uleb128 0x3
+ 347 0054 08       		.uleb128 0x8
+ 348 0055 3A       		.uleb128 0x3a
+ 349 0056 0B       		.uleb128 0xb
+ 350 0057 3B       		.uleb128 0x3b
+ 351 0058 05       		.uleb128 0x5
+ 352 0059 49       		.uleb128 0x49
+ 353 005a 13       		.uleb128 0x13
+ 354 005b 02       		.uleb128 0x2
+ 355 005c 17       		.uleb128 0x17
+ 356 005d 00       		.byte	0
+ 357 005e 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 14
+
+
+ 358 005f 07       		.uleb128 0x7
+ 359 0060 898201   		.uleb128 0x4109
+ 360 0063 00       		.byte	0
+ 361 0064 11       		.uleb128 0x11
+ 362 0065 01       		.uleb128 0x1
+ 363 0066 31       		.uleb128 0x31
+ 364 0067 13       		.uleb128 0x13
+ 365 0068 00       		.byte	0
+ 366 0069 00       		.byte	0
+ 367 006a 08       		.uleb128 0x8
+ 368 006b 2E       		.uleb128 0x2e
+ 369 006c 00       		.byte	0
+ 370 006d 3F       		.uleb128 0x3f
+ 371 006e 19       		.uleb128 0x19
+ 372 006f 3C       		.uleb128 0x3c
+ 373 0070 19       		.uleb128 0x19
+ 374 0071 6E       		.uleb128 0x6e
+ 375 0072 0E       		.uleb128 0xe
+ 376 0073 03       		.uleb128 0x3
+ 377 0074 0E       		.uleb128 0xe
+ 378 0075 3A       		.uleb128 0x3a
+ 379 0076 0B       		.uleb128 0xb
+ 380 0077 3B       		.uleb128 0x3b
+ 381 0078 05       		.uleb128 0x5
+ 382 0079 00       		.byte	0
+ 383 007a 00       		.byte	0
+ 384 007b 09       		.uleb128 0x9
+ 385 007c 2E       		.uleb128 0x2e
+ 386 007d 00       		.byte	0
+ 387 007e 3F       		.uleb128 0x3f
+ 388 007f 19       		.uleb128 0x19
+ 389 0080 3C       		.uleb128 0x3c
+ 390 0081 19       		.uleb128 0x19
+ 391 0082 6E       		.uleb128 0x6e
+ 392 0083 0E       		.uleb128 0xe
+ 393 0084 03       		.uleb128 0x3
+ 394 0085 0E       		.uleb128 0xe
+ 395 0086 3A       		.uleb128 0x3a
+ 396 0087 0B       		.uleb128 0xb
+ 397 0088 3B       		.uleb128 0x3b
+ 398 0089 0B       		.uleb128 0xb
+ 399 008a 00       		.byte	0
+ 400 008b 00       		.byte	0
+ 401 008c 00       		.byte	0
+ 402              		.section	.debug_loc,"",%progbits
+ 403              	.Ldebug_loc0:
+ 404              	.LLST0:
+ 405 0000 02000000 		.4byte	.LVL0
+ 406 0004 2A000000 		.4byte	.LVL10
+ 407 0008 0200     		.2byte	0x2
+ 408 000a 30       		.byte	0x30
+ 409 000b 9F       		.byte	0x9f
+ 410 000c 00000000 		.4byte	0
+ 411 0010 00000000 		.4byte	0
+ 412              		.section	.debug_aranges,"",%progbits
+ 413 0000 1C000000 		.4byte	0x1c
+ 414 0004 0200     		.2byte	0x2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 15
+
+
+ 415 0006 00000000 		.4byte	.Ldebug_info0
+ 416 000a 04       		.byte	0x4
+ 417 000b 00       		.byte	0
+ 418 000c 0000     		.2byte	0
+ 419 000e 0000     		.2byte	0
+ 420 0010 00000000 		.4byte	.LFB53
+ 421 0014 2C000000 		.4byte	.LFE53-.LFB53
+ 422 0018 00000000 		.4byte	0
+ 423 001c 00000000 		.4byte	0
+ 424              		.section	.debug_ranges,"",%progbits
+ 425              	.Ldebug_ranges0:
+ 426 0000 00000000 		.4byte	.LFB53
+ 427 0004 2C000000 		.4byte	.LFE53
+ 428 0008 00000000 		.4byte	0
+ 429 000c 00000000 		.4byte	0
+ 430              		.section	.debug_line,"",%progbits
+ 431              	.Ldebug_line0:
+ 432 0000 86010000 		.section	.debug_str,"MS",%progbits,1
+ 432      02006101 
+ 432      00000201 
+ 432      FB0E0D00 
+ 432      01010101 
+ 433              	.LASF20:
+ 434 0000 7463705F 		.ascii	"tcp_init\000"
+ 434      696E6974 
+ 434      00
+ 435              	.LASF28:
+ 436 0009 6C776970 		.ascii	"lwip_init\000"
+ 436      5F696E69 
+ 436      7400
+ 437              	.LASF16:
+ 438 0013 6D656D5F 		.ascii	"mem_init\000"
+ 438      696E6974 
+ 438      00
+ 439              	.LASF25:
+ 440 001c 536F7572 		.ascii	"Source\\LwIP\\src\\core\\init.c\000"
+ 440      63655C4C 
+ 440      7749505C 
+ 440      7372635C 
+ 440      636F7265 
+ 441              	.LASF12:
+ 442 0038 666C6F61 		.ascii	"float\000"
+ 442      7400
+ 443              	.LASF7:
+ 444 003e 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 444      206C6F6E 
+ 444      6720756E 
+ 444      7369676E 
+ 444      65642069 
+ 445              	.LASF1:
+ 446 0055 756E7369 		.ascii	"unsigned char\000"
+ 446      676E6564 
+ 446      20636861 
+ 446      7200
+ 447              	.LASF5:
+ 448 0063 6C6F6E67 		.ascii	"long unsigned int\000"
+ 448      20756E73 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 16
+
+
+ 448      69676E65 
+ 448      6420696E 
+ 448      7400
+ 449              	.LASF3:
+ 450 0075 73686F72 		.ascii	"short unsigned int\000"
+ 450      7420756E 
+ 450      7369676E 
+ 450      65642069 
+ 450      6E7400
+ 451              	.LASF13:
+ 452 0088 646F7562 		.ascii	"double\000"
+ 452      6C6500
+ 453              	.LASF27:
+ 454 008f 70747264 		.ascii	"ptrdiff_t\000"
+ 454      6966665F 
+ 454      7400
+ 455              	.LASF19:
+ 456 0099 7564705F 		.ascii	"udp_init\000"
+ 456      696E6974 
+ 456      00
+ 457              	.LASF14:
+ 458 00a2 73746174 		.ascii	"stats_init\000"
+ 458      735F696E 
+ 458      697400
+ 459              	.LASF8:
+ 460 00ad 756E7369 		.ascii	"unsigned int\000"
+ 460      676E6564 
+ 460      20696E74 
+ 460      00
+ 461              	.LASF26:
+ 462 00ba 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 462      73657273 
+ 462      5C506875 
+ 462      6F6E675C 
+ 462      446F6375 
+ 463 00e8 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 463      6F742D73 
+ 463      646B2D69 
+ 463      6F742D64 
+ 463      65765C50 
+ 464 0119 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 464      494F542D 
+ 464      4875622D 
+ 464      44656D6F 
+ 464      5C50534F 
+ 465 014b 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 465      2D487562 
+ 465      2D44656D 
+ 465      6F2E6379 
+ 465      64736E00 
+ 466              	.LASF22:
+ 467 015f 646E735F 		.ascii	"dns_init\000"
+ 467      696E6974 
+ 467      00
+ 468              	.LASF15:
+ 469 0168 7379735F 		.ascii	"sys_init\000"
+ 469      696E6974 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 17
+
+
+ 469      00
+ 470              	.LASF10:
+ 471 0171 73697A65 		.ascii	"sizetype\000"
+ 471      74797065 
+ 471      00
+ 472              	.LASF6:
+ 473 017a 6C6F6E67 		.ascii	"long long int\000"
+ 473      206C6F6E 
+ 473      6720696E 
+ 473      7400
+ 474              	.LASF11:
+ 475 0188 63686172 		.ascii	"char\000"
+ 475      00
+ 476              	.LASF2:
+ 477 018d 73686F72 		.ascii	"short int\000"
+ 477      7420696E 
+ 477      7400
+ 478              	.LASF18:
+ 479 0197 6E657469 		.ascii	"netif_init\000"
+ 479      665F696E 
+ 479      697400
+ 480              	.LASF21:
+ 481 01a2 69676D70 		.ascii	"igmp_init\000"
+ 481      5F696E69 
+ 481      7400
+ 482              	.LASF17:
+ 483 01ac 6D656D70 		.ascii	"memp_init\000"
+ 483      5F696E69 
+ 483      7400
+ 484              	.LASF4:
+ 485 01b6 6C6F6E67 		.ascii	"long int\000"
+ 485      20696E74 
+ 485      00
+ 486              	.LASF9:
+ 487 01bf 6C6F6E67 		.ascii	"long double\000"
+ 487      20646F75 
+ 487      626C6500 
+ 488              	.LASF24:
+ 489 01cb 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 489      43313120 
+ 489      352E342E 
+ 489      31203230 
+ 489      31363036 
+ 490 01fe 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 490      20726576 
+ 490      6973696F 
+ 490      6E203233 
+ 490      37373135 
+ 491 0231 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 491      67202D66 
+ 491      66756E63 
+ 491      74696F6E 
+ 491      2D736563 
+ 492              	.LASF0:
+ 493 025d 7369676E 		.ascii	"signed char\000"
+ 493      65642063 
+ 493      68617200 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc2c8YhN.s 			page 18
+
+
+ 494              	.LASF23:
+ 495 0269 7379735F 		.ascii	"sys_timeouts_init\000"
+ 495      74696D65 
+ 495      6F757473 
+ 495      5F696E69 
+ 495      7400
+ 496              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

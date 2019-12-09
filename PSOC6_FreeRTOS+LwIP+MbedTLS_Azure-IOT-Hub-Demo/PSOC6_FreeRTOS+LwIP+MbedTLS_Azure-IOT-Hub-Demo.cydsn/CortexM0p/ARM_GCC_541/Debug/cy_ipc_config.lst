@@ -1,0 +1,1584 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"cy_ipc_config.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.Cy_IPC_SystemSemaInit,"ax",%progbits
+  20              		.align	2
+  21              		.global	Cy_IPC_SystemSemaInit
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	Cy_IPC_SystemSemaInit, %function
+  25              	Cy_IPC_SystemSemaInit:
+  26              	.LFB57:
+  27              		.file 1 "cy_ipc_config.c"
+   1:cy_ipc_config.c **** /***************************************************************************//**
+   2:cy_ipc_config.c **** * \file cy_ipc_config.c
+   3:cy_ipc_config.c **** * \version 1.20
+   4:cy_ipc_config.c **** *
+   5:cy_ipc_config.c **** *  Description:
+   6:cy_ipc_config.c **** *  This C file is not intended to be part of the IPC driver. It is the code
+   7:cy_ipc_config.c **** *  required to configure the device specific IPC channels for semaphores
+   8:cy_ipc_config.c **** *  and pipes.
+   9:cy_ipc_config.c **** *
+  10:cy_ipc_config.c **** ********************************************************************************
+  11:cy_ipc_config.c **** * Copyright 2016-2018, Cypress Semiconductor Corporation.  All rights reserved.
+  12:cy_ipc_config.c **** * You may use this file only in accordance with the license, terms, conditions,
+  13:cy_ipc_config.c **** * disclaimers, and limitations in the end user license agreement accompanying
+  14:cy_ipc_config.c **** * the software package with which this file was provided.
+  15:cy_ipc_config.c **** *******************************************************************************/
+  16:cy_ipc_config.c **** 
+  17:cy_ipc_config.c **** #include "ipc/cy_ipc_drv.h"
+  18:cy_ipc_config.c **** #include "ipc/cy_ipc_pipe.h"
+  19:cy_ipc_config.c **** #include "ipc/cy_ipc_sema.h"
+  20:cy_ipc_config.c **** 
+  21:cy_ipc_config.c **** #include "cy_ipc_config.h"
+  22:cy_ipc_config.c **** 
+  23:cy_ipc_config.c **** #if (CY_IPC_CYPIPE_ENABLE)
+  24:cy_ipc_config.c **** static void Cy_IPC_SystemPipeIsr(void);
+  25:cy_ipc_config.c **** 
+  26:cy_ipc_config.c **** #define CY_CYPIPE_DEFAULT_CONFIG    \
+  27:cy_ipc_config.c **** {\
+  28:cy_ipc_config.c ****     /* .ep0ConfigData */ {\
+  29:cy_ipc_config.c ****         /* .ipcNotifierNumber    */  CY_IPC_INTR_CYPIPE_EP0,\
+  30:cy_ipc_config.c ****         /* .ipcNotifierPriority  */  CY_IPC_INTR_CYPIPE_PRIOR_EP0,\
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 2
+
+
+  31:cy_ipc_config.c ****         /* .ipcNotifierMuxNumber */  CY_IPC_INTR_CYPIPE_MUX_EP0,\
+  32:cy_ipc_config.c ****         /* .epAddress            */  CY_IPC_EP_CYPIPE_CM0_ADDR,\
+  33:cy_ipc_config.c ****         /* .epConfig             */  CY_IPC_CYPIPE_CONFIG_EP0\
+  34:cy_ipc_config.c ****     },\
+  35:cy_ipc_config.c ****     /* .ep1ConfigData */ {\
+  36:cy_ipc_config.c ****         /* .ipcNotifierNumber    */  CY_IPC_INTR_CYPIPE_EP1,\
+  37:cy_ipc_config.c ****         /* .ipcNotifierPriority  */  CY_IPC_INTR_CYPIPE_PRIOR_EP1,\
+  38:cy_ipc_config.c ****         /* .ipcNotifierMuxNumber */  0u,\
+  39:cy_ipc_config.c ****         /* .epAddress            */  CY_IPC_EP_CYPIPE_CM4_ADDR,\
+  40:cy_ipc_config.c ****         /* .epConfig             */  CY_IPC_CYPIPE_CONFIG_EP1\
+  41:cy_ipc_config.c ****     },\
+  42:cy_ipc_config.c ****     /* .endpointClientsCount     */  CY_IPC_CYPIPE_CLIENT_CNT,\
+  43:cy_ipc_config.c ****     /* .endpointsCallbacksArray  */  cy_ipc_pipe_sysCbArray,\
+  44:cy_ipc_config.c ****     /* .userPipeIsrHandler       */  &Cy_IPC_SystemPipeIsr\
+  45:cy_ipc_config.c **** }
+  46:cy_ipc_config.c **** #endif /* CY_IPC_CYPIPE_ENABLE */
+  47:cy_ipc_config.c **** 
+  48:cy_ipc_config.c **** /*******************************************************************************
+  49:cy_ipc_config.c **** * Function Name: Cy_IPC_SystemSemaInit
+  50:cy_ipc_config.c **** ****************************************************************************//**
+  51:cy_ipc_config.c **** *
+  52:cy_ipc_config.c **** * Initializes the system semaphores. The system semaphores are used by Flash.
+  53:cy_ipc_config.c **** *
+  54:cy_ipc_config.c **** * This function is called in the SystemInit() function. If the default startup
+  55:cy_ipc_config.c **** * file is not used, or SystemInit() is not called in your project,
+  56:cy_ipc_config.c **** * call the following three functions prior to executing any flash or EmEEPROM
+  57:cy_ipc_config.c **** * write or erase operation:
+  58:cy_ipc_config.c **** *  -# Cy_IPC_SystemSemaInit()
+  59:cy_ipc_config.c **** *  -# Cy_IPC_SystemPipeInit()
+  60:cy_ipc_config.c **** *  -# Cy_Flash_Init()
+  61:cy_ipc_config.c **** *
+  62:cy_ipc_config.c **** *******************************************************************************/
+  63:cy_ipc_config.c **** void Cy_IPC_SystemSemaInit(void)
+  64:cy_ipc_config.c **** {
+  28              		.loc 1 64 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 4, -8
+  35              		.cfi_offset 14, -4
+  65:cy_ipc_config.c **** /* Create array used for semaphores */
+  66:cy_ipc_config.c **** #if ((CY_CPU_CORTEX_M0P) || !(__CM0P_PRESENT))
+  67:cy_ipc_config.c ****     static uint32_t ipcSemaArray[CY_IPC_SEMA_COUNT / CY_IPC_SEMA_PER_WORD];
+  68:cy_ipc_config.c ****     (void) Cy_IPC_Sema_Init(CY_IPC_CHAN_SEMA, CY_IPC_SEMA_COUNT, ipcSemaArray);
+  36              		.loc 1 68 0
+  37 0002 034A     		ldr	r2, .L2
+  38 0004 8021     		movs	r1, #128
+  39 0006 0420     		movs	r0, #4
+  40 0008 FFF7FEFF 		bl	Cy_IPC_Sema_Init
+  41              	.LVL0:
+  69:cy_ipc_config.c **** #else
+  70:cy_ipc_config.c ****     (void) Cy_IPC_Sema_Init(CY_IPC_CHAN_SEMA, 0ul, NULL);
+  71:cy_ipc_config.c **** #endif
+  72:cy_ipc_config.c **** }
+  42              		.loc 1 72 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 3
+
+
+  43              		@ sp needed
+  44 000c 10BD     		pop	{r4, pc}
+  45              	.L3:
+  46 000e C046     		.align	2
+  47              	.L2:
+  48 0010 00000000 		.word	.LANCHOR0
+  49              		.cfi_endproc
+  50              	.LFE57:
+  51              		.size	Cy_IPC_SystemSemaInit, .-Cy_IPC_SystemSemaInit
+  52              		.section	.text.Cy_IPC_SystemPipeInit,"ax",%progbits
+  53              		.align	2
+  54              		.global	Cy_IPC_SystemPipeInit
+  55              		.code	16
+  56              		.thumb_func
+  57              		.type	Cy_IPC_SystemPipeInit, %function
+  58              	Cy_IPC_SystemPipeInit:
+  59              	.LFB58:
+  73:cy_ipc_config.c **** 
+  74:cy_ipc_config.c **** /*******************************************************************************
+  75:cy_ipc_config.c **** * Function Name: Cy_IPC_SystemPipeInit
+  76:cy_ipc_config.c **** ****************************************************************************//**
+  77:cy_ipc_config.c **** *
+  78:cy_ipc_config.c **** * Initializes the system pipes. The system pipes are used by BLE and Flash.
+  79:cy_ipc_config.c **** * \note The function should be called on all CPUs.
+  80:cy_ipc_config.c **** *
+  81:cy_ipc_config.c **** * This function is called in the SystemInit() function. If the default startup
+  82:cy_ipc_config.c **** * file is not used, or SystemInit() is not called in your project,
+  83:cy_ipc_config.c **** * call the following three functions prior to executing any flash or EmEEPROM
+  84:cy_ipc_config.c **** * write or erase operation:
+  85:cy_ipc_config.c **** *  -# Cy_IPC_SystemSemaInit()
+  86:cy_ipc_config.c **** *  -# Cy_IPC_SystemPipeInit()
+  87:cy_ipc_config.c **** *  -# Cy_Flash_Init()
+  88:cy_ipc_config.c **** *
+  89:cy_ipc_config.c **** * Also this function is called to support BLE host/controller communication.
+  90:cy_ipc_config.c **** *
+  91:cy_ipc_config.c **** *******************************************************************************/
+  92:cy_ipc_config.c **** void Cy_IPC_SystemPipeInit(void)
+  93:cy_ipc_config.c **** {
+  60              		.loc 1 93 0
+  61              		.cfi_startproc
+  62              		@ args = 0, pretend = 0, frame = 0
+  63              		@ frame_needed = 0, uses_anonymous_args = 0
+  64 0000 10B5     		push	{r4, lr}
+  65              		.cfi_def_cfa_offset 8
+  66              		.cfi_offset 4, -8
+  67              		.cfi_offset 14, -4
+  94:cy_ipc_config.c ****     /* Create an array of endpoint structures */
+  95:cy_ipc_config.c ****     static cy_stc_ipc_pipe_ep_t cy_ipc_pipe_sysEpArray[CY_IPC_MAX_ENDPOINTS];
+  96:cy_ipc_config.c **** 
+  97:cy_ipc_config.c ****     Cy_IPC_Pipe_Config(cy_ipc_pipe_sysEpArray);
+  68              		.loc 1 97 0
+  69 0002 0248     		ldr	r0, .L5
+  70 0004 1030     		adds	r0, r0, #16
+  71 0006 FFF7FEFF 		bl	Cy_IPC_Pipe_Config
+  72              	.LVL1:
+  98:cy_ipc_config.c **** 
+  99:cy_ipc_config.c **** #if (CY_IPC_CYPIPE_ENABLE)
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 4
+
+
+ 100:cy_ipc_config.c ****     uint32_t intr;
+ 101:cy_ipc_config.c **** 
+ 102:cy_ipc_config.c ****     static cy_ipc_pipe_callback_ptr_t cy_ipc_pipe_sysCbArray[CY_IPC_CYPIPE_CLIENT_CNT];
+ 103:cy_ipc_config.c **** 
+ 104:cy_ipc_config.c ****     static const cy_stc_ipc_pipe_config_t systemPipeConfig = CY_CYPIPE_DEFAULT_CONFIG;
+ 105:cy_ipc_config.c **** 
+ 106:cy_ipc_config.c ****     intr = Cy_SysLib_EnterCriticalSection();
+ 107:cy_ipc_config.c **** 
+ 108:cy_ipc_config.c ****     Cy_IPC_Pipe_Init(&systemPipeConfig);
+ 109:cy_ipc_config.c **** 
+ 110:cy_ipc_config.c ****     Cy_SysLib_ExitCriticalSection(intr);
+ 111:cy_ipc_config.c **** #endif /* CY_IPC_CYPIPE_ENABLE */
+ 112:cy_ipc_config.c **** }
+  73              		.loc 1 112 0
+  74              		@ sp needed
+  75 000a 10BD     		pop	{r4, pc}
+  76              	.L6:
+  77              		.align	2
+  78              	.L5:
+  79 000c 00000000 		.word	.LANCHOR0
+  80              		.cfi_endproc
+  81              	.LFE58:
+  82              		.size	Cy_IPC_SystemPipeInit, .-Cy_IPC_SystemPipeInit
+  83              		.bss
+  84              		.align	2
+  85              		.set	.LANCHOR0,. + 0
+  86              		.type	ipcSemaArray.9630, %object
+  87              		.size	ipcSemaArray.9630, 16
+  88              	ipcSemaArray.9630:
+  89 0000 00000000 		.space	16
+  89      00000000 
+  89      00000000 
+  89      00000000 
+  90              		.type	cy_ipc_pipe_sysEpArray.9634, %object
+  91              		.size	cy_ipc_pipe_sysEpArray.9634, 352
+  92              	cy_ipc_pipe_sysEpArray.9634:
+  93 0010 00000000 		.space	352
+  93      00000000 
+  93      00000000 
+  93      00000000 
+  93      00000000 
+  94              		.text
+  95              	.Letext0:
+  96              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+  97              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+  98              		.file 4 "Generated_Source\\PSoC6\\pdl\\devices/psoc6/psoc62/include/cy8c6247bzi_d54.h"
+  99              		.file 5 "Generated_Source\\PSoC6\\pdl\\devices/psoc6/ip/cyip_ipc.h"
+ 100              		.file 6 "Generated_Source\\PSoC6\\pdl\\drivers/peripheral/ipc/cy_ipc_pipe.h"
+ 101              		.file 7 "Generated_Source\\PSoC6\\pdl\\drivers/peripheral/ipc/cy_ipc_sema.h"
+ 102              		.section	.debug_info,"",%progbits
+ 103              	.Ldebug_info0:
+ 104 0000 2B040000 		.4byte	0x42b
+ 105 0004 0400     		.2byte	0x4
+ 106 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 107 000a 04       		.byte	0x4
+ 108 000b 01       		.uleb128 0x1
+ 109 000c BB000000 		.4byte	.LASF89
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 5
+
+
+ 110 0010 0C       		.byte	0xc
+ 111 0011 90040000 		.4byte	.LASF90
+ 112 0015 8A030000 		.4byte	.LASF91
+ 113 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 114 001d 00000000 		.4byte	0
+ 115 0021 00000000 		.4byte	.Ldebug_line0
+ 116 0025 02       		.uleb128 0x2
+ 117 0026 01       		.byte	0x1
+ 118 0027 06       		.byte	0x6
+ 119 0028 3A030000 		.4byte	.LASF0
+ 120 002c 02       		.uleb128 0x2
+ 121 002d 01       		.byte	0x1
+ 122 002e 08       		.byte	0x8
+ 123 002f 07030000 		.4byte	.LASF1
+ 124 0033 02       		.uleb128 0x2
+ 125 0034 02       		.byte	0x2
+ 126 0035 05       		.byte	0x5
+ 127 0036 6C000000 		.4byte	.LASF2
+ 128 003a 02       		.uleb128 0x2
+ 129 003b 02       		.byte	0x2
+ 130 003c 07       		.byte	0x7
+ 131 003d 0D050000 		.4byte	.LASF3
+ 132 0041 02       		.uleb128 0x2
+ 133 0042 04       		.byte	0x4
+ 134 0043 05       		.byte	0x5
+ 135 0044 66020000 		.4byte	.LASF4
+ 136 0048 03       		.uleb128 0x3
+ 137 0049 7F050000 		.4byte	.LASF9
+ 138 004d 02       		.byte	0x2
+ 139 004e 41       		.byte	0x41
+ 140 004f 53000000 		.4byte	0x53
+ 141 0053 02       		.uleb128 0x2
+ 142 0054 04       		.byte	0x4
+ 143 0055 07       		.byte	0x7
+ 144 0056 20050000 		.4byte	.LASF5
+ 145 005a 02       		.uleb128 0x2
+ 146 005b 08       		.byte	0x8
+ 147 005c 05       		.byte	0x5
+ 148 005d 51020000 		.4byte	.LASF6
+ 149 0061 02       		.uleb128 0x2
+ 150 0062 08       		.byte	0x8
+ 151 0063 07       		.byte	0x7
+ 152 0064 4F030000 		.4byte	.LASF7
+ 153 0068 04       		.uleb128 0x4
+ 154 0069 04       		.byte	0x4
+ 155 006a 05       		.byte	0x5
+ 156 006b 696E7400 		.ascii	"int\000"
+ 157 006f 02       		.uleb128 0x2
+ 158 0070 04       		.byte	0x4
+ 159 0071 07       		.byte	0x7
+ 160 0072 F4050000 		.4byte	.LASF8
+ 161 0076 03       		.uleb128 0x3
+ 162 0077 66030000 		.4byte	.LASF10
+ 163 007b 03       		.byte	0x3
+ 164 007c 30       		.byte	0x30
+ 165 007d 48000000 		.4byte	0x48
+ 166 0081 05       		.uleb128 0x5
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 6
+
+
+ 167 0082 02       		.byte	0x2
+ 168 0083 33000000 		.4byte	0x33
+ 169 0087 04       		.byte	0x4
+ 170 0088 24       		.byte	0x24
+ 171 0089 78010000 		.4byte	0x178
+ 172 008d 06       		.uleb128 0x6
+ 173 008e 6F020000 		.4byte	.LASF11
+ 174 0092 71       		.sleb128 -15
+ 175 0093 06       		.uleb128 0x6
+ 176 0094 8A050000 		.4byte	.LASF12
+ 177 0098 72       		.sleb128 -14
+ 178 0099 06       		.uleb128 0x6
+ 179 009a 3B040000 		.4byte	.LASF13
+ 180 009e 73       		.sleb128 -13
+ 181 009f 06       		.uleb128 0x6
+ 182 00a0 2F040000 		.4byte	.LASF14
+ 183 00a4 7B       		.sleb128 -5
+ 184 00a5 06       		.uleb128 0x6
+ 185 00a6 7E030000 		.4byte	.LASF15
+ 186 00aa 7E       		.sleb128 -2
+ 187 00ab 06       		.uleb128 0x6
+ 188 00ac 16000000 		.4byte	.LASF16
+ 189 00b0 7F       		.sleb128 -1
+ 190 00b1 07       		.uleb128 0x7
+ 191 00b2 2C030000 		.4byte	.LASF17
+ 192 00b6 00       		.byte	0
+ 193 00b7 07       		.uleb128 0x7
+ 194 00b8 2F000000 		.4byte	.LASF18
+ 195 00bc 01       		.byte	0x1
+ 196 00bd 07       		.uleb128 0x7
+ 197 00be 6A010000 		.4byte	.LASF19
+ 198 00c2 02       		.byte	0x2
+ 199 00c3 07       		.uleb128 0x7
+ 200 00c4 82040000 		.4byte	.LASF20
+ 201 00c8 03       		.byte	0x3
+ 202 00c9 07       		.uleb128 0x7
+ 203 00ca 3D000000 		.4byte	.LASF21
+ 204 00ce 04       		.byte	0x4
+ 205 00cf 07       		.uleb128 0x7
+ 206 00d0 4D010000 		.4byte	.LASF22
+ 207 00d4 05       		.byte	0x5
+ 208 00d5 07       		.uleb128 0x7
+ 209 00d6 6F040000 		.4byte	.LASF23
+ 210 00da 06       		.byte	0x6
+ 211 00db 07       		.uleb128 0x7
+ 212 00dc AA050000 		.4byte	.LASF24
+ 213 00e0 07       		.byte	0x7
+ 214 00e1 07       		.uleb128 0x7
+ 215 00e2 A1000000 		.4byte	.LASF25
+ 216 00e6 08       		.byte	0x8
+ 217 00e7 07       		.uleb128 0x7
+ 218 00e8 52040000 		.4byte	.LASF26
+ 219 00ec 09       		.byte	0x9
+ 220 00ed 07       		.uleb128 0x7
+ 221 00ee BE040000 		.4byte	.LASF27
+ 222 00f2 0A       		.byte	0xa
+ 223 00f3 07       		.uleb128 0x7
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 7
+
+
+ 224 00f4 93010000 		.4byte	.LASF28
+ 225 00f8 0B       		.byte	0xb
+ 226 00f9 07       		.uleb128 0x7
+ 227 00fa 6F030000 		.4byte	.LASF29
+ 228 00fe 0C       		.byte	0xc
+ 229 00ff 07       		.uleb128 0x7
+ 230 0100 A0040000 		.4byte	.LASF30
+ 231 0104 0D       		.byte	0xd
+ 232 0105 07       		.uleb128 0x7
+ 233 0106 5B010000 		.4byte	.LASF31
+ 234 010a 0E       		.byte	0xe
+ 235 010b 07       		.uleb128 0x7
+ 236 010c D3020000 		.4byte	.LASF32
+ 237 0110 0F       		.byte	0xf
+ 238 0111 07       		.uleb128 0x7
+ 239 0112 89000000 		.4byte	.LASF33
+ 240 0116 10       		.byte	0x10
+ 241 0117 07       		.uleb128 0x7
+ 242 0118 62050000 		.4byte	.LASF34
+ 243 011c 11       		.byte	0x11
+ 244 011d 07       		.uleb128 0x7
+ 245 011e 42020000 		.4byte	.LASF35
+ 246 0122 12       		.byte	0x12
+ 247 0123 07       		.uleb128 0x7
+ 248 0124 60040000 		.4byte	.LASF36
+ 249 0128 13       		.byte	0x13
+ 250 0129 07       		.uleb128 0x7
+ 251 012a E1010000 		.4byte	.LASF37
+ 252 012e 14       		.byte	0x14
+ 253 012f 07       		.uleb128 0x7
+ 254 0130 FE040000 		.4byte	.LASF38
+ 255 0134 15       		.byte	0x15
+ 256 0135 07       		.uleb128 0x7
+ 257 0136 01060000 		.4byte	.LASF39
+ 258 013a 16       		.byte	0x16
+ 259 013b 07       		.uleb128 0x7
+ 260 013c D2010000 		.4byte	.LASF40
+ 261 0140 17       		.byte	0x17
+ 262 0141 07       		.uleb128 0x7
+ 263 0142 DB040000 		.4byte	.LASF41
+ 264 0146 18       		.byte	0x18
+ 265 0147 07       		.uleb128 0x7
+ 266 0148 C7050000 		.4byte	.LASF42
+ 267 014c 19       		.byte	0x19
+ 268 014d 07       		.uleb128 0x7
+ 269 014e B1010000 		.4byte	.LASF43
+ 270 0152 1A       		.byte	0x1a
+ 271 0153 07       		.uleb128 0x7
+ 272 0154 AF040000 		.4byte	.LASF44
+ 273 0158 1B       		.byte	0x1b
+ 274 0159 07       		.uleb128 0x7
+ 275 015a B8050000 		.4byte	.LASF45
+ 276 015e 1C       		.byte	0x1c
+ 277 015f 07       		.uleb128 0x7
+ 278 0160 EA040000 		.4byte	.LASF46
+ 279 0164 1D       		.byte	0x1d
+ 280 0165 07       		.uleb128 0x7
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 8
+
+
+ 281 0166 A2010000 		.4byte	.LASF47
+ 282 016a 1E       		.byte	0x1e
+ 283 016b 07       		.uleb128 0x7
+ 284 016c 32050000 		.4byte	.LASF48
+ 285 0170 1F       		.byte	0x1f
+ 286 0171 07       		.uleb128 0x7
+ 287 0172 C2020000 		.4byte	.LASF49
+ 288 0176 F0       		.byte	0xf0
+ 289 0177 00       		.byte	0
+ 290 0178 03       		.uleb128 0x3
+ 291 0179 15030000 		.4byte	.LASF50
+ 292 017d 04       		.byte	0x4
+ 293 017e F4       		.byte	0xf4
+ 294 017f 81000000 		.4byte	0x81
+ 295 0183 02       		.uleb128 0x2
+ 296 0184 04       		.byte	0x4
+ 297 0185 07       		.byte	0x7
+ 298 0186 98000000 		.4byte	.LASF51
+ 299 018a 08       		.uleb128 0x8
+ 300 018b 76000000 		.4byte	0x76
+ 301 018f 09       		.uleb128 0x9
+ 302 0190 8A010000 		.4byte	0x18a
+ 303 0194 0A       		.uleb128 0xa
+ 304 0195 8F010000 		.4byte	0x18f
+ 305 0199 A4010000 		.4byte	0x1a4
+ 306 019d 0B       		.uleb128 0xb
+ 307 019e 83010000 		.4byte	0x183
+ 308 01a2 02       		.byte	0x2
+ 309 01a3 00       		.byte	0
+ 310 01a4 0A       		.uleb128 0xa
+ 311 01a5 8F010000 		.4byte	0x18f
+ 312 01a9 B4010000 		.4byte	0x1b4
+ 313 01ad 0B       		.uleb128 0xb
+ 314 01ae 83010000 		.4byte	0x183
+ 315 01b2 03       		.byte	0x3
+ 316 01b3 00       		.byte	0
+ 317 01b4 0C       		.uleb128 0xc
+ 318 01b5 20       		.byte	0x20
+ 319 01b6 05       		.byte	0x5
+ 320 01b7 23       		.byte	0x23
+ 321 01b8 05020000 		.4byte	0x205
+ 322 01bc 0D       		.uleb128 0xd
+ 323 01bd 10060000 		.4byte	.LASF52
+ 324 01c1 05       		.byte	0x5
+ 325 01c2 24       		.byte	0x24
+ 326 01c3 8F010000 		.4byte	0x18f
+ 327 01c7 00       		.byte	0
+ 328 01c8 0D       		.uleb128 0xd
+ 329 01c9 FF020000 		.4byte	.LASF53
+ 330 01cd 05       		.byte	0x5
+ 331 01ce 25       		.byte	0x25
+ 332 01cf 8A010000 		.4byte	0x18a
+ 333 01d3 04       		.byte	0x4
+ 334 01d4 0D       		.uleb128 0xd
+ 335 01d5 5F020000 		.4byte	.LASF54
+ 336 01d9 05       		.byte	0x5
+ 337 01da 26       		.byte	0x26
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 9
+
+
+ 338 01db 8A010000 		.4byte	0x18a
+ 339 01df 08       		.byte	0x8
+ 340 01e0 0D       		.uleb128 0xd
+ 341 01e1 E2020000 		.4byte	.LASF55
+ 342 01e5 05       		.byte	0x5
+ 343 01e6 27       		.byte	0x27
+ 344 01e7 8A010000 		.4byte	0x18a
+ 345 01eb 0C       		.byte	0xc
+ 346 01ec 0D       		.uleb128 0xd
+ 347 01ed 9E050000 		.4byte	.LASF56
+ 348 01f1 05       		.byte	0x5
+ 349 01f2 28       		.byte	0x28
+ 350 01f3 8F010000 		.4byte	0x18f
+ 351 01f7 10       		.byte	0x10
+ 352 01f8 0D       		.uleb128 0xd
+ 353 01f9 EB050000 		.4byte	.LASF57
+ 354 01fd 05       		.byte	0x5
+ 355 01fe 29       		.byte	0x29
+ 356 01ff 0A020000 		.4byte	0x20a
+ 357 0203 14       		.byte	0x14
+ 358 0204 00       		.byte	0
+ 359 0205 08       		.uleb128 0x8
+ 360 0206 94010000 		.4byte	0x194
+ 361 020a 09       		.uleb128 0x9
+ 362 020b 05020000 		.4byte	0x205
+ 363 020f 03       		.uleb128 0x3
+ 364 0210 B2020000 		.4byte	.LASF58
+ 365 0214 05       		.byte	0x5
+ 366 0215 2A       		.byte	0x2a
+ 367 0216 B4010000 		.4byte	0x1b4
+ 368 021a 0C       		.uleb128 0xc
+ 369 021b 20       		.byte	0x20
+ 370 021c 05       		.byte	0x5
+ 371 021d 2F       		.byte	0x2f
+ 372 021e 5F020000 		.4byte	0x25f
+ 373 0222 0D       		.uleb128 0xd
+ 374 0223 F9040000 		.4byte	.LASF59
+ 375 0227 05       		.byte	0x5
+ 376 0228 30       		.byte	0x30
+ 377 0229 8A010000 		.4byte	0x18a
+ 378 022d 00       		.byte	0
+ 379 022e 0D       		.uleb128 0xd
+ 380 022f 46030000 		.4byte	.LASF60
+ 381 0233 05       		.byte	0x5
+ 382 0234 31       		.byte	0x31
+ 383 0235 8A010000 		.4byte	0x18a
+ 384 0239 04       		.byte	0x4
+ 385 023a 0D       		.uleb128 0xd
+ 386 023b 14020000 		.4byte	.LASF61
+ 387 023f 05       		.byte	0x5
+ 388 0240 32       		.byte	0x32
+ 389 0241 8A010000 		.4byte	0x18a
+ 390 0245 08       		.byte	0x8
+ 391 0246 0D       		.uleb128 0xd
+ 392 0247 E7020000 		.4byte	.LASF62
+ 393 024b 05       		.byte	0x5
+ 394 024c 33       		.byte	0x33
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 10
+
+
+ 395 024d 8F010000 		.4byte	0x18f
+ 396 0251 0C       		.byte	0xc
+ 397 0252 0D       		.uleb128 0xd
+ 398 0253 EB050000 		.4byte	.LASF57
+ 399 0257 05       		.byte	0x5
+ 400 0258 34       		.byte	0x34
+ 401 0259 64020000 		.4byte	0x264
+ 402 025d 10       		.byte	0x10
+ 403 025e 00       		.byte	0
+ 404 025f 08       		.uleb128 0x8
+ 405 0260 A4010000 		.4byte	0x1a4
+ 406 0264 09       		.uleb128 0x9
+ 407 0265 5F020000 		.4byte	0x25f
+ 408 0269 03       		.uleb128 0x3
+ 409 026a 86020000 		.4byte	.LASF63
+ 410 026e 05       		.byte	0x5
+ 411 026f 35       		.byte	0x35
+ 412 0270 1A020000 		.4byte	0x21a
+ 413 0274 0E       		.uleb128 0xe
+ 414 0275 04       		.byte	0x4
+ 415 0276 7A020000 		.4byte	0x27a
+ 416 027a 0F       		.uleb128 0xf
+ 417 027b 02       		.uleb128 0x2
+ 418 027c 01       		.byte	0x1
+ 419 027d 08       		.byte	0x8
+ 420 027e 7D040000 		.4byte	.LASF64
+ 421 0282 02       		.uleb128 0x2
+ 422 0283 04       		.byte	0x4
+ 423 0284 04       		.byte	0x4
+ 424 0285 3C020000 		.4byte	.LASF65
+ 425 0289 02       		.uleb128 0x2
+ 426 028a 08       		.byte	0x8
+ 427 028b 04       		.byte	0x4
+ 428 028c 41050000 		.4byte	.LASF66
+ 429 0290 02       		.uleb128 0x2
+ 430 0291 08       		.byte	0x8
+ 431 0292 04       		.byte	0x4
+ 432 0293 F3020000 		.4byte	.LASF67
+ 433 0297 03       		.uleb128 0x3
+ 434 0298 78010000 		.4byte	.LASF68
+ 435 029c 06       		.byte	0x6
+ 436 029d 3E       		.byte	0x3e
+ 437 029e A2020000 		.4byte	0x2a2
+ 438 02a2 0E       		.uleb128 0xe
+ 439 02a3 04       		.byte	0x4
+ 440 02a4 A8020000 		.4byte	0x2a8
+ 441 02a8 10       		.uleb128 0x10
+ 442 02a9 B3020000 		.4byte	0x2b3
+ 443 02ad 11       		.uleb128 0x11
+ 444 02ae B3020000 		.4byte	0x2b3
+ 445 02b2 00       		.byte	0
+ 446 02b3 0E       		.uleb128 0xe
+ 447 02b4 04       		.byte	0x4
+ 448 02b5 76000000 		.4byte	0x76
+ 449 02b9 03       		.uleb128 0x3
+ 450 02ba 1E020000 		.4byte	.LASF69
+ 451 02be 06       		.byte	0x6
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 11
+
+
+ 452 02bf 41       		.byte	0x41
+ 453 02c0 74020000 		.4byte	0x274
+ 454 02c4 03       		.uleb128 0x3
+ 455 02c5 4B000000 		.4byte	.LASF70
+ 456 02c9 06       		.byte	0x6
+ 457 02ca 44       		.byte	0x44
+ 458 02cb CF020000 		.4byte	0x2cf
+ 459 02cf 0E       		.uleb128 0xe
+ 460 02d0 04       		.byte	0x4
+ 461 02d1 97020000 		.4byte	0x297
+ 462 02d5 0C       		.uleb128 0xc
+ 463 02d6 2C       		.byte	0x2c
+ 464 02d7 06       		.byte	0x6
+ 465 02d8 78       		.byte	0x78
+ 466 02d9 62030000 		.4byte	0x362
+ 467 02dd 0D       		.uleb128 0xd
+ 468 02de 4A040000 		.4byte	.LASF71
+ 469 02e2 06       		.byte	0x6
+ 470 02e3 7A       		.byte	0x7a
+ 471 02e4 76000000 		.4byte	0x76
+ 472 02e8 00       		.byte	0
+ 473 02e9 0D       		.uleb128 0xd
+ 474 02ea 76050000 		.4byte	.LASF72
+ 475 02ee 06       		.byte	0x6
+ 476 02ef 7B       		.byte	0x7b
+ 477 02f0 76000000 		.4byte	0x76
+ 478 02f4 04       		.byte	0x4
+ 479 02f5 0D       		.uleb128 0xd
+ 480 02f6 AF000000 		.4byte	.LASF73
+ 481 02fa 06       		.byte	0x6
+ 482 02fb 7C       		.byte	0x7c
+ 483 02fc 76000000 		.4byte	0x76
+ 484 0300 08       		.byte	0x8
+ 485 0301 0D       		.uleb128 0xd
+ 486 0302 23000000 		.4byte	.LASF74
+ 487 0306 06       		.byte	0x6
+ 488 0307 7D       		.byte	0x7d
+ 489 0308 78010000 		.4byte	0x178
+ 490 030c 0C       		.byte	0xc
+ 491 030d 0D       		.uleb128 0xd
+ 492 030e CB010000 		.4byte	.LASF75
+ 493 0312 06       		.byte	0x6
+ 494 0313 7F       		.byte	0x7f
+ 495 0314 62030000 		.4byte	0x362
+ 496 0318 10       		.byte	0x10
+ 497 0319 0D       		.uleb128 0xd
+ 498 031a C0010000 		.4byte	.LASF76
+ 499 031e 06       		.byte	0x6
+ 500 031f 80       		.byte	0x80
+ 501 0320 68030000 		.4byte	0x368
+ 502 0324 14       		.byte	0x14
+ 503 0325 0D       		.uleb128 0xd
+ 504 0326 71050000 		.4byte	.LASF77
+ 505 032a 06       		.byte	0x6
+ 506 032b 81       		.byte	0x81
+ 507 032c 76000000 		.4byte	0x76
+ 508 0330 18       		.byte	0x18
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 12
+
+
+ 509 0331 0D       		.uleb128 0xd
+ 510 0332 7A020000 		.4byte	.LASF78
+ 511 0336 06       		.byte	0x6
+ 512 0337 82       		.byte	0x82
+ 513 0338 76000000 		.4byte	0x76
+ 514 033c 1C       		.byte	0x1c
+ 515 033d 0D       		.uleb128 0xd
+ 516 033e CD040000 		.4byte	.LASF79
+ 517 0342 06       		.byte	0x6
+ 518 0343 84       		.byte	0x84
+ 519 0344 C4020000 		.4byte	0x2c4
+ 520 0348 20       		.byte	0x20
+ 521 0349 0D       		.uleb128 0xd
+ 522 034a 76000000 		.4byte	.LASF80
+ 523 034e 06       		.byte	0x6
+ 524 034f 85       		.byte	0x85
+ 525 0350 B9020000 		.4byte	0x2b9
+ 526 0354 24       		.byte	0x24
+ 527 0355 0D       		.uleb128 0xd
+ 528 0356 48050000 		.4byte	.LASF81
+ 529 035a 06       		.byte	0x6
+ 530 035b 86       		.byte	0x86
+ 531 035c B9020000 		.4byte	0x2b9
+ 532 0360 28       		.byte	0x28
+ 533 0361 00       		.byte	0
+ 534 0362 0E       		.uleb128 0xe
+ 535 0363 04       		.byte	0x4
+ 536 0364 0F020000 		.4byte	0x20f
+ 537 0368 0E       		.uleb128 0xe
+ 538 0369 04       		.byte	0x4
+ 539 036a 69020000 		.4byte	0x269
+ 540 036e 03       		.uleb128 0x3
+ 541 036f D6050000 		.4byte	.LASF82
+ 542 0373 06       		.byte	0x6
+ 543 0374 87       		.byte	0x87
+ 544 0375 D5020000 		.4byte	0x2d5
+ 545 0379 12       		.uleb128 0x12
+ 546 037a 18060000 		.4byte	.LASF83
+ 547 037e 01       		.byte	0x1
+ 548 037f 3F       		.byte	0x3f
+ 549 0380 00000000 		.4byte	.LFB57
+ 550 0384 14000000 		.4byte	.LFE57-.LFB57
+ 551 0388 01       		.uleb128 0x1
+ 552 0389 9C       		.byte	0x9c
+ 553 038a BE030000 		.4byte	0x3be
+ 554 038e 13       		.uleb128 0x13
+ 555 038f 1F030000 		.4byte	.LASF85
+ 556 0393 01       		.byte	0x1
+ 557 0394 43       		.byte	0x43
+ 558 0395 BE030000 		.4byte	0x3be
+ 559 0399 05       		.uleb128 0x5
+ 560 039a 03       		.byte	0x3
+ 561 039b 00000000 		.4byte	ipcSemaArray.9630
+ 562 039f 14       		.uleb128 0x14
+ 563 03a0 0C000000 		.4byte	.LVL0
+ 564 03a4 18040000 		.4byte	0x418
+ 565 03a8 15       		.uleb128 0x15
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 13
+
+
+ 566 03a9 01       		.uleb128 0x1
+ 567 03aa 50       		.byte	0x50
+ 568 03ab 01       		.uleb128 0x1
+ 569 03ac 34       		.byte	0x34
+ 570 03ad 15       		.uleb128 0x15
+ 571 03ae 01       		.uleb128 0x1
+ 572 03af 51       		.byte	0x51
+ 573 03b0 02       		.uleb128 0x2
+ 574 03b1 08       		.byte	0x8
+ 575 03b2 80       		.byte	0x80
+ 576 03b3 15       		.uleb128 0x15
+ 577 03b4 01       		.uleb128 0x1
+ 578 03b5 52       		.byte	0x52
+ 579 03b6 05       		.uleb128 0x5
+ 580 03b7 03       		.byte	0x3
+ 581 03b8 00000000 		.4byte	.LANCHOR0
+ 582 03bc 00       		.byte	0
+ 583 03bd 00       		.byte	0
+ 584 03be 0A       		.uleb128 0xa
+ 585 03bf 76000000 		.4byte	0x76
+ 586 03c3 CE030000 		.4byte	0x3ce
+ 587 03c7 0B       		.uleb128 0xb
+ 588 03c8 83010000 		.4byte	0x183
+ 589 03cc 03       		.byte	0x3
+ 590 03cd 00       		.byte	0
+ 591 03ce 12       		.uleb128 0x12
+ 592 03cf 00000000 		.4byte	.LASF84
+ 593 03d3 01       		.byte	0x1
+ 594 03d4 5C       		.byte	0x5c
+ 595 03d5 00000000 		.4byte	.LFB58
+ 596 03d9 10000000 		.4byte	.LFE58-.LFB58
+ 597 03dd 01       		.uleb128 0x1
+ 598 03de 9C       		.byte	0x9c
+ 599 03df 08040000 		.4byte	0x408
+ 600 03e3 13       		.uleb128 0x13
+ 601 03e4 9B020000 		.4byte	.LASF86
+ 602 03e8 01       		.byte	0x1
+ 603 03e9 5F       		.byte	0x5f
+ 604 03ea 08040000 		.4byte	0x408
+ 605 03ee 05       		.uleb128 0x5
+ 606 03ef 03       		.byte	0x3
+ 607 03f0 10000000 		.4byte	cy_ipc_pipe_sysEpArray.9634
+ 608 03f4 14       		.uleb128 0x14
+ 609 03f5 0A000000 		.4byte	.LVL1
+ 610 03f9 23040000 		.4byte	0x423
+ 611 03fd 15       		.uleb128 0x15
+ 612 03fe 01       		.uleb128 0x1
+ 613 03ff 50       		.byte	0x50
+ 614 0400 05       		.uleb128 0x5
+ 615 0401 03       		.byte	0x3
+ 616 0402 10000000 		.4byte	.LANCHOR0+16
+ 617 0406 00       		.byte	0
+ 618 0407 00       		.byte	0
+ 619 0408 0A       		.uleb128 0xa
+ 620 0409 6E030000 		.4byte	0x36e
+ 621 040d 18040000 		.4byte	0x418
+ 622 0411 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 14
+
+
+ 623 0412 83010000 		.4byte	0x183
+ 624 0416 07       		.byte	0x7
+ 625 0417 00       		.byte	0
+ 626 0418 16       		.uleb128 0x16
+ 627 0419 F0010000 		.4byte	.LASF87
+ 628 041d F0010000 		.4byte	.LASF87
+ 629 0421 07       		.byte	0x7
+ 630 0422 65       		.byte	0x65
+ 631 0423 16       		.uleb128 0x16
+ 632 0424 01020000 		.4byte	.LASF88
+ 633 0428 01020000 		.4byte	.LASF88
+ 634 042c 06       		.byte	0x6
+ 635 042d FC       		.byte	0xfc
+ 636 042e 00       		.byte	0
+ 637              		.section	.debug_abbrev,"",%progbits
+ 638              	.Ldebug_abbrev0:
+ 639 0000 01       		.uleb128 0x1
+ 640 0001 11       		.uleb128 0x11
+ 641 0002 01       		.byte	0x1
+ 642 0003 25       		.uleb128 0x25
+ 643 0004 0E       		.uleb128 0xe
+ 644 0005 13       		.uleb128 0x13
+ 645 0006 0B       		.uleb128 0xb
+ 646 0007 03       		.uleb128 0x3
+ 647 0008 0E       		.uleb128 0xe
+ 648 0009 1B       		.uleb128 0x1b
+ 649 000a 0E       		.uleb128 0xe
+ 650 000b 55       		.uleb128 0x55
+ 651 000c 17       		.uleb128 0x17
+ 652 000d 11       		.uleb128 0x11
+ 653 000e 01       		.uleb128 0x1
+ 654 000f 10       		.uleb128 0x10
+ 655 0010 17       		.uleb128 0x17
+ 656 0011 00       		.byte	0
+ 657 0012 00       		.byte	0
+ 658 0013 02       		.uleb128 0x2
+ 659 0014 24       		.uleb128 0x24
+ 660 0015 00       		.byte	0
+ 661 0016 0B       		.uleb128 0xb
+ 662 0017 0B       		.uleb128 0xb
+ 663 0018 3E       		.uleb128 0x3e
+ 664 0019 0B       		.uleb128 0xb
+ 665 001a 03       		.uleb128 0x3
+ 666 001b 0E       		.uleb128 0xe
+ 667 001c 00       		.byte	0
+ 668 001d 00       		.byte	0
+ 669 001e 03       		.uleb128 0x3
+ 670 001f 16       		.uleb128 0x16
+ 671 0020 00       		.byte	0
+ 672 0021 03       		.uleb128 0x3
+ 673 0022 0E       		.uleb128 0xe
+ 674 0023 3A       		.uleb128 0x3a
+ 675 0024 0B       		.uleb128 0xb
+ 676 0025 3B       		.uleb128 0x3b
+ 677 0026 0B       		.uleb128 0xb
+ 678 0027 49       		.uleb128 0x49
+ 679 0028 13       		.uleb128 0x13
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 15
+
+
+ 680 0029 00       		.byte	0
+ 681 002a 00       		.byte	0
+ 682 002b 04       		.uleb128 0x4
+ 683 002c 24       		.uleb128 0x24
+ 684 002d 00       		.byte	0
+ 685 002e 0B       		.uleb128 0xb
+ 686 002f 0B       		.uleb128 0xb
+ 687 0030 3E       		.uleb128 0x3e
+ 688 0031 0B       		.uleb128 0xb
+ 689 0032 03       		.uleb128 0x3
+ 690 0033 08       		.uleb128 0x8
+ 691 0034 00       		.byte	0
+ 692 0035 00       		.byte	0
+ 693 0036 05       		.uleb128 0x5
+ 694 0037 04       		.uleb128 0x4
+ 695 0038 01       		.byte	0x1
+ 696 0039 0B       		.uleb128 0xb
+ 697 003a 0B       		.uleb128 0xb
+ 698 003b 49       		.uleb128 0x49
+ 699 003c 13       		.uleb128 0x13
+ 700 003d 3A       		.uleb128 0x3a
+ 701 003e 0B       		.uleb128 0xb
+ 702 003f 3B       		.uleb128 0x3b
+ 703 0040 0B       		.uleb128 0xb
+ 704 0041 01       		.uleb128 0x1
+ 705 0042 13       		.uleb128 0x13
+ 706 0043 00       		.byte	0
+ 707 0044 00       		.byte	0
+ 708 0045 06       		.uleb128 0x6
+ 709 0046 28       		.uleb128 0x28
+ 710 0047 00       		.byte	0
+ 711 0048 03       		.uleb128 0x3
+ 712 0049 0E       		.uleb128 0xe
+ 713 004a 1C       		.uleb128 0x1c
+ 714 004b 0D       		.uleb128 0xd
+ 715 004c 00       		.byte	0
+ 716 004d 00       		.byte	0
+ 717 004e 07       		.uleb128 0x7
+ 718 004f 28       		.uleb128 0x28
+ 719 0050 00       		.byte	0
+ 720 0051 03       		.uleb128 0x3
+ 721 0052 0E       		.uleb128 0xe
+ 722 0053 1C       		.uleb128 0x1c
+ 723 0054 0B       		.uleb128 0xb
+ 724 0055 00       		.byte	0
+ 725 0056 00       		.byte	0
+ 726 0057 08       		.uleb128 0x8
+ 727 0058 35       		.uleb128 0x35
+ 728 0059 00       		.byte	0
+ 729 005a 49       		.uleb128 0x49
+ 730 005b 13       		.uleb128 0x13
+ 731 005c 00       		.byte	0
+ 732 005d 00       		.byte	0
+ 733 005e 09       		.uleb128 0x9
+ 734 005f 26       		.uleb128 0x26
+ 735 0060 00       		.byte	0
+ 736 0061 49       		.uleb128 0x49
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 16
+
+
+ 737 0062 13       		.uleb128 0x13
+ 738 0063 00       		.byte	0
+ 739 0064 00       		.byte	0
+ 740 0065 0A       		.uleb128 0xa
+ 741 0066 01       		.uleb128 0x1
+ 742 0067 01       		.byte	0x1
+ 743 0068 49       		.uleb128 0x49
+ 744 0069 13       		.uleb128 0x13
+ 745 006a 01       		.uleb128 0x1
+ 746 006b 13       		.uleb128 0x13
+ 747 006c 00       		.byte	0
+ 748 006d 00       		.byte	0
+ 749 006e 0B       		.uleb128 0xb
+ 750 006f 21       		.uleb128 0x21
+ 751 0070 00       		.byte	0
+ 752 0071 49       		.uleb128 0x49
+ 753 0072 13       		.uleb128 0x13
+ 754 0073 2F       		.uleb128 0x2f
+ 755 0074 0B       		.uleb128 0xb
+ 756 0075 00       		.byte	0
+ 757 0076 00       		.byte	0
+ 758 0077 0C       		.uleb128 0xc
+ 759 0078 13       		.uleb128 0x13
+ 760 0079 01       		.byte	0x1
+ 761 007a 0B       		.uleb128 0xb
+ 762 007b 0B       		.uleb128 0xb
+ 763 007c 3A       		.uleb128 0x3a
+ 764 007d 0B       		.uleb128 0xb
+ 765 007e 3B       		.uleb128 0x3b
+ 766 007f 0B       		.uleb128 0xb
+ 767 0080 01       		.uleb128 0x1
+ 768 0081 13       		.uleb128 0x13
+ 769 0082 00       		.byte	0
+ 770 0083 00       		.byte	0
+ 771 0084 0D       		.uleb128 0xd
+ 772 0085 0D       		.uleb128 0xd
+ 773 0086 00       		.byte	0
+ 774 0087 03       		.uleb128 0x3
+ 775 0088 0E       		.uleb128 0xe
+ 776 0089 3A       		.uleb128 0x3a
+ 777 008a 0B       		.uleb128 0xb
+ 778 008b 3B       		.uleb128 0x3b
+ 779 008c 0B       		.uleb128 0xb
+ 780 008d 49       		.uleb128 0x49
+ 781 008e 13       		.uleb128 0x13
+ 782 008f 38       		.uleb128 0x38
+ 783 0090 0B       		.uleb128 0xb
+ 784 0091 00       		.byte	0
+ 785 0092 00       		.byte	0
+ 786 0093 0E       		.uleb128 0xe
+ 787 0094 0F       		.uleb128 0xf
+ 788 0095 00       		.byte	0
+ 789 0096 0B       		.uleb128 0xb
+ 790 0097 0B       		.uleb128 0xb
+ 791 0098 49       		.uleb128 0x49
+ 792 0099 13       		.uleb128 0x13
+ 793 009a 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 17
+
+
+ 794 009b 00       		.byte	0
+ 795 009c 0F       		.uleb128 0xf
+ 796 009d 15       		.uleb128 0x15
+ 797 009e 00       		.byte	0
+ 798 009f 27       		.uleb128 0x27
+ 799 00a0 19       		.uleb128 0x19
+ 800 00a1 00       		.byte	0
+ 801 00a2 00       		.byte	0
+ 802 00a3 10       		.uleb128 0x10
+ 803 00a4 15       		.uleb128 0x15
+ 804 00a5 01       		.byte	0x1
+ 805 00a6 27       		.uleb128 0x27
+ 806 00a7 19       		.uleb128 0x19
+ 807 00a8 01       		.uleb128 0x1
+ 808 00a9 13       		.uleb128 0x13
+ 809 00aa 00       		.byte	0
+ 810 00ab 00       		.byte	0
+ 811 00ac 11       		.uleb128 0x11
+ 812 00ad 05       		.uleb128 0x5
+ 813 00ae 00       		.byte	0
+ 814 00af 49       		.uleb128 0x49
+ 815 00b0 13       		.uleb128 0x13
+ 816 00b1 00       		.byte	0
+ 817 00b2 00       		.byte	0
+ 818 00b3 12       		.uleb128 0x12
+ 819 00b4 2E       		.uleb128 0x2e
+ 820 00b5 01       		.byte	0x1
+ 821 00b6 3F       		.uleb128 0x3f
+ 822 00b7 19       		.uleb128 0x19
+ 823 00b8 03       		.uleb128 0x3
+ 824 00b9 0E       		.uleb128 0xe
+ 825 00ba 3A       		.uleb128 0x3a
+ 826 00bb 0B       		.uleb128 0xb
+ 827 00bc 3B       		.uleb128 0x3b
+ 828 00bd 0B       		.uleb128 0xb
+ 829 00be 27       		.uleb128 0x27
+ 830 00bf 19       		.uleb128 0x19
+ 831 00c0 11       		.uleb128 0x11
+ 832 00c1 01       		.uleb128 0x1
+ 833 00c2 12       		.uleb128 0x12
+ 834 00c3 06       		.uleb128 0x6
+ 835 00c4 40       		.uleb128 0x40
+ 836 00c5 18       		.uleb128 0x18
+ 837 00c6 9742     		.uleb128 0x2117
+ 838 00c8 19       		.uleb128 0x19
+ 839 00c9 01       		.uleb128 0x1
+ 840 00ca 13       		.uleb128 0x13
+ 841 00cb 00       		.byte	0
+ 842 00cc 00       		.byte	0
+ 843 00cd 13       		.uleb128 0x13
+ 844 00ce 34       		.uleb128 0x34
+ 845 00cf 00       		.byte	0
+ 846 00d0 03       		.uleb128 0x3
+ 847 00d1 0E       		.uleb128 0xe
+ 848 00d2 3A       		.uleb128 0x3a
+ 849 00d3 0B       		.uleb128 0xb
+ 850 00d4 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 18
+
+
+ 851 00d5 0B       		.uleb128 0xb
+ 852 00d6 49       		.uleb128 0x49
+ 853 00d7 13       		.uleb128 0x13
+ 854 00d8 02       		.uleb128 0x2
+ 855 00d9 18       		.uleb128 0x18
+ 856 00da 00       		.byte	0
+ 857 00db 00       		.byte	0
+ 858 00dc 14       		.uleb128 0x14
+ 859 00dd 898201   		.uleb128 0x4109
+ 860 00e0 01       		.byte	0x1
+ 861 00e1 11       		.uleb128 0x11
+ 862 00e2 01       		.uleb128 0x1
+ 863 00e3 31       		.uleb128 0x31
+ 864 00e4 13       		.uleb128 0x13
+ 865 00e5 00       		.byte	0
+ 866 00e6 00       		.byte	0
+ 867 00e7 15       		.uleb128 0x15
+ 868 00e8 8A8201   		.uleb128 0x410a
+ 869 00eb 00       		.byte	0
+ 870 00ec 02       		.uleb128 0x2
+ 871 00ed 18       		.uleb128 0x18
+ 872 00ee 9142     		.uleb128 0x2111
+ 873 00f0 18       		.uleb128 0x18
+ 874 00f1 00       		.byte	0
+ 875 00f2 00       		.byte	0
+ 876 00f3 16       		.uleb128 0x16
+ 877 00f4 2E       		.uleb128 0x2e
+ 878 00f5 00       		.byte	0
+ 879 00f6 3F       		.uleb128 0x3f
+ 880 00f7 19       		.uleb128 0x19
+ 881 00f8 3C       		.uleb128 0x3c
+ 882 00f9 19       		.uleb128 0x19
+ 883 00fa 6E       		.uleb128 0x6e
+ 884 00fb 0E       		.uleb128 0xe
+ 885 00fc 03       		.uleb128 0x3
+ 886 00fd 0E       		.uleb128 0xe
+ 887 00fe 3A       		.uleb128 0x3a
+ 888 00ff 0B       		.uleb128 0xb
+ 889 0100 3B       		.uleb128 0x3b
+ 890 0101 0B       		.uleb128 0xb
+ 891 0102 00       		.byte	0
+ 892 0103 00       		.byte	0
+ 893 0104 00       		.byte	0
+ 894              		.section	.debug_aranges,"",%progbits
+ 895 0000 24000000 		.4byte	0x24
+ 896 0004 0200     		.2byte	0x2
+ 897 0006 00000000 		.4byte	.Ldebug_info0
+ 898 000a 04       		.byte	0x4
+ 899 000b 00       		.byte	0
+ 900 000c 0000     		.2byte	0
+ 901 000e 0000     		.2byte	0
+ 902 0010 00000000 		.4byte	.LFB57
+ 903 0014 14000000 		.4byte	.LFE57-.LFB57
+ 904 0018 00000000 		.4byte	.LFB58
+ 905 001c 10000000 		.4byte	.LFE58-.LFB58
+ 906 0020 00000000 		.4byte	0
+ 907 0024 00000000 		.4byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 19
+
+
+ 908              		.section	.debug_ranges,"",%progbits
+ 909              	.Ldebug_ranges0:
+ 910 0000 00000000 		.4byte	.LFB57
+ 911 0004 14000000 		.4byte	.LFE57
+ 912 0008 00000000 		.4byte	.LFB58
+ 913 000c 10000000 		.4byte	.LFE58
+ 914 0010 00000000 		.4byte	0
+ 915 0014 00000000 		.4byte	0
+ 916              		.section	.debug_line,"",%progbits
+ 917              	.Ldebug_line0:
+ 918 0000 29020000 		.section	.debug_str,"MS",%progbits,1
+ 918      0200FE01 
+ 918      00000201 
+ 918      FB0E0D00 
+ 918      01010101 
+ 919              	.LASF84:
+ 920 0000 43795F49 		.ascii	"Cy_IPC_SystemPipeInit\000"
+ 920      50435F53 
+ 920      79737465 
+ 920      6D506970 
+ 920      65496E69 
+ 921              	.LASF16:
+ 922 0016 53797354 		.ascii	"SysTick_IRQn\000"
+ 922      69636B5F 
+ 922      4952516E 
+ 922      00
+ 923              	.LASF74:
+ 924 0023 70697065 		.ascii	"pipeIntrSrc\000"
+ 924      496E7472 
+ 924      53726300 
+ 925              	.LASF18:
+ 926 002f 4E766963 		.ascii	"NvicMux1_IRQn\000"
+ 926      4D757831 
+ 926      5F495251 
+ 926      6E00
+ 927              	.LASF21:
+ 928 003d 4E766963 		.ascii	"NvicMux4_IRQn\000"
+ 928      4D757834 
+ 928      5F495251 
+ 928      6E00
+ 929              	.LASF70:
+ 930 004b 63795F69 		.ascii	"cy_ipc_pipe_callback_array_ptr_t\000"
+ 930      70635F70 
+ 930      6970655F 
+ 930      63616C6C 
+ 930      6261636B 
+ 931              	.LASF2:
+ 932 006c 73686F72 		.ascii	"short int\000"
+ 932      7420696E 
+ 932      7400
+ 933              	.LASF80:
+ 934 0076 72656C65 		.ascii	"releaseCallbackPtr\000"
+ 934      61736543 
+ 934      616C6C62 
+ 934      61636B50 
+ 934      747200
+ 935              	.LASF33:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 20
+
+
+ 936 0089 4E766963 		.ascii	"NvicMux16_IRQn\000"
+ 936      4D757831 
+ 936      365F4952 
+ 936      516E00
+ 937              	.LASF51:
+ 938 0098 73697A65 		.ascii	"sizetype\000"
+ 938      74797065 
+ 938      00
+ 939              	.LASF25:
+ 940 00a1 4E766963 		.ascii	"NvicMux8_IRQn\000"
+ 940      4D757838 
+ 940      5F495251 
+ 940      6E00
+ 941              	.LASF73:
+ 942 00af 70697065 		.ascii	"pipeIntMask\000"
+ 942      496E744D 
+ 942      61736B00 
+ 943              	.LASF89:
+ 944 00bb 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 944      43313120 
+ 944      352E342E 
+ 944      31203230 
+ 944      31363036 
+ 945 00ee 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 945      20726576 
+ 945      6973696F 
+ 945      6E203233 
+ 945      37373135 
+ 946 0121 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 946      67202D66 
+ 946      66756E63 
+ 946      74696F6E 
+ 946      2D736563 
+ 947              	.LASF22:
+ 948 014d 4E766963 		.ascii	"NvicMux5_IRQn\000"
+ 948      4D757835 
+ 948      5F495251 
+ 948      6E00
+ 949              	.LASF31:
+ 950 015b 4E766963 		.ascii	"NvicMux14_IRQn\000"
+ 950      4D757831 
+ 950      345F4952 
+ 950      516E00
+ 951              	.LASF19:
+ 952 016a 4E766963 		.ascii	"NvicMux2_IRQn\000"
+ 952      4D757832 
+ 952      5F495251 
+ 952      6E00
+ 953              	.LASF68:
+ 954 0178 63795F69 		.ascii	"cy_ipc_pipe_callback_ptr_t\000"
+ 954      70635F70 
+ 954      6970655F 
+ 954      63616C6C 
+ 954      6261636B 
+ 955              	.LASF28:
+ 956 0193 4E766963 		.ascii	"NvicMux11_IRQn\000"
+ 956      4D757831 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 21
+
+
+ 956      315F4952 
+ 956      516E00
+ 957              	.LASF47:
+ 958 01a2 4E766963 		.ascii	"NvicMux30_IRQn\000"
+ 958      4D757833 
+ 958      305F4952 
+ 958      516E00
+ 959              	.LASF43:
+ 960 01b1 4E766963 		.ascii	"NvicMux26_IRQn\000"
+ 960      4D757832 
+ 960      365F4952 
+ 960      516E00
+ 961              	.LASF76:
+ 962 01c0 69706349 		.ascii	"ipcIntrPtr\000"
+ 962      6E747250 
+ 962      747200
+ 963              	.LASF75:
+ 964 01cb 69706350 		.ascii	"ipcPtr\000"
+ 964      747200
+ 965              	.LASF40:
+ 966 01d2 4E766963 		.ascii	"NvicMux23_IRQn\000"
+ 966      4D757832 
+ 966      335F4952 
+ 966      516E00
+ 967              	.LASF37:
+ 968 01e1 4E766963 		.ascii	"NvicMux20_IRQn\000"
+ 968      4D757832 
+ 968      305F4952 
+ 968      516E00
+ 969              	.LASF87:
+ 970 01f0 43795F49 		.ascii	"Cy_IPC_Sema_Init\000"
+ 970      50435F53 
+ 970      656D615F 
+ 970      496E6974 
+ 970      00
+ 971              	.LASF88:
+ 972 0201 43795F49 		.ascii	"Cy_IPC_Pipe_Config\000"
+ 972      50435F50 
+ 972      6970655F 
+ 972      436F6E66 
+ 972      696700
+ 973              	.LASF61:
+ 974 0214 494E5452 		.ascii	"INTR_MASK\000"
+ 974      5F4D4153 
+ 974      4B00
+ 975              	.LASF69:
+ 976 021e 63795F69 		.ascii	"cy_ipc_pipe_relcallback_ptr_t\000"
+ 976      70635F70 
+ 976      6970655F 
+ 976      72656C63 
+ 976      616C6C62 
+ 977              	.LASF65:
+ 978 023c 666C6F61 		.ascii	"float\000"
+ 978      7400
+ 979              	.LASF35:
+ 980 0242 4E766963 		.ascii	"NvicMux18_IRQn\000"
+ 980      4D757831 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 22
+
+
+ 980      385F4952 
+ 980      516E00
+ 981              	.LASF6:
+ 982 0251 6C6F6E67 		.ascii	"long long int\000"
+ 982      206C6F6E 
+ 982      6720696E 
+ 982      7400
+ 983              	.LASF54:
+ 984 025f 4E4F5449 		.ascii	"NOTIFY\000"
+ 984      465900
+ 985              	.LASF4:
+ 986 0266 6C6F6E67 		.ascii	"long int\000"
+ 986      20696E74 
+ 986      00
+ 987              	.LASF11:
+ 988 026f 52657365 		.ascii	"Reset_IRQn\000"
+ 988      745F4952 
+ 988      516E00
+ 989              	.LASF78:
+ 990 027a 636C6965 		.ascii	"clientCount\000"
+ 990      6E74436F 
+ 990      756E7400 
+ 991              	.LASF63:
+ 992 0286 4950435F 		.ascii	"IPC_INTR_STRUCT_Type\000"
+ 992      494E5452 
+ 992      5F535452 
+ 992      5543545F 
+ 992      54797065 
+ 993              	.LASF86:
+ 994 029b 63795F69 		.ascii	"cy_ipc_pipe_sysEpArray\000"
+ 994      70635F70 
+ 994      6970655F 
+ 994      73797345 
+ 994      70417272 
+ 995              	.LASF58:
+ 996 02b2 4950435F 		.ascii	"IPC_STRUCT_Type\000"
+ 996      53545255 
+ 996      43545F54 
+ 996      79706500 
+ 997              	.LASF49:
+ 998 02c2 756E636F 		.ascii	"unconnected_IRQn\000"
+ 998      6E6E6563 
+ 998      7465645F 
+ 998      4952516E 
+ 998      00
+ 999              	.LASF32:
+ 1000 02d3 4E766963 		.ascii	"NvicMux15_IRQn\000"
+ 1000      4D757831 
+ 1000      355F4952 
+ 1000      516E00
+ 1001              	.LASF55:
+ 1002 02e2 44415441 		.ascii	"DATA\000"
+ 1002      00
+ 1003              	.LASF62:
+ 1004 02e7 494E5452 		.ascii	"INTR_MASKED\000"
+ 1004      5F4D4153 
+ 1004      4B454400 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 23
+
+
+ 1005              	.LASF67:
+ 1006 02f3 6C6F6E67 		.ascii	"long double\000"
+ 1006      20646F75 
+ 1006      626C6500 
+ 1007              	.LASF53:
+ 1008 02ff 52454C45 		.ascii	"RELEASE\000"
+ 1008      41534500 
+ 1009              	.LASF1:
+ 1010 0307 756E7369 		.ascii	"unsigned char\000"
+ 1010      676E6564 
+ 1010      20636861 
+ 1010      7200
+ 1011              	.LASF50:
+ 1012 0315 4952516E 		.ascii	"IRQn_Type\000"
+ 1012      5F547970 
+ 1012      6500
+ 1013              	.LASF85:
+ 1014 031f 69706353 		.ascii	"ipcSemaArray\000"
+ 1014      656D6141 
+ 1014      72726179 
+ 1014      00
+ 1015              	.LASF17:
+ 1016 032c 4E766963 		.ascii	"NvicMux0_IRQn\000"
+ 1016      4D757830 
+ 1016      5F495251 
+ 1016      6E00
+ 1017              	.LASF0:
+ 1018 033a 7369676E 		.ascii	"signed char\000"
+ 1018      65642063 
+ 1018      68617200 
+ 1019              	.LASF60:
+ 1020 0346 494E5452 		.ascii	"INTR_SET\000"
+ 1020      5F534554 
+ 1020      00
+ 1021              	.LASF7:
+ 1022 034f 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1022      206C6F6E 
+ 1022      6720756E 
+ 1022      7369676E 
+ 1022      65642069 
+ 1023              	.LASF10:
+ 1024 0366 75696E74 		.ascii	"uint32_t\000"
+ 1024      33325F74 
+ 1024      00
+ 1025              	.LASF29:
+ 1026 036f 4E766963 		.ascii	"NvicMux12_IRQn\000"
+ 1026      4D757831 
+ 1026      325F4952 
+ 1026      516E00
+ 1027              	.LASF15:
+ 1028 037e 50656E64 		.ascii	"PendSV_IRQn\000"
+ 1028      53565F49 
+ 1028      52516E00 
+ 1029              	.LASF91:
+ 1030 038a 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 1030      73657273 
+ 1030      5C506875 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 24
+
+
+ 1030      6F6E675C 
+ 1030      446F6375 
+ 1031 03b8 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 1031      6F742D73 
+ 1031      646B2D69 
+ 1031      6F742D64 
+ 1031      65765C50 
+ 1032 03e9 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 1032      494F542D 
+ 1032      4875622D 
+ 1032      44656D6F 
+ 1032      5C50534F 
+ 1033 041b 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 1033      2D487562 
+ 1033      2D44656D 
+ 1033      6F2E6379 
+ 1033      64736E00 
+ 1034              	.LASF14:
+ 1035 042f 53564361 		.ascii	"SVCall_IRQn\000"
+ 1035      6C6C5F49 
+ 1035      52516E00 
+ 1036              	.LASF13:
+ 1037 043b 48617264 		.ascii	"HardFault_IRQn\000"
+ 1037      4661756C 
+ 1037      745F4952 
+ 1037      516E00
+ 1038              	.LASF71:
+ 1039 044a 69706343 		.ascii	"ipcChan\000"
+ 1039      68616E00 
+ 1040              	.LASF26:
+ 1041 0452 4E766963 		.ascii	"NvicMux9_IRQn\000"
+ 1041      4D757839 
+ 1041      5F495251 
+ 1041      6E00
+ 1042              	.LASF36:
+ 1043 0460 4E766963 		.ascii	"NvicMux19_IRQn\000"
+ 1043      4D757831 
+ 1043      395F4952 
+ 1043      516E00
+ 1044              	.LASF23:
+ 1045 046f 4E766963 		.ascii	"NvicMux6_IRQn\000"
+ 1045      4D757836 
+ 1045      5F495251 
+ 1045      6E00
+ 1046              	.LASF64:
+ 1047 047d 63686172 		.ascii	"char\000"
+ 1047      00
+ 1048              	.LASF20:
+ 1049 0482 4E766963 		.ascii	"NvicMux3_IRQn\000"
+ 1049      4D757833 
+ 1049      5F495251 
+ 1049      6E00
+ 1050              	.LASF90:
+ 1051 0490 63795F69 		.ascii	"cy_ipc_config.c\000"
+ 1051      70635F63 
+ 1051      6F6E6669 
+ 1051      672E6300 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 25
+
+
+ 1052              	.LASF30:
+ 1053 04a0 4E766963 		.ascii	"NvicMux13_IRQn\000"
+ 1053      4D757831 
+ 1053      335F4952 
+ 1053      516E00
+ 1054              	.LASF44:
+ 1055 04af 4E766963 		.ascii	"NvicMux27_IRQn\000"
+ 1055      4D757832 
+ 1055      375F4952 
+ 1055      516E00
+ 1056              	.LASF27:
+ 1057 04be 4E766963 		.ascii	"NvicMux10_IRQn\000"
+ 1057      4D757831 
+ 1057      305F4952 
+ 1057      516E00
+ 1058              	.LASF79:
+ 1059 04cd 63616C6C 		.ascii	"callbackArray\000"
+ 1059      6261636B 
+ 1059      41727261 
+ 1059      7900
+ 1060              	.LASF41:
+ 1061 04db 4E766963 		.ascii	"NvicMux24_IRQn\000"
+ 1061      4D757832 
+ 1061      345F4952 
+ 1061      516E00
+ 1062              	.LASF46:
+ 1063 04ea 4E766963 		.ascii	"NvicMux29_IRQn\000"
+ 1063      4D757832 
+ 1063      395F4952 
+ 1063      516E00
+ 1064              	.LASF59:
+ 1065 04f9 494E5452 		.ascii	"INTR\000"
+ 1065      00
+ 1066              	.LASF38:
+ 1067 04fe 4E766963 		.ascii	"NvicMux21_IRQn\000"
+ 1067      4D757832 
+ 1067      315F4952 
+ 1067      516E00
+ 1068              	.LASF3:
+ 1069 050d 73686F72 		.ascii	"short unsigned int\000"
+ 1069      7420756E 
+ 1069      7369676E 
+ 1069      65642069 
+ 1069      6E7400
+ 1070              	.LASF5:
+ 1071 0520 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1071      20756E73 
+ 1071      69676E65 
+ 1071      6420696E 
+ 1071      7400
+ 1072              	.LASF48:
+ 1073 0532 4E766963 		.ascii	"NvicMux31_IRQn\000"
+ 1073      4D757833 
+ 1073      315F4952 
+ 1073      516E00
+ 1074              	.LASF66:
+ 1075 0541 646F7562 		.ascii	"double\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 26
+
+
+ 1075      6C6500
+ 1076              	.LASF81:
+ 1077 0548 64656661 		.ascii	"defaultReleaseCallbackPtr\000"
+ 1077      756C7452 
+ 1077      656C6561 
+ 1077      73654361 
+ 1077      6C6C6261 
+ 1078              	.LASF34:
+ 1079 0562 4E766963 		.ascii	"NvicMux17_IRQn\000"
+ 1079      4D757831 
+ 1079      375F4952 
+ 1079      516E00
+ 1080              	.LASF77:
+ 1081 0571 62757379 		.ascii	"busy\000"
+ 1081      00
+ 1082              	.LASF72:
+ 1083 0576 696E7472 		.ascii	"intrChan\000"
+ 1083      4368616E 
+ 1083      00
+ 1084              	.LASF9:
+ 1085 057f 5F5F7569 		.ascii	"__uint32_t\000"
+ 1085      6E743332 
+ 1085      5F7400
+ 1086              	.LASF12:
+ 1087 058a 4E6F6E4D 		.ascii	"NonMaskableInt_IRQn\000"
+ 1087      61736B61 
+ 1087      626C6549 
+ 1087      6E745F49 
+ 1087      52516E00 
+ 1088              	.LASF56:
+ 1089 059e 4C4F434B 		.ascii	"LOCK_STATUS\000"
+ 1089      5F535441 
+ 1089      54555300 
+ 1090              	.LASF24:
+ 1091 05aa 4E766963 		.ascii	"NvicMux7_IRQn\000"
+ 1091      4D757837 
+ 1091      5F495251 
+ 1091      6E00
+ 1092              	.LASF45:
+ 1093 05b8 4E766963 		.ascii	"NvicMux28_IRQn\000"
+ 1093      4D757832 
+ 1093      385F4952 
+ 1093      516E00
+ 1094              	.LASF42:
+ 1095 05c7 4E766963 		.ascii	"NvicMux25_IRQn\000"
+ 1095      4D757832 
+ 1095      355F4952 
+ 1095      516E00
+ 1096              	.LASF82:
+ 1097 05d6 63795F73 		.ascii	"cy_stc_ipc_pipe_ep_t\000"
+ 1097      74635F69 
+ 1097      70635F70 
+ 1097      6970655F 
+ 1097      65705F74 
+ 1098              	.LASF57:
+ 1099 05eb 52455345 		.ascii	"RESERVED\000"
+ 1099      52564544 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\cc9u3plX.s 			page 27
+
+
+ 1099      00
+ 1100              	.LASF8:
+ 1101 05f4 756E7369 		.ascii	"unsigned int\000"
+ 1101      676E6564 
+ 1101      20696E74 
+ 1101      00
+ 1102              	.LASF39:
+ 1103 0601 4E766963 		.ascii	"NvicMux22_IRQn\000"
+ 1103      4D757832 
+ 1103      325F4952 
+ 1103      516E00
+ 1104              	.LASF52:
+ 1105 0610 41435155 		.ascii	"ACQUIRE\000"
+ 1105      49524500 
+ 1106              	.LASF83:
+ 1107 0618 43795F49 		.ascii	"Cy_IPC_SystemSemaInit\000"
+ 1107      50435F53 
+ 1107      79737465 
+ 1107      6D53656D 
+ 1107      61496E69 
+ 1108              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

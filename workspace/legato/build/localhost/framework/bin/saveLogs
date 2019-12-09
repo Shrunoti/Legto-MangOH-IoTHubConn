@@ -1,0 +1,89 @@
+#!/bin/sh
+
+# --------------------------------------------------------------------------------------------------
+# Script to handle the backing up of device logs and core dumps due to application faults.
+#
+# Copyright (C) Sierra Wireless Inc.
+# --------------------------------------------------------------------------------------------------
+
+APP_NAME=$1      # The name of the app that we're running for.
+PROC_NAME=$2     # The name of the process we're backing up logs for.
+
+# Location of the application/framework's home directory.
+if [ "$APP_NAME" = "framework" ]
+then
+    APP_HOME="/"
+else
+    APP_HOME="/legato/systems/current/appsWriteable/$APP_NAME"
+fi
+
+# For apps, we save the logs in the tmp file-system, (normally a RAM disk.)  However, if the
+# system is about to be rebooted, then we backup any previously stored RAM based logs to flash.
+# The new logs will also be stored into flash.
+FLASH_LOC="/mnt/flash/legato_logs"
+RAM_LOC="/tmp/legato_logs"
+
+if [ "$3" = "REBOOT" ]
+then
+    LOG_HOME=$FLASH_LOC
+    mkdir -p "$LOG_HOME"
+
+    # Remove the old logs in the flash-based location.
+    rm -rf "$LOG_HOME/"*
+
+    # Backup RAM-based logs to the flash-based location, only if they exist.
+    cp -r "$RAM_LOC/"* "$LOG_HOME" 2> /dev/null
+else
+    LOG_HOME=$RAM_LOC
+    mkdir -p "$LOG_HOME"
+
+    # Remove all but the 3 most recent of the core and syslog files.
+    rm `ls -t "$LOG_HOME"/core-* 2> /dev/null | tail -n +4` 2> /dev/null
+    rm `ls -t "$LOG_HOME"/syslog-* 2> /dev/null | tail -n +4` 2> /dev/null
+fi
+
+# Get the current time stamp.
+UNIX_TIME=`date +%s`
+
+# Dump the current syslog directly into our output directory.
+/sbin/logread > "$LOG_HOME/syslog-$APP_NAME-$PROC_NAME-$UNIX_TIME"
+
+# Given a list of core files, delete all of them but the first one.
+DeleteAllButFirst()
+{
+    if [ $# -eq 0 ]
+    then
+        return 0
+    fi
+
+    # Drop the first core file from our parameter list.
+    shift 1
+
+    # Now, go through and delete the rest.
+    for FILE in $*
+    do
+        rm "$FILE"
+    done
+}
+
+# Given a list of core files, move the first one into the given target directory.
+MoveFirstCore()
+{
+    CORE_FILE=$1
+    DEST_PATH=$LOG_HOME/core-$APP_NAME-$PROC_NAME-$UNIX_TIME
+
+    # If there weren't any core files found, then there's not much to do here.
+    if [ -z "$CORE_FILE" ]
+    then
+        return 0
+    fi
+
+    mv "$CORE_FILE" "$DEST_PATH"
+}
+
+# Build a list of core files and drop the redundant ones, while moving the latest one to the
+# target directory.
+CORE_LIST=`ls -t "$APP_HOME/core-$PROC_NAME"-* 2> /dev/null`
+
+DeleteAllButFirst $CORE_LIST
+MoveFirstCore $CORE_LIST

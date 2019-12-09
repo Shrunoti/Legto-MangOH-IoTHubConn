@@ -1,0 +1,535 @@
+\hypertarget{fd_monitor_8c}{}\section{framework/liblegato/linux/fd\+Monitor.c File Reference}
+\label{fd_monitor_8c}\index{framework/liblegato/linux/fd\+Monitor.\+c@{framework/liblegato/linux/fd\+Monitor.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}event\+Loop.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}thread.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}fd\+Monitor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$pthread.\+h$>$}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_fd_monitor__t}{Fd\+Monitor\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{fd_monitor_8c_afade2d1c034a300007e1435974a6a0c6}{M\+A\+X\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}~\hyperlink{limit_8h_a089f06d273b054f909c21c092d4b3918}{L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+M\+E\+M\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}
+\begin{DoxyCompactList}\small\item\em Maximum number of bytes in a File Descriptor Monitor\textquotesingle{}s name, including the null terminator. \end{DoxyCompactList}\item 
+\#define \hyperlink{fd_monitor_8c_ac19d988964dd22cd571d09dde4a2b5ae}{D\+E\+F\+A\+U\+L\+T\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+P\+O\+O\+L\+\_\+\+S\+I\+ZE}~10
+\item 
+\#define \hyperlink{fd_monitor_8c_a0376b2ead2de10bb7ab6a4d21ec304e9}{L\+O\+CK}~\hyperlink{sbtrace_8c_a7c6c2e5e914cf8eca19d150e90f3b106}{L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+lock(\&\hyperlink{thread_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{Mutex}) == 0);
+\begin{DoxyCompactList}\small\item\em Locks the mutex. \end{DoxyCompactList}\item 
+\#define \hyperlink{fd_monitor_8c_ac82effb31e82e32254efc8b57251d59e}{U\+N\+L\+O\+CK}~\hyperlink{sbtrace_8c_a7c6c2e5e914cf8eca19d150e90f3b106}{L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+unlock(\&\hyperlink{thread_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{Mutex}) == 0);
+\begin{DoxyCompactList}\small\item\em Unlocks the mutex. \end{DoxyCompactList}\item 
+\#define \hyperlink{fd_monitor_8c_a5f6aa8edcd99914757600b5d3b259bb7}{T\+R\+A\+CE}(...)~\hyperlink{le__log_8h_a331fb6c78ccddeafc455ad9c64e42008}{L\+E\+\_\+\+T\+R\+A\+CE}(\hyperlink{timer_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref}, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+)
+\item 
+\#define \hyperlink{fd_monitor_8c_aad0e6bd30e8a4e8d565bd386765dc3f9}{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}()~\hyperlink{le__log_8h_a0746e2e37585f61ccdf7ce4976909936}{L\+E\+\_\+\+I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}(\hyperlink{timer_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref})
+\begin{DoxyCompactList}\small\item\em Macro used to check if trace output is enabled in this module. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static uint32\+\_\+t \hyperlink{fd_monitor_8c_a930b52156f5e1e9dfd200361345aed8a}{Poll\+To\+E\+Poll} (short poll\+Flags)
+\item 
+static short \hyperlink{fd_monitor_8c_a163677cf8db3df59bc16bae1fec8f7e6}{E\+Poll\+To\+Poll} (uint32\+\_\+t epoll\+Flags)
+\item 
+static const char $\ast$ \hyperlink{fd_monitor_8c_a4fa5e62d8230d8057ac787326bb95c76}{Get\+Poll\+Events\+Text} (char $\ast$buff\+Ptr, size\+\_\+t buff\+Size, short events)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_a946ffcbdfd7745f541f2a4f0fc993d69}{Stop\+Monitoring\+Fd} (\hyperlink{struct_fd_monitor__t}{Fd\+Monitor\+\_\+t} $\ast$fd\+Monitor\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_ad6398cb1fd8ca24dc425a8d59915aa4d}{Delete\+Fd\+Monitor} (\hyperlink{struct_fd_monitor__t}{Fd\+Monitor\+\_\+t} $\ast$fd\+Monitor\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_a522c958875902abca37d843cb879024f}{Dispatch\+To\+Handler} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$param1\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$param2\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_acb8ed5e90ccebc7cdb7f7743bd13fb7d}{Update\+Epoll\+Fd} (\hyperlink{struct_fd_monitor__t}{Fd\+Monitor\+\_\+t} $\ast$monitor\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_a19c8a1005007350074559f38fa0b7fe7}{fd\+Mon\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_ad94f432783c87e2dab5843f40329a04d}{fd\+Mon\+\_\+\+Init\+Thread} (\hyperlink{structevent___per_thread_rec__t}{event\+\_\+\+Per\+Thread\+Rec\+\_\+t} $\ast$per\+Thread\+Rec\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_ae2dd26ce5f3b6ef107675c3f04254418}{fd\+Mon\+\_\+\+Report} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$safe\+Ref, uint32\+\_\+t event\+Flags)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_a4f0026661923bebf05ade496d574cc93}{fd\+Mon\+\_\+\+Destruct\+Thread} (\hyperlink{structevent___per_thread_rec__t}{event\+\_\+\+Per\+Thread\+Rec\+\_\+t} $\ast$per\+Thread\+Rec\+Ptr)
+\item 
+\hyperlink{le__fd_monitor_8h_a85048556f0b95147af81e76907895d42}{le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} \hyperlink{fd_monitor_8c_a52902d634d810f9b7a23c53c9c5164f0}{le\+\_\+fd\+Monitor\+\_\+\+Create} (const char $\ast$name, int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, \hyperlink{le__fd_monitor_8h_ac2d5531f6fae37076c9a79682091a161}{le\+\_\+fd\+Monitor\+\_\+\+Handler\+Func\+\_\+t} handler\+Func, short events)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_a497aee19dbedadf884f404958713b414}{le\+\_\+fd\+Monitor\+\_\+\+Enable} (\hyperlink{le__fd_monitor_8h_a85048556f0b95147af81e76907895d42}{le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} monitor\+Ref, short events)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_ada2b1023507b99e9247175dd3ffe5d48}{le\+\_\+fd\+Monitor\+\_\+\+Disable} (\hyperlink{le__fd_monitor_8h_a85048556f0b95147af81e76907895d42}{le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} monitor\+Ref, short events)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_a66a93ae01f1e6faf1d0c7645752d4442}{le\+\_\+fd\+Monitor\+\_\+\+Set\+Deferrable} (\hyperlink{le__fd_monitor_8h_a85048556f0b95147af81e76907895d42}{le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} monitor\+Ref, bool is\+Deferrable)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_af88e40be018bcd6cd47a64bde49a9f98}{le\+\_\+fd\+Monitor\+\_\+\+Set\+Context\+Ptr} (\hyperlink{le__fd_monitor_8h_a85048556f0b95147af81e76907895d42}{le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} monitor\+Ref, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$ \hyperlink{fd_monitor_8c_a3073205dc7ee7a054857119bc11c9dfc}{le\+\_\+fd\+Monitor\+\_\+\+Get\+Context\+Ptr} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{le__fd_monitor_8h_a85048556f0b95147af81e76907895d42}{le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} \hyperlink{fd_monitor_8c_a688da8b3627d20b01795dfa1ae46bb78}{le\+\_\+fd\+Monitor\+\_\+\+Get\+Monitor} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+int \hyperlink{fd_monitor_8c_af8761888bcd44c4826d02b5e5931168f}{le\+\_\+fd\+Monitor\+\_\+\+Get\+Fd} (\hyperlink{le__fd_monitor_8h_a85048556f0b95147af81e76907895d42}{le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} monitor\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{fd_monitor_8c_ad7f0f1a0cd2f99b081403784f048aef0}{le\+\_\+fd\+Monitor\+\_\+\+Delete} (\hyperlink{le__fd_monitor_8h_a85048556f0b95147af81e76907895d42}{le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} monitor\+Ref)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static pthread\+\_\+key\+\_\+t \hyperlink{fd_monitor_8c_a5807b63ae135315be08e840a5316972d}{F\+D\+Monitor\+Ptr\+Key}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{fd_monitor_8c_ac173ffec077860ae16b85412b4709870}{Fd\+Monitor\+Pool}
+\item 
+static \hyperlink{le__safe_ref_8h_aaf8fb3412fb840cb50366856affaf69b}{le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} \hyperlink{fd_monitor_8c_aa849aa7d1207f8487242ee2d5ccc9314}{Fd\+Monitor\+Ref\+Map}
+\item 
+static pthread\+\_\+mutex\+\_\+t \hyperlink{fd_monitor_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{Mutex} = P\+T\+H\+R\+E\+A\+D\+\_\+\+M\+U\+T\+E\+X\+\_\+\+I\+N\+I\+T\+I\+A\+L\+I\+Z\+ER
+\item 
+static \hyperlink{le__log_8h_a055e29785e8d1c5bf1b3a230df8d65b7}{le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} \hyperlink{fd_monitor_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{fd_monitor_8c_fdMonitor_DataStructures}{}\subsection{Data Structures}\label{fd_monitor_8c_fdMonitor_DataStructures}
+
+\begin{DoxyItemize}
+\item {\bfseries  FD Monitors } -\/ One per monitored file descriptor. Keeps track of the file descriptor, what fd events are being monitored, and what thread is doing the monitoring.
+\end{DoxyItemize}
+
+FD Monitor objects are allocated from the FD Monitor Pool and are kept on the FD Monitor List.\hypertarget{fd_monitor_8c_fdMonitor_Algorithm}{}\subsection{Algorithm}\label{fd_monitor_8c_fdMonitor_Algorithm}
+When a file descriptor event is detected by the Event Loop, \hyperlink{fd_monitor_8c_ae2dd26ce5f3b6ef107675c3f04254418}{fd\+Mon\+\_\+\+Report()} is called with the FD Monitor Reference (a safe reference) and a bit map containing the events that were detected. \hyperlink{fd_monitor_8c_ae2dd26ce5f3b6ef107675c3f04254418}{fd\+Mon\+\_\+\+Report()} queues a function call (\hyperlink{fd_monitor_8c_a522c958875902abca37d843cb879024f}{Dispatch\+To\+Handler()}) to the calling thread. When that function gets called, it does a look-\/up of the safe reference. If it finds an FD Monitor object matching that reference (it could have been deleted in the meantime), then it calls its registered handler function for that event.
+
+The reason it was decided not to use Publish-\/\+Subscribe Events for this feature is that Event I\+Ds can\textquotesingle{}t be deleted, and yet FD Monitors can.
+
+In some cases (e.\+g., with regular files), the fd doesn\textquotesingle{}t support epoll(). In those cases, we treat the fd as if it is always ready to be read from and written to. If either E\+P\+O\+L\+L\+IN or E\+P\+O\+L\+L\+O\+UT are enabled in the epoll events set for such an fd, \hyperlink{fd_monitor_8c_a522c958875902abca37d843cb879024f}{Dispatch\+To\+Handler()} is immediately queued to the thread\textquotesingle{}s Event Queue
+\begin{DoxyItemize}
+\item When the FD Monitor is created,
+\item When \hyperlink{fd_monitor_8c_a522c958875902abca37d843cb879024f}{Dispatch\+To\+Handler()} finishes running the handler function and the FD Monitor has not been deleted and still has at least one of E\+P\+O\+L\+L\+IN or E\+P\+O\+L\+L\+O\+UT enabled.
+\item When \hyperlink{fd_monitor_8c_a497aee19dbedadf884f404958713b414}{le\+\_\+fd\+Monitor\+\_\+\+Enable()} is called for an FD Monitor from outside that FD Monitor\textquotesingle{}s handler.
+\end{DoxyItemize}\hypertarget{fd_monitor_8c_fdMonitor_Threads}{}\subsection{Threads}\label{fd_monitor_8c_fdMonitor_Threads}
+Only the thread that creates an FD Monitor is allowed to perform operations on that FD Monitor, including deleting the FD Monitor.
+
+The Safe Reference Map is shared between threads, though, so any access to it must be protected from races.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!D\+E\+F\+A\+U\+L\+T\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+P\+O\+O\+L\+\_\+\+S\+I\+ZE@{D\+E\+F\+A\+U\+L\+T\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+P\+O\+O\+L\+\_\+\+S\+I\+ZE}}
+\index{D\+E\+F\+A\+U\+L\+T\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+P\+O\+O\+L\+\_\+\+S\+I\+ZE@{D\+E\+F\+A\+U\+L\+T\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+P\+O\+O\+L\+\_\+\+S\+I\+ZE}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{D\+E\+F\+A\+U\+L\+T\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+P\+O\+O\+L\+\_\+\+S\+I\+ZE}{DEFAULT_FD_MONITOR_POOL_SIZE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define D\+E\+F\+A\+U\+L\+T\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+P\+O\+O\+L\+\_\+\+S\+I\+ZE~10}\hypertarget{fd_monitor_8c_ac19d988964dd22cd571d09dde4a2b5ae}{}\label{fd_monitor_8c_ac19d988964dd22cd571d09dde4a2b5ae}
+The number of objects in the process-\/wide FD Monitor Pool, from which all FD Monitor objects are allocated. \begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000039}{Todo}]Make this configurable. \end{DoxyRefDesc}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED@{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}}
+\index{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED@{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}{IS_TRACE_ENABLED}}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED(
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)~{\bf L\+E\+\_\+\+I\+S\+\_\+\+T\+R\+A\+C\+E\+\_\+\+E\+N\+A\+B\+L\+ED}({\bf Trace\+Ref})}\hypertarget{fd_monitor_8c_aad0e6bd30e8a4e8d565bd386765dc3f9}{}\label{fd_monitor_8c_aad0e6bd30e8a4e8d565bd386765dc3f9}
+
+
+Macro used to check if trace output is enabled in this module. 
+
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!L\+O\+CK@{L\+O\+CK}}
+\index{L\+O\+CK@{L\+O\+CK}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{L\+O\+CK}{LOCK}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+CK~{\bf L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+lock(\&{\bf Mutex}) == 0);}\hypertarget{fd_monitor_8c_a0376b2ead2de10bb7ab6a4d21ec304e9}{}\label{fd_monitor_8c_a0376b2ead2de10bb7ab6a4d21ec304e9}
+
+
+Locks the mutex. 
+
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!M\+A\+X\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}}
+\index{M\+A\+X\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES@{M\+A\+X\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}{MAX_FD_MONITOR_NAME_BYTES}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+F\+D\+\_\+\+M\+O\+N\+I\+T\+O\+R\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES~{\bf L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+M\+E\+M\+\_\+\+P\+O\+O\+L\+\_\+\+N\+A\+M\+E\+\_\+\+B\+Y\+T\+ES}}\hypertarget{fd_monitor_8c_afade2d1c034a300007e1435974a6a0c6}{}\label{fd_monitor_8c_afade2d1c034a300007e1435974a6a0c6}
+
+
+Maximum number of bytes in a File Descriptor Monitor\textquotesingle{}s name, including the null terminator. 
+
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!T\+R\+A\+CE@{T\+R\+A\+CE}}
+\index{T\+R\+A\+CE@{T\+R\+A\+CE}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{T\+R\+A\+CE}{TRACE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define T\+R\+A\+CE(
+\begin{DoxyParamCaption}
+\item[{}]{...}
+\end{DoxyParamCaption}
+)~{\bf L\+E\+\_\+\+T\+R\+A\+CE}({\bf Trace\+Ref}, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+)}\hypertarget{fd_monitor_8c_a5f6aa8edcd99914757600b5d3b259bb7}{}\label{fd_monitor_8c_a5f6aa8edcd99914757600b5d3b259bb7}
+Macro used to generate trace output in this module. Takes the same parameters as \hyperlink{le__log_8h_a2a91ea8857cf190fde71d85ba930a498}{L\+E\+\_\+\+D\+E\+B\+U\+G()} et. al. \index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!U\+N\+L\+O\+CK@{U\+N\+L\+O\+CK}}
+\index{U\+N\+L\+O\+CK@{U\+N\+L\+O\+CK}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{U\+N\+L\+O\+CK}{UNLOCK}}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\+N\+L\+O\+CK~{\bf L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+unlock(\&{\bf Mutex}) == 0);}\hypertarget{fd_monitor_8c_ac82effb31e82e32254efc8b57251d59e}{}\label{fd_monitor_8c_ac82effb31e82e32254efc8b57251d59e}
+
+
+Unlocks the mutex. 
+
+
+
+\subsection{Function Documentation}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!Delete\+Fd\+Monitor@{Delete\+Fd\+Monitor}}
+\index{Delete\+Fd\+Monitor@{Delete\+Fd\+Monitor}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Fd\+Monitor(\+Fd\+Monitor\+\_\+t $\ast$fd\+Monitor\+Ptr)}{DeleteFdMonitor(FdMonitor_t *fdMonitorPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+Fd\+Monitor (
+\begin{DoxyParamCaption}
+\item[{{\bf Fd\+Monitor\+\_\+t} $\ast$}]{fd\+Monitor\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_ad6398cb1fd8ca24dc425a8d59915aa4d}{}\label{fd_monitor_8c_ad6398cb1fd8ca24dc425a8d59915aa4d}
+Deletes a FD Monitor object for a given thread. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd\+Monitor\+Ptr} & Pointer to the FD Monitor to be deleted. \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!Dispatch\+To\+Handler@{Dispatch\+To\+Handler}}
+\index{Dispatch\+To\+Handler@{Dispatch\+To\+Handler}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{Dispatch\+To\+Handler(void $\ast$param1\+Ptr, void $\ast$param2\+Ptr)}{DispatchToHandler(void *param1Ptr, void *param2Ptr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Dispatch\+To\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{param1\+Ptr, }
+\item[{{\bf void} $\ast$}]{param2\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_a522c958875902abca37d843cb879024f}{}\label{fd_monitor_8c_a522c958875902abca37d843cb879024f}
+Dispatch an FD Event to the appropriate registered handler function. 
+\begin{DoxyParams}{Parameters}
+{\em param1\+Ptr} & FD Monitor safe reference. \\
+\hline
+{\em param2\+Ptr} & epoll() event flags. \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!E\+Poll\+To\+Poll@{E\+Poll\+To\+Poll}}
+\index{E\+Poll\+To\+Poll@{E\+Poll\+To\+Poll}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{E\+Poll\+To\+Poll(uint32\+\_\+t epoll\+Flags)}{EPollToPoll(uint32_t epollFlags)}}]{\setlength{\rightskip}{0pt plus 5cm}static short E\+Poll\+To\+Poll (
+\begin{DoxyParamCaption}
+\item[{uint32\+\_\+t}]{epoll\+Flags}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_a163677cf8db3df59bc16bae1fec8f7e6}{}\label{fd_monitor_8c_a163677cf8db3df59bc16bae1fec8f7e6}
+Converts a set of epoll(7) event flags into a set of poll(2) event flags.
+
+\begin{DoxyReturn}{Returns}
+Bit map containing poll(2) events flags. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em epoll\+Flags} & Bit map containing epoll(7) event flags. \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!fd\+Mon\+\_\+\+Destruct\+Thread@{fd\+Mon\+\_\+\+Destruct\+Thread}}
+\index{fd\+Mon\+\_\+\+Destruct\+Thread@{fd\+Mon\+\_\+\+Destruct\+Thread}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{fd\+Mon\+\_\+\+Destruct\+Thread(event\+\_\+\+Per\+Thread\+Rec\+\_\+t $\ast$per\+Thread\+Rec\+Ptr)}{fdMon_DestructThread(event_PerThreadRec_t *perThreadRecPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} fd\+Mon\+\_\+\+Destruct\+Thread (
+\begin{DoxyParamCaption}
+\item[{{\bf event\+\_\+\+Per\+Thread\+Rec\+\_\+t} $\ast$}]{per\+Thread\+Rec\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_a4f0026661923bebf05ade496d574cc93}{}\label{fd_monitor_8c_a4f0026661923bebf05ade496d574cc93}
+Delete all FD Monitor objects for the calling thread.
+
+\begin{DoxyNote}{Note}
+This is only called by the thread that is being destructed. 
+\end{DoxyNote}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!fd\+Mon\+\_\+\+Init@{fd\+Mon\+\_\+\+Init}}
+\index{fd\+Mon\+\_\+\+Init@{fd\+Mon\+\_\+\+Init}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{fd\+Mon\+\_\+\+Init(void)}{fdMon_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} fd\+Mon\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_a19c8a1005007350074559f38fa0b7fe7}{}\label{fd_monitor_8c_a19c8a1005007350074559f38fa0b7fe7}
+Initialize the FD Monitor module.
+
+This function must be called exactly once at process start-\/up, before any other FD Monitor functions are called. \begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000040}{Todo}]Make this configurable. \end{DoxyRefDesc}
+
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000041}{Todo}]Make this configurable. \end{DoxyRefDesc}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!fd\+Mon\+\_\+\+Init\+Thread@{fd\+Mon\+\_\+\+Init\+Thread}}
+\index{fd\+Mon\+\_\+\+Init\+Thread@{fd\+Mon\+\_\+\+Init\+Thread}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{fd\+Mon\+\_\+\+Init\+Thread(event\+\_\+\+Per\+Thread\+Rec\+\_\+t $\ast$per\+Thread\+Rec\+Ptr)}{fdMon_InitThread(event_PerThreadRec_t *perThreadRecPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} fd\+Mon\+\_\+\+Init\+Thread (
+\begin{DoxyParamCaption}
+\item[{{\bf event\+\_\+\+Per\+Thread\+Rec\+\_\+t} $\ast$}]{per\+Thread\+Rec\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_ad94f432783c87e2dab5843f40329a04d}{}\label{fd_monitor_8c_ad94f432783c87e2dab5843f40329a04d}
+Initialize the FD Monitor part of the Event Loop A\+PI\textquotesingle{}s per-\/thread record.
+
+This function must be called exactly once at thread start-\/up, before any other FD Monitor functions are called by that thread. \index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!fd\+Mon\+\_\+\+Report@{fd\+Mon\+\_\+\+Report}}
+\index{fd\+Mon\+\_\+\+Report@{fd\+Mon\+\_\+\+Report}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{fd\+Mon\+\_\+\+Report(void $\ast$safe\+Ref, uint32\+\_\+t event\+Flags)}{fdMon_Report(void *safeRef, uint32_t eventFlags)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} fd\+Mon\+\_\+\+Report (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{safe\+Ref, }
+\item[{uint32\+\_\+t}]{event\+Flags}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_ae2dd26ce5f3b6ef107675c3f04254418}{}\label{fd_monitor_8c_ae2dd26ce5f3b6ef107675c3f04254418}
+Report FD Events.
+
+This is called by the Event Loop when it detects events on a file descriptor that is being monitored. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em safe\+Ref} & Safe Reference for the FD Monitor object for the fd. \\
+\hline
+\mbox{\tt in}  & {\em event\+Flags} & OR\textquotesingle{}d together event flags from epoll\+\_\+wait(). \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!Get\+Poll\+Events\+Text@{Get\+Poll\+Events\+Text}}
+\index{Get\+Poll\+Events\+Text@{Get\+Poll\+Events\+Text}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Poll\+Events\+Text(char $\ast$buff\+Ptr, size\+\_\+t buff\+Size, short events)}{GetPollEventsText(char *buffPtr, size_t buffSize, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}static const char$\ast$ Get\+Poll\+Events\+Text (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{buff\+Ptr, }
+\item[{size\+\_\+t}]{buff\+Size, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_a4fa5e62d8230d8057ac787326bb95c76}{}\label{fd_monitor_8c_a4fa5e62d8230d8057ac787326bb95c76}
+Get a human readable string describing the fd events in a given bit map.
+
+\begin{DoxyReturn}{Returns}
+buff\+Ptr. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em buff\+Ptr} & Pointer to buffer to put the string in. \\
+\hline
+{\em buff\+Size} & Size of the buffer, in bytes. \\
+\hline
+{\em events} & Bit map of events (see \textquotesingle{}man 2 poll\textquotesingle{}). \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!le\+\_\+fd\+Monitor\+\_\+\+Create@{le\+\_\+fd\+Monitor\+\_\+\+Create}}
+\index{le\+\_\+fd\+Monitor\+\_\+\+Create@{le\+\_\+fd\+Monitor\+\_\+\+Create}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+fd\+Monitor\+\_\+\+Create(const char $\ast$name, int fd, le\+\_\+fd\+Monitor\+\_\+\+Handler\+Func\+\_\+t handler\+Func, short events)}{le_fdMonitor_Create(const char *name, int fd, le_fdMonitor_HandlerFunc_t handlerFunc, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} le\+\_\+fd\+Monitor\+\_\+\+Create (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{name, }
+\item[{int}]{fd, }
+\item[{{\bf le\+\_\+fd\+Monitor\+\_\+\+Handler\+Func\+\_\+t}}]{handler\+Func, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_a52902d634d810f9b7a23c53c9c5164f0}{}\label{fd_monitor_8c_a52902d634d810f9b7a23c53c9c5164f0}
+Creates a File Descriptor Monitor.
+
+Creates an object that will monitor a given file descriptor for events.
+
+The monitoring will be performed by the event loop of the thread that created the Monitor object. If that thread is blocked, no events will be detected for that file descriptor until that thread is unblocked and returns to its event loop.
+
+Events that can be enabled for monitoring\+:
+
+
+\begin{DoxyItemize}
+\item {\ttfamily P\+O\+L\+L\+IN} = Data available to read.
+\item {\ttfamily P\+O\+L\+L\+P\+RI} = Urgent data available to read (e.\+g., out-\/of-\/band data on a socket).
+\item {\ttfamily P\+O\+L\+L\+O\+UT} = Writing to the fd should accept some data now.
+\end{DoxyItemize}
+
+These are bitmask values and can be combined using the bit-\/wise OR operator (\textquotesingle{}$\vert$\textquotesingle{}).
+
+The following events are always monitored, even if not requested\+:
+
+
+\begin{DoxyItemize}
+\item {\ttfamily P\+O\+L\+L\+R\+D\+H\+UP} = Other end of stream socket closed or shutdown.
+\item {\ttfamily P\+O\+L\+L\+E\+RR} = Error occurred.
+\item {\ttfamily P\+O\+L\+L\+H\+UP} = Hang up.
+\end{DoxyItemize}
+
+\begin{DoxyReturn}{Returns}
+Reference to the object, which is needed for later deletion.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Doesn\textquotesingle{}t return on failure, there\textquotesingle{}s no need to check the return value for errors. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em name} & Name of the object (for diagnostics). \\
+\hline
+\mbox{\tt in}  & {\em fd} & File descriptor to be monitored for events. \\
+\hline
+\mbox{\tt in}  & {\em handler\+Func} & Handler function. \\
+\hline
+\mbox{\tt in}  & {\em events} & Initial set of events to be monitored. \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!le\+\_\+fd\+Monitor\+\_\+\+Delete@{le\+\_\+fd\+Monitor\+\_\+\+Delete}}
+\index{le\+\_\+fd\+Monitor\+\_\+\+Delete@{le\+\_\+fd\+Monitor\+\_\+\+Delete}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+fd\+Monitor\+\_\+\+Delete(le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t monitor\+Ref)}{le_fdMonitor_Delete(le_fdMonitor_Ref_t monitorRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+fd\+Monitor\+\_\+\+Delete (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t}}]{monitor\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_ad7f0f1a0cd2f99b081403784f048aef0}{}\label{fd_monitor_8c_ad7f0f1a0cd2f99b081403784f048aef0}
+Deletes a file descriptor monitor object. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em monitor\+Ref} & Reference to the File Descriptor Monitor object. \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!le\+\_\+fd\+Monitor\+\_\+\+Disable@{le\+\_\+fd\+Monitor\+\_\+\+Disable}}
+\index{le\+\_\+fd\+Monitor\+\_\+\+Disable@{le\+\_\+fd\+Monitor\+\_\+\+Disable}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+fd\+Monitor\+\_\+\+Disable(le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t monitor\+Ref, short events)}{le_fdMonitor_Disable(le_fdMonitor_Ref_t monitorRef, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+fd\+Monitor\+\_\+\+Disable (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t}}]{monitor\+Ref, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_ada2b1023507b99e9247175dd3ffe5d48}{}\label{fd_monitor_8c_ada2b1023507b99e9247175dd3ffe5d48}
+Disables monitoring for events on a file descriptor.
+
+Events that can be disabled for monitoring\+:
+
+
+\begin{DoxyItemize}
+\item {\ttfamily P\+O\+L\+L\+IN} = Data available to read.
+\item {\ttfamily P\+O\+L\+L\+P\+RI} = Urgent data available to read (e.\+g., out-\/of-\/band data on a socket).
+\item {\ttfamily P\+O\+L\+L\+O\+UT} = Writing to the fd should accept some data now.
+\end{DoxyItemize}
+
+These are bitmask values and can be combined using the bit-\/wise OR operator (\textquotesingle{}$\vert$\textquotesingle{}). 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em monitor\+Ref} & Reference to the File Descriptor Monitor object. \\
+\hline
+\mbox{\tt in}  & {\em events} & Bit map of events. \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!le\+\_\+fd\+Monitor\+\_\+\+Enable@{le\+\_\+fd\+Monitor\+\_\+\+Enable}}
+\index{le\+\_\+fd\+Monitor\+\_\+\+Enable@{le\+\_\+fd\+Monitor\+\_\+\+Enable}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+fd\+Monitor\+\_\+\+Enable(le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t monitor\+Ref, short events)}{le_fdMonitor_Enable(le_fdMonitor_Ref_t monitorRef, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+fd\+Monitor\+\_\+\+Enable (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t}}]{monitor\+Ref, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_a497aee19dbedadf884f404958713b414}{}\label{fd_monitor_8c_a497aee19dbedadf884f404958713b414}
+Enables monitoring for events on a file descriptor.
+
+Events that can be enabled for monitoring\+:
+
+
+\begin{DoxyItemize}
+\item {\ttfamily P\+O\+L\+L\+IN} = Data available to read.
+\item {\ttfamily P\+O\+L\+L\+P\+RI} = Urgent data available to read (e.\+g., out-\/of-\/band data on a socket).
+\item {\ttfamily P\+O\+L\+L\+O\+UT} = Writing to the fd should accept some data now.
+\end{DoxyItemize}
+
+These are bitmask values and can be combined using the bit-\/wise OR operator (\textquotesingle{}$\vert$\textquotesingle{}). 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em monitor\+Ref} & Reference to the File Descriptor Monitor object. \\
+\hline
+\mbox{\tt in}  & {\em events} & Bit map of events. \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!le\+\_\+fd\+Monitor\+\_\+\+Get\+Context\+Ptr@{le\+\_\+fd\+Monitor\+\_\+\+Get\+Context\+Ptr}}
+\index{le\+\_\+fd\+Monitor\+\_\+\+Get\+Context\+Ptr@{le\+\_\+fd\+Monitor\+\_\+\+Get\+Context\+Ptr}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+fd\+Monitor\+\_\+\+Get\+Context\+Ptr(void)}{le_fdMonitor_GetContextPtr(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void}$\ast$ le\+\_\+fd\+Monitor\+\_\+\+Get\+Context\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_a3073205dc7ee7a054857119bc11c9dfc}{}\label{fd_monitor_8c_a3073205dc7ee7a054857119bc11c9dfc}
+Gets the Context Pointer for File Descriptor Monitor\textquotesingle{}s handler function.
+
+\begin{DoxyReturn}{Returns}
+The context pointer set using \hyperlink{fd_monitor_8c_af88e40be018bcd6cd47a64bde49a9f98}{le\+\_\+fd\+Monitor\+\_\+\+Set\+Context\+Ptr()}, or N\+U\+LL if it hasn\textquotesingle{}t been set.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+This only works inside the handler function. 
+\end{DoxyNote}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!le\+\_\+fd\+Monitor\+\_\+\+Get\+Fd@{le\+\_\+fd\+Monitor\+\_\+\+Get\+Fd}}
+\index{le\+\_\+fd\+Monitor\+\_\+\+Get\+Fd@{le\+\_\+fd\+Monitor\+\_\+\+Get\+Fd}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+fd\+Monitor\+\_\+\+Get\+Fd(le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t monitor\+Ref)}{le_fdMonitor_GetFd(le_fdMonitor_Ref_t monitorRef)}}]{\setlength{\rightskip}{0pt plus 5cm}int le\+\_\+fd\+Monitor\+\_\+\+Get\+Fd (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t}}]{monitor\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_af8761888bcd44c4826d02b5e5931168f}{}\label{fd_monitor_8c_af8761888bcd44c4826d02b5e5931168f}
+Gets the file descriptor that an FD Monitor object is monitoring.
+
+\begin{DoxyReturn}{Returns}
+The fd. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em monitor\+Ref} & Reference to the File Descriptor Monitor. \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!le\+\_\+fd\+Monitor\+\_\+\+Get\+Monitor@{le\+\_\+fd\+Monitor\+\_\+\+Get\+Monitor}}
+\index{le\+\_\+fd\+Monitor\+\_\+\+Get\+Monitor@{le\+\_\+fd\+Monitor\+\_\+\+Get\+Monitor}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+fd\+Monitor\+\_\+\+Get\+Monitor(void)}{le_fdMonitor_GetMonitor(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t} le\+\_\+fd\+Monitor\+\_\+\+Get\+Monitor (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_a688da8b3627d20b01795dfa1ae46bb78}{}\label{fd_monitor_8c_a688da8b3627d20b01795dfa1ae46bb78}
+Gets a reference to the File Descriptor Monitor whose handler function is currently running.
+
+\begin{DoxyReturn}{Returns}
+File Descriptor Monitor reference.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+This only works inside the handler function. 
+\end{DoxyNote}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!le\+\_\+fd\+Monitor\+\_\+\+Set\+Context\+Ptr@{le\+\_\+fd\+Monitor\+\_\+\+Set\+Context\+Ptr}}
+\index{le\+\_\+fd\+Monitor\+\_\+\+Set\+Context\+Ptr@{le\+\_\+fd\+Monitor\+\_\+\+Set\+Context\+Ptr}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+fd\+Monitor\+\_\+\+Set\+Context\+Ptr(le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t monitor\+Ref, void $\ast$context\+Ptr)}{le_fdMonitor_SetContextPtr(le_fdMonitor_Ref_t monitorRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+fd\+Monitor\+\_\+\+Set\+Context\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t}}]{monitor\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_af88e40be018bcd6cd47a64bde49a9f98}{}\label{fd_monitor_8c_af88e40be018bcd6cd47a64bde49a9f98}
+Sets the Context Pointer for File Descriptor Monitor\textquotesingle{}s handler function. This can be retrieved by the handler by calling \hyperlink{fd_monitor_8c_a3073205dc7ee7a054857119bc11c9dfc}{le\+\_\+fd\+Monitor\+\_\+\+Get\+Context\+Ptr()} when the handler function is running. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em monitor\+Ref} & Reference to the File Descriptor Monitor. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Opaque context pointer value. \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!le\+\_\+fd\+Monitor\+\_\+\+Set\+Deferrable@{le\+\_\+fd\+Monitor\+\_\+\+Set\+Deferrable}}
+\index{le\+\_\+fd\+Monitor\+\_\+\+Set\+Deferrable@{le\+\_\+fd\+Monitor\+\_\+\+Set\+Deferrable}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+fd\+Monitor\+\_\+\+Set\+Deferrable(le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t monitor\+Ref, bool is\+Deferrable)}{le_fdMonitor_SetDeferrable(le_fdMonitor_Ref_t monitorRef, bool isDeferrable)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+fd\+Monitor\+\_\+\+Set\+Deferrable (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+fd\+Monitor\+\_\+\+Ref\+\_\+t}}]{monitor\+Ref, }
+\item[{bool}]{is\+Deferrable}
+\end{DoxyParamCaption}
+)}\hypertarget{fd_monitor_8c_a66a93ae01f1e6faf1d0c7645752d4442}{}\label{fd_monitor_8c_a66a93ae01f1e6faf1d0c7645752d4442}
+Sets if processing of events on a given fd is deferrable (the system is allowed to go to sleep while there are monitored events pending for this fd) or urgent (the system will be kept awake until there are no monitored events waiting to be handled for this fd).
+
+If the process has {\ttfamily C\+A\+P\+\_\+\+E\+P\+O\+L\+L\+W\+A\+K\+E\+UP} (or {\ttfamily C\+A\+P\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+U\+S\+P\+E\+ND}) capability, then fd events are considered urgent by default.
+
+If the process does not have {\ttfamily C\+A\+P\+\_\+\+E\+P\+O\+L\+L\+W\+A\+K\+E\+UP} (or {\ttfamily C\+A\+P\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+U\+S\+P\+E\+ND}) capability, then fd events are always deferrable, and calls to this function have no effect. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em monitor\+Ref} & Reference to the File Descriptor Monitor object. \\
+\hline
+\mbox{\tt in}  & {\em is\+Deferrable} & true (deferrable) or false (urgent). \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!Poll\+To\+E\+Poll@{Poll\+To\+E\+Poll}}
+\index{Poll\+To\+E\+Poll@{Poll\+To\+E\+Poll}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{Poll\+To\+E\+Poll(short poll\+Flags)}{PollToEPoll(short pollFlags)}}]{\setlength{\rightskip}{0pt plus 5cm}static uint32\+\_\+t Poll\+To\+E\+Poll (
+\begin{DoxyParamCaption}
+\item[{short}]{poll\+Flags}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_a930b52156f5e1e9dfd200361345aed8a}{}\label{fd_monitor_8c_a930b52156f5e1e9dfd200361345aed8a}
+Converts a set of poll(2) event flags into a set of epoll(7) event flags.
+
+\begin{DoxyReturn}{Returns}
+Bit map containing epoll(7) events flags. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em poll\+Flags} & Bit map containing poll(2) event flags. \\
+\hline
+\end{DoxyParams}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!Stop\+Monitoring\+Fd@{Stop\+Monitoring\+Fd}}
+\index{Stop\+Monitoring\+Fd@{Stop\+Monitoring\+Fd}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{Stop\+Monitoring\+Fd(\+Fd\+Monitor\+\_\+t $\ast$fd\+Monitor\+Ptr)}{StopMonitoringFd(FdMonitor_t *fdMonitorPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Stop\+Monitoring\+Fd (
+\begin{DoxyParamCaption}
+\item[{{\bf Fd\+Monitor\+\_\+t} $\ast$}]{fd\+Monitor\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_a946ffcbdfd7745f541f2a4f0fc993d69}{}\label{fd_monitor_8c_a946ffcbdfd7745f541f2a4f0fc993d69}
+Tell epoll(7) to stop monitoring an FD Monitor object\textquotesingle{}s fd. \index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!Update\+Epoll\+Fd@{Update\+Epoll\+Fd}}
+\index{Update\+Epoll\+Fd@{Update\+Epoll\+Fd}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{Update\+Epoll\+Fd(\+Fd\+Monitor\+\_\+t $\ast$monitor\+Ptr)}{UpdateEpollFd(FdMonitor_t *monitorPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Update\+Epoll\+Fd (
+\begin{DoxyParamCaption}
+\item[{{\bf Fd\+Monitor\+\_\+t} $\ast$}]{monitor\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_acb8ed5e90ccebc7cdb7f7743bd13fb7d}{}\label{fd_monitor_8c_acb8ed5e90ccebc7cdb7f7743bd13fb7d}
+Update the epoll(7) FD for a given FD Monitor object. 
+
+\subsection{Variable Documentation}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!Fd\+Monitor\+Pool@{Fd\+Monitor\+Pool}}
+\index{Fd\+Monitor\+Pool@{Fd\+Monitor\+Pool}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{Fd\+Monitor\+Pool}{FdMonitorPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Fd\+Monitor\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_ac173ffec077860ae16b85412b4709870}{}\label{fd_monitor_8c_ac173ffec077860ae16b85412b4709870}
+FD Monitor Pool
+
+This is the main pool of FD Monitor objects from which FD Monitor objects are allocated. \index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!F\+D\+Monitor\+Ptr\+Key@{F\+D\+Monitor\+Ptr\+Key}}
+\index{F\+D\+Monitor\+Ptr\+Key@{F\+D\+Monitor\+Ptr\+Key}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{F\+D\+Monitor\+Ptr\+Key}{FDMonitorPtrKey}}]{\setlength{\rightskip}{0pt plus 5cm}pthread\+\_\+key\+\_\+t F\+D\+Monitor\+Ptr\+Key\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_a5807b63ae135315be08e840a5316972d}{}\label{fd_monitor_8c_a5807b63ae135315be08e840a5316972d}
+Thread-\/specific data key for the FD Monitor Ptr of the currently running fd event handler.
+
+This data item will be N\+U\+LL if the thread is not currently running an fd event handler. \index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!Fd\+Monitor\+Ref\+Map@{Fd\+Monitor\+Ref\+Map}}
+\index{Fd\+Monitor\+Ref\+Map@{Fd\+Monitor\+Ref\+Map}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{Fd\+Monitor\+Ref\+Map}{FdMonitorRefMap}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} Fd\+Monitor\+Ref\+Map\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_aa849aa7d1207f8487242ee2d5ccc9314}{}\label{fd_monitor_8c_aa849aa7d1207f8487242ee2d5ccc9314}
+The Safe Reference Map to be used to create FD Monitor References.
+
+\begin{DoxyWarning}{Warning}
+This can be accessed by multiple threads. Use the Mutex to protect it from races. 
+\end{DoxyWarning}
+\index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!Mutex@{Mutex}}
+\index{Mutex@{Mutex}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{Mutex}{Mutex}}]{\setlength{\rightskip}{0pt plus 5cm}pthread\+\_\+mutex\+\_\+t Mutex = P\+T\+H\+R\+E\+A\+D\+\_\+\+M\+U\+T\+E\+X\+\_\+\+I\+N\+I\+T\+I\+A\+L\+I\+Z\+ER\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{}\label{fd_monitor_8c_abc03085ccf7c38e092cdf06bf6b98ea6}
+Mutex used to protect shared data structures in this module. \index{fd\+Monitor.\+c@{fd\+Monitor.\+c}!Trace\+Ref@{Trace\+Ref}}
+\index{Trace\+Ref@{Trace\+Ref}!fd\+Monitor.\+c@{fd\+Monitor.\+c}}
+\subsubsection[{\texorpdfstring{Trace\+Ref}{TraceRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} Trace\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{fd_monitor_8c_a84d541f37420ace8bdf697deca689deb}{}\label{fd_monitor_8c_a84d541f37420ace8bdf697deca689deb}
+Trace reference used for controlling tracing in this module. 

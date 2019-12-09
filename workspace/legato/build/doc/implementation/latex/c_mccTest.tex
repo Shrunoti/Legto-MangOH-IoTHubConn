@@ -1,0 +1,449 @@
+
+\begin{DoxyCodeInclude}
+\textcolor{comment}{ /**}
+\textcolor{comment}{  * This module implements the le\_mcc's tests.}
+\textcolor{comment}{  *}
+\textcolor{comment}{  *}
+\textcolor{comment}{  * Copyright (C) Sierra Wireless Inc.}
+\textcolor{comment}{  *}
+\textcolor{comment}{  */}
+
+\textcolor{preprocessor}{#include "\hyperlink{legato_8h}{legato.h}"}
+\textcolor{preprocessor}{#include "interfaces.h"}
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test sequence Structure list}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{typedef} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} (*TestFunc)(\hyperlink{_t_e_m_p_l_a_t_e__interface_8h_ac9c84fa68bbad002983e35ce3663c686}{void});
+
+\textcolor{keyword}{typedef} \textcolor{keyword}{struct}
+\{
+        \textcolor{keywordtype}{char} * name;
+        TestFunc ptrfunc;
+\} myStruct;
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * CLIR field valid or not.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{bool} ClirValid = \textcolor{keyword}{true};
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Calling Line Identification Restriction setting for the destination phone number to used.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \hyperlink{le__basics_8h_ae2138c90c41d30e2d510be01d8b374da}{le\_onoff\_t} ClirStatus = \hyperlink{le__basics_8h_ae2138c90c41d30e2d510be01d8b374daa66236546b5af0328d2db0e6970f67e50}{LE\_OFF};
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Call Reference.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \hyperlink{le__mcc__interface_8h_a8ae6dac3ca12854884d63e17d5388a7a}{le\_mcc\_CallRef\_t} TestCallRef;
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Hang Up Timer Reference.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\_timer\_Ref\_t} HangUpTimer;
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Destination Phone number.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{char}  DestinationNumber[\hyperlink{le__mdm_defs__interface_8h_ae6d4a4c7892f14d1e340f8df083d479f}{LE\_MDMDEFS\_PHONE\_NUM\_MAX\_BYTES}];
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * The audio AMR Wideband capability}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{bool} AmrWbCapState = \textcolor{keyword}{true};
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * HangUp Timer handler.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} HangUpTimerHandler
+(
+    \hyperlink{le__timer_8h_a763fa6992488cdce3b5a820817094838}{le\_timer\_Ref\_t} timerRef
+)
+\{
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Hanging up all calls!"});
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}(\hyperlink{le__mcc__interface_8h_a38ac8543a579ecc81430c121a64bd346}{le\_mcc\_HangUpAll}() != LE\_OK, \textcolor{stringliteral}{"Could not hangup."});
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Handler function for Call Event Notifications.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} MyCallEventHandler
+(
+    \hyperlink{le__mcc__interface_8h_a8ae6dac3ca12854884d63e17d5388a7a}{le\_mcc\_CallRef\_t}  callRef,
+    \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cf}{le\_mcc\_Event\_t} callEvent,
+    \textcolor{keywordtype}{void}* contextPtr
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t}         res;
+    \textcolor{keyword}{static} \textcolor{keywordtype}{bool} firstConnectCall = \textcolor{keyword}{true};
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"MCC TEST: New Call event: %d for Call %p"}, callEvent, callRef);
+
+    \textcolor{keywordflow}{if} (callEvent == \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cfa05261a9fdb7ee59a0dae1cc27bb30e07}{LE\_MCC\_EVENT\_ALERTING})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Check MyCallEventHandler passed, event is LE\_MCC\_EVENT\_ALERTING."});
+        \textcolor{keywordflow}{if} (firstConnectCall)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"---!!!! PLEASE CHECK ON THE REMOTE SIDE IF THE PHONE NUMBER IS %s !!!!---"},
+                            ((ClirStatus == \hyperlink{le__basics_8h_ae2138c90c41d30e2d510be01d8b374daa73623e8b9450d62517b467b9be2afce8}{LE\_ON}) ? \textcolor{stringliteral}{"HIDED"} : \textcolor{stringliteral}{"DISPLAYED"}));
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"---!!!! PLEASE HANG UP ON THE REMOTE SIDE !!!!---"});
+        \}
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (callEvent == \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cfa86702531207c50314b10ae3278c7ca0d}{LE\_MCC\_EVENT\_CONNECTED})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Check MyCallEventHandler passed, event is LE\_MCC\_EVENT\_CONNECTED."});
+        \textcolor{keywordflow}{if} (firstConnectCall)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"---!!!! PLEASE TERMINATE THE CALL on THE REMOTE SIDE !!!!---"});
+            firstConnectCall = \textcolor{keyword}{false};
+        \}
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (callEvent == \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cfa38b7c4ab21fa9828be8169372e41ae98}{LE\_MCC\_EVENT\_TERMINATED})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Check MyCallEventHandler passed, event is LE\_MCC\_EVENT\_TERMINATED."});
+        \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960d}{le\_mcc\_TerminationReason\_t} term = 
+      \hyperlink{le__mcc__interface_8h_ab16921abc02e0569b129f4a7d92bf3c9}{le\_mcc\_GetTerminationReason}(callRef);
+        int32\_t code = \hyperlink{le__mcc__interface_8h_a68b9b8ed1b221924dcea1be0fd610a54}{le\_mcc\_GetPlatformSpecificTerminationCode}(
+      callRef);
+        \textcolor{keywordflow}{switch}(term)
+        \{
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960da2ef2a4a77e51faec38a2c131ff5d6f24}{LE\_MCC\_TERM\_NETWORK\_FAIL}:
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_NETWORK\_FAIL"});
+                \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960da2efa341f50cb8abef243d8ea2b9fac7d}{LE\_MCC\_TERM\_UNASSIGNED\_NUMBER}:
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_UNASSIGNED\_NUMBER"});
+                \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960dad7664d1f5a0c6517861637d0a083020c}{LE\_MCC\_TERM\_USER\_BUSY}:
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_USER\_BUSY"});
+                \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960daf4262288191582892e6f84e51e3082c1}{LE\_MCC\_TERM\_LOCAL\_ENDED}:
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_LOCAL\_ENDED"});
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"mccTest Sequence SUCCESS"});
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"mccTest test exit"});
+                \hyperlink{le__mcc__interface_8h_a1a016e6443df2d3ee99113649f4f34ae}{le\_mcc\_Delete}(callRef);
+                \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_SUCCESS);
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960dad33c3e71bdfd7513392f28bf2a7e9c9b}{LE\_MCC\_TERM\_REMOTE\_ENDED}:
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_REMOTE\_ENDED"});
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"---!!!! PLEASE CREATE AN INCOMING CALL !!!!---"});
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960da4e0eb63003598ed7103a45ea5521598d}{LE\_MCC\_TERM\_NO\_SERVICE}:
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_NO\_SERVICE"});
+                \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960da4f91eb4e6eec8ed84c3b4b6d1ab949fd}{LE\_MCC\_TERM\_OPERATOR\_DETERMINED\_BARRING}:
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_OPERATOR\_DETERMINED\_BARRING"});
+                \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960da3dbb90bf0628971a6afbd4773fc97c1a}{LE\_MCC\_TERM\_UNDEFINED}:
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Termination reason is LE\_MCC\_TERM\_UNDEFINED"});
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"---!!!! PLEASE CREATE AN INCOMING CALL !!!!---"});
+                \textcolor{keywordflow}{break};
+
+            \textcolor{keywordflow}{default}:
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Termination reason is %d"}, term);
+                \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+                \textcolor{keywordflow}{break};
+        \}
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Termination code is 0x%X"}, code);
+
+        \textcolor{keywordflow}{if} (HangUpTimer)
+        \{
+            \hyperlink{le__timer_8h_af310daa378bd6ca39373a47e073f2243}{le\_timer\_Stop}(HangUpTimer);
+        \}
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (callEvent == \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cfab37936f33d31259ea0c16169ba852bd0}{LE\_MCC\_EVENT\_INCOMING})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Check MyCallEventHandler passed, event is LE\_MCC\_EVENT\_INCOMING."});
+        res = \hyperlink{le__mcc__interface_8h_a598349c6ccfa151dbd1d2f2a9c293ca4}{le\_mcc\_Answer}(callRef);
+        \textcolor{keywordflow}{if} (res == LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Check MyCallEventHandler passed, I answered the call"});
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"All calls will be hung-up in 10 seconds"});
+            \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{watchdog_8c_a8f0ef9d6af3090467f5a969c799ad25d}{le\_timer\_Start}(HangUpTimer) == LE\_OK);
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Check MyCallEventHandler failed to answer the call."});
+        \}
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (callEvent == \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cfa1fa56f470ae87b06edb532f9e2b593e0}{LE\_MCC\_EVENT\_ORIGINATING})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Check MyCallEventHandler passed, event is LE\_MCC\_EVENT\_ORIGINATING."});
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (callEvent == \hyperlink{le__mcc__interface_8h_aefc4679ffa76d0e04c578572c22f06cfa57dc02ca807a7a7c616e947f3651de9f}{LE\_MCC\_EVENT\_SETUP})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Check MyCallEventHandler passed, event is LE\_MCC\_EVENT\_SETUP."});
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Check MyCallEventHandler failed, unknowm event %d."}, callEvent);
+    \}
+\}
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: Create and start a call.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} Testle\_mcc\_Call
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t}          res = \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \hyperlink{le__basics_8h_ae2138c90c41d30e2d510be01d8b374da}{le\_onoff\_t}           localClirStatus;
+    \textcolor{keywordtype}{bool}                 amrWbCapabilityState;
+
+    TestCallRef = \hyperlink{le__mcc__interface_8h_a42130fc6b1d69413a387e3292117b3d3}{le\_mcc\_Create}(DestinationNumber);
+
+    \textcolor{keywordflow}{if} (TestCallRef == NULL)
+    \{
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    \hyperlink{le__mcc__interface_8h_ab826cf4b9e3911e659a90d483081e7fe}{le\_mcc\_AddCallEventHandler}(MyCallEventHandler, NULL);
+
+    \textcolor{keywordflow}{if} (ClirValid == \textcolor{keyword}{true})
+    \{
+        res = \hyperlink{le__mcc__interface_8h_a6b7fda9b1d0f0208a99b4bdcafe97538}{le\_mcc\_SetCallerIdRestrict}(TestCallRef, ClirStatus);
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to set Caller Id Restriction"});
+            \textcolor{keywordflow}{return} res;
+        \}
+    \}
+
+    res = \hyperlink{le__mcc__interface_8h_a54093f7d51cae9a186a97aa799ac3ddc}{le\_mcc\_GetCallerIdRestrict}(TestCallRef, &localClirStatus);
+    \textcolor{keywordflow}{if} (((ClirValid == \textcolor{keyword}{true}) && (res != LE\_OK)) ||
+        ((ClirValid == \textcolor{keyword}{false}) && (res != LE\_OK) && (res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cabf039026140e8a341a0e9bbd78271f23}{LE\_UNAVAILABLE})))
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Failed to get Caller Id Restriction"});
+        \textcolor{keywordflow}{return} res;
+    \}
+
+    \textcolor{keywordflow}{if} ((res == LE\_OK) && (localClirStatus !=  ClirStatus))
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"CLIR status doesn't match with CLIR set"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    \textcolor{keywordflow}{if} (LE\_OK != \hyperlink{le__mcc__interface_8h_ab2df0040963d964f360cb2b7148f9277}{le\_mcc\_SetAmrWbCapability}(AmrWbCapState))
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Set AMR Wideband capability Error"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    \textcolor{keywordflow}{if} (LE\_OK != \hyperlink{le__mcc__interface_8h_a3762311b9860dc66c52b00f4324dc140}{le\_mcc\_GetAmrWbCapability}(&amrWbCapabilityState))
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Get AMR Wideband capability Error"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    \textcolor{keywordflow}{if} (amrWbCapabilityState != AmrWbCapState)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"AMR Wideband capability Error"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__mcc__interface_8h_a72a32869bb23864b3e86c606368bed70}{le\_mcc\_Start}(TestCallRef);
+    \textcolor{keywordflow}{if} (res != LE\_OK)
+    \{
+       \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960d}{le\_mcc\_TerminationReason\_t} reason = 
+      \hyperlink{le__mcc__interface_8h_ab16921abc02e0569b129f4a7d92bf3c9}{le\_mcc\_GetTerminationReason}(TestCallRef);
+
+       \textcolor{keywordflow}{switch}(reason)
+       \{
+           \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960dad24334b942be14ab63255b29492ec3f9}{LE\_MCC\_TERM\_FDN\_ACTIVE}:
+               \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Term reason LE\_MCC\_TERM\_FDN\_ACTIVE"});
+               \textcolor{keywordflow}{break};
+           \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960dac3b888429481ec4ea6cd94de80d11a2c}{LE\_MCC\_TERM\_NOT\_ALLOWED}:
+               \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Term reason LE\_MCC\_TERM\_NOT\_ALLOWED"});
+               \textcolor{keywordflow}{break};
+           \textcolor{keywordflow}{case} \hyperlink{le__mcc__interface_8h_abda706f723ba619f9bc460bcc9a4960da3dbb90bf0628971a6afbd4773fc97c1a}{LE\_MCC\_TERM\_UNDEFINED}:
+               \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Term reason LE\_MCC\_TERM\_UNDEFINED"});
+               \textcolor{keywordflow}{break};
+           \textcolor{keywordflow}{default}:
+               \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Term reason %d"}, reason);
+       \}
+       \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        res = \hyperlink{le__mcc__interface_8h_a72a32869bb23864b3e86c606368bed70}{le\_mcc\_Start}(TestCallRef);
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(res == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY});
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_mcc\_Start() LE\_BUSY test OK"});
+    \}
+
+    \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5066a4bcec691c6b67843b8f79656422}{LE\_OK};
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: Expect an incoming call and then hang-up.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} Testle\_mcc\_HangUpAll
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{comment}{// Set a hang-up timer.}
+    HangUpTimer = \hyperlink{le__timer_8h_aee41169a210378b369f440cf99146522}{le\_timer\_Create}(\textcolor{stringliteral}{"HangUp"});
+
+    \hyperlink{structle__clk___time__t}{le\_clk\_Time\_t} interval = \{10, 0\};
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__timer_8h_a0a103d5cef5e83fc9088859d527bbd43}{le\_timer\_SetInterval}(HangUpTimer, interval) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{update_daemon_8c_ac9249ea73392d7d9ffe947ef6829b551}{le\_timer\_SetHandler}(HangUpTimer, HangUpTimerHandler) == LE\_OK);
+
+    \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5066a4bcec691c6b67843b8f79656422}{LE\_OK};
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{comment}{/*}
+\textcolor{comment}{ * Test init}
+\textcolor{comment}{ *}
+\textcolor{comment}{ * - ME must be registered on Network with the SIM in ready state.}
+\textcolor{comment}{ * - According to PCM or I2S configuration and the type of board, execute the shell commands:}
+\textcolor{comment}{ *   PCM: for AR755x, AR8652 devkit's codec use, "wm8940\_demo --pcm" (not supported on mangOH board)}
+\textcolor{comment}{ *   I2S: for AR755x, AR8652 devkit's codec use, "wm8940\_demo --i2s" (not supported on mangOH board)}
+\textcolor{comment}{ * - Check "logread -f | grep mcc" log}
+\textcolor{comment}{ * - Start app : app start mccTest}
+\textcolor{comment}{ * - Execute app :}
+\textcolor{comment}{ *  app runProc mccTest --exe=mccTest -- <Destination phone number> <CLIR\_ON | CLIR\_OFF | NO\_CLIR>}
+\textcolor{comment}{ *  <AMR\_WB\_ENABLE | AMR\_WB\_DISABLE>}
+\textcolor{comment}{ *   - CLIR\_ON to activate the Calling line identification restriction. Phone Number is not}
+\textcolor{comment}{ * displayed on the remote side.}
+\textcolor{comment}{ *   - CLIR\_OFF to deactivate the Calling line identification restriction. Phone Number can be}
+\textcolor{comment}{ * displayed on the remote side.}
+\textcolor{comment}{ *   - NO\_CLIR to indicate not to set the Calling line identification restriction for this call.}
+\textcolor{comment}{ *   - AMR\_WB\_DISABLE disables the audio AMR Wideband capability.}
+\textcolor{comment}{ *   - AMR\_WB\_ENABLE enables the audio AMR Wideband capability.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\hyperlink{le__event_loop_8h_abdb9187a56836a93d19cc793cbd4b7ec}{COMPONENT\_INIT}
+\{
+    \textcolor{keywordtype}{int} i, nbArgument = 0;
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+    myStruct mcctest[] =
+    \{
+                    \{ \textcolor{stringliteral}{"Test le\_mcc\_Call()"},         Testle\_mcc\_Call \},
+                    \{ \textcolor{stringliteral}{"Test le\_mcc\_HangUpAll()"},    Testle\_mcc\_HangUpAll \},
+                    \{ \textcolor{stringliteral}{""}, NULL \}
+    \};
+
+    nbArgument = \hyperlink{le__args_8h_a6fbbeb423104e6eb92fe47ef42b7310a}{le\_arg\_NumArgs}();
+
+    \textcolor{keywordflow}{if} (3 == nbArgument)
+    \{
+        \textcolor{comment}{// This function gets the telephone number from the User (interactive case).}
+        \textcolor{keyword}{const} \textcolor{keywordtype}{char}* phoneNumber = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(0);
+        \textcolor{keywordflow}{if} (NULL == phoneNumber)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"phoneNumber is NULL"});
+            \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+        \}
+        \textcolor{keyword}{const} \textcolor{keywordtype}{char}* clirStatusStr = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(1);
+        \hyperlink{app_stop_client_8c_a748fa753ce7d07eed585f0c09823cb76}{strncpy}(DestinationNumber, phoneNumber, 
+      \hyperlink{le__mdm_defs__interface_8h_ae6d4a4c7892f14d1e340f8df083d479f}{LE\_MDMDEFS\_PHONE\_NUM\_MAX\_BYTES});
+
+        \textcolor{keywordflow}{if} (clirStatusStr)
+        \{
+           \textcolor{keywordflow}{if} (0 == strcmp(clirStatusStr, \textcolor{stringliteral}{"NO\_CLIR"}))
+           \{
+               ClirValid = \textcolor{keyword}{false};
+               \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Phone number %s, No CLIR"}, DestinationNumber);
+           \}
+           \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (0 == strcmp(clirStatusStr, \textcolor{stringliteral}{"CLIR\_ON"}))
+           \{
+               ClirValid = \textcolor{keyword}{true};
+               ClirStatus = \hyperlink{le__basics_8h_ae2138c90c41d30e2d510be01d8b374daa73623e8b9450d62517b467b9be2afce8}{LE\_ON};
+               \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Phone number %s, CLIR ON"}, DestinationNumber);
+           \}
+           \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (0 == strcmp(clirStatusStr, \textcolor{stringliteral}{"CLIR\_OFF"}))
+           \{
+               ClirValid = \textcolor{keyword}{true};
+               ClirStatus = \hyperlink{le__basics_8h_ae2138c90c41d30e2d510be01d8b374daa66236546b5af0328d2db0e6970f67e50}{LE\_OFF};
+               \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Phone number %s, CLIR OFF"}, DestinationNumber);
+           \}
+           \textcolor{keywordflow}{else}
+           \{
+               \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Incorrect argument '%s'"}, clirStatusStr);
+               \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+           \}
+        \}
+
+        \textcolor{keyword}{const} \textcolor{keywordtype}{char}* amrWbCapStr = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(2);
+
+        \textcolor{keywordflow}{if} (amrWbCapStr)
+        \{
+           \textcolor{keywordflow}{if} (0 == strcmp(amrWbCapStr, \textcolor{stringliteral}{"AMR\_WB\_DISABLE"}))
+           \{
+               AmrWbCapState = \textcolor{keyword}{false};
+           \}
+           \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (0 == strcmp(amrWbCapStr, \textcolor{stringliteral}{"AMR\_WB\_ENABLE"}))
+           \{
+               AmrWbCapState = \textcolor{keyword}{true};
+           \}
+           \textcolor{keywordflow}{else}
+           \{
+               \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Incorrect AMR Widband Capability argument '%s'"}, amrWbCapStr);
+               \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+           \}
+        \}
+
+        \textcolor{keywordflow}{for} (i=0; mcctest[i].ptrfunc != NULL; i++)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Test %s STARTED\(\backslash\)n"}, mcctest[i].name);
+            res = mcctest[i].ptrfunc();
+            \textcolor{keywordflow}{if} (LE\_OK != res)
+            \{
+                \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"Test %s FAILED\(\backslash\)n"}, mcctest[i].name);
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"mccTest sequence FAILED"});
+                \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_FAILURE);
+            \}
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Test %s PASSED\(\backslash\)n"}, mcctest[i].name);
+        \}
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"PRINT USAGE => app runProc mccTest --exe=mccTest -- <Destination phone number>"}
+                        \textcolor{stringliteral}{" <CLIR\_ON | CLIR\_OFF | NO\_CLIR> <AMR\_WB\_ENABLE | AMR\_WB\_DISABLE>"});
+        \hyperlink{app_stop_client_8c_a310220604a584e112ba8f7aa3dfe23f1}{exit}(EXIT\_SUCCESS);
+    \}
+\}
+\end{DoxyCodeInclude}
+ 

@@ -1,0 +1,314 @@
+#! /bin/sh
+
+# options macrandom | macfixed, dhcp | static
+# static forces macfixed
+# static needs more params - how to handle in a script?
+
+cmd_name=$(basename $0)
+
+usage () {
+    echo ""
+    echo "Purpose:"
+    echo "$cmd_name allows the user to configure eth0 including setting the hardware MAC address,"
+    echo "and whether dhcp is used to get an ip address or if the address is static."
+    echo "$cmd_name makes changes to the /etc/network/interfaces file so if you have edited this"
+    echo "file by hand you probably shouldn't use $cmd_name."
+    echo "When you run $cmd_name, the original /etc/network/interfaces file is backed up (with a"
+    echo "timestamp appended to the file name) so you can easily restore it if you accidentally"
+    echo "break custom edits you have made."
+    echo ""
+    echo "Usage:"
+    echo "$cmd_name [macrandom|macfixed] [dhcp|static] [address <address>] [netmask <netmask>] [gateway <gateway>] [nameserver <nameserver>[,<nameserver>...] [mac <mac>]"
+    echo ""
+    echo "If called without arguments or with -h or --help this message will be printed"
+    echo "Arguments are optional and where they are missing, current values will be used where it"
+    echo "makes sense to do so."
+    echo ""
+    echo "By default, developer boards have no fixed MAC address and acquire their ip address by"
+    echo "dhcp. This means that the board will likely have a different ip address on each reboot."
+    echo "When communicating with the target over ethernet is it usually more convenient to have"
+    echo "a static ip address."
+    echo ""
+    echo "e.g. if you want to make it likely that dhcp will assign the same ip address each time"
+    echo "you should have a fixed MAC address."
+    echo ""
+    echo "    $cmd_name macfixed"
+    echo ""
+    echo "will cause the current random MAC address to become the permanent MAC address."
+    echo ""
+    echo "If you wish to set a specific MAC address:"
+    echo ""
+    echo "    $cmd_name mac <mac>   (where <mac> represents a valid MAC address)"
+    echo ""
+    echo "You can set a specific static ip address by:"
+    echo ""
+    echo "    $cmd_name address <address> (where <address> is a valid ipV4 address)"
+    echo ""
+    echo "which will also cause dhcp to be turned off, the MAC address to be fixed, and if"
+    echo "provisioned, the current netmask, gateway and nameserver settings will be made permanent."
+    echo ""
+    echo "If you call"
+    echo ""
+    echo "    $cmd_name static"
+    echo ""
+    echo "the result will be the same as above except that the currently assigned ip address will"
+    echo "be used as the permanent ip address."
+    echo ""
+    echo "Some combinations are invalid and will be flagged as errors."
+    echo "e.g. 'static' and 'macrandom' cannot coextist, nor does it make sense to give an"
+    echo "ip address and also specify dhcp."
+    echo ""
+    echo "$cmd_name 'macrandom' as the sole argument restores the factory default where a different"
+    echo "MAC address will be used on each reboot."
+    echo ""
+    echo "Note: If specifying nameservers, their ip addresses should be separated with commas"
+    echo "and without spaces."
+    exit 1
+}
+
+exit_error () {
+    echo ""
+    echo "ERROR: $1"
+    usage
+}
+
+up_script=/etc/network/if-up.d/static_resolve_conf
+
+write_ifup_script () {
+cat << 'UP_SCRIPT_DATA' >$up_script
+#! /bin/sh
+
+if [ "$IFACE" = "eth0" ]; then
+ns=$(awk 'BEGIN{ in_eth0=0 } \
+     /iface/{ \
+        if ($2 == "eth0"){ \
+            in_eth0=1; \
+        }else{ \
+            in_eth0=0; \
+        } \
+     } \
+     (in_eth0) && ($0 ~ /nameserver/) { $1=""; print $2}' /etc/network/interfaces)
+
+    echo "" >/etc/resolv.conf
+IFS=','
+for s in $ns; do
+    echo "nameserver $s" >> /etc/resolv.conf
+done
+fi
+UP_SCRIPT_DATA
+chmod a+x $up_script
+}
+
+remove_ifup_script () {
+    rm -rf $up_script 2>/dev/null
+}
+
+get_nameservers () {
+    local l=""
+    local n
+    for n in $(awk '/nameserver/{print $2}' /etc/resolv.conf 2>/dev/null); do
+        if [ -n "$l" ]; then
+            l="$l,$n"
+        else
+            l=$n
+        fi
+    done
+
+    echo $l
+}
+
+get_current_settings () {
+    # find out if we are static/dhcp and if we have a fixed mac
+    # we can use set in a function without messing the arg array $@ outside
+    set -- $(awk 'BEGIN{in_eth0=0} \
+    /iface/{if ($2~/eth0/){in_eth0=1; print $4}else{in_eth0=0}} \
+    (in_eth0){if ($1~/hwaddress/){print $3}}' </etc/network/interfaces)
+
+    netassign=$1
+    mac=$2
+    if [ -n "$mac" ]; then
+        mactype="fixed"
+    else
+        mactype="random"
+    fi
+
+    # get nameservers, obviously
+    nameserver=$(get_nameservers)
+
+    # get the mac and ipV4 network params we are currently using
+    r=$(route | awk '/eth0/{if  (/UG/){print "gway="$2; quit} }')
+    r="$r $(ifconfig eth0 | awk '/HWaddr/{print "mac="$5}/inet\W/{sub(/addr:/,"addr=",$2);sub(/Mask:/,"mask=",$4);print $2,$4}')"
+
+    for b in $r
+    do
+        eval $b
+    done
+}
+
+show_settings () {
+    echo "$mactype mac $mac"
+    echo "address assignment $netassign"
+    echo "    address: ${addr:-none}"
+    echo "    netmask: ${mask:-none}"
+    echo "    gateway: ${gway:-none}"
+    echo "    nameservers: ${nameserver:-none}"
+}
+
+if [ $# -eq 0 ];then
+    usage;
+fi
+
+get_current_settings
+
+if [ "$1" = "show" ]
+then
+    show_settings
+    exit 0
+fi
+
+# get options given by user on command line
+while [ $# -gt 0 ]
+do
+    case $1 in
+    -h|--help) usage ;;
+    macrandom) user_mactype_random="random";;
+    macfixed) user_mactype_fixed="fixed";;
+    static) user_netassign_static="static";;
+    dhcp) user_netassign_dhcp="dhcp";;
+    address) shift; user_addr=$1;;
+    netmask) shift; user_mask=$1;;
+    gateway) shift; user_gway=$1;;
+    nameserver) shift; user_nameserver=$1;;
+    mac) shift; user_mac=$1;;
+    *) echo "unknown option $1"; usage;;
+    esac
+    shift
+done
+
+# Now merge those values that exist (user input overrides existing) and make appropriate
+# inferences while alerting user to nonesense input.
+
+user_mactype=${user_mactype_fixed-$user_mactype_random}
+user_netassign=${user_netassign_static-$user_netassign_dhcp}
+
+if [ "$user_mactype" = "random" ]; then
+    if [ -n "$user_mactype_fixed" ]; then
+        exit_error "cannot define both random mac and fixed mac"
+    elif [ -n "$user_mac" ]; then
+        exit_error "cannot define both a hardware mac address and macrandom"
+    elif [ -n "$user_netassign_static" ] || [ -n "$user_addr$user_gway$user_mask$user_nameserver" ]; then
+        exit_error "cannot use a random mac with a static ip parameters"
+    fi
+    mactype=$user_mactype
+    netassign="dhcp"
+    addr=""
+    gway=""
+    mask=""
+    nameserver=""
+    mac=""
+elif [ "$user_netassign" = "dhcp" ]; then
+    if [ -n "$user_netassign_static" ]; then
+        exit_error "cannot define both dhcp and static"
+    elif [ -n "$user_addr$user_gway$user_mask$user_nameserver" ]; then
+        exit_error "cannot define both dhcp and static ip parameters"
+    fi
+    mactype="fixed"
+    netassign="dhcp"
+    addr=""
+    gway=""
+    mask=""
+    nameserver=""
+    mac=${user_mac-$mac}
+elif [ "$user_netassign" = "static" ] || [ -n "$user_mac$user_addr$user_gway$user_mask$user_nameserver" ]; then
+    mactype="fixed"
+    netassign="static"
+    addr=${user_addr-$addr}
+    mask=${user_mask-$mask}
+    gway=${user_gway-$gway}
+    nameserver=${user_nameserver-$nameserver}
+    mac=${user_mac-$mac}
+    if [ `echo $mac | egrep "^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$"` ]; then
+        firstoctet=$(echo $mac | cut -d":" -f1)
+        #Convert Hexadecimal value to Decimal
+        int_firstoctet=$((0x$firstoctet))
+        #If the first octet is odd, this is a multicast MAC, do not allow
+        if [ `expr $int_firstoctet % 2`  -eq 1 ]; then
+            exit_error "Multicast MAC address not allowed."
+        fi
+    else
+        exit_error "Please provide a valid MAC address."
+    fi
+elif [ $user_mactype = "fixed" ]; then
+    if [ -n "$user_addr$user_gway$user_mask$user_nameserver$user_netassign" ]; then
+        echo "Unexpected combination of parameters" >&2
+    fi
+    mactype="fixed"
+    echo "net assign $netassign"
+    netassign=${user_netassign:-$netassign}
+    addr=${user_addr-$addr}
+    mask=${user_mask-$mask}
+    gway=${user_gway-$gway}
+    nameserver=${user_nameserver-$nameserver}
+    mac=${user_mac-$mac}
+else
+# Think that should have covered everything but just incase
+    exit_error "Unable to determine user intent."
+fi
+
+echo "Setting the following:"
+show_settings
+
+# modify interfaces file
+ifile="/etc/network/interfaces"
+dstamp=$(date +%Y%m%d%H%M%S)
+if ! mv "${ifile}" "${ifile}_${dstamp}"
+then
+    exit 1
+fi
+
+# This awk snippet will skip over iface eth0 lines
+# replacing them with lines created from the supplied values.
+awk 'function writeStatic (mac, addr, mask, gway) {
+        print "iface eth0 inet static"
+        if (mac) {print "\thwaddress ether " mac}
+        if (addr) {print "\taddress " addr}
+        if (mask) {print "\tnetmask " mask}
+        if (gway) {print "\tgateway " gway}
+# write nameserver entries
+        if (nameserver) {print "\tnameserver " nameserver}
+    }
+    function writeDhcp (mac) {
+        print "iface eth0 inet dhcp"
+        if (mac) {print "\thwaddress ether " mac}
+    }
+    BEGIN {skip=0}
+    {if ($0 !~ /^[\t ]/) {skip=0}
+     if ($1 == "iface") {
+        if ($2 == "eth0") {
+            skip=1;
+            if (mac && addr) {writeStatic(mac,addr,mask,gway)}
+            else {writeDhcp(mac)}
+            }
+        };
+     if (!skip){print}
+    }' \
+    mac=$mac \
+    addr=$addr \
+    mask=$mask \
+    gway=$gway \
+    nameserver=$nameserver \
+    "${ifile}_${dstamp}" > "${ifile}"
+
+echo "${ifile} has been updated. Original has been renamed ${ifile}_${dstamp}"
+
+if [ "$netassign" = "static" ]; then
+# create the script that updates the resolv.conf if dhcp is not running
+    write_ifup_script
+else
+    remove_ifup_script
+fi
+
+# if this is being run from an ssh connection ssh would hang if we didn't
+# disconnect before the network went down
+nohup sh -c "sleep 1; ifdown eth0; ifup eth0" 2>/dev/null &
+

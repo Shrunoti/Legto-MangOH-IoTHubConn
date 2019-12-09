@@ -1,0 +1,2525 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"lock.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.Lock_Init,"ax",%progbits
+  20              		.align	2
+  21              		.global	Lock_Init
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	Lock_Init, %function
+  25              	Lock_Init:
+  26              	.LFB37:
+  27              		.file 1 "Source\\azure_iot_sdk\\c-utility\\pal\\freertos\\lock.c"
+   1:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** // Copyright (c) Microsoft. All rights reserved.
+   2:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** // Licensed under the MIT license. See LICENSE file in the project root for full license informatio
+   3:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** 
+   4:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** #include "azure_c_shared_utility/lock.h"
+   5:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** #include "azure_c_shared_utility/xlogging.h"
+   6:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** 
+   7:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** 
+   8:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** #include "FreeRTOS.h"
+   9:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** #include "semphr.h"
+  10:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** 
+  11:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** LOCK_HANDLE Lock_Init(void)
+  12:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** {
+  28              		.loc 1 12 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 30B5     		push	{r4, r5, lr}
+  33              		.cfi_def_cfa_offset 12
+  34              		.cfi_offset 4, -12
+  35              		.cfi_offset 5, -8
+  36              		.cfi_offset 14, -4
+  37 0002 83B0     		sub	sp, sp, #12
+  38              		.cfi_def_cfa_offset 24
+  13:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     /* Codes_SRS_LOCK_10_002: [Lock_Init on success shall return a valid lock handle which should b
+  14:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     /* Codes_SRS_LOCK_10_003: [Lock_Init on error shall return NULL ] */
+  15:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     // xSemaphoreCreateMutex is the obvious choice, but it returns a recursive
+  16:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     // sync object, which we do not want for the lock adapter.
+  17:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     SemaphoreHandle_t result = xSemaphoreCreateBinary();
+  39              		.loc 1 17 0
+  40 0004 0322     		movs	r2, #3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 2
+
+
+  41 0006 0021     		movs	r1, #0
+  42 0008 0120     		movs	r0, #1
+  43 000a FFF7FEFF 		bl	xQueueGenericCreate
+  44              	.LVL0:
+  45 000e 041E     		subs	r4, r0, #0
+  46              	.LVL1:
+  18:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     if (result != NULL)
+  47              		.loc 1 18 0
+  48 0010 18D0     		beq	.L2
+  49              	.LBB2:
+  19:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     {
+  20:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         int gv = xSemaphoreGive(result);
+  50              		.loc 1 20 0
+  51 0012 0023     		movs	r3, #0
+  52 0014 0022     		movs	r2, #0
+  53 0016 0021     		movs	r1, #0
+  54 0018 FFF7FEFF 		bl	xQueueGenericSend
+  55              	.LVL2:
+  21:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         if (gv != pdTRUE)
+  56              		.loc 1 21 0
+  57 001c 0128     		cmp	r0, #1
+  58 001e 1ED0     		beq	.L3
+  59              	.LBB3:
+  22:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         {
+  23:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****             LogError("xSemaphoreGive failed after create.");
+  60              		.loc 1 23 0 discriminator 3
+  61 0020 FFF7FEFF 		bl	xlogging_get_log_function
+  62              	.LVL3:
+  63 0024 051E     		subs	r5, r0, #0
+  64              	.LVL4:
+  65 0026 08D0     		beq	.L4
+  66              		.loc 1 23 0 is_stmt 0 discriminator 4
+  67 0028 0E4B     		ldr	r3, .L5
+  68 002a 0193     		str	r3, [sp, #4]
+  69 002c 0123     		movs	r3, #1
+  70 002e 0093     		str	r3, [sp]
+  71 0030 1633     		adds	r3, r3, #22
+  72 0032 0D4A     		ldr	r2, .L5+4
+  73 0034 0D49     		ldr	r1, .L5+8
+  74 0036 0020     		movs	r0, #0
+  75              	.LVL5:
+  76 0038 A847     		blx	r5
+  77              	.LVL6:
+  78              	.L4:
+  79              	.LBE3:
+  24:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****             vSemaphoreDelete(result);
+  80              		.loc 1 24 0 is_stmt 1
+  81 003a 2000     		movs	r0, r4
+  82 003c FFF7FEFF 		bl	vQueueDelete
+  83              	.LVL7:
+  25:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****             result = NULL;
+  84              		.loc 1 25 0
+  85 0040 0024     		movs	r4, #0
+  86 0042 0CE0     		b	.L3
+  87              	.LVL8:
+  88              	.L2:
+  89              	.LBE2:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 3
+
+
+  90              	.LBB4:
+  26:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         }
+  27:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     }
+  28:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     else
+  29:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     {
+  30:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         LogError("xSemaphoreCreateBinary failed.");
+  91              		.loc 1 30 0 discriminator 3
+  92 0044 FFF7FEFF 		bl	xlogging_get_log_function
+  93              	.LVL9:
+  94 0048 051E     		subs	r5, r0, #0
+  95              	.LVL10:
+  96 004a 08D0     		beq	.L3
+  97              		.loc 1 30 0 is_stmt 0 discriminator 4
+  98 004c 084B     		ldr	r3, .L5+12
+  99 004e 0193     		str	r3, [sp, #4]
+ 100 0050 0123     		movs	r3, #1
+ 101 0052 0093     		str	r3, [sp]
+ 102 0054 1D33     		adds	r3, r3, #29
+ 103 0056 044A     		ldr	r2, .L5+4
+ 104 0058 0449     		ldr	r1, .L5+8
+ 105 005a 0020     		movs	r0, #0
+ 106              	.LVL11:
+ 107 005c A847     		blx	r5
+ 108              	.LVL12:
+ 109              	.L3:
+ 110              	.LBE4:
+  31:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     }
+  32:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** 
+  33:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     return (LOCK_HANDLE)result;
+  34:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** }
+ 111              		.loc 1 34 0 is_stmt 1
+ 112 005e 2000     		movs	r0, r4
+ 113 0060 03B0     		add	sp, sp, #12
+ 114              		@ sp needed
+ 115              	.LVL13:
+ 116 0062 30BD     		pop	{r4, r5, pc}
+ 117              	.L6:
+ 118              		.align	2
+ 119              	.L5:
+ 120 0064 34000000 		.word	.LC3
+ 121 0068 00000000 		.word	.LANCHOR0
+ 122 006c 00000000 		.word	.LC1
+ 123 0070 58000000 		.word	.LC5
+ 124              		.cfi_endproc
+ 125              	.LFE37:
+ 126              		.size	Lock_Init, .-Lock_Init
+ 127              		.section	.text.Lock_Deinit,"ax",%progbits
+ 128              		.align	2
+ 129              		.global	Lock_Deinit
+ 130              		.code	16
+ 131              		.thumb_func
+ 132              		.type	Lock_Deinit, %function
+ 133              	Lock_Deinit:
+ 134              	.LFB38:
+  35:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** 
+  36:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** LOCK_RESULT Lock_Deinit(LOCK_HANDLE handle)
+  37:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** {
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 4
+
+
+ 135              		.loc 1 37 0
+ 136              		.cfi_startproc
+ 137              		@ args = 0, pretend = 0, frame = 0
+ 138              		@ frame_needed = 0, uses_anonymous_args = 0
+ 139              	.LVL14:
+ 140 0000 10B5     		push	{r4, lr}
+ 141              		.cfi_def_cfa_offset 8
+ 142              		.cfi_offset 4, -8
+ 143              		.cfi_offset 14, -4
+ 144 0002 82B0     		sub	sp, sp, #8
+ 145              		.cfi_def_cfa_offset 16
+  38:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     LOCK_RESULT result;
+  39:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     if (handle == NULL)
+ 146              		.loc 1 39 0
+ 147 0004 0028     		cmp	r0, #0
+ 148 0006 0FD1     		bne	.L8
+ 149              	.LBB5:
+  40:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     {
+  41:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         /* Codes_SRS_LOCK_10_007: [Lock_Deinit on NULL handle passed returns LOCK_ERROR] */
+  42:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         LogError("Invalid argument; handle is NULL.");
+ 150              		.loc 1 42 0 discriminator 3
+ 151 0008 FFF7FEFF 		bl	xlogging_get_log_function
+ 152              	.LVL15:
+ 153 000c 041E     		subs	r4, r0, #0
+ 154              	.LVL16:
+ 155 000e 0FD0     		beq	.L10
+ 156              		.loc 1 42 0 is_stmt 0 discriminator 4
+ 157 0010 094B     		ldr	r3, .L11
+ 158 0012 0193     		str	r3, [sp, #4]
+ 159 0014 0123     		movs	r3, #1
+ 160 0016 0093     		str	r3, [sp]
+ 161 0018 2933     		adds	r3, r3, #41
+ 162 001a 084A     		ldr	r2, .L11+4
+ 163 001c 0C32     		adds	r2, r2, #12
+ 164 001e 0849     		ldr	r1, .L11+8
+ 165 0020 0020     		movs	r0, #0
+ 166              	.LVL17:
+ 167 0022 A047     		blx	r4
+ 168              	.LVL18:
+ 169              	.LBE5:
+  43:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         result = LOCK_ERROR;
+ 170              		.loc 1 43 0 is_stmt 1 discriminator 4
+ 171 0024 0120     		movs	r0, #1
+ 172 0026 04E0     		b	.L9
+ 173              	.LVL19:
+ 174              	.L8:
+  44:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     }
+  45:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     else
+  46:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     {
+  47:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         /* Codes_SRS_LOCK_10_012: [Lock_Deinit frees the memory pointed by handle] */
+  48:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         vSemaphoreDelete((SemaphoreHandle_t)handle);
+ 175              		.loc 1 48 0
+ 176 0028 FFF7FEFF 		bl	vQueueDelete
+ 177              	.LVL20:
+  49:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         result = LOCK_OK;
+ 178              		.loc 1 49 0
+ 179 002c 0020     		movs	r0, #0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 5
+
+
+ 180 002e 00E0     		b	.L9
+ 181              	.LVL21:
+ 182              	.L10:
+  43:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         result = LOCK_ERROR;
+ 183              		.loc 1 43 0
+ 184 0030 0120     		movs	r0, #1
+ 185              	.LVL22:
+ 186              	.L9:
+  50:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     }
+  51:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** 
+  52:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     return result;
+  53:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** }
+ 187              		.loc 1 53 0
+ 188 0032 02B0     		add	sp, sp, #8
+ 189              		@ sp needed
+ 190 0034 10BD     		pop	{r4, pc}
+ 191              	.L12:
+ 192 0036 C046     		.align	2
+ 193              	.L11:
+ 194 0038 78000000 		.word	.LC9
+ 195 003c 00000000 		.word	.LANCHOR0
+ 196 0040 00000000 		.word	.LC1
+ 197              		.cfi_endproc
+ 198              	.LFE38:
+ 199              		.size	Lock_Deinit, .-Lock_Deinit
+ 200              		.section	.text.Lock,"ax",%progbits
+ 201              		.align	2
+ 202              		.global	Lock
+ 203              		.code	16
+ 204              		.thumb_func
+ 205              		.type	Lock, %function
+ 206              	Lock:
+ 207              	.LFB39:
+  54:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** 
+  55:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** LOCK_RESULT Lock(LOCK_HANDLE handle)
+  56:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** {
+ 208              		.loc 1 56 0
+ 209              		.cfi_startproc
+ 210              		@ args = 0, pretend = 0, frame = 0
+ 211              		@ frame_needed = 0, uses_anonymous_args = 0
+ 212              	.LVL23:
+ 213 0000 10B5     		push	{r4, lr}
+ 214              		.cfi_def_cfa_offset 8
+ 215              		.cfi_offset 4, -8
+ 216              		.cfi_offset 14, -4
+ 217 0002 82B0     		sub	sp, sp, #8
+ 218              		.cfi_def_cfa_offset 16
+  57:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     LOCK_RESULT result;
+  58:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     if (handle == NULL)
+ 219              		.loc 1 58 0
+ 220 0004 0028     		cmp	r0, #0
+ 221 0006 0FD1     		bne	.L14
+ 222              	.LBB6:
+  59:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     {
+  60:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         /* Codes_SRS_LOCK_10_007: [Lock on NULL handle passed returns LOCK_ERROR] */
+  61:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         LogError("Invalid argument; handle is NULL.");
+ 223              		.loc 1 61 0 discriminator 3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 6
+
+
+ 224 0008 FFF7FEFF 		bl	xlogging_get_log_function
+ 225              	.LVL24:
+ 226 000c 041E     		subs	r4, r0, #0
+ 227              	.LVL25:
+ 228 000e 21D0     		beq	.L17
+ 229              		.loc 1 61 0 is_stmt 0 discriminator 4
+ 230 0010 144B     		ldr	r3, .L20
+ 231 0012 0193     		str	r3, [sp, #4]
+ 232 0014 0123     		movs	r3, #1
+ 233 0016 0093     		str	r3, [sp]
+ 234 0018 3C33     		adds	r3, r3, #60
+ 235 001a 134A     		ldr	r2, .L20+4
+ 236 001c 1832     		adds	r2, r2, #24
+ 237 001e 1349     		ldr	r1, .L20+8
+ 238 0020 0020     		movs	r0, #0
+ 239              	.LVL26:
+ 240 0022 A047     		blx	r4
+ 241              	.LVL27:
+ 242              	.LBE6:
+  62:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         result = LOCK_ERROR;
+ 243              		.loc 1 62 0 is_stmt 1 discriminator 4
+ 244 0024 0120     		movs	r0, #1
+ 245 0026 1AE0     		b	.L15
+ 246              	.LVL28:
+ 247              	.L14:
+ 248              	.LBB7:
+  63:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     }
+  64:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     else
+  65:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     {
+  66:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         int rv = xSemaphoreTake((SemaphoreHandle_t)handle, portMAX_DELAY);
+ 249              		.loc 1 66 0
+ 250 0028 0121     		movs	r1, #1
+ 251 002a 4942     		rsbs	r1, r1, #0
+ 252 002c FFF7FEFF 		bl	xQueueSemaphoreTake
+ 253              	.LVL29:
+  67:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         switch (rv)
+ 254              		.loc 1 67 0
+ 255 0030 0128     		cmp	r0, #1
+ 256 0032 11D0     		beq	.L18
+ 257              	.LBB8:
+  68:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         {
+  69:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****             case pdTRUE:
+  70:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 /* Codes_SRS_LOCK_10_005: [Lock on success shall return LOCK_OK] */
+  71:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 result = LOCK_OK;
+  72:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 break;
+  73:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****             default:
+  74:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 LogError("xSemaphoreTake failed.");
+ 258              		.loc 1 74 0
+ 259 0034 FFF7FEFF 		bl	xlogging_get_log_function
+ 260              	.LVL30:
+ 261 0038 041E     		subs	r4, r0, #0
+ 262              	.LVL31:
+ 263 003a 0FD0     		beq	.L19
+ 264              		.loc 1 74 0 is_stmt 0 discriminator 4
+ 265 003c 0C4B     		ldr	r3, .L20+12
+ 266 003e 0193     		str	r3, [sp, #4]
+ 267 0040 0123     		movs	r3, #1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 7
+
+
+ 268 0042 0093     		str	r3, [sp]
+ 269 0044 4933     		adds	r3, r3, #73
+ 270 0046 084A     		ldr	r2, .L20+4
+ 271 0048 1832     		adds	r2, r2, #24
+ 272 004a 0849     		ldr	r1, .L20+8
+ 273 004c 0020     		movs	r0, #0
+ 274              	.LVL32:
+ 275 004e A047     		blx	r4
+ 276              	.LVL33:
+ 277              	.LBE8:
+  75:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 /* Codes_SRS_LOCK_10_006: [Lock on error shall return LOCK_ERROR] */
+  76:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 result = LOCK_ERROR;
+ 278              		.loc 1 76 0 is_stmt 1 discriminator 4
+ 279 0050 0120     		movs	r0, #1
+ 280 0052 04E0     		b	.L15
+ 281              	.LVL34:
+ 282              	.L17:
+ 283              	.LBE7:
+  62:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     }
+ 284              		.loc 1 62 0
+ 285 0054 0120     		movs	r0, #1
+ 286              	.LVL35:
+ 287 0056 02E0     		b	.L15
+ 288              	.LVL36:
+ 289              	.L18:
+ 290              	.LBB9:
+  71:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 break;
+ 291              		.loc 1 71 0
+ 292 0058 0020     		movs	r0, #0
+ 293              	.LVL37:
+ 294 005a 00E0     		b	.L15
+ 295              	.LVL38:
+ 296              	.L19:
+ 297              		.loc 1 76 0
+ 298 005c 0120     		movs	r0, #1
+ 299              	.LVL39:
+ 300              	.L15:
+ 301              	.LBE9:
+  77:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 break;
+  78:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         }
+  79:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     }
+  80:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** 
+  81:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     return result;
+  82:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** }
+ 302              		.loc 1 82 0
+ 303 005e 02B0     		add	sp, sp, #8
+ 304              		@ sp needed
+ 305 0060 10BD     		pop	{r4, pc}
+ 306              	.L21:
+ 307 0062 C046     		.align	2
+ 308              	.L20:
+ 309 0064 78000000 		.word	.LC9
+ 310 0068 00000000 		.word	.LANCHOR0
+ 311 006c 00000000 		.word	.LC1
+ 312 0070 9C000000 		.word	.LC14
+ 313              		.cfi_endproc
+ 314              	.LFE39:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 8
+
+
+ 315              		.size	Lock, .-Lock
+ 316              		.section	.text.Unlock,"ax",%progbits
+ 317              		.align	2
+ 318              		.global	Unlock
+ 319              		.code	16
+ 320              		.thumb_func
+ 321              		.type	Unlock, %function
+ 322              	Unlock:
+ 323              	.LFB40:
+  83:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** 
+  84:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** LOCK_RESULT Unlock(LOCK_HANDLE handle)
+  85:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** {
+ 324              		.loc 1 85 0
+ 325              		.cfi_startproc
+ 326              		@ args = 0, pretend = 0, frame = 0
+ 327              		@ frame_needed = 0, uses_anonymous_args = 0
+ 328              	.LVL40:
+ 329 0000 10B5     		push	{r4, lr}
+ 330              		.cfi_def_cfa_offset 8
+ 331              		.cfi_offset 4, -8
+ 332              		.cfi_offset 14, -4
+ 333 0002 82B0     		sub	sp, sp, #8
+ 334              		.cfi_def_cfa_offset 16
+  86:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     LOCK_RESULT result;
+  87:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     if (handle == NULL)
+ 335              		.loc 1 87 0
+ 336 0004 0028     		cmp	r0, #0
+ 337 0006 0FD1     		bne	.L23
+ 338              	.LBB10:
+  88:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     {
+  89:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         /* Codes_SRS_LOCK_10_007: [Unlock on NULL handle passed returns LOCK_ERROR] */
+  90:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         LogError("Invalid argument; handle is NULL.");
+ 339              		.loc 1 90 0 discriminator 3
+ 340 0008 FFF7FEFF 		bl	xlogging_get_log_function
+ 341              	.LVL41:
+ 342 000c 041E     		subs	r4, r0, #0
+ 343              	.LVL42:
+ 344 000e 22D0     		beq	.L26
+ 345              		.loc 1 90 0 is_stmt 0 discriminator 4
+ 346 0010 144B     		ldr	r3, .L29
+ 347 0012 0193     		str	r3, [sp, #4]
+ 348 0014 0123     		movs	r3, #1
+ 349 0016 0093     		str	r3, [sp]
+ 350 0018 5933     		adds	r3, r3, #89
+ 351 001a 134A     		ldr	r2, .L29+4
+ 352 001c 2032     		adds	r2, r2, #32
+ 353 001e 1349     		ldr	r1, .L29+8
+ 354 0020 0020     		movs	r0, #0
+ 355              	.LVL43:
+ 356 0022 A047     		blx	r4
+ 357              	.LVL44:
+ 358              	.LBE10:
+  91:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         result = LOCK_ERROR;
+ 359              		.loc 1 91 0 is_stmt 1 discriminator 4
+ 360 0024 0120     		movs	r0, #1
+ 361 0026 1BE0     		b	.L24
+ 362              	.LVL45:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 9
+
+
+ 363              	.L23:
+ 364              	.LBB11:
+  92:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     }
+  93:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     else
+  94:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     {
+  95:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         int rv = xSemaphoreGive((SemaphoreHandle_t)handle);
+ 365              		.loc 1 95 0
+ 366 0028 0023     		movs	r3, #0
+ 367 002a 0022     		movs	r2, #0
+ 368 002c 0021     		movs	r1, #0
+ 369 002e FFF7FEFF 		bl	xQueueGenericSend
+ 370              	.LVL46:
+  96:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         switch (rv)
+ 371              		.loc 1 96 0
+ 372 0032 0128     		cmp	r0, #1
+ 373 0034 11D0     		beq	.L27
+ 374              	.LBB12:
+  97:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         {
+  98:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****             case pdTRUE:
+  99:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 /* Codes_SRS_LOCK_10_005: [Lock on success shall return LOCK_OK] */
+ 100:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 result = LOCK_OK;
+ 101:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 break;
+ 102:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****             default:
+ 103:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 LogError("xSemaphoreGive failed.");
+ 375              		.loc 1 103 0
+ 376 0036 FFF7FEFF 		bl	xlogging_get_log_function
+ 377              	.LVL47:
+ 378 003a 041E     		subs	r4, r0, #0
+ 379              	.LVL48:
+ 380 003c 0FD0     		beq	.L28
+ 381              		.loc 1 103 0 is_stmt 0 discriminator 4
+ 382 003e 0C4B     		ldr	r3, .L29+12
+ 383 0040 0193     		str	r3, [sp, #4]
+ 384 0042 0123     		movs	r3, #1
+ 385 0044 0093     		str	r3, [sp]
+ 386 0046 6633     		adds	r3, r3, #102
+ 387 0048 074A     		ldr	r2, .L29+4
+ 388 004a 2032     		adds	r2, r2, #32
+ 389 004c 0749     		ldr	r1, .L29+8
+ 390 004e 0020     		movs	r0, #0
+ 391              	.LVL49:
+ 392 0050 A047     		blx	r4
+ 393              	.LVL50:
+ 394              	.LBE12:
+ 104:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 /* Codes_SRS_LOCK_10_006: [Lock on error shall return LOCK_ERROR] */
+ 105:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 result = LOCK_ERROR;
+ 395              		.loc 1 105 0 is_stmt 1 discriminator 4
+ 396 0052 0120     		movs	r0, #1
+ 397 0054 04E0     		b	.L24
+ 398              	.LVL51:
+ 399              	.L26:
+ 400              	.LBE11:
+  91:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     }
+ 401              		.loc 1 91 0
+ 402 0056 0120     		movs	r0, #1
+ 403              	.LVL52:
+ 404 0058 02E0     		b	.L24
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 10
+
+
+ 405              	.LVL53:
+ 406              	.L27:
+ 407              	.LBB13:
+ 100:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 break;
+ 408              		.loc 1 100 0
+ 409 005a 0020     		movs	r0, #0
+ 410              	.LVL54:
+ 411 005c 00E0     		b	.L24
+ 412              	.LVL55:
+ 413              	.L28:
+ 414              		.loc 1 105 0
+ 415 005e 0120     		movs	r0, #1
+ 416              	.LVL56:
+ 417              	.L24:
+ 418              	.LBE13:
+ 106:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****                 break;
+ 107:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****         }
+ 108:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     }
+ 109:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** 
+ 110:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c ****     return result;
+ 111:Source\azure_iot_sdk\c-utility\pal\freertos/lock.c **** }
+ 419              		.loc 1 111 0
+ 420 0060 02B0     		add	sp, sp, #8
+ 421              		@ sp needed
+ 422 0062 10BD     		pop	{r4, pc}
+ 423              	.L30:
+ 424              		.align	2
+ 425              	.L29:
+ 426 0064 78000000 		.word	.LC9
+ 427 0068 00000000 		.word	.LANCHOR0
+ 428 006c 00000000 		.word	.LC1
+ 429 0070 B4000000 		.word	.LC19
+ 430              		.cfi_endproc
+ 431              	.LFE40:
+ 432              		.size	Unlock, .-Unlock
+ 433              		.section	.rodata
+ 434              		.align	2
+ 435              		.set	.LANCHOR0,. + 0
+ 436              		.type	__func__.10827, %object
+ 437              		.size	__func__.10827, 10
+ 438              	__func__.10827:
+ 439 0000 4C6F636B 		.ascii	"Lock_Init\000"
+ 439      5F496E69 
+ 439      7400
+ 440 000a 0000     		.space	2
+ 441              		.type	__func__.10838, %object
+ 442              		.size	__func__.10838, 12
+ 443              	__func__.10838:
+ 444 000c 4C6F636B 		.ascii	"Lock_Deinit\000"
+ 444      5F446569 
+ 444      6E697400 
+ 445              		.type	__func__.10846, %object
+ 446              		.size	__func__.10846, 5
+ 447              	__func__.10846:
+ 448 0018 4C6F636B 		.ascii	"Lock\000"
+ 448      00
+ 449 001d 000000   		.space	3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 11
+
+
+ 450              		.type	__func__.10861, %object
+ 451              		.size	__func__.10861, 7
+ 452              	__func__.10861:
+ 453 0020 556E6C6F 		.ascii	"Unlock\000"
+ 453      636B00
+ 454              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 455              		.align	2
+ 456              	.LC1:
+ 457 0000 536F7572 		.ascii	"Source\\azure_iot_sdk\\c-utility\\pal\\freertos\\lo"
+ 457      63655C61 
+ 457      7A757265 
+ 457      5F696F74 
+ 457      5F73646B 
+ 458 002e 636B2E63 		.ascii	"ck.c\000"
+ 458      00
+ 459 0033 00       		.space	1
+ 460              	.LC3:
+ 461 0034 7853656D 		.ascii	"xSemaphoreGive failed after create.\000"
+ 461      6170686F 
+ 461      72654769 
+ 461      76652066 
+ 461      61696C65 
+ 462              	.LC5:
+ 463 0058 7853656D 		.ascii	"xSemaphoreCreateBinary failed.\000"
+ 463      6170686F 
+ 463      72654372 
+ 463      65617465 
+ 463      42696E61 
+ 464 0077 00       		.space	1
+ 465              	.LC9:
+ 466 0078 496E7661 		.ascii	"Invalid argument; handle is NULL.\000"
+ 466      6C696420 
+ 466      61726775 
+ 466      6D656E74 
+ 466      3B206861 
+ 467 009a 0000     		.space	2
+ 468              	.LC14:
+ 469 009c 7853656D 		.ascii	"xSemaphoreTake failed.\000"
+ 469      6170686F 
+ 469      72655461 
+ 469      6B652066 
+ 469      61696C65 
+ 470 00b3 00       		.space	1
+ 471              	.LC19:
+ 472 00b4 7853656D 		.ascii	"xSemaphoreGive failed.\000"
+ 472      6170686F 
+ 472      72654769 
+ 472      76652066 
+ 472      61696C65 
+ 473              		.text
+ 474              	.Letext0:
+ 475              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 476              		.file 3 ".\\Source\\azure_iot_sdk\\c-utility\\inc/azure_c_shared_utility/lock.h"
+ 477              		.file 4 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 478              		.file 5 ".\\Source\\azure_iot_sdk\\c-utility\\inc/azure_c_shared_utility/xlogging.h"
+ 479              		.file 6 ".\\Source\\FreeRTOS\\10.0.1\\Source\\portable\\GCC\\CM0/portmacro.h"
+ 480              		.file 7 ".\\Source\\FreeRTOS\\10.0.1\\Source\\include/queue.h"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 12
+
+
+ 481              		.file 8 ".\\Source\\FreeRTOS\\10.0.1\\Source\\include/semphr.h"
+ 482              		.section	.debug_info,"",%progbits
+ 483              	.Ldebug_info0:
+ 484 0000 60060000 		.4byte	0x660
+ 485 0004 0400     		.2byte	0x4
+ 486 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 487 000a 04       		.byte	0x4
+ 488 000b 01       		.uleb128 0x1
+ 489 000c DA020000 		.4byte	.LASF46
+ 490 0010 0C       		.byte	0xc
+ 491 0011 38020000 		.4byte	.LASF47
+ 492 0015 6F010000 		.4byte	.LASF48
+ 493 0019 30000000 		.4byte	.Ldebug_ranges0+0x30
+ 494 001d 00000000 		.4byte	0
+ 495 0021 00000000 		.4byte	.Ldebug_line0
+ 496 0025 02       		.uleb128 0x2
+ 497 0026 04       		.byte	0x4
+ 498 0027 05       		.byte	0x5
+ 499 0028 696E7400 		.ascii	"int\000"
+ 500 002c 03       		.uleb128 0x3
+ 501 002d 04       		.byte	0x4
+ 502 002e 07       		.byte	0x7
+ 503 002f 6E000000 		.4byte	.LASF0
+ 504 0033 03       		.uleb128 0x3
+ 505 0034 08       		.byte	0x8
+ 506 0035 05       		.byte	0x5
+ 507 0036 7B020000 		.4byte	.LASF1
+ 508 003a 03       		.uleb128 0x3
+ 509 003b 08       		.byte	0x8
+ 510 003c 04       		.byte	0x4
+ 511 003d CE020000 		.4byte	.LASF2
+ 512 0041 03       		.uleb128 0x3
+ 513 0042 01       		.byte	0x1
+ 514 0043 06       		.byte	0x6
+ 515 0044 6C030000 		.4byte	.LASF3
+ 516 0048 04       		.uleb128 0x4
+ 517 0049 1A000000 		.4byte	.LASF8
+ 518 004d 02       		.byte	0x2
+ 519 004e 1D       		.byte	0x1d
+ 520 004f 53000000 		.4byte	0x53
+ 521 0053 03       		.uleb128 0x3
+ 522 0054 01       		.byte	0x1
+ 523 0055 08       		.byte	0x8
+ 524 0056 0C010000 		.4byte	.LASF4
+ 525 005a 03       		.uleb128 0x3
+ 526 005b 02       		.byte	0x2
+ 527 005c 05       		.byte	0x5
+ 528 005d 9A020000 		.4byte	.LASF5
+ 529 0061 03       		.uleb128 0x3
+ 530 0062 02       		.byte	0x2
+ 531 0063 07       		.byte	0x7
+ 532 0064 E5000000 		.4byte	.LASF6
+ 533 0068 03       		.uleb128 0x3
+ 534 0069 04       		.byte	0x4
+ 535 006a 05       		.byte	0x5
+ 536 006b C5020000 		.4byte	.LASF7
+ 537 006f 04       		.uleb128 0x4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 13
+
+
+ 538 0070 3B010000 		.4byte	.LASF9
+ 539 0074 02       		.byte	0x2
+ 540 0075 41       		.byte	0x41
+ 541 0076 7A000000 		.4byte	0x7a
+ 542 007a 03       		.uleb128 0x3
+ 543 007b 04       		.byte	0x4
+ 544 007c 07       		.byte	0x7
+ 545 007d C2000000 		.4byte	.LASF10
+ 546 0081 03       		.uleb128 0x3
+ 547 0082 08       		.byte	0x8
+ 548 0083 07       		.byte	0x7
+ 549 0084 97000000 		.4byte	.LASF11
+ 550 0088 03       		.uleb128 0x3
+ 551 0089 04       		.byte	0x4
+ 552 008a 07       		.byte	0x7
+ 553 008b 2F020000 		.4byte	.LASF12
+ 554 008f 05       		.uleb128 0x5
+ 555 0090 04       		.byte	0x4
+ 556 0091 03       		.uleb128 0x3
+ 557 0092 01       		.byte	0x1
+ 558 0093 08       		.byte	0x8
+ 559 0094 95020000 		.4byte	.LASF13
+ 560 0098 06       		.uleb128 0x6
+ 561 0099 04       		.byte	0x4
+ 562 009a 9E000000 		.4byte	0x9e
+ 563 009e 07       		.uleb128 0x7
+ 564 009f 91000000 		.4byte	0x91
+ 565 00a3 04       		.uleb128 0x4
+ 566 00a4 46010000 		.4byte	.LASF14
+ 567 00a8 03       		.byte	0x3
+ 568 00a9 18       		.byte	0x18
+ 569 00aa 8F000000 		.4byte	0x8f
+ 570 00ae 08       		.uleb128 0x8
+ 571 00af 6B020000 		.4byte	.LASF20
+ 572 00b3 01       		.byte	0x1
+ 573 00b4 53000000 		.4byte	0x53
+ 574 00b8 03       		.byte	0x3
+ 575 00b9 20       		.byte	0x20
+ 576 00ba CB000000 		.4byte	0xcb
+ 577 00be 09       		.uleb128 0x9
+ 578 00bf 1A010000 		.4byte	.LASF15
+ 579 00c3 00       		.byte	0
+ 580 00c4 09       		.uleb128 0x9
+ 581 00c5 64010000 		.4byte	.LASF16
+ 582 00c9 01       		.byte	0x1
+ 583 00ca 00       		.byte	0
+ 584 00cb 04       		.uleb128 0x4
+ 585 00cc 89020000 		.4byte	.LASF17
+ 586 00d0 03       		.byte	0x3
+ 587 00d1 20       		.byte	0x20
+ 588 00d2 AE000000 		.4byte	0xae
+ 589 00d6 04       		.uleb128 0x4
+ 590 00d7 20020000 		.4byte	.LASF18
+ 591 00db 04       		.byte	0x4
+ 592 00dc 18       		.byte	0x18
+ 593 00dd 48000000 		.4byte	0x48
+ 594 00e1 04       		.uleb128 0x4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 14
+
+
+ 595 00e2 BC020000 		.4byte	.LASF19
+ 596 00e6 04       		.byte	0x4
+ 597 00e7 30       		.byte	0x30
+ 598 00e8 6F000000 		.4byte	0x6f
+ 599 00ec 08       		.uleb128 0x8
+ 600 00ed D4000000 		.4byte	.LASF21
+ 601 00f1 01       		.byte	0x1
+ 602 00f2 53000000 		.4byte	0x53
+ 603 00f6 05       		.byte	0x5
+ 604 00f7 22       		.byte	0x22
+ 605 00f8 0F010000 		.4byte	0x10f
+ 606 00fc 09       		.uleb128 0x9
+ 607 00fd 61000000 		.4byte	.LASF22
+ 608 0101 00       		.byte	0
+ 609 0102 09       		.uleb128 0x9
+ 610 0103 A4020000 		.4byte	.LASF23
+ 611 0107 01       		.byte	0x1
+ 612 0108 09       		.uleb128 0x9
+ 613 0109 B5000000 		.4byte	.LASF24
+ 614 010d 02       		.byte	0x2
+ 615 010e 00       		.byte	0
+ 616 010f 04       		.uleb128 0x4
+ 617 0110 FF000000 		.4byte	.LASF25
+ 618 0114 05       		.byte	0x5
+ 619 0115 27       		.byte	0x27
+ 620 0116 EC000000 		.4byte	0xec
+ 621 011a 04       		.uleb128 0x4
+ 622 011b 24000000 		.4byte	.LASF26
+ 623 011f 05       		.byte	0x5
+ 624 0120 2F       		.byte	0x2f
+ 625 0121 25010000 		.4byte	0x125
+ 626 0125 06       		.uleb128 0x6
+ 627 0126 04       		.byte	0x4
+ 628 0127 2B010000 		.4byte	0x12b
+ 629 012b 0A       		.uleb128 0xa
+ 630 012c 50010000 		.4byte	0x150
+ 631 0130 0B       		.uleb128 0xb
+ 632 0131 0F010000 		.4byte	0x10f
+ 633 0135 0B       		.uleb128 0xb
+ 634 0136 98000000 		.4byte	0x98
+ 635 013a 0B       		.uleb128 0xb
+ 636 013b 98000000 		.4byte	0x98
+ 637 013f 0B       		.uleb128 0xb
+ 638 0140 25000000 		.4byte	0x25
+ 639 0144 0B       		.uleb128 0xb
+ 640 0145 2C000000 		.4byte	0x2c
+ 641 0149 0B       		.uleb128 0xb
+ 642 014a 98000000 		.4byte	0x98
+ 643 014e 0C       		.uleb128 0xc
+ 644 014f 00       		.byte	0
+ 645 0150 03       		.uleb128 0x3
+ 646 0151 04       		.byte	0x4
+ 647 0152 04       		.byte	0x4
+ 648 0153 91000000 		.4byte	.LASF27
+ 649 0157 03       		.uleb128 0x3
+ 650 0158 08       		.byte	0x8
+ 651 0159 04       		.byte	0x4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 15
+
+
+ 652 015a 22010000 		.4byte	.LASF28
+ 653 015e 04       		.uleb128 0x4
+ 654 015f 8C030000 		.4byte	.LASF29
+ 655 0163 06       		.byte	0x6
+ 656 0164 38       		.byte	0x38
+ 657 0165 68000000 		.4byte	0x68
+ 658 0169 04       		.uleb128 0x4
+ 659 016a 14020000 		.4byte	.LASF30
+ 660 016e 06       		.byte	0x6
+ 661 016f 39       		.byte	0x39
+ 662 0170 7A000000 		.4byte	0x7a
+ 663 0174 04       		.uleb128 0x4
+ 664 0175 2F000000 		.4byte	.LASF31
+ 665 0179 06       		.byte	0x6
+ 666 017a 3F       		.byte	0x3f
+ 667 017b E1000000 		.4byte	0xe1
+ 668 017f 04       		.uleb128 0x4
+ 669 0180 53000000 		.4byte	.LASF32
+ 670 0184 07       		.byte	0x7
+ 671 0185 2E       		.byte	0x2e
+ 672 0186 8F000000 		.4byte	0x8f
+ 673 018a 04       		.uleb128 0x4
+ 674 018b 29010000 		.4byte	.LASF33
+ 675 018f 08       		.byte	0x8
+ 676 0190 25       		.byte	0x25
+ 677 0191 7F010000 		.4byte	0x17f
+ 678 0195 0D       		.uleb128 0xd
+ 679 0196 97030000 		.4byte	.LASF35
+ 680 019a 01       		.byte	0x1
+ 681 019b 0B       		.byte	0xb
+ 682 019c A3000000 		.4byte	0xa3
+ 683 01a0 00000000 		.4byte	.LFB37
+ 684 01a4 74000000 		.4byte	.LFE37-.LFB37
+ 685 01a8 01       		.uleb128 0x1
+ 686 01a9 9C       		.byte	0x9c
+ 687 01aa E7020000 		.4byte	0x2e7
+ 688 01ae 0E       		.uleb128 0xe
+ 689 01af 28020000 		.4byte	.LASF34
+ 690 01b3 01       		.byte	0x1
+ 691 01b4 11       		.byte	0x11
+ 692 01b5 8A010000 		.4byte	0x18a
+ 693 01b9 00000000 		.4byte	.LLST0
+ 694 01bd 0F       		.uleb128 0xf
+ 695 01be 88000000 		.4byte	.LASF37
+ 696 01c2 F7020000 		.4byte	0x2f7
+ 697 01c6 05       		.uleb128 0x5
+ 698 01c7 03       		.byte	0x3
+ 699 01c8 00000000 		.4byte	__func__.10827
+ 700 01cc 10       		.uleb128 0x10
+ 701 01cd 12000000 		.4byte	.LBB2
+ 702 01d1 32000000 		.4byte	.LBE2-.LBB2
+ 703 01d5 74020000 		.4byte	0x274
+ 704 01d9 11       		.uleb128 0x11
+ 705 01da 677600   		.ascii	"gv\000"
+ 706 01dd 01       		.byte	0x1
+ 707 01de 14       		.byte	0x14
+ 708 01df 25000000 		.4byte	0x25
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 16
+
+
+ 709 01e3 4B000000 		.4byte	.LLST1
+ 710 01e7 10       		.uleb128 0x10
+ 711 01e8 20000000 		.4byte	.LBB3
+ 712 01ec 1A000000 		.4byte	.LBE3-.LBB3
+ 713 01f0 40020000 		.4byte	0x240
+ 714 01f4 11       		.uleb128 0x11
+ 715 01f5 6C00     		.ascii	"l\000"
+ 716 01f7 01       		.byte	0x1
+ 717 01f8 17       		.byte	0x17
+ 718 01f9 1A010000 		.4byte	0x11a
+ 719 01fd 5E000000 		.4byte	.LLST2
+ 720 0201 12       		.uleb128 0x12
+ 721 0202 24000000 		.4byte	.LVL3
+ 722 0206 28060000 		.4byte	0x628
+ 723 020a 13       		.uleb128 0x13
+ 724 020b 3A000000 		.4byte	.LVL6
+ 725 020f 02       		.uleb128 0x2
+ 726 0210 75       		.byte	0x75
+ 727 0211 00       		.sleb128 0
+ 728 0212 14       		.uleb128 0x14
+ 729 0213 01       		.uleb128 0x1
+ 730 0214 50       		.byte	0x50
+ 731 0215 01       		.uleb128 0x1
+ 732 0216 30       		.byte	0x30
+ 733 0217 14       		.uleb128 0x14
+ 734 0218 01       		.uleb128 0x1
+ 735 0219 51       		.byte	0x51
+ 736 021a 05       		.uleb128 0x5
+ 737 021b 03       		.byte	0x3
+ 738 021c 00000000 		.4byte	.LC1
+ 739 0220 14       		.uleb128 0x14
+ 740 0221 01       		.uleb128 0x1
+ 741 0222 52       		.byte	0x52
+ 742 0223 05       		.uleb128 0x5
+ 743 0224 03       		.byte	0x3
+ 744 0225 00000000 		.4byte	.LANCHOR0
+ 745 0229 14       		.uleb128 0x14
+ 746 022a 01       		.uleb128 0x1
+ 747 022b 53       		.byte	0x53
+ 748 022c 01       		.uleb128 0x1
+ 749 022d 47       		.byte	0x47
+ 750 022e 14       		.uleb128 0x14
+ 751 022f 02       		.uleb128 0x2
+ 752 0230 7D       		.byte	0x7d
+ 753 0231 00       		.sleb128 0
+ 754 0232 01       		.uleb128 0x1
+ 755 0233 31       		.byte	0x31
+ 756 0234 14       		.uleb128 0x14
+ 757 0235 02       		.uleb128 0x2
+ 758 0236 7D       		.byte	0x7d
+ 759 0237 04       		.sleb128 4
+ 760 0238 05       		.uleb128 0x5
+ 761 0239 03       		.byte	0x3
+ 762 023a 34000000 		.4byte	.LC3
+ 763 023e 00       		.byte	0
+ 764 023f 00       		.byte	0
+ 765 0240 15       		.uleb128 0x15
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 17
+
+
+ 766 0241 1C000000 		.4byte	.LVL2
+ 767 0245 33060000 		.4byte	0x633
+ 768 0249 63020000 		.4byte	0x263
+ 769 024d 14       		.uleb128 0x14
+ 770 024e 01       		.uleb128 0x1
+ 771 024f 50       		.byte	0x50
+ 772 0250 02       		.uleb128 0x2
+ 773 0251 74       		.byte	0x74
+ 774 0252 00       		.sleb128 0
+ 775 0253 14       		.uleb128 0x14
+ 776 0254 01       		.uleb128 0x1
+ 777 0255 51       		.byte	0x51
+ 778 0256 01       		.uleb128 0x1
+ 779 0257 30       		.byte	0x30
+ 780 0258 14       		.uleb128 0x14
+ 781 0259 01       		.uleb128 0x1
+ 782 025a 52       		.byte	0x52
+ 783 025b 01       		.uleb128 0x1
+ 784 025c 30       		.byte	0x30
+ 785 025d 14       		.uleb128 0x14
+ 786 025e 01       		.uleb128 0x1
+ 787 025f 53       		.byte	0x53
+ 788 0260 01       		.uleb128 0x1
+ 789 0261 30       		.byte	0x30
+ 790 0262 00       		.byte	0
+ 791 0263 16       		.uleb128 0x16
+ 792 0264 40000000 		.4byte	.LVL7
+ 793 0268 3F060000 		.4byte	0x63f
+ 794 026c 14       		.uleb128 0x14
+ 795 026d 01       		.uleb128 0x1
+ 796 026e 50       		.byte	0x50
+ 797 026f 02       		.uleb128 0x2
+ 798 0270 74       		.byte	0x74
+ 799 0271 00       		.sleb128 0
+ 800 0272 00       		.byte	0
+ 801 0273 00       		.byte	0
+ 802 0274 10       		.uleb128 0x10
+ 803 0275 44000000 		.4byte	.LBB4
+ 804 0279 1A000000 		.4byte	.LBE4-.LBB4
+ 805 027d CD020000 		.4byte	0x2cd
+ 806 0281 11       		.uleb128 0x11
+ 807 0282 6C00     		.ascii	"l\000"
+ 808 0284 01       		.byte	0x1
+ 809 0285 1E       		.byte	0x1e
+ 810 0286 1A010000 		.4byte	0x11a
+ 811 028a 7C000000 		.4byte	.LLST3
+ 812 028e 12       		.uleb128 0x12
+ 813 028f 48000000 		.4byte	.LVL9
+ 814 0293 28060000 		.4byte	0x628
+ 815 0297 13       		.uleb128 0x13
+ 816 0298 5E000000 		.4byte	.LVL12
+ 817 029c 02       		.uleb128 0x2
+ 818 029d 75       		.byte	0x75
+ 819 029e 00       		.sleb128 0
+ 820 029f 14       		.uleb128 0x14
+ 821 02a0 01       		.uleb128 0x1
+ 822 02a1 50       		.byte	0x50
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 18
+
+
+ 823 02a2 01       		.uleb128 0x1
+ 824 02a3 30       		.byte	0x30
+ 825 02a4 14       		.uleb128 0x14
+ 826 02a5 01       		.uleb128 0x1
+ 827 02a6 51       		.byte	0x51
+ 828 02a7 05       		.uleb128 0x5
+ 829 02a8 03       		.byte	0x3
+ 830 02a9 00000000 		.4byte	.LC1
+ 831 02ad 14       		.uleb128 0x14
+ 832 02ae 01       		.uleb128 0x1
+ 833 02af 52       		.byte	0x52
+ 834 02b0 05       		.uleb128 0x5
+ 835 02b1 03       		.byte	0x3
+ 836 02b2 00000000 		.4byte	.LANCHOR0
+ 837 02b6 14       		.uleb128 0x14
+ 838 02b7 01       		.uleb128 0x1
+ 839 02b8 53       		.byte	0x53
+ 840 02b9 01       		.uleb128 0x1
+ 841 02ba 4E       		.byte	0x4e
+ 842 02bb 14       		.uleb128 0x14
+ 843 02bc 02       		.uleb128 0x2
+ 844 02bd 7D       		.byte	0x7d
+ 845 02be 00       		.sleb128 0
+ 846 02bf 01       		.uleb128 0x1
+ 847 02c0 31       		.byte	0x31
+ 848 02c1 14       		.uleb128 0x14
+ 849 02c2 02       		.uleb128 0x2
+ 850 02c3 7D       		.byte	0x7d
+ 851 02c4 04       		.sleb128 4
+ 852 02c5 05       		.uleb128 0x5
+ 853 02c6 03       		.byte	0x3
+ 854 02c7 58000000 		.4byte	.LC5
+ 855 02cb 00       		.byte	0
+ 856 02cc 00       		.byte	0
+ 857 02cd 16       		.uleb128 0x16
+ 858 02ce 0E000000 		.4byte	.LVL0
+ 859 02d2 4B060000 		.4byte	0x64b
+ 860 02d6 14       		.uleb128 0x14
+ 861 02d7 01       		.uleb128 0x1
+ 862 02d8 50       		.byte	0x50
+ 863 02d9 01       		.uleb128 0x1
+ 864 02da 31       		.byte	0x31
+ 865 02db 14       		.uleb128 0x14
+ 866 02dc 01       		.uleb128 0x1
+ 867 02dd 51       		.byte	0x51
+ 868 02de 01       		.uleb128 0x1
+ 869 02df 30       		.byte	0x30
+ 870 02e0 14       		.uleb128 0x14
+ 871 02e1 01       		.uleb128 0x1
+ 872 02e2 52       		.byte	0x52
+ 873 02e3 01       		.uleb128 0x1
+ 874 02e4 33       		.byte	0x33
+ 875 02e5 00       		.byte	0
+ 876 02e6 00       		.byte	0
+ 877 02e7 17       		.uleb128 0x17
+ 878 02e8 9E000000 		.4byte	0x9e
+ 879 02ec F7020000 		.4byte	0x2f7
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 19
+
+
+ 880 02f0 18       		.uleb128 0x18
+ 881 02f1 88000000 		.4byte	0x88
+ 882 02f5 09       		.byte	0x9
+ 883 02f6 00       		.byte	0
+ 884 02f7 07       		.uleb128 0x7
+ 885 02f8 E7020000 		.4byte	0x2e7
+ 886 02fc 0D       		.uleb128 0xd
+ 887 02fd B0020000 		.4byte	.LASF36
+ 888 0301 01       		.byte	0x1
+ 889 0302 24       		.byte	0x24
+ 890 0303 CB000000 		.4byte	0xcb
+ 891 0307 00000000 		.4byte	.LFB38
+ 892 030b 44000000 		.4byte	.LFE38-.LFB38
+ 893 030f 01       		.uleb128 0x1
+ 894 0310 9C       		.byte	0x9c
+ 895 0311 A6030000 		.4byte	0x3a6
+ 896 0315 19       		.uleb128 0x19
+ 897 0316 F8000000 		.4byte	.LASF39
+ 898 031a 01       		.byte	0x1
+ 899 031b 24       		.byte	0x24
+ 900 031c A3000000 		.4byte	0xa3
+ 901 0320 9A000000 		.4byte	.LLST4
+ 902 0324 0E       		.uleb128 0xe
+ 903 0325 28020000 		.4byte	.LASF34
+ 904 0329 01       		.byte	0x1
+ 905 032a 26       		.byte	0x26
+ 906 032b CB000000 		.4byte	0xcb
+ 907 032f D4000000 		.4byte	.LLST5
+ 908 0333 0F       		.uleb128 0xf
+ 909 0334 88000000 		.4byte	.LASF37
+ 910 0338 B6030000 		.4byte	0x3b6
+ 911 033c 05       		.uleb128 0x5
+ 912 033d 03       		.byte	0x3
+ 913 033e 0C000000 		.4byte	__func__.10838
+ 914 0342 10       		.uleb128 0x10
+ 915 0343 08000000 		.4byte	.LBB5
+ 916 0347 1C000000 		.4byte	.LBE5-.LBB5
+ 917 034b 9C030000 		.4byte	0x39c
+ 918 034f 11       		.uleb128 0x11
+ 919 0350 6C00     		.ascii	"l\000"
+ 920 0352 01       		.byte	0x1
+ 921 0353 2A       		.byte	0x2a
+ 922 0354 1A010000 		.4byte	0x11a
+ 923 0358 F3000000 		.4byte	.LLST6
+ 924 035c 12       		.uleb128 0x12
+ 925 035d 0C000000 		.4byte	.LVL15
+ 926 0361 28060000 		.4byte	0x628
+ 927 0365 13       		.uleb128 0x13
+ 928 0366 24000000 		.4byte	.LVL18
+ 929 036a 02       		.uleb128 0x2
+ 930 036b 74       		.byte	0x74
+ 931 036c 00       		.sleb128 0
+ 932 036d 14       		.uleb128 0x14
+ 933 036e 01       		.uleb128 0x1
+ 934 036f 50       		.byte	0x50
+ 935 0370 01       		.uleb128 0x1
+ 936 0371 30       		.byte	0x30
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 20
+
+
+ 937 0372 14       		.uleb128 0x14
+ 938 0373 01       		.uleb128 0x1
+ 939 0374 51       		.byte	0x51
+ 940 0375 05       		.uleb128 0x5
+ 941 0376 03       		.byte	0x3
+ 942 0377 00000000 		.4byte	.LC1
+ 943 037b 14       		.uleb128 0x14
+ 944 037c 01       		.uleb128 0x1
+ 945 037d 52       		.byte	0x52
+ 946 037e 05       		.uleb128 0x5
+ 947 037f 03       		.byte	0x3
+ 948 0380 0C000000 		.4byte	.LANCHOR0+12
+ 949 0384 14       		.uleb128 0x14
+ 950 0385 01       		.uleb128 0x1
+ 951 0386 53       		.byte	0x53
+ 952 0387 02       		.uleb128 0x2
+ 953 0388 08       		.byte	0x8
+ 954 0389 2A       		.byte	0x2a
+ 955 038a 14       		.uleb128 0x14
+ 956 038b 02       		.uleb128 0x2
+ 957 038c 7D       		.byte	0x7d
+ 958 038d 00       		.sleb128 0
+ 959 038e 01       		.uleb128 0x1
+ 960 038f 31       		.byte	0x31
+ 961 0390 14       		.uleb128 0x14
+ 962 0391 02       		.uleb128 0x2
+ 963 0392 7D       		.byte	0x7d
+ 964 0393 04       		.sleb128 4
+ 965 0394 05       		.uleb128 0x5
+ 966 0395 03       		.byte	0x3
+ 967 0396 78000000 		.4byte	.LC9
+ 968 039a 00       		.byte	0
+ 969 039b 00       		.byte	0
+ 970 039c 12       		.uleb128 0x12
+ 971 039d 2C000000 		.4byte	.LVL20
+ 972 03a1 3F060000 		.4byte	0x63f
+ 973 03a5 00       		.byte	0
+ 974 03a6 17       		.uleb128 0x17
+ 975 03a7 9E000000 		.4byte	0x9e
+ 976 03ab B6030000 		.4byte	0x3b6
+ 977 03af 18       		.uleb128 0x18
+ 978 03b0 88000000 		.4byte	0x88
+ 979 03b4 0B       		.byte	0xb
+ 980 03b5 00       		.byte	0
+ 981 03b6 07       		.uleb128 0x7
+ 982 03b7 A6030000 		.4byte	0x3a6
+ 983 03bb 0D       		.uleb128 0xd
+ 984 03bc 4E000000 		.4byte	.LASF38
+ 985 03c0 01       		.byte	0x1
+ 986 03c1 37       		.byte	0x37
+ 987 03c2 CB000000 		.4byte	0xcb
+ 988 03c6 00000000 		.4byte	.LFB39
+ 989 03ca 74000000 		.4byte	.LFE39-.LFB39
+ 990 03ce 01       		.uleb128 0x1
+ 991 03cf 9C       		.byte	0x9c
+ 992 03d0 D8040000 		.4byte	0x4d8
+ 993 03d4 19       		.uleb128 0x19
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 21
+
+
+ 994 03d5 F8000000 		.4byte	.LASF39
+ 995 03d9 01       		.byte	0x1
+ 996 03da 37       		.byte	0x37
+ 997 03db A3000000 		.4byte	0xa3
+ 998 03df 1C010000 		.4byte	.LLST7
+ 999 03e3 1A       		.uleb128 0x1a
+ 1000 03e4 28020000 		.4byte	.LASF34
+ 1001 03e8 01       		.byte	0x1
+ 1002 03e9 39       		.byte	0x39
+ 1003 03ea CB000000 		.4byte	0xcb
+ 1004 03ee 01       		.uleb128 0x1
+ 1005 03ef 50       		.byte	0x50
+ 1006 03f0 0F       		.uleb128 0xf
+ 1007 03f1 88000000 		.4byte	.LASF37
+ 1008 03f5 E8040000 		.4byte	0x4e8
+ 1009 03f9 05       		.uleb128 0x5
+ 1010 03fa 03       		.byte	0x3
+ 1011 03fb 18000000 		.4byte	__func__.10846
+ 1012 03ff 10       		.uleb128 0x10
+ 1013 0400 08000000 		.4byte	.LBB6
+ 1014 0404 1C000000 		.4byte	.LBE6-.LBB6
+ 1015 0408 59040000 		.4byte	0x459
+ 1016 040c 11       		.uleb128 0x11
+ 1017 040d 6C00     		.ascii	"l\000"
+ 1018 040f 01       		.byte	0x1
+ 1019 0410 3D       		.byte	0x3d
+ 1020 0411 1A010000 		.4byte	0x11a
+ 1021 0415 56010000 		.4byte	.LLST8
+ 1022 0419 12       		.uleb128 0x12
+ 1023 041a 0C000000 		.4byte	.LVL24
+ 1024 041e 28060000 		.4byte	0x628
+ 1025 0422 13       		.uleb128 0x13
+ 1026 0423 24000000 		.4byte	.LVL27
+ 1027 0427 02       		.uleb128 0x2
+ 1028 0428 74       		.byte	0x74
+ 1029 0429 00       		.sleb128 0
+ 1030 042a 14       		.uleb128 0x14
+ 1031 042b 01       		.uleb128 0x1
+ 1032 042c 50       		.byte	0x50
+ 1033 042d 01       		.uleb128 0x1
+ 1034 042e 30       		.byte	0x30
+ 1035 042f 14       		.uleb128 0x14
+ 1036 0430 01       		.uleb128 0x1
+ 1037 0431 51       		.byte	0x51
+ 1038 0432 05       		.uleb128 0x5
+ 1039 0433 03       		.byte	0x3
+ 1040 0434 00000000 		.4byte	.LC1
+ 1041 0438 14       		.uleb128 0x14
+ 1042 0439 01       		.uleb128 0x1
+ 1043 043a 52       		.byte	0x52
+ 1044 043b 05       		.uleb128 0x5
+ 1045 043c 03       		.byte	0x3
+ 1046 043d 18000000 		.4byte	.LANCHOR0+24
+ 1047 0441 14       		.uleb128 0x14
+ 1048 0442 01       		.uleb128 0x1
+ 1049 0443 53       		.byte	0x53
+ 1050 0444 02       		.uleb128 0x2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 22
+
+
+ 1051 0445 08       		.byte	0x8
+ 1052 0446 3D       		.byte	0x3d
+ 1053 0447 14       		.uleb128 0x14
+ 1054 0448 02       		.uleb128 0x2
+ 1055 0449 7D       		.byte	0x7d
+ 1056 044a 00       		.sleb128 0
+ 1057 044b 01       		.uleb128 0x1
+ 1058 044c 31       		.byte	0x31
+ 1059 044d 14       		.uleb128 0x14
+ 1060 044e 02       		.uleb128 0x2
+ 1061 044f 7D       		.byte	0x7d
+ 1062 0450 04       		.sleb128 4
+ 1063 0451 05       		.uleb128 0x5
+ 1064 0452 03       		.byte	0x3
+ 1065 0453 78000000 		.4byte	.LC9
+ 1066 0457 00       		.byte	0
+ 1067 0458 00       		.byte	0
+ 1068 0459 1B       		.uleb128 0x1b
+ 1069 045a 00000000 		.4byte	.Ldebug_ranges0+0
+ 1070 045e 11       		.uleb128 0x11
+ 1071 045f 727600   		.ascii	"rv\000"
+ 1072 0462 01       		.byte	0x1
+ 1073 0463 42       		.byte	0x42
+ 1074 0464 25000000 		.4byte	0x25
+ 1075 0468 8A010000 		.4byte	.LLST9
+ 1076 046c 10       		.uleb128 0x10
+ 1077 046d 34000000 		.4byte	.LBB8
+ 1078 0471 1C000000 		.4byte	.LBE8-.LBB8
+ 1079 0475 C6040000 		.4byte	0x4c6
+ 1080 0479 11       		.uleb128 0x11
+ 1081 047a 6C00     		.ascii	"l\000"
+ 1082 047c 01       		.byte	0x1
+ 1083 047d 4A       		.byte	0x4a
+ 1084 047e 1A010000 		.4byte	0x11a
+ 1085 0482 A8010000 		.4byte	.LLST10
+ 1086 0486 12       		.uleb128 0x12
+ 1087 0487 38000000 		.4byte	.LVL30
+ 1088 048b 28060000 		.4byte	0x628
+ 1089 048f 13       		.uleb128 0x13
+ 1090 0490 50000000 		.4byte	.LVL33
+ 1091 0494 02       		.uleb128 0x2
+ 1092 0495 74       		.byte	0x74
+ 1093 0496 00       		.sleb128 0
+ 1094 0497 14       		.uleb128 0x14
+ 1095 0498 01       		.uleb128 0x1
+ 1096 0499 50       		.byte	0x50
+ 1097 049a 01       		.uleb128 0x1
+ 1098 049b 30       		.byte	0x30
+ 1099 049c 14       		.uleb128 0x14
+ 1100 049d 01       		.uleb128 0x1
+ 1101 049e 51       		.byte	0x51
+ 1102 049f 05       		.uleb128 0x5
+ 1103 04a0 03       		.byte	0x3
+ 1104 04a1 00000000 		.4byte	.LC1
+ 1105 04a5 14       		.uleb128 0x14
+ 1106 04a6 01       		.uleb128 0x1
+ 1107 04a7 52       		.byte	0x52
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 23
+
+
+ 1108 04a8 05       		.uleb128 0x5
+ 1109 04a9 03       		.byte	0x3
+ 1110 04aa 18000000 		.4byte	.LANCHOR0+24
+ 1111 04ae 14       		.uleb128 0x14
+ 1112 04af 01       		.uleb128 0x1
+ 1113 04b0 53       		.byte	0x53
+ 1114 04b1 02       		.uleb128 0x2
+ 1115 04b2 08       		.byte	0x8
+ 1116 04b3 4A       		.byte	0x4a
+ 1117 04b4 14       		.uleb128 0x14
+ 1118 04b5 02       		.uleb128 0x2
+ 1119 04b6 7D       		.byte	0x7d
+ 1120 04b7 00       		.sleb128 0
+ 1121 04b8 01       		.uleb128 0x1
+ 1122 04b9 31       		.byte	0x31
+ 1123 04ba 14       		.uleb128 0x14
+ 1124 04bb 02       		.uleb128 0x2
+ 1125 04bc 7D       		.byte	0x7d
+ 1126 04bd 04       		.sleb128 4
+ 1127 04be 05       		.uleb128 0x5
+ 1128 04bf 03       		.byte	0x3
+ 1129 04c0 9C000000 		.4byte	.LC14
+ 1130 04c4 00       		.byte	0
+ 1131 04c5 00       		.byte	0
+ 1132 04c6 16       		.uleb128 0x16
+ 1133 04c7 30000000 		.4byte	.LVL29
+ 1134 04cb 57060000 		.4byte	0x657
+ 1135 04cf 14       		.uleb128 0x14
+ 1136 04d0 01       		.uleb128 0x1
+ 1137 04d1 51       		.byte	0x51
+ 1138 04d2 02       		.uleb128 0x2
+ 1139 04d3 09       		.byte	0x9
+ 1140 04d4 FF       		.byte	0xff
+ 1141 04d5 00       		.byte	0
+ 1142 04d6 00       		.byte	0
+ 1143 04d7 00       		.byte	0
+ 1144 04d8 17       		.uleb128 0x17
+ 1145 04d9 9E000000 		.4byte	0x9e
+ 1146 04dd E8040000 		.4byte	0x4e8
+ 1147 04e1 18       		.uleb128 0x18
+ 1148 04e2 88000000 		.4byte	0x88
+ 1149 04e6 04       		.byte	0x4
+ 1150 04e7 00       		.byte	0
+ 1151 04e8 07       		.uleb128 0x7
+ 1152 04e9 D8040000 		.4byte	0x4d8
+ 1153 04ed 0D       		.uleb128 0xd
+ 1154 04ee AE000000 		.4byte	.LASF40
+ 1155 04f2 01       		.byte	0x1
+ 1156 04f3 54       		.byte	0x54
+ 1157 04f4 CB000000 		.4byte	0xcb
+ 1158 04f8 00000000 		.4byte	.LFB40
+ 1159 04fc 74000000 		.4byte	.LFE40-.LFB40
+ 1160 0500 01       		.uleb128 0x1
+ 1161 0501 9C       		.byte	0x9c
+ 1162 0502 13060000 		.4byte	0x613
+ 1163 0506 19       		.uleb128 0x19
+ 1164 0507 F8000000 		.4byte	.LASF39
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 24
+
+
+ 1165 050b 01       		.byte	0x1
+ 1166 050c 54       		.byte	0x54
+ 1167 050d A3000000 		.4byte	0xa3
+ 1168 0511 D1010000 		.4byte	.LLST11
+ 1169 0515 1A       		.uleb128 0x1a
+ 1170 0516 28020000 		.4byte	.LASF34
+ 1171 051a 01       		.byte	0x1
+ 1172 051b 56       		.byte	0x56
+ 1173 051c CB000000 		.4byte	0xcb
+ 1174 0520 01       		.uleb128 0x1
+ 1175 0521 50       		.byte	0x50
+ 1176 0522 0F       		.uleb128 0xf
+ 1177 0523 88000000 		.4byte	.LASF37
+ 1178 0527 23060000 		.4byte	0x623
+ 1179 052b 05       		.uleb128 0x5
+ 1180 052c 03       		.byte	0x3
+ 1181 052d 20000000 		.4byte	__func__.10861
+ 1182 0531 10       		.uleb128 0x10
+ 1183 0532 08000000 		.4byte	.LBB10
+ 1184 0536 1C000000 		.4byte	.LBE10-.LBB10
+ 1185 053a 8B050000 		.4byte	0x58b
+ 1186 053e 11       		.uleb128 0x11
+ 1187 053f 6C00     		.ascii	"l\000"
+ 1188 0541 01       		.byte	0x1
+ 1189 0542 5A       		.byte	0x5a
+ 1190 0543 1A010000 		.4byte	0x11a
+ 1191 0547 0B020000 		.4byte	.LLST12
+ 1192 054b 12       		.uleb128 0x12
+ 1193 054c 0C000000 		.4byte	.LVL41
+ 1194 0550 28060000 		.4byte	0x628
+ 1195 0554 13       		.uleb128 0x13
+ 1196 0555 24000000 		.4byte	.LVL44
+ 1197 0559 02       		.uleb128 0x2
+ 1198 055a 74       		.byte	0x74
+ 1199 055b 00       		.sleb128 0
+ 1200 055c 14       		.uleb128 0x14
+ 1201 055d 01       		.uleb128 0x1
+ 1202 055e 50       		.byte	0x50
+ 1203 055f 01       		.uleb128 0x1
+ 1204 0560 30       		.byte	0x30
+ 1205 0561 14       		.uleb128 0x14
+ 1206 0562 01       		.uleb128 0x1
+ 1207 0563 51       		.byte	0x51
+ 1208 0564 05       		.uleb128 0x5
+ 1209 0565 03       		.byte	0x3
+ 1210 0566 00000000 		.4byte	.LC1
+ 1211 056a 14       		.uleb128 0x14
+ 1212 056b 01       		.uleb128 0x1
+ 1213 056c 52       		.byte	0x52
+ 1214 056d 05       		.uleb128 0x5
+ 1215 056e 03       		.byte	0x3
+ 1216 056f 20000000 		.4byte	.LANCHOR0+32
+ 1217 0573 14       		.uleb128 0x14
+ 1218 0574 01       		.uleb128 0x1
+ 1219 0575 53       		.byte	0x53
+ 1220 0576 02       		.uleb128 0x2
+ 1221 0577 08       		.byte	0x8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 25
+
+
+ 1222 0578 5A       		.byte	0x5a
+ 1223 0579 14       		.uleb128 0x14
+ 1224 057a 02       		.uleb128 0x2
+ 1225 057b 7D       		.byte	0x7d
+ 1226 057c 00       		.sleb128 0
+ 1227 057d 01       		.uleb128 0x1
+ 1228 057e 31       		.byte	0x31
+ 1229 057f 14       		.uleb128 0x14
+ 1230 0580 02       		.uleb128 0x2
+ 1231 0581 7D       		.byte	0x7d
+ 1232 0582 04       		.sleb128 4
+ 1233 0583 05       		.uleb128 0x5
+ 1234 0584 03       		.byte	0x3
+ 1235 0585 78000000 		.4byte	.LC9
+ 1236 0589 00       		.byte	0
+ 1237 058a 00       		.byte	0
+ 1238 058b 1B       		.uleb128 0x1b
+ 1239 058c 18000000 		.4byte	.Ldebug_ranges0+0x18
+ 1240 0590 11       		.uleb128 0x11
+ 1241 0591 727600   		.ascii	"rv\000"
+ 1242 0594 01       		.byte	0x1
+ 1243 0595 5F       		.byte	0x5f
+ 1244 0596 25000000 		.4byte	0x25
+ 1245 059a 3F020000 		.4byte	.LLST13
+ 1246 059e 10       		.uleb128 0x10
+ 1247 059f 36000000 		.4byte	.LBB12
+ 1248 05a3 1C000000 		.4byte	.LBE12-.LBB12
+ 1249 05a7 F8050000 		.4byte	0x5f8
+ 1250 05ab 11       		.uleb128 0x11
+ 1251 05ac 6C00     		.ascii	"l\000"
+ 1252 05ae 01       		.byte	0x1
+ 1253 05af 67       		.byte	0x67
+ 1254 05b0 1A010000 		.4byte	0x11a
+ 1255 05b4 5D020000 		.4byte	.LLST14
+ 1256 05b8 12       		.uleb128 0x12
+ 1257 05b9 3A000000 		.4byte	.LVL47
+ 1258 05bd 28060000 		.4byte	0x628
+ 1259 05c1 13       		.uleb128 0x13
+ 1260 05c2 52000000 		.4byte	.LVL50
+ 1261 05c6 02       		.uleb128 0x2
+ 1262 05c7 74       		.byte	0x74
+ 1263 05c8 00       		.sleb128 0
+ 1264 05c9 14       		.uleb128 0x14
+ 1265 05ca 01       		.uleb128 0x1
+ 1266 05cb 50       		.byte	0x50
+ 1267 05cc 01       		.uleb128 0x1
+ 1268 05cd 30       		.byte	0x30
+ 1269 05ce 14       		.uleb128 0x14
+ 1270 05cf 01       		.uleb128 0x1
+ 1271 05d0 51       		.byte	0x51
+ 1272 05d1 05       		.uleb128 0x5
+ 1273 05d2 03       		.byte	0x3
+ 1274 05d3 00000000 		.4byte	.LC1
+ 1275 05d7 14       		.uleb128 0x14
+ 1276 05d8 01       		.uleb128 0x1
+ 1277 05d9 52       		.byte	0x52
+ 1278 05da 05       		.uleb128 0x5
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 26
+
+
+ 1279 05db 03       		.byte	0x3
+ 1280 05dc 20000000 		.4byte	.LANCHOR0+32
+ 1281 05e0 14       		.uleb128 0x14
+ 1282 05e1 01       		.uleb128 0x1
+ 1283 05e2 53       		.byte	0x53
+ 1284 05e3 02       		.uleb128 0x2
+ 1285 05e4 08       		.byte	0x8
+ 1286 05e5 67       		.byte	0x67
+ 1287 05e6 14       		.uleb128 0x14
+ 1288 05e7 02       		.uleb128 0x2
+ 1289 05e8 7D       		.byte	0x7d
+ 1290 05e9 00       		.sleb128 0
+ 1291 05ea 01       		.uleb128 0x1
+ 1292 05eb 31       		.byte	0x31
+ 1293 05ec 14       		.uleb128 0x14
+ 1294 05ed 02       		.uleb128 0x2
+ 1295 05ee 7D       		.byte	0x7d
+ 1296 05ef 04       		.sleb128 4
+ 1297 05f0 05       		.uleb128 0x5
+ 1298 05f1 03       		.byte	0x3
+ 1299 05f2 B4000000 		.4byte	.LC19
+ 1300 05f6 00       		.byte	0
+ 1301 05f7 00       		.byte	0
+ 1302 05f8 16       		.uleb128 0x16
+ 1303 05f9 32000000 		.4byte	.LVL46
+ 1304 05fd 33060000 		.4byte	0x633
+ 1305 0601 14       		.uleb128 0x14
+ 1306 0602 01       		.uleb128 0x1
+ 1307 0603 51       		.byte	0x51
+ 1308 0604 01       		.uleb128 0x1
+ 1309 0605 30       		.byte	0x30
+ 1310 0606 14       		.uleb128 0x14
+ 1311 0607 01       		.uleb128 0x1
+ 1312 0608 52       		.byte	0x52
+ 1313 0609 01       		.uleb128 0x1
+ 1314 060a 30       		.byte	0x30
+ 1315 060b 14       		.uleb128 0x14
+ 1316 060c 01       		.uleb128 0x1
+ 1317 060d 53       		.byte	0x53
+ 1318 060e 01       		.uleb128 0x1
+ 1319 060f 30       		.byte	0x30
+ 1320 0610 00       		.byte	0
+ 1321 0611 00       		.byte	0
+ 1322 0612 00       		.byte	0
+ 1323 0613 17       		.uleb128 0x17
+ 1324 0614 9E000000 		.4byte	0x9e
+ 1325 0618 23060000 		.4byte	0x623
+ 1326 061c 18       		.uleb128 0x18
+ 1327 061d 88000000 		.4byte	0x88
+ 1328 0621 06       		.byte	0x6
+ 1329 0622 00       		.byte	0
+ 1330 0623 07       		.uleb128 0x7
+ 1331 0624 13060000 		.4byte	0x613
+ 1332 0628 1C       		.uleb128 0x1c
+ 1333 0629 00000000 		.4byte	.LASF41
+ 1334 062d 00000000 		.4byte	.LASF41
+ 1335 0631 05       		.byte	0x5
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 27
+
+
+ 1336 0632 9D       		.byte	0x9d
+ 1337 0633 1D       		.uleb128 0x1d
+ 1338 0634 52010000 		.4byte	.LASF42
+ 1339 0638 52010000 		.4byte	.LASF42
+ 1340 063c 07       		.byte	0x7
+ 1341 063d 8802     		.2byte	0x288
+ 1342 063f 1D       		.uleb128 0x1d
+ 1343 0640 7B000000 		.4byte	.LASF43
+ 1344 0644 7B000000 		.4byte	.LASF43
+ 1345 0648 07       		.byte	0x7
+ 1346 0649 9003     		.2byte	0x390
+ 1347 064b 1D       		.uleb128 0x1d
+ 1348 064c 3A000000 		.4byte	.LASF44
+ 1349 0650 3A000000 		.4byte	.LASF44
+ 1350 0654 07       		.byte	0x7
+ 1351 0655 D605     		.2byte	0x5d6
+ 1352 0657 1D       		.uleb128 0x1d
+ 1353 0658 78030000 		.4byte	.LASF45
+ 1354 065c 78030000 		.4byte	.LASF45
+ 1355 0660 07       		.byte	0x7
+ 1356 0661 8805     		.2byte	0x588
+ 1357 0663 00       		.byte	0
+ 1358              		.section	.debug_abbrev,"",%progbits
+ 1359              	.Ldebug_abbrev0:
+ 1360 0000 01       		.uleb128 0x1
+ 1361 0001 11       		.uleb128 0x11
+ 1362 0002 01       		.byte	0x1
+ 1363 0003 25       		.uleb128 0x25
+ 1364 0004 0E       		.uleb128 0xe
+ 1365 0005 13       		.uleb128 0x13
+ 1366 0006 0B       		.uleb128 0xb
+ 1367 0007 03       		.uleb128 0x3
+ 1368 0008 0E       		.uleb128 0xe
+ 1369 0009 1B       		.uleb128 0x1b
+ 1370 000a 0E       		.uleb128 0xe
+ 1371 000b 55       		.uleb128 0x55
+ 1372 000c 17       		.uleb128 0x17
+ 1373 000d 11       		.uleb128 0x11
+ 1374 000e 01       		.uleb128 0x1
+ 1375 000f 10       		.uleb128 0x10
+ 1376 0010 17       		.uleb128 0x17
+ 1377 0011 00       		.byte	0
+ 1378 0012 00       		.byte	0
+ 1379 0013 02       		.uleb128 0x2
+ 1380 0014 24       		.uleb128 0x24
+ 1381 0015 00       		.byte	0
+ 1382 0016 0B       		.uleb128 0xb
+ 1383 0017 0B       		.uleb128 0xb
+ 1384 0018 3E       		.uleb128 0x3e
+ 1385 0019 0B       		.uleb128 0xb
+ 1386 001a 03       		.uleb128 0x3
+ 1387 001b 08       		.uleb128 0x8
+ 1388 001c 00       		.byte	0
+ 1389 001d 00       		.byte	0
+ 1390 001e 03       		.uleb128 0x3
+ 1391 001f 24       		.uleb128 0x24
+ 1392 0020 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 28
+
+
+ 1393 0021 0B       		.uleb128 0xb
+ 1394 0022 0B       		.uleb128 0xb
+ 1395 0023 3E       		.uleb128 0x3e
+ 1396 0024 0B       		.uleb128 0xb
+ 1397 0025 03       		.uleb128 0x3
+ 1398 0026 0E       		.uleb128 0xe
+ 1399 0027 00       		.byte	0
+ 1400 0028 00       		.byte	0
+ 1401 0029 04       		.uleb128 0x4
+ 1402 002a 16       		.uleb128 0x16
+ 1403 002b 00       		.byte	0
+ 1404 002c 03       		.uleb128 0x3
+ 1405 002d 0E       		.uleb128 0xe
+ 1406 002e 3A       		.uleb128 0x3a
+ 1407 002f 0B       		.uleb128 0xb
+ 1408 0030 3B       		.uleb128 0x3b
+ 1409 0031 0B       		.uleb128 0xb
+ 1410 0032 49       		.uleb128 0x49
+ 1411 0033 13       		.uleb128 0x13
+ 1412 0034 00       		.byte	0
+ 1413 0035 00       		.byte	0
+ 1414 0036 05       		.uleb128 0x5
+ 1415 0037 0F       		.uleb128 0xf
+ 1416 0038 00       		.byte	0
+ 1417 0039 0B       		.uleb128 0xb
+ 1418 003a 0B       		.uleb128 0xb
+ 1419 003b 00       		.byte	0
+ 1420 003c 00       		.byte	0
+ 1421 003d 06       		.uleb128 0x6
+ 1422 003e 0F       		.uleb128 0xf
+ 1423 003f 00       		.byte	0
+ 1424 0040 0B       		.uleb128 0xb
+ 1425 0041 0B       		.uleb128 0xb
+ 1426 0042 49       		.uleb128 0x49
+ 1427 0043 13       		.uleb128 0x13
+ 1428 0044 00       		.byte	0
+ 1429 0045 00       		.byte	0
+ 1430 0046 07       		.uleb128 0x7
+ 1431 0047 26       		.uleb128 0x26
+ 1432 0048 00       		.byte	0
+ 1433 0049 49       		.uleb128 0x49
+ 1434 004a 13       		.uleb128 0x13
+ 1435 004b 00       		.byte	0
+ 1436 004c 00       		.byte	0
+ 1437 004d 08       		.uleb128 0x8
+ 1438 004e 04       		.uleb128 0x4
+ 1439 004f 01       		.byte	0x1
+ 1440 0050 03       		.uleb128 0x3
+ 1441 0051 0E       		.uleb128 0xe
+ 1442 0052 0B       		.uleb128 0xb
+ 1443 0053 0B       		.uleb128 0xb
+ 1444 0054 49       		.uleb128 0x49
+ 1445 0055 13       		.uleb128 0x13
+ 1446 0056 3A       		.uleb128 0x3a
+ 1447 0057 0B       		.uleb128 0xb
+ 1448 0058 3B       		.uleb128 0x3b
+ 1449 0059 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 29
+
+
+ 1450 005a 01       		.uleb128 0x1
+ 1451 005b 13       		.uleb128 0x13
+ 1452 005c 00       		.byte	0
+ 1453 005d 00       		.byte	0
+ 1454 005e 09       		.uleb128 0x9
+ 1455 005f 28       		.uleb128 0x28
+ 1456 0060 00       		.byte	0
+ 1457 0061 03       		.uleb128 0x3
+ 1458 0062 0E       		.uleb128 0xe
+ 1459 0063 1C       		.uleb128 0x1c
+ 1460 0064 0B       		.uleb128 0xb
+ 1461 0065 00       		.byte	0
+ 1462 0066 00       		.byte	0
+ 1463 0067 0A       		.uleb128 0xa
+ 1464 0068 15       		.uleb128 0x15
+ 1465 0069 01       		.byte	0x1
+ 1466 006a 27       		.uleb128 0x27
+ 1467 006b 19       		.uleb128 0x19
+ 1468 006c 01       		.uleb128 0x1
+ 1469 006d 13       		.uleb128 0x13
+ 1470 006e 00       		.byte	0
+ 1471 006f 00       		.byte	0
+ 1472 0070 0B       		.uleb128 0xb
+ 1473 0071 05       		.uleb128 0x5
+ 1474 0072 00       		.byte	0
+ 1475 0073 49       		.uleb128 0x49
+ 1476 0074 13       		.uleb128 0x13
+ 1477 0075 00       		.byte	0
+ 1478 0076 00       		.byte	0
+ 1479 0077 0C       		.uleb128 0xc
+ 1480 0078 18       		.uleb128 0x18
+ 1481 0079 00       		.byte	0
+ 1482 007a 00       		.byte	0
+ 1483 007b 00       		.byte	0
+ 1484 007c 0D       		.uleb128 0xd
+ 1485 007d 2E       		.uleb128 0x2e
+ 1486 007e 01       		.byte	0x1
+ 1487 007f 3F       		.uleb128 0x3f
+ 1488 0080 19       		.uleb128 0x19
+ 1489 0081 03       		.uleb128 0x3
+ 1490 0082 0E       		.uleb128 0xe
+ 1491 0083 3A       		.uleb128 0x3a
+ 1492 0084 0B       		.uleb128 0xb
+ 1493 0085 3B       		.uleb128 0x3b
+ 1494 0086 0B       		.uleb128 0xb
+ 1495 0087 27       		.uleb128 0x27
+ 1496 0088 19       		.uleb128 0x19
+ 1497 0089 49       		.uleb128 0x49
+ 1498 008a 13       		.uleb128 0x13
+ 1499 008b 11       		.uleb128 0x11
+ 1500 008c 01       		.uleb128 0x1
+ 1501 008d 12       		.uleb128 0x12
+ 1502 008e 06       		.uleb128 0x6
+ 1503 008f 40       		.uleb128 0x40
+ 1504 0090 18       		.uleb128 0x18
+ 1505 0091 9742     		.uleb128 0x2117
+ 1506 0093 19       		.uleb128 0x19
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 30
+
+
+ 1507 0094 01       		.uleb128 0x1
+ 1508 0095 13       		.uleb128 0x13
+ 1509 0096 00       		.byte	0
+ 1510 0097 00       		.byte	0
+ 1511 0098 0E       		.uleb128 0xe
+ 1512 0099 34       		.uleb128 0x34
+ 1513 009a 00       		.byte	0
+ 1514 009b 03       		.uleb128 0x3
+ 1515 009c 0E       		.uleb128 0xe
+ 1516 009d 3A       		.uleb128 0x3a
+ 1517 009e 0B       		.uleb128 0xb
+ 1518 009f 3B       		.uleb128 0x3b
+ 1519 00a0 0B       		.uleb128 0xb
+ 1520 00a1 49       		.uleb128 0x49
+ 1521 00a2 13       		.uleb128 0x13
+ 1522 00a3 02       		.uleb128 0x2
+ 1523 00a4 17       		.uleb128 0x17
+ 1524 00a5 00       		.byte	0
+ 1525 00a6 00       		.byte	0
+ 1526 00a7 0F       		.uleb128 0xf
+ 1527 00a8 34       		.uleb128 0x34
+ 1528 00a9 00       		.byte	0
+ 1529 00aa 03       		.uleb128 0x3
+ 1530 00ab 0E       		.uleb128 0xe
+ 1531 00ac 49       		.uleb128 0x49
+ 1532 00ad 13       		.uleb128 0x13
+ 1533 00ae 34       		.uleb128 0x34
+ 1534 00af 19       		.uleb128 0x19
+ 1535 00b0 02       		.uleb128 0x2
+ 1536 00b1 18       		.uleb128 0x18
+ 1537 00b2 00       		.byte	0
+ 1538 00b3 00       		.byte	0
+ 1539 00b4 10       		.uleb128 0x10
+ 1540 00b5 0B       		.uleb128 0xb
+ 1541 00b6 01       		.byte	0x1
+ 1542 00b7 11       		.uleb128 0x11
+ 1543 00b8 01       		.uleb128 0x1
+ 1544 00b9 12       		.uleb128 0x12
+ 1545 00ba 06       		.uleb128 0x6
+ 1546 00bb 01       		.uleb128 0x1
+ 1547 00bc 13       		.uleb128 0x13
+ 1548 00bd 00       		.byte	0
+ 1549 00be 00       		.byte	0
+ 1550 00bf 11       		.uleb128 0x11
+ 1551 00c0 34       		.uleb128 0x34
+ 1552 00c1 00       		.byte	0
+ 1553 00c2 03       		.uleb128 0x3
+ 1554 00c3 08       		.uleb128 0x8
+ 1555 00c4 3A       		.uleb128 0x3a
+ 1556 00c5 0B       		.uleb128 0xb
+ 1557 00c6 3B       		.uleb128 0x3b
+ 1558 00c7 0B       		.uleb128 0xb
+ 1559 00c8 49       		.uleb128 0x49
+ 1560 00c9 13       		.uleb128 0x13
+ 1561 00ca 02       		.uleb128 0x2
+ 1562 00cb 17       		.uleb128 0x17
+ 1563 00cc 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 31
+
+
+ 1564 00cd 00       		.byte	0
+ 1565 00ce 12       		.uleb128 0x12
+ 1566 00cf 898201   		.uleb128 0x4109
+ 1567 00d2 00       		.byte	0
+ 1568 00d3 11       		.uleb128 0x11
+ 1569 00d4 01       		.uleb128 0x1
+ 1570 00d5 31       		.uleb128 0x31
+ 1571 00d6 13       		.uleb128 0x13
+ 1572 00d7 00       		.byte	0
+ 1573 00d8 00       		.byte	0
+ 1574 00d9 13       		.uleb128 0x13
+ 1575 00da 898201   		.uleb128 0x4109
+ 1576 00dd 01       		.byte	0x1
+ 1577 00de 11       		.uleb128 0x11
+ 1578 00df 01       		.uleb128 0x1
+ 1579 00e0 9342     		.uleb128 0x2113
+ 1580 00e2 18       		.uleb128 0x18
+ 1581 00e3 00       		.byte	0
+ 1582 00e4 00       		.byte	0
+ 1583 00e5 14       		.uleb128 0x14
+ 1584 00e6 8A8201   		.uleb128 0x410a
+ 1585 00e9 00       		.byte	0
+ 1586 00ea 02       		.uleb128 0x2
+ 1587 00eb 18       		.uleb128 0x18
+ 1588 00ec 9142     		.uleb128 0x2111
+ 1589 00ee 18       		.uleb128 0x18
+ 1590 00ef 00       		.byte	0
+ 1591 00f0 00       		.byte	0
+ 1592 00f1 15       		.uleb128 0x15
+ 1593 00f2 898201   		.uleb128 0x4109
+ 1594 00f5 01       		.byte	0x1
+ 1595 00f6 11       		.uleb128 0x11
+ 1596 00f7 01       		.uleb128 0x1
+ 1597 00f8 31       		.uleb128 0x31
+ 1598 00f9 13       		.uleb128 0x13
+ 1599 00fa 01       		.uleb128 0x1
+ 1600 00fb 13       		.uleb128 0x13
+ 1601 00fc 00       		.byte	0
+ 1602 00fd 00       		.byte	0
+ 1603 00fe 16       		.uleb128 0x16
+ 1604 00ff 898201   		.uleb128 0x4109
+ 1605 0102 01       		.byte	0x1
+ 1606 0103 11       		.uleb128 0x11
+ 1607 0104 01       		.uleb128 0x1
+ 1608 0105 31       		.uleb128 0x31
+ 1609 0106 13       		.uleb128 0x13
+ 1610 0107 00       		.byte	0
+ 1611 0108 00       		.byte	0
+ 1612 0109 17       		.uleb128 0x17
+ 1613 010a 01       		.uleb128 0x1
+ 1614 010b 01       		.byte	0x1
+ 1615 010c 49       		.uleb128 0x49
+ 1616 010d 13       		.uleb128 0x13
+ 1617 010e 01       		.uleb128 0x1
+ 1618 010f 13       		.uleb128 0x13
+ 1619 0110 00       		.byte	0
+ 1620 0111 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 32
+
+
+ 1621 0112 18       		.uleb128 0x18
+ 1622 0113 21       		.uleb128 0x21
+ 1623 0114 00       		.byte	0
+ 1624 0115 49       		.uleb128 0x49
+ 1625 0116 13       		.uleb128 0x13
+ 1626 0117 2F       		.uleb128 0x2f
+ 1627 0118 0B       		.uleb128 0xb
+ 1628 0119 00       		.byte	0
+ 1629 011a 00       		.byte	0
+ 1630 011b 19       		.uleb128 0x19
+ 1631 011c 05       		.uleb128 0x5
+ 1632 011d 00       		.byte	0
+ 1633 011e 03       		.uleb128 0x3
+ 1634 011f 0E       		.uleb128 0xe
+ 1635 0120 3A       		.uleb128 0x3a
+ 1636 0121 0B       		.uleb128 0xb
+ 1637 0122 3B       		.uleb128 0x3b
+ 1638 0123 0B       		.uleb128 0xb
+ 1639 0124 49       		.uleb128 0x49
+ 1640 0125 13       		.uleb128 0x13
+ 1641 0126 02       		.uleb128 0x2
+ 1642 0127 17       		.uleb128 0x17
+ 1643 0128 00       		.byte	0
+ 1644 0129 00       		.byte	0
+ 1645 012a 1A       		.uleb128 0x1a
+ 1646 012b 34       		.uleb128 0x34
+ 1647 012c 00       		.byte	0
+ 1648 012d 03       		.uleb128 0x3
+ 1649 012e 0E       		.uleb128 0xe
+ 1650 012f 3A       		.uleb128 0x3a
+ 1651 0130 0B       		.uleb128 0xb
+ 1652 0131 3B       		.uleb128 0x3b
+ 1653 0132 0B       		.uleb128 0xb
+ 1654 0133 49       		.uleb128 0x49
+ 1655 0134 13       		.uleb128 0x13
+ 1656 0135 02       		.uleb128 0x2
+ 1657 0136 18       		.uleb128 0x18
+ 1658 0137 00       		.byte	0
+ 1659 0138 00       		.byte	0
+ 1660 0139 1B       		.uleb128 0x1b
+ 1661 013a 0B       		.uleb128 0xb
+ 1662 013b 01       		.byte	0x1
+ 1663 013c 55       		.uleb128 0x55
+ 1664 013d 17       		.uleb128 0x17
+ 1665 013e 00       		.byte	0
+ 1666 013f 00       		.byte	0
+ 1667 0140 1C       		.uleb128 0x1c
+ 1668 0141 2E       		.uleb128 0x2e
+ 1669 0142 00       		.byte	0
+ 1670 0143 3F       		.uleb128 0x3f
+ 1671 0144 19       		.uleb128 0x19
+ 1672 0145 3C       		.uleb128 0x3c
+ 1673 0146 19       		.uleb128 0x19
+ 1674 0147 6E       		.uleb128 0x6e
+ 1675 0148 0E       		.uleb128 0xe
+ 1676 0149 03       		.uleb128 0x3
+ 1677 014a 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 33
+
+
+ 1678 014b 3A       		.uleb128 0x3a
+ 1679 014c 0B       		.uleb128 0xb
+ 1680 014d 3B       		.uleb128 0x3b
+ 1681 014e 0B       		.uleb128 0xb
+ 1682 014f 00       		.byte	0
+ 1683 0150 00       		.byte	0
+ 1684 0151 1D       		.uleb128 0x1d
+ 1685 0152 2E       		.uleb128 0x2e
+ 1686 0153 00       		.byte	0
+ 1687 0154 3F       		.uleb128 0x3f
+ 1688 0155 19       		.uleb128 0x19
+ 1689 0156 3C       		.uleb128 0x3c
+ 1690 0157 19       		.uleb128 0x19
+ 1691 0158 6E       		.uleb128 0x6e
+ 1692 0159 0E       		.uleb128 0xe
+ 1693 015a 03       		.uleb128 0x3
+ 1694 015b 0E       		.uleb128 0xe
+ 1695 015c 3A       		.uleb128 0x3a
+ 1696 015d 0B       		.uleb128 0xb
+ 1697 015e 3B       		.uleb128 0x3b
+ 1698 015f 05       		.uleb128 0x5
+ 1699 0160 00       		.byte	0
+ 1700 0161 00       		.byte	0
+ 1701 0162 00       		.byte	0
+ 1702              		.section	.debug_loc,"",%progbits
+ 1703              	.Ldebug_loc0:
+ 1704              	.LLST0:
+ 1705 0000 10000000 		.4byte	.LVL1
+ 1706 0004 1B000000 		.4byte	.LVL2-1
+ 1707 0008 0100     		.2byte	0x1
+ 1708 000a 50       		.byte	0x50
+ 1709 000b 1B000000 		.4byte	.LVL2-1
+ 1710 000f 40000000 		.4byte	.LVL7
+ 1711 0013 0100     		.2byte	0x1
+ 1712 0015 54       		.byte	0x54
+ 1713 0016 40000000 		.4byte	.LVL7
+ 1714 001a 44000000 		.4byte	.LVL8
+ 1715 001e 0200     		.2byte	0x2
+ 1716 0020 30       		.byte	0x30
+ 1717 0021 9F       		.byte	0x9f
+ 1718 0022 44000000 		.4byte	.LVL8
+ 1719 0026 47000000 		.4byte	.LVL9-1
+ 1720 002a 0100     		.2byte	0x1
+ 1721 002c 50       		.byte	0x50
+ 1722 002d 47000000 		.4byte	.LVL9-1
+ 1723 0031 62000000 		.4byte	.LVL13
+ 1724 0035 0100     		.2byte	0x1
+ 1725 0037 54       		.byte	0x54
+ 1726 0038 62000000 		.4byte	.LVL13
+ 1727 003c 74000000 		.4byte	.LFE37
+ 1728 0040 0100     		.2byte	0x1
+ 1729 0042 50       		.byte	0x50
+ 1730 0043 00000000 		.4byte	0
+ 1731 0047 00000000 		.4byte	0
+ 1732              	.LLST1:
+ 1733 004b 1C000000 		.4byte	.LVL2
+ 1734 004f 23000000 		.4byte	.LVL3-1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 34
+
+
+ 1735 0053 0100     		.2byte	0x1
+ 1736 0055 50       		.byte	0x50
+ 1737 0056 00000000 		.4byte	0
+ 1738 005a 00000000 		.4byte	0
+ 1739              	.LLST2:
+ 1740 005e 26000000 		.4byte	.LVL4
+ 1741 0062 38000000 		.4byte	.LVL5
+ 1742 0066 0100     		.2byte	0x1
+ 1743 0068 50       		.byte	0x50
+ 1744 0069 38000000 		.4byte	.LVL5
+ 1745 006d 44000000 		.4byte	.LVL8
+ 1746 0071 0100     		.2byte	0x1
+ 1747 0073 55       		.byte	0x55
+ 1748 0074 00000000 		.4byte	0
+ 1749 0078 00000000 		.4byte	0
+ 1750              	.LLST3:
+ 1751 007c 4A000000 		.4byte	.LVL10
+ 1752 0080 5C000000 		.4byte	.LVL11
+ 1753 0084 0100     		.2byte	0x1
+ 1754 0086 50       		.byte	0x50
+ 1755 0087 5C000000 		.4byte	.LVL11
+ 1756 008b 5E000000 		.4byte	.LVL12
+ 1757 008f 0100     		.2byte	0x1
+ 1758 0091 55       		.byte	0x55
+ 1759 0092 00000000 		.4byte	0
+ 1760 0096 00000000 		.4byte	0
+ 1761              	.LLST4:
+ 1762 009a 00000000 		.4byte	.LVL14
+ 1763 009e 0B000000 		.4byte	.LVL15-1
+ 1764 00a2 0100     		.2byte	0x1
+ 1765 00a4 50       		.byte	0x50
+ 1766 00a5 0B000000 		.4byte	.LVL15-1
+ 1767 00a9 28000000 		.4byte	.LVL19
+ 1768 00ad 0400     		.2byte	0x4
+ 1769 00af F3       		.byte	0xf3
+ 1770 00b0 01       		.uleb128 0x1
+ 1771 00b1 50       		.byte	0x50
+ 1772 00b2 9F       		.byte	0x9f
+ 1773 00b3 28000000 		.4byte	.LVL19
+ 1774 00b7 2B000000 		.4byte	.LVL20-1
+ 1775 00bb 0100     		.2byte	0x1
+ 1776 00bd 50       		.byte	0x50
+ 1777 00be 2B000000 		.4byte	.LVL20-1
+ 1778 00c2 44000000 		.4byte	.LFE38
+ 1779 00c6 0400     		.2byte	0x4
+ 1780 00c8 F3       		.byte	0xf3
+ 1781 00c9 01       		.uleb128 0x1
+ 1782 00ca 50       		.byte	0x50
+ 1783 00cb 9F       		.byte	0x9f
+ 1784 00cc 00000000 		.4byte	0
+ 1785 00d0 00000000 		.4byte	0
+ 1786              	.LLST5:
+ 1787 00d4 2C000000 		.4byte	.LVL20
+ 1788 00d8 30000000 		.4byte	.LVL21
+ 1789 00dc 0200     		.2byte	0x2
+ 1790 00de 30       		.byte	0x30
+ 1791 00df 9F       		.byte	0x9f
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 35
+
+
+ 1792 00e0 32000000 		.4byte	.LVL22
+ 1793 00e4 44000000 		.4byte	.LFE38
+ 1794 00e8 0100     		.2byte	0x1
+ 1795 00ea 50       		.byte	0x50
+ 1796 00eb 00000000 		.4byte	0
+ 1797 00ef 00000000 		.4byte	0
+ 1798              	.LLST6:
+ 1799 00f3 0E000000 		.4byte	.LVL16
+ 1800 00f7 22000000 		.4byte	.LVL17
+ 1801 00fb 0100     		.2byte	0x1
+ 1802 00fd 50       		.byte	0x50
+ 1803 00fe 22000000 		.4byte	.LVL17
+ 1804 0102 28000000 		.4byte	.LVL19
+ 1805 0106 0100     		.2byte	0x1
+ 1806 0108 54       		.byte	0x54
+ 1807 0109 30000000 		.4byte	.LVL21
+ 1808 010d 32000000 		.4byte	.LVL22
+ 1809 0111 0100     		.2byte	0x1
+ 1810 0113 50       		.byte	0x50
+ 1811 0114 00000000 		.4byte	0
+ 1812 0118 00000000 		.4byte	0
+ 1813              	.LLST7:
+ 1814 011c 00000000 		.4byte	.LVL23
+ 1815 0120 0B000000 		.4byte	.LVL24-1
+ 1816 0124 0100     		.2byte	0x1
+ 1817 0126 50       		.byte	0x50
+ 1818 0127 0B000000 		.4byte	.LVL24-1
+ 1819 012b 28000000 		.4byte	.LVL28
+ 1820 012f 0400     		.2byte	0x4
+ 1821 0131 F3       		.byte	0xf3
+ 1822 0132 01       		.uleb128 0x1
+ 1823 0133 50       		.byte	0x50
+ 1824 0134 9F       		.byte	0x9f
+ 1825 0135 28000000 		.4byte	.LVL28
+ 1826 0139 2F000000 		.4byte	.LVL29-1
+ 1827 013d 0100     		.2byte	0x1
+ 1828 013f 50       		.byte	0x50
+ 1829 0140 2F000000 		.4byte	.LVL29-1
+ 1830 0144 74000000 		.4byte	.LFE39
+ 1831 0148 0400     		.2byte	0x4
+ 1832 014a F3       		.byte	0xf3
+ 1833 014b 01       		.uleb128 0x1
+ 1834 014c 50       		.byte	0x50
+ 1835 014d 9F       		.byte	0x9f
+ 1836 014e 00000000 		.4byte	0
+ 1837 0152 00000000 		.4byte	0
+ 1838              	.LLST8:
+ 1839 0156 0E000000 		.4byte	.LVL25
+ 1840 015a 22000000 		.4byte	.LVL26
+ 1841 015e 0100     		.2byte	0x1
+ 1842 0160 50       		.byte	0x50
+ 1843 0161 22000000 		.4byte	.LVL26
+ 1844 0165 28000000 		.4byte	.LVL28
+ 1845 0169 0100     		.2byte	0x1
+ 1846 016b 54       		.byte	0x54
+ 1847 016c 54000000 		.4byte	.LVL34
+ 1848 0170 56000000 		.4byte	.LVL35
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 36
+
+
+ 1849 0174 0100     		.2byte	0x1
+ 1850 0176 50       		.byte	0x50
+ 1851 0177 56000000 		.4byte	.LVL35
+ 1852 017b 58000000 		.4byte	.LVL36
+ 1853 017f 0100     		.2byte	0x1
+ 1854 0181 54       		.byte	0x54
+ 1855 0182 00000000 		.4byte	0
+ 1856 0186 00000000 		.4byte	0
+ 1857              	.LLST9:
+ 1858 018a 30000000 		.4byte	.LVL29
+ 1859 018e 37000000 		.4byte	.LVL30-1
+ 1860 0192 0100     		.2byte	0x1
+ 1861 0194 50       		.byte	0x50
+ 1862 0195 58000000 		.4byte	.LVL36
+ 1863 0199 5A000000 		.4byte	.LVL37
+ 1864 019d 0100     		.2byte	0x1
+ 1865 019f 50       		.byte	0x50
+ 1866 01a0 00000000 		.4byte	0
+ 1867 01a4 00000000 		.4byte	0
+ 1868              	.LLST10:
+ 1869 01a8 3A000000 		.4byte	.LVL31
+ 1870 01ac 4E000000 		.4byte	.LVL32
+ 1871 01b0 0100     		.2byte	0x1
+ 1872 01b2 50       		.byte	0x50
+ 1873 01b3 4E000000 		.4byte	.LVL32
+ 1874 01b7 54000000 		.4byte	.LVL34
+ 1875 01bb 0100     		.2byte	0x1
+ 1876 01bd 54       		.byte	0x54
+ 1877 01be 5C000000 		.4byte	.LVL38
+ 1878 01c2 5E000000 		.4byte	.LVL39
+ 1879 01c6 0100     		.2byte	0x1
+ 1880 01c8 50       		.byte	0x50
+ 1881 01c9 00000000 		.4byte	0
+ 1882 01cd 00000000 		.4byte	0
+ 1883              	.LLST11:
+ 1884 01d1 00000000 		.4byte	.LVL40
+ 1885 01d5 0B000000 		.4byte	.LVL41-1
+ 1886 01d9 0100     		.2byte	0x1
+ 1887 01db 50       		.byte	0x50
+ 1888 01dc 0B000000 		.4byte	.LVL41-1
+ 1889 01e0 28000000 		.4byte	.LVL45
+ 1890 01e4 0400     		.2byte	0x4
+ 1891 01e6 F3       		.byte	0xf3
+ 1892 01e7 01       		.uleb128 0x1
+ 1893 01e8 50       		.byte	0x50
+ 1894 01e9 9F       		.byte	0x9f
+ 1895 01ea 28000000 		.4byte	.LVL45
+ 1896 01ee 31000000 		.4byte	.LVL46-1
+ 1897 01f2 0100     		.2byte	0x1
+ 1898 01f4 50       		.byte	0x50
+ 1899 01f5 31000000 		.4byte	.LVL46-1
+ 1900 01f9 74000000 		.4byte	.LFE40
+ 1901 01fd 0400     		.2byte	0x4
+ 1902 01ff F3       		.byte	0xf3
+ 1903 0200 01       		.uleb128 0x1
+ 1904 0201 50       		.byte	0x50
+ 1905 0202 9F       		.byte	0x9f
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 37
+
+
+ 1906 0203 00000000 		.4byte	0
+ 1907 0207 00000000 		.4byte	0
+ 1908              	.LLST12:
+ 1909 020b 0E000000 		.4byte	.LVL42
+ 1910 020f 22000000 		.4byte	.LVL43
+ 1911 0213 0100     		.2byte	0x1
+ 1912 0215 50       		.byte	0x50
+ 1913 0216 22000000 		.4byte	.LVL43
+ 1914 021a 28000000 		.4byte	.LVL45
+ 1915 021e 0100     		.2byte	0x1
+ 1916 0220 54       		.byte	0x54
+ 1917 0221 56000000 		.4byte	.LVL51
+ 1918 0225 58000000 		.4byte	.LVL52
+ 1919 0229 0100     		.2byte	0x1
+ 1920 022b 50       		.byte	0x50
+ 1921 022c 58000000 		.4byte	.LVL52
+ 1922 0230 5A000000 		.4byte	.LVL53
+ 1923 0234 0100     		.2byte	0x1
+ 1924 0236 54       		.byte	0x54
+ 1925 0237 00000000 		.4byte	0
+ 1926 023b 00000000 		.4byte	0
+ 1927              	.LLST13:
+ 1928 023f 32000000 		.4byte	.LVL46
+ 1929 0243 39000000 		.4byte	.LVL47-1
+ 1930 0247 0100     		.2byte	0x1
+ 1931 0249 50       		.byte	0x50
+ 1932 024a 5A000000 		.4byte	.LVL53
+ 1933 024e 5C000000 		.4byte	.LVL54
+ 1934 0252 0100     		.2byte	0x1
+ 1935 0254 50       		.byte	0x50
+ 1936 0255 00000000 		.4byte	0
+ 1937 0259 00000000 		.4byte	0
+ 1938              	.LLST14:
+ 1939 025d 3C000000 		.4byte	.LVL48
+ 1940 0261 50000000 		.4byte	.LVL49
+ 1941 0265 0100     		.2byte	0x1
+ 1942 0267 50       		.byte	0x50
+ 1943 0268 50000000 		.4byte	.LVL49
+ 1944 026c 56000000 		.4byte	.LVL51
+ 1945 0270 0100     		.2byte	0x1
+ 1946 0272 54       		.byte	0x54
+ 1947 0273 5E000000 		.4byte	.LVL55
+ 1948 0277 60000000 		.4byte	.LVL56
+ 1949 027b 0100     		.2byte	0x1
+ 1950 027d 50       		.byte	0x50
+ 1951 027e 00000000 		.4byte	0
+ 1952 0282 00000000 		.4byte	0
+ 1953              		.section	.debug_aranges,"",%progbits
+ 1954 0000 34000000 		.4byte	0x34
+ 1955 0004 0200     		.2byte	0x2
+ 1956 0006 00000000 		.4byte	.Ldebug_info0
+ 1957 000a 04       		.byte	0x4
+ 1958 000b 00       		.byte	0
+ 1959 000c 0000     		.2byte	0
+ 1960 000e 0000     		.2byte	0
+ 1961 0010 00000000 		.4byte	.LFB37
+ 1962 0014 74000000 		.4byte	.LFE37-.LFB37
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 38
+
+
+ 1963 0018 00000000 		.4byte	.LFB38
+ 1964 001c 44000000 		.4byte	.LFE38-.LFB38
+ 1965 0020 00000000 		.4byte	.LFB39
+ 1966 0024 74000000 		.4byte	.LFE39-.LFB39
+ 1967 0028 00000000 		.4byte	.LFB40
+ 1968 002c 74000000 		.4byte	.LFE40-.LFB40
+ 1969 0030 00000000 		.4byte	0
+ 1970 0034 00000000 		.4byte	0
+ 1971              		.section	.debug_ranges,"",%progbits
+ 1972              	.Ldebug_ranges0:
+ 1973 0000 28000000 		.4byte	.LBB7
+ 1974 0004 54000000 		.4byte	.LBE7
+ 1975 0008 58000000 		.4byte	.LBB9
+ 1976 000c 5E000000 		.4byte	.LBE9
+ 1977 0010 00000000 		.4byte	0
+ 1978 0014 00000000 		.4byte	0
+ 1979 0018 28000000 		.4byte	.LBB11
+ 1980 001c 56000000 		.4byte	.LBE11
+ 1981 0020 5A000000 		.4byte	.LBB13
+ 1982 0024 60000000 		.4byte	.LBE13
+ 1983 0028 00000000 		.4byte	0
+ 1984 002c 00000000 		.4byte	0
+ 1985 0030 00000000 		.4byte	.LFB37
+ 1986 0034 74000000 		.4byte	.LFE37
+ 1987 0038 00000000 		.4byte	.LFB38
+ 1988 003c 44000000 		.4byte	.LFE38
+ 1989 0040 00000000 		.4byte	.LFB39
+ 1990 0044 74000000 		.4byte	.LFE39
+ 1991 0048 00000000 		.4byte	.LFB40
+ 1992 004c 74000000 		.4byte	.LFE40
+ 1993 0050 00000000 		.4byte	0
+ 1994 0054 00000000 		.4byte	0
+ 1995              		.section	.debug_line,"",%progbits
+ 1996              	.Ldebug_line0:
+ 1997 0000 E7020000 		.section	.debug_str,"MS",%progbits,1
+ 1997      02001902 
+ 1997      00000201 
+ 1997      FB0E0D00 
+ 1997      01010101 
+ 1998              	.LASF41:
+ 1999 0000 786C6F67 		.ascii	"xlogging_get_log_function\000"
+ 1999      67696E67 
+ 1999      5F676574 
+ 1999      5F6C6F67 
+ 1999      5F66756E 
+ 2000              	.LASF8:
+ 2001 001a 5F5F7569 		.ascii	"__uint8_t\000"
+ 2001      6E74385F 
+ 2001      7400
+ 2002              	.LASF26:
+ 2003 0024 4C4F4747 		.ascii	"LOGGER_LOG\000"
+ 2003      45525F4C 
+ 2003      4F4700
+ 2004              	.LASF31:
+ 2005 002f 5469636B 		.ascii	"TickType_t\000"
+ 2005      54797065 
+ 2005      5F7400
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 39
+
+
+ 2006              	.LASF44:
+ 2007 003a 78517565 		.ascii	"xQueueGenericCreate\000"
+ 2007      75654765 
+ 2007      6E657269 
+ 2007      63437265 
+ 2007      61746500 
+ 2008              	.LASF38:
+ 2009 004e 4C6F636B 		.ascii	"Lock\000"
+ 2009      00
+ 2010              	.LASF32:
+ 2011 0053 51756575 		.ascii	"QueueHandle_t\000"
+ 2011      6548616E 
+ 2011      646C655F 
+ 2011      7400
+ 2012              	.LASF22:
+ 2013 0061 415A5F4C 		.ascii	"AZ_LOG_ERROR\000"
+ 2013      4F475F45 
+ 2013      52524F52 
+ 2013      00
+ 2014              	.LASF0:
+ 2015 006e 756E7369 		.ascii	"unsigned int\000"
+ 2015      676E6564 
+ 2015      20696E74 
+ 2015      00
+ 2016              	.LASF43:
+ 2017 007b 76517565 		.ascii	"vQueueDelete\000"
+ 2017      75654465 
+ 2017      6C657465 
+ 2017      00
+ 2018              	.LASF37:
+ 2019 0088 5F5F6675 		.ascii	"__func__\000"
+ 2019      6E635F5F 
+ 2019      00
+ 2020              	.LASF27:
+ 2021 0091 666C6F61 		.ascii	"float\000"
+ 2021      7400
+ 2022              	.LASF11:
+ 2023 0097 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 2023      206C6F6E 
+ 2023      6720756E 
+ 2023      7369676E 
+ 2023      65642069 
+ 2024              	.LASF40:
+ 2025 00ae 556E6C6F 		.ascii	"Unlock\000"
+ 2025      636B00
+ 2026              	.LASF24:
+ 2027 00b5 415A5F4C 		.ascii	"AZ_LOG_TRACE\000"
+ 2027      4F475F54 
+ 2027      52414345 
+ 2027      00
+ 2028              	.LASF10:
+ 2029 00c2 6C6F6E67 		.ascii	"long unsigned int\000"
+ 2029      20756E73 
+ 2029      69676E65 
+ 2029      6420696E 
+ 2029      7400
+ 2030              	.LASF21:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 40
+
+
+ 2031 00d4 4C4F475F 		.ascii	"LOG_CATEGORY_TAG\000"
+ 2031      43415445 
+ 2031      474F5259 
+ 2031      5F544147 
+ 2031      00
+ 2032              	.LASF6:
+ 2033 00e5 73686F72 		.ascii	"short unsigned int\000"
+ 2033      7420756E 
+ 2033      7369676E 
+ 2033      65642069 
+ 2033      6E7400
+ 2034              	.LASF39:
+ 2035 00f8 68616E64 		.ascii	"handle\000"
+ 2035      6C6500
+ 2036              	.LASF25:
+ 2037 00ff 4C4F475F 		.ascii	"LOG_CATEGORY\000"
+ 2037      43415445 
+ 2037      474F5259 
+ 2037      00
+ 2038              	.LASF4:
+ 2039 010c 756E7369 		.ascii	"unsigned char\000"
+ 2039      676E6564 
+ 2039      20636861 
+ 2039      7200
+ 2040              	.LASF15:
+ 2041 011a 4C4F434B 		.ascii	"LOCK_OK\000"
+ 2041      5F4F4B00 
+ 2042              	.LASF28:
+ 2043 0122 646F7562 		.ascii	"double\000"
+ 2043      6C6500
+ 2044              	.LASF33:
+ 2045 0129 53656D61 		.ascii	"SemaphoreHandle_t\000"
+ 2045      70686F72 
+ 2045      6548616E 
+ 2045      646C655F 
+ 2045      7400
+ 2046              	.LASF9:
+ 2047 013b 5F5F7569 		.ascii	"__uint32_t\000"
+ 2047      6E743332 
+ 2047      5F7400
+ 2048              	.LASF14:
+ 2049 0146 4C4F434B 		.ascii	"LOCK_HANDLE\000"
+ 2049      5F48414E 
+ 2049      444C4500 
+ 2050              	.LASF42:
+ 2051 0152 78517565 		.ascii	"xQueueGenericSend\000"
+ 2051      75654765 
+ 2051      6E657269 
+ 2051      6353656E 
+ 2051      6400
+ 2052              	.LASF16:
+ 2053 0164 4C4F434B 		.ascii	"LOCK_ERROR\000"
+ 2053      5F455252 
+ 2053      4F5200
+ 2054              	.LASF48:
+ 2055 016f 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 2055      73657273 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 41
+
+
+ 2055      5C506875 
+ 2055      6F6E675C 
+ 2055      446F6375 
+ 2056 019d 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 2056      6F742D73 
+ 2056      646B2D69 
+ 2056      6F742D64 
+ 2056      65765C50 
+ 2057 01ce 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 2057      494F542D 
+ 2057      4875622D 
+ 2057      44656D6F 
+ 2057      5C50534F 
+ 2058 0200 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 2058      2D487562 
+ 2058      2D44656D 
+ 2058      6F2E6379 
+ 2058      64736E00 
+ 2059              	.LASF30:
+ 2060 0214 55426173 		.ascii	"UBaseType_t\000"
+ 2060      65547970 
+ 2060      655F7400 
+ 2061              	.LASF18:
+ 2062 0220 75696E74 		.ascii	"uint8_t\000"
+ 2062      385F7400 
+ 2063              	.LASF34:
+ 2064 0228 72657375 		.ascii	"result\000"
+ 2064      6C7400
+ 2065              	.LASF12:
+ 2066 022f 73697A65 		.ascii	"sizetype\000"
+ 2066      74797065 
+ 2066      00
+ 2067              	.LASF47:
+ 2068 0238 536F7572 		.ascii	"Source\\azure_iot_sdk\\c-utility\\pal\\freertos\\lo"
+ 2068      63655C61 
+ 2068      7A757265 
+ 2068      5F696F74 
+ 2068      5F73646B 
+ 2069 0266 636B2E63 		.ascii	"ck.c\000"
+ 2069      00
+ 2070              	.LASF20:
+ 2071 026b 4C4F434B 		.ascii	"LOCK_RESULT_TAG\000"
+ 2071      5F524553 
+ 2071      554C545F 
+ 2071      54414700 
+ 2072              	.LASF1:
+ 2073 027b 6C6F6E67 		.ascii	"long long int\000"
+ 2073      206C6F6E 
+ 2073      6720696E 
+ 2073      7400
+ 2074              	.LASF17:
+ 2075 0289 4C4F434B 		.ascii	"LOCK_RESULT\000"
+ 2075      5F524553 
+ 2075      554C5400 
+ 2076              	.LASF13:
+ 2077 0295 63686172 		.ascii	"char\000"
+ 2077      00
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 42
+
+
+ 2078              	.LASF5:
+ 2079 029a 73686F72 		.ascii	"short int\000"
+ 2079      7420696E 
+ 2079      7400
+ 2080              	.LASF23:
+ 2081 02a4 415A5F4C 		.ascii	"AZ_LOG_INFO\000"
+ 2081      4F475F49 
+ 2081      4E464F00 
+ 2082              	.LASF36:
+ 2083 02b0 4C6F636B 		.ascii	"Lock_Deinit\000"
+ 2083      5F446569 
+ 2083      6E697400 
+ 2084              	.LASF19:
+ 2085 02bc 75696E74 		.ascii	"uint32_t\000"
+ 2085      33325F74 
+ 2085      00
+ 2086              	.LASF7:
+ 2087 02c5 6C6F6E67 		.ascii	"long int\000"
+ 2087      20696E74 
+ 2087      00
+ 2088              	.LASF2:
+ 2089 02ce 6C6F6E67 		.ascii	"long double\000"
+ 2089      20646F75 
+ 2089      626C6500 
+ 2090              	.LASF46:
+ 2091 02da 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 2091      43313120 
+ 2091      352E342E 
+ 2091      31203230 
+ 2091      31363036 
+ 2092 030d 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 2092      20726576 
+ 2092      6973696F 
+ 2092      6E203233 
+ 2092      37373135 
+ 2093 0340 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 2093      67202D66 
+ 2093      66756E63 
+ 2093      74696F6E 
+ 2093      2D736563 
+ 2094              	.LASF3:
+ 2095 036c 7369676E 		.ascii	"signed char\000"
+ 2095      65642063 
+ 2095      68617200 
+ 2096              	.LASF45:
+ 2097 0378 78517565 		.ascii	"xQueueSemaphoreTake\000"
+ 2097      75655365 
+ 2097      6D617068 
+ 2097      6F726554 
+ 2097      616B6500 
+ 2098              	.LASF29:
+ 2099 038c 42617365 		.ascii	"BaseType_t\000"
+ 2099      54797065 
+ 2099      5F7400
+ 2100              	.LASF35:
+ 2101 0397 4C6F636B 		.ascii	"Lock_Init\000"
+ 2101      5F496E69 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccff32sI.s 			page 43
+
+
+ 2101      7400
+ 2102              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

@@ -1,0 +1,957 @@
+
+\begin{DoxyCodeInclude}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * This module implements the le\_sms's unit tests.}
+\textcolor{comment}{  *}
+\textcolor{comment}{  * Copyright (C) Sierra Wireless Inc.}
+\textcolor{comment}{  *}
+\textcolor{comment}{  */}
+
+\textcolor{preprocessor}{#include "\hyperlink{legato_8h}{legato.h}"}
+\textcolor{preprocessor}{#include "interfaces.h"}
+\textcolor{preprocessor}{#include <semaphore.h>}
+
+\textcolor{keyword}{static} \hyperlink{le__sms__interface_8h_a77d2607cc541bf0369e69bb2d105d4bf}{le\_sms\_RxMessageHandlerRef\_t} HandlerRef;
+
+\textcolor{keyword}{static} \textcolor{keywordtype}{bool} CdmaTest = \textcolor{keyword}{true};
+\textcolor{keyword}{static} \textcolor{keywordtype}{bool} GsmTest = \textcolor{keyword}{true};
+\textcolor{keyword}{static} le\_log\_TraceRef\_t TraceRefPdu;
+\textcolor{keyword}{static} le\_log\_TraceRef\_t TraceRefSms;
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Dump the PDU}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} Dump
+(
+    \textcolor{keyword}{const} \textcolor{keywordtype}{char}      *label,     \textcolor{comment}{///< [IN] label}
+\textcolor{comment}{}    \textcolor{keyword}{const} uint8\_t   *buffer,    \textcolor{comment}{///< [IN] buffer}
+\textcolor{comment}{}    \textcolor{keywordtype}{size\_t}           bufferSize \textcolor{comment}{///< [IN] buffer size}
+\textcolor{comment}{})
+\{
+    uint32\_t index = 0, i = 0;
+    \textcolor{keywordtype}{char} output[65] = \{0\};
+
+    \hyperlink{le__log_8h_a2a91ea8857cf190fde71d85ba930a498}{LE\_DEBUG}(\textcolor{stringliteral}{"%s:"},label);
+    \textcolor{keywordflow}{for} (i=0;i<bufferSize;i++)
+    \{
+        index += sprintf(&output[index],\textcolor{stringliteral}{"%02X"},buffer[i]);
+        \textcolor{keywordflow}{if} ( !((i+1)%32) )
+        \{
+            \hyperlink{le__log_8h_a2a91ea8857cf190fde71d85ba930a498}{LE\_DEBUG}(\textcolor{stringliteral}{"%s"},output);
+            index = 0;
+        \}
+    \}
+    \hyperlink{le__log_8h_a2a91ea8857cf190fde71d85ba930a498}{LE\_DEBUG}(\textcolor{stringliteral}{"%s"},output);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Handler function for SMS message reception.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} TestRxHandler
+(
+    \hyperlink{le__sms__interface_8h_a8eb2a15362fe26516fc68fd7a7d5e3e7}{le\_sms\_MsgRef\_t} msg,
+    \textcolor{keywordtype}{void}* contextPtr
+)
+\{
+    \hyperlink{le__sms__interface_8h_a337778c44e63660c44fa2116699296c0}{le\_sms\_Format\_t}       myformat;
+    \hyperlink{le__sms__interface_8h_a9001c5bc939bda5d5865e363bdf7662c}{le\_sms\_Type\_t}         myType;
+    uint16\_t              myMessageId = 0;
+    uint16\_t              myMessageSerialNumber = 0;
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t}           res;
+
+    \textcolor{keywordtype}{size\_t}                pduLen;
+    \textcolor{keywordtype}{char}                  timestamp[\hyperlink{le__sms__interface_8h_a9844280f515fbc2b393844e63aa83075}{LE\_SMS\_TIMESTAMP\_MAX\_BYTES}];
+    \textcolor{keywordtype}{char}                  text[\hyperlink{le__sms__interface_8h_a0dc5c2cec7c1fb166c47393fbb07e43f}{LE\_SMS\_TEXT\_MAX\_BYTES}] = \{0\};
+    uint8\_t               pdu[\hyperlink{le__sms__interface_8h_aaa740f36bbc6d13d0b355d3dc2d8d4dc}{LE\_SMS\_PDU\_MAX\_BYTES}] = \{0\};
+    uint16\_t              ucs2[\hyperlink{le__sms__interface_8h_a8026a1caf6d8b759972785ebefafaf94}{LE\_SMS\_UCS2\_MAX\_CHARS}] = \{0\};
+    uint8\_t               bin[50] = \{0\};
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST- New SMS message received ! msg.%p"}, msg);
+
+    myformat = \hyperlink{le__sms__interface_8h_a5c2b8ce7043b4732c7b0ede7c5d7118c}{le\_sms\_GetFormat}(msg);
+    myType = \hyperlink{le__sms__interface_8h_a2a63c6b5179025a80fb86c7f188e1eb7}{le\_sms\_GetType}(msg);
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST- New SMS message format %d, Type %d"}, myformat, myType);
+
+    \textcolor{keywordflow}{if} (myType != \hyperlink{le__sms__interface_8h_a9001c5bc939bda5d5865e363bdf7662ca3dff7628faf85524d772f34f52699a47}{LE\_SMS\_TYPE\_BROADCAST\_RX})
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  1- Check le\_sms\_GetType failure! %d"}, myType);
+        \textcolor{keywordflow}{return};
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  1- Check le\_sms\_GetType LE\_SMS\_TYPE\_CB"});
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_aa28c1d04ff19b88100b766737610b128}{le\_sms\_GetCellBroadcastId}(msg, &myMessageId);
+    \textcolor{keywordflow}{if} (res != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  2- Check le\_sms\_GetMessageIdCellBroadcast failure! %d"}, res);
+        \textcolor{keywordflow}{return};
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  2- Check le\_sms\_GetMessageIdCellBroadcast OK Message Id 0x%04X (%d)"},
+            myMessageId, myMessageId);
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_aa3e075b4a9396b2e4af233e4543f40bd}{le\_sms\_GetCellBroadcastSerialNumber}(msg, &
+      myMessageSerialNumber);
+    \textcolor{keywordflow}{if} (res != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  3- Check le\_sms\_GetCellBroadcastSerialNumber failure! %d"}, res);
+        \textcolor{keywordflow}{return};
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  3- Check le\_sms\_GetCellBroadcastSerialNumber OK Message Id 0x%04X (%d)"},
+            myMessageSerialNumber, myMessageSerialNumber);
+    \}
+
+    \textcolor{keywordflow}{if} (myformat == \hyperlink{le__sms__interface_8h_a337778c44e63660c44fa2116699296c0a1bb6a0d76a622b1185ee879e1595dff8}{LE\_SMS\_FORMAT\_TEXT})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SMS Cell Broadcast in text format"});
+        res = \hyperlink{le__sms__interface_8h_af018ca1bc2085a48e4b6d4691bef3cc7}{le\_sms\_GetTimeStamp}(msg, timestamp, \textcolor{keyword}{sizeof}(timestamp));
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  4- Check le\_sms\_GetTimeStamp failure! %d"}, res);
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  4- Check le\_sms\_GetTimeStamp LE\_NOT\_PERMITTED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aebf0c28efce6ec0b9616ffa8ecb80782}{le\_sms\_GetText}(msg, text, \textcolor{keyword}{sizeof}(text));
+        \textcolor{keywordflow}{if}(res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  5- Check le\_sms\_GetText failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SMS CB text=> '%s'"},text);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  5- Check le\_sms\_GetText OK."});
+        \}
+
+        pduLen = \hyperlink{le__sms__interface_8h_abb89b302e564f3d55d604bb0c0dda022}{le\_sms\_GetPDULen}(msg);
+        \textcolor{keywordflow}{if}( (pduLen <= 0) || (pduLen > \hyperlink{le__sms__interface_8h_aaa740f36bbc6d13d0b355d3dc2d8d4dc}{LE\_SMS\_PDU\_MAX\_BYTES}))
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  6 Check le\_sms\_GetPDULen failure!"});
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SMS CB Pdu len %d"}, (\textcolor{keywordtype}{int}) pduLen);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  6- Check le\_sms\_GetPDULen OK."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a77555788d56f73fa52f56904cd39cd2f}{le\_sms\_GetPDU}(msg, pdu, &pduLen);
+        \textcolor{keywordflow}{if}(res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  7 Check le\_sms\_GetPDU failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            Dump(\textcolor{stringliteral}{"SMS CB PDU"}, pdu, pduLen);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  7 Check le\_sms\_GetPDU OK."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aff755186b683b94ba2788b48e28284a3}{le\_sms\_DeleteFromStorage}(msg);
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca68b2d1935e287dda88cba448508cfbd7}{LE\_NO\_MEMORY})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  8 Check le\_sms\_DeleteFromStorage failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            Dump(\textcolor{stringliteral}{"SMS CB PDU"}, pdu, pduLen);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  8 Check le\_sms\_DeleteFromStorage LE\_NO\_MEMORY."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aa5468a01069d8c8d03e5204453560d9a}{le\_sms\_SetText}(msg, \textcolor{stringliteral}{"TOTO"});
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  9 Check le\_sms\_SetText failure !%d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  9 Check le\_sms\_SetText OK."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a6fda3e193c9662c394412816ae508c23}{le\_sms\_SetDestination}(msg, \textcolor{stringliteral}{"0123456789"});
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  10 Check le\_sms\_SetDestination failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  10 Check le\_sms\_SetDestination LE\_NOT\_PERMITTED."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_ad135130755ab2979a265f65178a3ae0d}{le\_sms\_SetBinary}(msg, bin, \textcolor{keyword}{sizeof}(bin));
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  11 Check le\_sms\_SetBinary failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  11 Check le\_sms\_SetBinary LE\_NOT\_PERMITTED."});
+        \}
+
+        \textcolor{keywordtype}{size\_t} binLen = \textcolor{keyword}{sizeof}(bin);
+        res = \hyperlink{le__sms__interface_8h_af652a15437db583f333257ff5cef808d}{le\_sms\_GetBinary}(msg, bin, &binLen);
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca556a4bcd649b2cee7145a6f913d77af3}{LE\_FORMAT\_ERROR})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  12 Check le\_sms\_GetBinary failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  12 Check le\_sms\_GetBinary LE\_FORMAT\_ERROR."});
+        \}
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (myformat == \hyperlink{le__sms__interface_8h_a337778c44e63660c44fa2116699296c0ac70333fc9281ed10aa405d585689c000}{LE\_SMS\_FORMAT\_BINARY})
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SMS Cell Broadcast in binary format"});
+        res = \hyperlink{le__sms__interface_8h_af018ca1bc2085a48e4b6d4691bef3cc7}{le\_sms\_GetTimeStamp}(msg, timestamp, \textcolor{keyword}{sizeof}(timestamp));
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  4- Check le\_sms\_GetTimeStamp failure! %d"}, res);
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  4- Check le\_sms\_GetTimeStamp LE\_NOT\_PERMITTED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aebf0c28efce6ec0b9616ffa8ecb80782}{le\_sms\_GetText}(msg, text, \textcolor{keyword}{sizeof}(text));
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca556a4bcd649b2cee7145a6f913d77af3}{LE\_FORMAT\_ERROR})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  5- Check le\_sms\_GetText failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SMS CB text=> '%s'"},text);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  5- Check le\_sms\_GetText LE\_FORMAT\_ERROR."});
+        \}
+
+        pduLen = \hyperlink{le__sms__interface_8h_abb89b302e564f3d55d604bb0c0dda022}{le\_sms\_GetPDULen}(msg);
+        \textcolor{keywordflow}{if}( (pduLen <= 0) || (pduLen > \hyperlink{le__sms__interface_8h_aaa740f36bbc6d13d0b355d3dc2d8d4dc}{LE\_SMS\_PDU\_MAX\_BYTES}))
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  6 Check le\_sms\_GetPDULen failure!"});
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SMS CB Pdu len %d"}, (\textcolor{keywordtype}{int}) pduLen);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  6- Check le\_sms\_GetPDULen OK."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a77555788d56f73fa52f56904cd39cd2f}{le\_sms\_GetPDU}(msg, pdu, &pduLen);
+        \textcolor{keywordflow}{if}(res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  7 Check le\_sms\_GetPDU failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            Dump(\textcolor{stringliteral}{"SMS CB PDU"}, pdu, pduLen);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  7 Check le\_sms\_GetPDU OK."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aff755186b683b94ba2788b48e28284a3}{le\_sms\_DeleteFromStorage}(msg);
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca68b2d1935e287dda88cba448508cfbd7}{LE\_NO\_MEMORY})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  8 Check le\_sms\_DeleteFromStorage failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            Dump(\textcolor{stringliteral}{"SMS CB PDU"}, pdu, pduLen);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  8 Check le\_sms\_DeleteFromStorage LE\_NO\_MEMORY."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aa5468a01069d8c8d03e5204453560d9a}{le\_sms\_SetText}(msg, \textcolor{stringliteral}{"TOTO"});
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  9 Check le\_sms\_SetText failure !%d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  9 Check le\_sms\_SetText LE\_NOT\_PERMITTED."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a6fda3e193c9662c394412816ae508c23}{le\_sms\_SetDestination}(msg, \textcolor{stringliteral}{"0123456789"});
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  10 Check le\_sms\_SetDestination failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  10 Check le\_sms\_SetDestination LE\_NOT\_PERMITTED."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_ad135130755ab2979a265f65178a3ae0d}{le\_sms\_SetBinary}(msg, bin, \textcolor{keyword}{sizeof}(bin));
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  11 Check le\_sms\_SetBinary failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  11 Check le\_sms\_SetBinary LE\_NOT\_PERMITTED."});
+        \}
+
+        \textcolor{keywordtype}{size\_t} binLen = \textcolor{keyword}{sizeof}(bin);
+        res = \hyperlink{le__sms__interface_8h_af652a15437db583f333257ff5cef808d}{le\_sms\_GetBinary}(msg, bin, &binLen);
+        \textcolor{keywordflow}{if}(res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  12 Check le\_sms\_GetBinary failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+
+            bin[binLen] = 0;
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SMS CB binary (%d)=> '%s'"},(\textcolor{keywordtype}{int}) binLen, bin);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  12 Check le\_sms\_GetBinary OK."});
+        \}
+    \}
+    \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} (myformat == \hyperlink{le__sms__interface_8h_a337778c44e63660c44fa2116699296c0afe08800134fe4f54c84439cb2d323a77}{LE\_SMS\_FORMAT\_UCS2})
+    \{
+        \textcolor{keyword}{const} uint16\_t ucs2Pattern[]= \{ 0x3100, 0x3200, 0x3300 \};
+
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SMS Cell Broadcast in UCS2 format"});
+        res = \hyperlink{le__sms__interface_8h_af018ca1bc2085a48e4b6d4691bef3cc7}{le\_sms\_GetTimeStamp}(msg, timestamp, \textcolor{keyword}{sizeof}(timestamp));
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  4- Check le\_sms\_GetTimeStamp failure! %d"}, res);
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  4- Check le\_sms\_GetTimeStamp LE\_NOT\_PERMITTED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aebf0c28efce6ec0b9616ffa8ecb80782}{le\_sms\_GetText}(msg, text, \textcolor{keyword}{sizeof}(text));
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca556a4bcd649b2cee7145a6f913d77af3}{LE\_FORMAT\_ERROR})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  5- Check le\_sms\_GetUCS2 failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SMS CB text=> '%s'"},text);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  5- Check le\_sms\_GetUCS2 LE\_FORMAT\_ERROR."});
+        \}
+
+        pduLen = \hyperlink{le__sms__interface_8h_abb89b302e564f3d55d604bb0c0dda022}{le\_sms\_GetPDULen}(msg);
+        \textcolor{keywordflow}{if}( (pduLen <= 0) || (pduLen > \hyperlink{le__sms__interface_8h_a8026a1caf6d8b759972785ebefafaf94}{LE\_SMS\_UCS2\_MAX\_CHARS}))
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  6 Check le\_sms\_GetPDULen failure!"});
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SMS CB Pdu len %d"}, (\textcolor{keywordtype}{int}) pduLen);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  6- Check le\_sms\_GetPDULen OK."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a77555788d56f73fa52f56904cd39cd2f}{le\_sms\_GetPDU}(msg, pdu, &pduLen);
+        \textcolor{keywordflow}{if}(res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  7 Check le\_sms\_GetPDU failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            Dump(\textcolor{stringliteral}{"SMS CB PDU"}, pdu, pduLen);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  7 Check le\_sms\_GetPDU OK."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aff755186b683b94ba2788b48e28284a3}{le\_sms\_DeleteFromStorage}(msg);
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca68b2d1935e287dda88cba448508cfbd7}{LE\_NO\_MEMORY})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  8 Check le\_sms\_DeleteFromStorage failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            Dump(\textcolor{stringliteral}{"SMS CB PDU"}, pdu, pduLen);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  8 Check le\_sms\_DeleteFromStorage LE\_NO\_MEMORY."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_ac351541bd51f008551a55ea645e31599}{le\_sms\_SetUCS2}(msg, ucs2Pattern, \textcolor{keyword}{sizeof}(ucs2Pattern) / 2);
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  9 Check le\_sms\_SetUCS2 failure !%d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  9 Check le\_sms\_SetUCS2 LE\_NOT\_PERMITTED."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a6fda3e193c9662c394412816ae508c23}{le\_sms\_SetDestination}(msg, \textcolor{stringliteral}{"0123456789"});
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  10 Check le\_sms\_SetDestination failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  10 Check le\_sms\_SetDestination LE\_NOT\_PERMITTED."});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_ad135130755ab2979a265f65178a3ae0d}{le\_sms\_SetBinary}(msg, bin, \textcolor{keyword}{sizeof}(bin));
+        \textcolor{keywordflow}{if}(res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  11 Check le\_sms\_SetBinary failure! %d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  11 Check le\_sms\_SetBinary LE\_NOT\_PERMITTED."});
+        \}
+
+        \textcolor{keywordtype}{size\_t} binLen = \hyperlink{le__sms__interface_8h_a8026a1caf6d8b759972785ebefafaf94}{LE\_SMS\_UCS2\_MAX\_CHARS};
+        res = \hyperlink{le__sms__interface_8h_adafdc63a36a6a50c8e942bf69958789f}{le\_sms\_GetUCS2}(msg, ucs2, &binLen);
+        \textcolor{keywordflow}{if}(res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"-TEST  12 Check le\_sms\_GetUCS2 failure !%d"}, res);
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"FAILED !!"});
+            \textcolor{keywordflow}{return};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            Dump(\textcolor{stringliteral}{"UCS2 Dump: "}, (uint8\_t *) ucs2, binLen * 2);
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"-TEST  12 Check le\_sms\_GetUCS2 LE\_OK"});
+        \}
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SMS Cell Broadcast not in test format"});
+    \}
+    \hyperlink{le__sms__interface_8h_aca1691010c88995cb47225f2889910fa}{le\_sms\_Delete}(msg);
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"smsCBTest sequence PASSED"});
+\}
+
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{comment}{/*}
+\textcolor{comment}{ * Test:}
+\textcolor{comment}{ * - le\_sms\_AddCellBroadcastIds()}
+\textcolor{comment}{ * - le\_sms\_RemoveCellBroadcastIds()}
+\textcolor{comment}{ * - le\_sms\_ClearCellBroadcastIds()}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} TestAddRemoveCellBroadcastIds
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    res = \hyperlink{le__sms__interface_8h_aae87dacecc438ea9182d370895e5cb3f}{le\_sms\_AddCellBroadcastIds}(0,50);
+    \textcolor{keywordflow}{if} (res != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_AddCellBroadcastIds FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_aae87dacecc438ea9182d370895e5cb3f}{le\_sms\_AddCellBroadcastIds}(0,50);
+    \textcolor{keywordflow}{if} (res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT})
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_AddCellBroadcastIds FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_a656fefe815bb965e10087ee65b59faa0}{le\_sms\_RemoveCellBroadcastIds}(0,100);
+    \textcolor{keywordflow}{if} (res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT})
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"TestAddRemoveCellBroadcastIds FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_a656fefe815bb965e10087ee65b59faa0}{le\_sms\_RemoveCellBroadcastIds}(0,50);
+    \textcolor{keywordflow}{if} (res != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"TestAddRemoveCellBroadcastIds FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_a656fefe815bb965e10087ee65b59faa0}{le\_sms\_RemoveCellBroadcastIds}(0,50);
+    \textcolor{keywordflow}{if} (res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT})
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"TestAddRemoveCellBroadcastIds FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_aae87dacecc438ea9182d370895e5cb3f}{le\_sms\_AddCellBroadcastIds}(60,110);
+    \textcolor{keywordflow}{if} (res != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_AddCellBroadcastIds FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_ae3333cbf700035067f2dae8ea0e564d0}{le\_sms\_ClearCellBroadcastIds}();
+    \textcolor{keywordflow}{if} (res != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ClearCellBroadcastIds FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5066a4bcec691c6b67843b8f79656422}{LE\_OK};
+\}
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{comment}{/*}
+\textcolor{comment}{ * Test:}
+\textcolor{comment}{ * - le\_sms\_AddCdmaCellBroadcastServices()}
+\textcolor{comment}{ * - le\_sms\_RemoveCdmaCellBroadcastServices()}
+\textcolor{comment}{ * - le\_sms\_ClearCdmaCellBroadcastServices()}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} TestAddRemoveCDMACellBroadcastIds
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+
+    res = \hyperlink{le__sms__interface_8h_ad57196114a634f36b057a9cfbcb7d58a}{le\_sms\_AddCdmaCellBroadcastServices}(LE\_SMS\_CDMA\_SVC\_CAT\_MAX, 
+      \hyperlink{le__sms__interface_8h_ad4ba75a2c1d118cd46ca5e8428fb5ddbad0356a01286311e11035b9ef1ca4ef7c}{LE\_SMS\_LANGUAGE\_UNKNOWN});
+    \textcolor{keywordflow}{if} (res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cabe505065132f6e8850da6f476d8fb783}{LE\_BAD\_PARAMETER})
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_AddCdmaCellBroadcastServices FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_ad57196114a634f36b057a9cfbcb7d58a}{le\_sms\_AddCdmaCellBroadcastServices}(
+      \hyperlink{le__sms__interface_8h_a4d1e11633722ac519f2d8efb1178167ca745c1a522cc4202e9c42ef90791cbe5b}{LE\_SMS\_CDMA\_SVC\_CAT\_UNKNOWN}, LE\_SMS\_LANGUAGE\_MAX);
+    \textcolor{keywordflow}{if} (res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cabe505065132f6e8850da6f476d8fb783}{LE\_BAD\_PARAMETER})
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_AddCdmaCellBroadcastServices FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_ad57196114a634f36b057a9cfbcb7d58a}{le\_sms\_AddCdmaCellBroadcastServices}(
+      \hyperlink{le__sms__interface_8h_a4d1e11633722ac519f2d8efb1178167ca745c1a522cc4202e9c42ef90791cbe5b}{LE\_SMS\_CDMA\_SVC\_CAT\_UNKNOWN}, \hyperlink{le__sms__interface_8h_ad4ba75a2c1d118cd46ca5e8428fb5ddbad0356a01286311e11035b9ef1ca4ef7c}{LE\_SMS\_LANGUAGE\_UNKNOWN});
+    \textcolor{keywordflow}{if} (res != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_AddCdmaCellBroadcastServices FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_ad57196114a634f36b057a9cfbcb7d58a}{le\_sms\_AddCdmaCellBroadcastServices}(
+      \hyperlink{le__sms__interface_8h_a4d1e11633722ac519f2d8efb1178167ca745c1a522cc4202e9c42ef90791cbe5b}{LE\_SMS\_CDMA\_SVC\_CAT\_UNKNOWN}, \hyperlink{le__sms__interface_8h_ad4ba75a2c1d118cd46ca5e8428fb5ddbad0356a01286311e11035b9ef1ca4ef7c}{LE\_SMS\_LANGUAGE\_UNKNOWN});
+    \textcolor{keywordflow}{if} (res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT})
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_AddCdmaCellBroadcastServices FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_ae7c58d4ed9ff586d2403232b0cda99e7}{le\_sms\_RemoveCdmaCellBroadcastServices}(
+      \hyperlink{le__sms__interface_8h_a4d1e11633722ac519f2d8efb1178167ca745c1a522cc4202e9c42ef90791cbe5b}{LE\_SMS\_CDMA\_SVC\_CAT\_UNKNOWN},
+                    \hyperlink{le__sms__interface_8h_ad4ba75a2c1d118cd46ca5e8428fb5ddba42b1bbed8b017e36fd0389bfa09f42fb}{LE\_SMS\_LANGUAGE\_ENGLISH});
+    \textcolor{keywordflow}{if} (res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT})
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_RemoveCdmaCellBroadcastServices FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_ae7c58d4ed9ff586d2403232b0cda99e7}{le\_sms\_RemoveCdmaCellBroadcastServices}(
+      \hyperlink{le__sms__interface_8h_a4d1e11633722ac519f2d8efb1178167ca745c1a522cc4202e9c42ef90791cbe5b}{LE\_SMS\_CDMA\_SVC\_CAT\_UNKNOWN},
+                    \hyperlink{le__sms__interface_8h_ad4ba75a2c1d118cd46ca5e8428fb5ddbad0356a01286311e11035b9ef1ca4ef7c}{LE\_SMS\_LANGUAGE\_UNKNOWN});
+    \textcolor{keywordflow}{if} (res != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_RemoveCdmaCellBroadcastServices FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_ae7c58d4ed9ff586d2403232b0cda99e7}{le\_sms\_RemoveCdmaCellBroadcastServices}(
+      \hyperlink{le__sms__interface_8h_a4d1e11633722ac519f2d8efb1178167ca745c1a522cc4202e9c42ef90791cbe5b}{LE\_SMS\_CDMA\_SVC\_CAT\_UNKNOWN},
+                    \hyperlink{le__sms__interface_8h_ad4ba75a2c1d118cd46ca5e8428fb5ddbad0356a01286311e11035b9ef1ca4ef7c}{LE\_SMS\_LANGUAGE\_UNKNOWN});
+    \textcolor{keywordflow}{if} (res != \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT})
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_RemoveCdmaCellBroadcastServices FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    res = \hyperlink{le__sms__interface_8h_ac737aaab68b6fa1d51a21b518ad112a9}{le\_sms\_ClearCdmaCellBroadcastServices}();
+    \textcolor{keywordflow}{if} (res != LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ClearCdmaCellBroadcastServices FAILED"});
+        \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+    \}
+
+    \textcolor{keywordflow}{return} \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5066a4bcec691c6b67843b8f79656422}{LE\_OK};
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * The signal event handler function for SIGINT/SIGTERM when process dies.}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} SigHandler
+(
+    \textcolor{keywordtype}{int} sigNum
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+    \textcolor{keywordtype}{bool} statusPassed = \textcolor{keyword}{true};
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Deactivated SMS CB"});
+
+    \textcolor{keywordflow}{if} (GsmTest)
+    \{
+        res = \hyperlink{le__sms__interface_8h_ae3333cbf700035067f2dae8ea0e564d0}{le\_sms\_ClearCellBroadcastIds}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ClearCellBroadcastIds FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_ClearCellBroadcastIds PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aa57c2f717c71b33e93f278673a7806e9}{le\_sms\_DeactivateCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_DeactivateCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_DeactivateCellBroadcast PASSED"});
+        \}
+    \}
+
+    \textcolor{keywordflow}{if} (CdmaTest)
+    \{
+        res = \hyperlink{le__sms__interface_8h_ac737aaab68b6fa1d51a21b518ad112a9}{le\_sms\_ClearCdmaCellBroadcastServices}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ClearCdmaCellBroadcastServices FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_ClearCdmaCellBroadcastServices PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a26d43a50652431063e0a8e4d88fdba86}{le\_sms\_DeactivateCdmaCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_DeactivateCdmaCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_DeactivateCdmaCellBroadcast PASSED"});
+        \}
+    \}
+
+
+    \textcolor{keywordflow}{if} (statusPassed)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"smsCBTest sequence PASSED"});
+        exit(EXIT\_SUCCESS);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"smsCBTest sequence FAILED"});
+        exit(EXIT\_FAILURE);
+    \}
+\}
+
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{comment}{/*}
+\textcolor{comment}{ * ME must be registered on Network with the SIM in ready state. Network have to broadcast SMS CB.}
+\textcolor{comment}{ * Test application delete all Rx SM}
+\textcolor{comment}{ * Check "logread -f | grep sms" log}
+\textcolor{comment}{ * Start app : app start smsCBTest}
+\textcolor{comment}{ * Execute app : app runProc smsCBTest --exe=smsCBTest}
+\textcolor{comment}{ * or Execute app : app runProc smsCBTest --exe=smsCBTest -- < cdma | gsm |   >}
+\textcolor{comment}{ * Wait for SMS Cell broadcast reception on the INFO trace Level.}
+\textcolor{comment}{ * Execute CTRL + C to exit from application}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\hyperlink{le__event_loop_8h_abdb9187a56836a93d19cc793cbd4b7ec}{COMPONENT\_INIT}
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} res;
+    \textcolor{keywordtype}{bool} statusPassed = \textcolor{keyword}{true};
+
+    TraceRefPdu = \hyperlink{le__log_8h_a6d99d8147bcdcd1ed3848c9fdb72afe5}{le\_log\_GetTraceRef}( \textcolor{stringliteral}{"smsPdu"} );
+    TraceRefSms = \hyperlink{le__log_8h_a6d99d8147bcdcd1ed3848c9fdb72afe5}{le\_log\_GetTraceRef}( \textcolor{stringliteral}{"sms"} );
+
+    \hyperlink{le__log_8h_a06856e82ef8dc28a964d84db1aeee517}{le\_log\_SetFilterLevel}(\hyperlink{le__log_8h_aa3de78c088c398afb23c0b582deabc0aa1a5c0e9f9bcf857faad0cc4187002479}{LE\_LOG\_DEBUG});
+    \hyperlink{le__log_8h_a7dfe7c6d02a68b473d94d83ae71ff2b3}{le\_log\_EnableTrace}(TraceRefPdu);
+    \hyperlink{le__log_8h_a7dfe7c6d02a68b473d94d83ae71ff2b3}{le\_log\_EnableTrace}(TraceRefSms);
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"PRINT USAGE => app runProc smsCBTest --exe=smsCBTest -- < cdma | gsm |   >"});
+
+    \textcolor{keywordflow}{if} (\hyperlink{le__args_8h_a6fbbeb423104e6eb92fe47ef42b7310a}{le\_arg\_NumArgs}() == 1)
+    \{
+        \textcolor{comment}{// This function gets the test band fom the User (interactive case).}
+        \textcolor{keyword}{const} \textcolor{keywordtype}{char}* testmode = \hyperlink{le__args_8h_a5ebca8229facd069785639cb3c1e273a}{le\_arg\_GetArg}(0);
+        \textcolor{keywordflow}{if} (testmode != NULL )
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"smsCBTest argument %s"}, testmode);
+            \textcolor{keywordflow}{if} ( strcmp(testmode, \textcolor{stringliteral}{"cdma"}) == 0)
+            \{
+                GsmTest = \textcolor{keyword}{false};
+            \}
+            \textcolor{keywordflow}{else} \textcolor{keywordflow}{if} ( strcmp(testmode, \textcolor{stringliteral}{"gsm"}) == 0)
+            \{
+                CdmaTest = \textcolor{keyword}{false};
+            \}
+        \}
+    \}
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"smsCBTest started in CDMA %c GSM %c"},
+        (CdmaTest ? \textcolor{charliteral}{'Y'} : \textcolor{charliteral}{'N'}),
+        (GsmTest ? \textcolor{charliteral}{'Y'} : \textcolor{charliteral}{'N'}) );
+
+    \textcolor{comment}{// Register a signal event handler for SIGINT when user interrupts/terminates process}
+    signal(SIGINT, SigHandler);
+
+    HandlerRef = \hyperlink{le__sms__interface_8h_a844d595f3ae8d170b2fff80d854abb8d}{le\_sms\_AddRxMessageHandler}(TestRxHandler, NULL);
+    \hyperlink{le__log_8h_aceaf11a11691d6c676e36dd317b38dbd}{LE\_ERROR\_IF}((HandlerRef == NULL), \textcolor{stringliteral}{"le\_sms\_AddRxMessageHandler() Failed!!"});
+
+
+    \textcolor{keywordflow}{if} (GsmTest)
+    \{
+        res = \hyperlink{le__sms__interface_8h_ae3333cbf700035067f2dae8ea0e564d0}{le\_sms\_ClearCellBroadcastIds}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ClearCellBroadcastIds FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_ClearCellBroadcastIds PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a4607c63f325465d078514b5682347c7f}{le\_sms\_ActivateCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ActivateCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_ActivateCellBroadcast PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aa57c2f717c71b33e93f278673a7806e9}{le\_sms\_DeactivateCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_DeactivateCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_DeactivateCellBroadcast PASSED"});
+        \}
+
+        res = TestAddRemoveCellBroadcastIds();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"TestAddRemoveCellBroadcastIds FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TestAddRemoveCellBroadcastIds PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a4607c63f325465d078514b5682347c7f}{le\_sms\_ActivateCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ActivateCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_ActivateCellBroadcast PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aae87dacecc438ea9182d370895e5cb3f}{le\_sms\_AddCellBroadcastIds}(1,100);
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_AddCellBroadcastIds FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_AddCellBroadcastIds PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_aa57c2f717c71b33e93f278673a7806e9}{le\_sms\_DeactivateCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_DeactivateCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_DeactivateCellBroadcast PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a4607c63f325465d078514b5682347c7f}{le\_sms\_ActivateCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ActivateCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_ActivateCellBroadcast PASSED"});
+        \}
+    \}
+
+    \textcolor{keywordflow}{if} (CdmaTest)
+    \{
+        res = \hyperlink{le__sms__interface_8h_ac737aaab68b6fa1d51a21b518ad112a9}{le\_sms\_ClearCdmaCellBroadcastServices}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ClearCdmaCellBroadcastServices FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_ClearCdmaCellBroadcastServices PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a45a160fea5a8f6cd195e3aff33830602}{le\_sms\_ActivateCdmaCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ActivateCdmaCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_ActivateCdmaCellBroadcast PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a26d43a50652431063e0a8e4d88fdba86}{le\_sms\_DeactivateCdmaCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_DeactivateCdmaCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_DeactivateCdmaCellBroadcast PASSED"});
+        \}
+
+        res = TestAddRemoveCDMACellBroadcastIds();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"TestAddRemoveCDMACellBroadcastIds FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TestAddRemoveCDMACellBroadcastIds PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_ad57196114a634f36b057a9cfbcb7d58a}{le\_sms\_AddCdmaCellBroadcastServices}(
+      \hyperlink{le__sms__interface_8h_a4d1e11633722ac519f2d8efb1178167ca745c1a522cc4202e9c42ef90791cbe5b}{LE\_SMS\_CDMA\_SVC\_CAT\_UNKNOWN},
+            \hyperlink{le__sms__interface_8h_ad4ba75a2c1d118cd46ca5e8428fb5ddbad0356a01286311e11035b9ef1ca4ef7c}{LE\_SMS\_LANGUAGE\_UNKNOWN});
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_AddCdmaCellBroadcastServices FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_AddCdmaCellBroadcastServices PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a45a160fea5a8f6cd195e3aff33830602}{le\_sms\_ActivateCdmaCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ActivateCdmaCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_ActivateCdmaCellBroadcast PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a26d43a50652431063e0a8e4d88fdba86}{le\_sms\_DeactivateCdmaCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_DeactivateCdmaCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_DeactivateCdmaCellBroadcast PASSED"});
+        \}
+
+        res = \hyperlink{le__sms__interface_8h_a45a160fea5a8f6cd195e3aff33830602}{le\_sms\_ActivateCdmaCellBroadcast}();
+        \textcolor{keywordflow}{if} (res != LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"le\_sms\_ActivateCdmaCellBroadcast FAILED"});
+            statusPassed = \textcolor{keyword}{false};
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_sms\_ActivateCdmaCellBroadcast PASSED"});
+        \}
+    \}
+
+    \textcolor{keywordflow}{if} (statusPassed)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"smsCBTest sequence STARTED PASSED"});
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"smsCBTest sequence STARTED FAILED"});
+    \}
+\}
+\end{DoxyCodeInclude}
+ 

@@ -1,0 +1,3956 @@
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0plus
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"inet_chksum.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.lwip_standard_chksum,"ax",%progbits
+  20              		.align	2
+  21              		.global	lwip_standard_chksum
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	lwip_standard_chksum, %function
+  25              	lwip_standard_chksum:
+  26              	.LFB53:
+  27              		.file 1 "Source\\LwIP\\src\\core\\inet_chksum.c"
+   1:Source\LwIP\src\core/inet_chksum.c **** /**
+   2:Source\LwIP\src\core/inet_chksum.c ****  * @file
+   3:Source\LwIP\src\core/inet_chksum.c ****  * Incluse internet checksum functions.\n
+   4:Source\LwIP\src\core/inet_chksum.c ****  *
+   5:Source\LwIP\src\core/inet_chksum.c ****  * These are some reference implementations of the checksum algorithm, with the
+   6:Source\LwIP\src\core/inet_chksum.c ****  * aim of being simple, correct and fully portable. Checksumming is the
+   7:Source\LwIP\src\core/inet_chksum.c ****  * first thing you would want to optimize for your platform. If you create
+   8:Source\LwIP\src\core/inet_chksum.c ****  * your own version, link it in and in your cc.h put:
+   9:Source\LwIP\src\core/inet_chksum.c ****  *
+  10:Source\LwIP\src\core/inet_chksum.c ****  * \#define LWIP_CHKSUM your_checksum_routine
+  11:Source\LwIP\src\core/inet_chksum.c ****  * 
+  12:Source\LwIP\src\core/inet_chksum.c ****  * Or you can select from the implementations below by defining
+  13:Source\LwIP\src\core/inet_chksum.c ****  * LWIP_CHKSUM_ALGORITHM to 1, 2 or 3.
+  14:Source\LwIP\src\core/inet_chksum.c ****  */
+  15:Source\LwIP\src\core/inet_chksum.c **** 
+  16:Source\LwIP\src\core/inet_chksum.c **** /*
+  17:Source\LwIP\src\core/inet_chksum.c ****  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
+  18:Source\LwIP\src\core/inet_chksum.c ****  * All rights reserved.
+  19:Source\LwIP\src\core/inet_chksum.c ****  *
+  20:Source\LwIP\src\core/inet_chksum.c ****  * Redistribution and use in source and binary forms, with or without modification,
+  21:Source\LwIP\src\core/inet_chksum.c ****  * are permitted provided that the following conditions are met:
+  22:Source\LwIP\src\core/inet_chksum.c ****  *
+  23:Source\LwIP\src\core/inet_chksum.c ****  * 1. Redistributions of source code must retain the above copyright notice,
+  24:Source\LwIP\src\core/inet_chksum.c ****  *    this list of conditions and the following disclaimer.
+  25:Source\LwIP\src\core/inet_chksum.c ****  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  26:Source\LwIP\src\core/inet_chksum.c ****  *    this list of conditions and the following disclaimer in the documentation
+  27:Source\LwIP\src\core/inet_chksum.c ****  *    and/or other materials provided with the distribution.
+  28:Source\LwIP\src\core/inet_chksum.c ****  * 3. The name of the author may not be used to endorse or promote products
+  29:Source\LwIP\src\core/inet_chksum.c ****  *    derived from this software without specific prior written permission.
+  30:Source\LwIP\src\core/inet_chksum.c ****  *
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 2
+
+
+  31:Source\LwIP\src\core/inet_chksum.c ****  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+  32:Source\LwIP\src\core/inet_chksum.c ****  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+  33:Source\LwIP\src\core/inet_chksum.c ****  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+  34:Source\LwIP\src\core/inet_chksum.c ****  * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  35:Source\LwIP\src\core/inet_chksum.c ****  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+  36:Source\LwIP\src\core/inet_chksum.c ****  * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  37:Source\LwIP\src\core/inet_chksum.c ****  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  38:Source\LwIP\src\core/inet_chksum.c ****  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+  39:Source\LwIP\src\core/inet_chksum.c ****  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+  40:Source\LwIP\src\core/inet_chksum.c ****  * OF SUCH DAMAGE.
+  41:Source\LwIP\src\core/inet_chksum.c ****  *
+  42:Source\LwIP\src\core/inet_chksum.c ****  * This file is part of the lwIP TCP/IP stack.
+  43:Source\LwIP\src\core/inet_chksum.c ****  *
+  44:Source\LwIP\src\core/inet_chksum.c ****  * Author: Adam Dunkels <adam@sics.se>
+  45:Source\LwIP\src\core/inet_chksum.c ****  *
+  46:Source\LwIP\src\core/inet_chksum.c ****  */
+  47:Source\LwIP\src\core/inet_chksum.c **** 
+  48:Source\LwIP\src\core/inet_chksum.c **** #include "lwip/opt.h"
+  49:Source\LwIP\src\core/inet_chksum.c **** 
+  50:Source\LwIP\src\core/inet_chksum.c **** #include "lwip/inet_chksum.h"
+  51:Source\LwIP\src\core/inet_chksum.c **** #include "lwip/def.h"
+  52:Source\LwIP\src\core/inet_chksum.c **** #include "lwip/ip_addr.h"
+  53:Source\LwIP\src\core/inet_chksum.c **** 
+  54:Source\LwIP\src\core/inet_chksum.c **** #include <string.h>
+  55:Source\LwIP\src\core/inet_chksum.c **** 
+  56:Source\LwIP\src\core/inet_chksum.c **** #ifndef LWIP_CHKSUM
+  57:Source\LwIP\src\core/inet_chksum.c **** # define LWIP_CHKSUM lwip_standard_chksum
+  58:Source\LwIP\src\core/inet_chksum.c **** # ifndef LWIP_CHKSUM_ALGORITHM
+  59:Source\LwIP\src\core/inet_chksum.c **** #  define LWIP_CHKSUM_ALGORITHM 2
+  60:Source\LwIP\src\core/inet_chksum.c **** # endif
+  61:Source\LwIP\src\core/inet_chksum.c **** u16_t lwip_standard_chksum(const void *dataptr, int len);
+  62:Source\LwIP\src\core/inet_chksum.c **** #endif
+  63:Source\LwIP\src\core/inet_chksum.c **** /* If none set: */
+  64:Source\LwIP\src\core/inet_chksum.c **** #ifndef LWIP_CHKSUM_ALGORITHM
+  65:Source\LwIP\src\core/inet_chksum.c **** # define LWIP_CHKSUM_ALGORITHM 0
+  66:Source\LwIP\src\core/inet_chksum.c **** #endif
+  67:Source\LwIP\src\core/inet_chksum.c **** 
+  68:Source\LwIP\src\core/inet_chksum.c **** #if (LWIP_CHKSUM_ALGORITHM == 1) /* Version #1 */
+  69:Source\LwIP\src\core/inet_chksum.c **** /**
+  70:Source\LwIP\src\core/inet_chksum.c ****  * lwip checksum
+  71:Source\LwIP\src\core/inet_chksum.c ****  *
+  72:Source\LwIP\src\core/inet_chksum.c ****  * @param dataptr points to start of data to be summed at any boundary
+  73:Source\LwIP\src\core/inet_chksum.c ****  * @param len length of data to be summed
+  74:Source\LwIP\src\core/inet_chksum.c ****  * @return host order (!) lwip checksum (non-inverted Internet sum)
+  75:Source\LwIP\src\core/inet_chksum.c ****  *
+  76:Source\LwIP\src\core/inet_chksum.c ****  * @note accumulator size limits summable length to 64k
+  77:Source\LwIP\src\core/inet_chksum.c ****  * @note host endianess is irrelevant (p3 RFC1071)
+  78:Source\LwIP\src\core/inet_chksum.c ****  */
+  79:Source\LwIP\src\core/inet_chksum.c **** u16_t
+  80:Source\LwIP\src\core/inet_chksum.c **** lwip_standard_chksum(const void *dataptr, int len)
+  81:Source\LwIP\src\core/inet_chksum.c **** {
+  82:Source\LwIP\src\core/inet_chksum.c ****   u32_t acc;
+  83:Source\LwIP\src\core/inet_chksum.c ****   u16_t src;
+  84:Source\LwIP\src\core/inet_chksum.c ****   const u8_t *octetptr;
+  85:Source\LwIP\src\core/inet_chksum.c **** 
+  86:Source\LwIP\src\core/inet_chksum.c ****   acc = 0;
+  87:Source\LwIP\src\core/inet_chksum.c ****   /* dataptr may be at odd or even addresses */
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 3
+
+
+  88:Source\LwIP\src\core/inet_chksum.c ****   octetptr = (const u8_t*)dataptr;
+  89:Source\LwIP\src\core/inet_chksum.c ****   while (len > 1) {
+  90:Source\LwIP\src\core/inet_chksum.c ****     /* declare first octet as most significant
+  91:Source\LwIP\src\core/inet_chksum.c ****        thus assume network order, ignoring host order */
+  92:Source\LwIP\src\core/inet_chksum.c ****     src = (*octetptr) << 8;
+  93:Source\LwIP\src\core/inet_chksum.c ****     octetptr++;
+  94:Source\LwIP\src\core/inet_chksum.c ****     /* declare second octet as least significant */
+  95:Source\LwIP\src\core/inet_chksum.c ****     src |= (*octetptr);
+  96:Source\LwIP\src\core/inet_chksum.c ****     octetptr++;
+  97:Source\LwIP\src\core/inet_chksum.c ****     acc += src;
+  98:Source\LwIP\src\core/inet_chksum.c ****     len -= 2;
+  99:Source\LwIP\src\core/inet_chksum.c ****   }
+ 100:Source\LwIP\src\core/inet_chksum.c ****   if (len > 0) {
+ 101:Source\LwIP\src\core/inet_chksum.c ****     /* accumulate remaining octet */
+ 102:Source\LwIP\src\core/inet_chksum.c ****     src = (*octetptr) << 8;
+ 103:Source\LwIP\src\core/inet_chksum.c ****     acc += src;
+ 104:Source\LwIP\src\core/inet_chksum.c ****   }
+ 105:Source\LwIP\src\core/inet_chksum.c ****   /* add deferred carry bits */
+ 106:Source\LwIP\src\core/inet_chksum.c ****   acc = (acc >> 16) + (acc & 0x0000ffffUL);
+ 107:Source\LwIP\src\core/inet_chksum.c ****   if ((acc & 0xffff0000UL) != 0) {
+ 108:Source\LwIP\src\core/inet_chksum.c ****     acc = (acc >> 16) + (acc & 0x0000ffffUL);
+ 109:Source\LwIP\src\core/inet_chksum.c ****   }
+ 110:Source\LwIP\src\core/inet_chksum.c ****   /* This maybe a little confusing: reorder sum using lwip_htons()
+ 111:Source\LwIP\src\core/inet_chksum.c ****      instead of lwip_ntohs() since it has a little less call overhead.
+ 112:Source\LwIP\src\core/inet_chksum.c ****      The caller must invert bits for Internet sum ! */
+ 113:Source\LwIP\src\core/inet_chksum.c ****   return lwip_htons((u16_t)acc);
+ 114:Source\LwIP\src\core/inet_chksum.c **** }
+ 115:Source\LwIP\src\core/inet_chksum.c **** #endif
+ 116:Source\LwIP\src\core/inet_chksum.c **** 
+ 117:Source\LwIP\src\core/inet_chksum.c **** #if (LWIP_CHKSUM_ALGORITHM == 2) /* Alternative version #2 */
+ 118:Source\LwIP\src\core/inet_chksum.c **** /*
+ 119:Source\LwIP\src\core/inet_chksum.c ****  * Curt McDowell
+ 120:Source\LwIP\src\core/inet_chksum.c ****  * Broadcom Corp.
+ 121:Source\LwIP\src\core/inet_chksum.c ****  * csm@broadcom.com
+ 122:Source\LwIP\src\core/inet_chksum.c ****  *
+ 123:Source\LwIP\src\core/inet_chksum.c ****  * IP checksum two bytes at a time with support for
+ 124:Source\LwIP\src\core/inet_chksum.c ****  * unaligned buffer.
+ 125:Source\LwIP\src\core/inet_chksum.c ****  * Works for len up to and including 0x20000.
+ 126:Source\LwIP\src\core/inet_chksum.c ****  * by Curt McDowell, Broadcom Corp. 12/08/2005
+ 127:Source\LwIP\src\core/inet_chksum.c ****  *
+ 128:Source\LwIP\src\core/inet_chksum.c ****  * @param dataptr points to start of data to be summed at any boundary
+ 129:Source\LwIP\src\core/inet_chksum.c ****  * @param len length of data to be summed
+ 130:Source\LwIP\src\core/inet_chksum.c ****  * @return host order (!) lwip checksum (non-inverted Internet sum)
+ 131:Source\LwIP\src\core/inet_chksum.c ****  */
+ 132:Source\LwIP\src\core/inet_chksum.c **** u16_t
+ 133:Source\LwIP\src\core/inet_chksum.c **** lwip_standard_chksum(const void *dataptr, int len)
+ 134:Source\LwIP\src\core/inet_chksum.c **** {
+  28              		.loc 1 134 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 8
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  33 0000 10B5     		push	{r4, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  37 0002 82B0     		sub	sp, sp, #8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 4
+
+
+  38              		.cfi_def_cfa_offset 16
+  39              	.LVL1:
+ 135:Source\LwIP\src\core/inet_chksum.c ****   const u8_t *pb = (const u8_t *)dataptr;
+ 136:Source\LwIP\src\core/inet_chksum.c ****   const u16_t *ps;
+ 137:Source\LwIP\src\core/inet_chksum.c ****   u16_t t = 0;
+  40              		.loc 1 137 0
+  41 0004 0022     		movs	r2, #0
+  42 0006 6B46     		mov	r3, sp
+  43 0008 DA80     		strh	r2, [r3, #6]
+  44              	.LVL2:
+ 138:Source\LwIP\src\core/inet_chksum.c ****   u32_t sum = 0;
+ 139:Source\LwIP\src\core/inet_chksum.c ****   int odd = ((mem_ptr_t)pb & 1);
+  45              		.loc 1 139 0
+  46 000a 0124     		movs	r4, #1
+  47 000c 0440     		ands	r4, r0
+  48              	.LVL3:
+ 140:Source\LwIP\src\core/inet_chksum.c **** 
+ 141:Source\LwIP\src\core/inet_chksum.c ****   /* Get aligned to u16_t */
+ 142:Source\LwIP\src\core/inet_chksum.c ****   if (odd && len > 0) {
+  49              		.loc 1 142 0
+  50 000e 06D0     		beq	.L2
+  51              		.loc 1 142 0 is_stmt 0 discriminator 1
+  52 0010 0029     		cmp	r1, #0
+  53 0012 04DD     		ble	.L2
+  54              	.LVL4:
+ 143:Source\LwIP\src\core/inet_chksum.c ****     ((u8_t *)&t)[1] = *pb++;
+  55              		.loc 1 143 0 is_stmt 1
+  56 0014 0278     		ldrb	r2, [r0]
+  57 0016 6B46     		mov	r3, sp
+  58 0018 DA71     		strb	r2, [r3, #7]
+ 144:Source\LwIP\src\core/inet_chksum.c ****     len--;
+  59              		.loc 1 144 0
+  60 001a 0139     		subs	r1, r1, #1
+  61              	.LVL5:
+ 143:Source\LwIP\src\core/inet_chksum.c ****     ((u8_t *)&t)[1] = *pb++;
+  62              		.loc 1 143 0
+  63 001c 0130     		adds	r0, r0, #1
+  64              	.LVL6:
+  65              	.L2:
+ 138:Source\LwIP\src\core/inet_chksum.c ****   int odd = ((mem_ptr_t)pb & 1);
+  66              		.loc 1 138 0
+  67 001e 0023     		movs	r3, #0
+ 145:Source\LwIP\src\core/inet_chksum.c ****   }
+ 146:Source\LwIP\src\core/inet_chksum.c **** 
+ 147:Source\LwIP\src\core/inet_chksum.c ****   /* Add the bulk of the data */
+ 148:Source\LwIP\src\core/inet_chksum.c ****   ps = (const u16_t *)(const void *)pb;
+ 149:Source\LwIP\src\core/inet_chksum.c ****   while (len > 1) {
+  68              		.loc 1 149 0
+  69 0020 03E0     		b	.L3
+  70              	.LVL7:
+  71              	.L4:
+ 150:Source\LwIP\src\core/inet_chksum.c ****     sum += *ps++;
+  72              		.loc 1 150 0
+  73 0022 0288     		ldrh	r2, [r0]
+  74 0024 9B18     		adds	r3, r3, r2
+  75              	.LVL8:
+ 151:Source\LwIP\src\core/inet_chksum.c ****     len -= 2;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 5
+
+
+  76              		.loc 1 151 0
+  77 0026 0239     		subs	r1, r1, #2
+  78              	.LVL9:
+ 150:Source\LwIP\src\core/inet_chksum.c ****     sum += *ps++;
+  79              		.loc 1 150 0
+  80 0028 0230     		adds	r0, r0, #2
+  81              	.LVL10:
+  82              	.L3:
+ 149:Source\LwIP\src\core/inet_chksum.c ****     sum += *ps++;
+  83              		.loc 1 149 0
+  84 002a 0129     		cmp	r1, #1
+  85 002c F9DC     		bgt	.L4
+ 152:Source\LwIP\src\core/inet_chksum.c ****   }
+ 153:Source\LwIP\src\core/inet_chksum.c **** 
+ 154:Source\LwIP\src\core/inet_chksum.c ****   /* Consume left-over byte, if any */
+ 155:Source\LwIP\src\core/inet_chksum.c ****   if (len > 0) {
+  86              		.loc 1 155 0
+  87 002e 0029     		cmp	r1, #0
+  88 0030 02DD     		ble	.L5
+ 156:Source\LwIP\src\core/inet_chksum.c ****     ((u8_t *)&t)[0] = *(const u8_t *)ps;
+  89              		.loc 1 156 0
+  90 0032 0178     		ldrb	r1, [r0]
+  91              	.LVL11:
+  92 0034 6A46     		mov	r2, sp
+  93 0036 9171     		strb	r1, [r2, #6]
+  94              	.L5:
+ 157:Source\LwIP\src\core/inet_chksum.c ****   }
+ 158:Source\LwIP\src\core/inet_chksum.c **** 
+ 159:Source\LwIP\src\core/inet_chksum.c ****   /* Add end bytes */
+ 160:Source\LwIP\src\core/inet_chksum.c ****   sum += t;
+  95              		.loc 1 160 0
+  96 0038 6A46     		mov	r2, sp
+  97 003a 0632     		adds	r2, r2, #6
+  98 003c 1288     		ldrh	r2, [r2]
+  99 003e D318     		adds	r3, r2, r3
+ 100              	.LVL12:
+ 161:Source\LwIP\src\core/inet_chksum.c **** 
+ 162:Source\LwIP\src\core/inet_chksum.c ****   /* Fold 32-bit sum to 16 bits
+ 163:Source\LwIP\src\core/inet_chksum.c ****      calling this twice is probably faster than if statements... */
+ 164:Source\LwIP\src\core/inet_chksum.c ****   sum = FOLD_U32T(sum);
+ 101              		.loc 1 164 0
+ 102 0040 180C     		lsrs	r0, r3, #16
+ 103              	.LVL13:
+ 104 0042 1B04     		lsls	r3, r3, #16
+ 105              	.LVL14:
+ 106 0044 1B0C     		lsrs	r3, r3, #16
+ 107 0046 C318     		adds	r3, r0, r3
+ 108              	.LVL15:
+ 165:Source\LwIP\src\core/inet_chksum.c ****   sum = FOLD_U32T(sum);
+ 109              		.loc 1 165 0
+ 110 0048 180C     		lsrs	r0, r3, #16
+ 111 004a 1B04     		lsls	r3, r3, #16
+ 112              	.LVL16:
+ 113 004c 1B0C     		lsrs	r3, r3, #16
+ 114 004e C018     		adds	r0, r0, r3
+ 115              	.LVL17:
+ 166:Source\LwIP\src\core/inet_chksum.c **** 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 6
+
+
+ 167:Source\LwIP\src\core/inet_chksum.c ****   /* Swap if alignment was odd */
+ 168:Source\LwIP\src\core/inet_chksum.c ****   if (odd) {
+ 116              		.loc 1 168 0
+ 117 0050 002C     		cmp	r4, #0
+ 118 0052 05D0     		beq	.L6
+ 169:Source\LwIP\src\core/inet_chksum.c ****     sum = SWAP_BYTES_IN_WORD(sum);
+ 119              		.loc 1 169 0
+ 120 0054 0306     		lsls	r3, r0, #24
+ 121 0056 1B0C     		lsrs	r3, r3, #16
+ 122 0058 000A     		lsrs	r0, r0, #8
+ 123              	.LVL18:
+ 124 005a FF22     		movs	r2, #255
+ 125 005c 1040     		ands	r0, r2
+ 126 005e 1843     		orrs	r0, r3
+ 127              	.LVL19:
+ 128              	.L6:
+ 170:Source\LwIP\src\core/inet_chksum.c ****   }
+ 171:Source\LwIP\src\core/inet_chksum.c **** 
+ 172:Source\LwIP\src\core/inet_chksum.c ****   return (u16_t)sum;
+ 129              		.loc 1 172 0
+ 130 0060 80B2     		uxth	r0, r0
+ 131              	.LVL20:
+ 173:Source\LwIP\src\core/inet_chksum.c **** }
+ 132              		.loc 1 173 0
+ 133 0062 02B0     		add	sp, sp, #8
+ 134              		@ sp needed
+ 135              	.LVL21:
+ 136 0064 10BD     		pop	{r4, pc}
+ 137              		.cfi_endproc
+ 138              	.LFE53:
+ 139              		.size	lwip_standard_chksum, .-lwip_standard_chksum
+ 140 0066 C046     		.section	.text.inet_cksum_pseudo_base,"ax",%progbits
+ 141              		.align	2
+ 142              		.code	16
+ 143              		.thumb_func
+ 144              		.type	inet_cksum_pseudo_base, %function
+ 145              	inet_cksum_pseudo_base:
+ 146              	.LFB54:
+ 174:Source\LwIP\src\core/inet_chksum.c **** #endif
+ 175:Source\LwIP\src\core/inet_chksum.c **** 
+ 176:Source\LwIP\src\core/inet_chksum.c **** #if (LWIP_CHKSUM_ALGORITHM == 3) /* Alternative version #3 */
+ 177:Source\LwIP\src\core/inet_chksum.c **** /**
+ 178:Source\LwIP\src\core/inet_chksum.c ****  * An optimized checksum routine. Basically, it uses loop-unrolling on
+ 179:Source\LwIP\src\core/inet_chksum.c ****  * the checksum loop, treating the head and tail bytes specially, whereas
+ 180:Source\LwIP\src\core/inet_chksum.c ****  * the inner loop acts on 8 bytes at a time.
+ 181:Source\LwIP\src\core/inet_chksum.c ****  *
+ 182:Source\LwIP\src\core/inet_chksum.c ****  * @arg start of buffer to be checksummed. May be an odd byte address.
+ 183:Source\LwIP\src\core/inet_chksum.c ****  * @len number of bytes in the buffer to be checksummed.
+ 184:Source\LwIP\src\core/inet_chksum.c ****  * @return host order (!) lwip checksum (non-inverted Internet sum)
+ 185:Source\LwIP\src\core/inet_chksum.c ****  *
+ 186:Source\LwIP\src\core/inet_chksum.c ****  * by Curt McDowell, Broadcom Corp. December 8th, 2005
+ 187:Source\LwIP\src\core/inet_chksum.c ****  */
+ 188:Source\LwIP\src\core/inet_chksum.c **** u16_t
+ 189:Source\LwIP\src\core/inet_chksum.c **** lwip_standard_chksum(const void *dataptr, int len)
+ 190:Source\LwIP\src\core/inet_chksum.c **** {
+ 191:Source\LwIP\src\core/inet_chksum.c ****   const u8_t *pb = (const u8_t *)dataptr;
+ 192:Source\LwIP\src\core/inet_chksum.c ****   const u16_t *ps;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 7
+
+
+ 193:Source\LwIP\src\core/inet_chksum.c ****   u16_t t = 0;
+ 194:Source\LwIP\src\core/inet_chksum.c ****   const u32_t *pl;
+ 195:Source\LwIP\src\core/inet_chksum.c ****   u32_t sum = 0, tmp;
+ 196:Source\LwIP\src\core/inet_chksum.c ****   /* starts at odd byte address? */
+ 197:Source\LwIP\src\core/inet_chksum.c ****   int odd = ((mem_ptr_t)pb & 1);
+ 198:Source\LwIP\src\core/inet_chksum.c **** 
+ 199:Source\LwIP\src\core/inet_chksum.c ****   if (odd && len > 0) {
+ 200:Source\LwIP\src\core/inet_chksum.c ****     ((u8_t *)&t)[1] = *pb++;
+ 201:Source\LwIP\src\core/inet_chksum.c ****     len--;
+ 202:Source\LwIP\src\core/inet_chksum.c ****   }
+ 203:Source\LwIP\src\core/inet_chksum.c **** 
+ 204:Source\LwIP\src\core/inet_chksum.c ****   ps = (const u16_t *)(const void*)pb;
+ 205:Source\LwIP\src\core/inet_chksum.c **** 
+ 206:Source\LwIP\src\core/inet_chksum.c ****   if (((mem_ptr_t)ps & 3) && len > 1) {
+ 207:Source\LwIP\src\core/inet_chksum.c ****     sum += *ps++;
+ 208:Source\LwIP\src\core/inet_chksum.c ****     len -= 2;
+ 209:Source\LwIP\src\core/inet_chksum.c ****   }
+ 210:Source\LwIP\src\core/inet_chksum.c **** 
+ 211:Source\LwIP\src\core/inet_chksum.c ****   pl = (const u32_t *)(const void*)ps;
+ 212:Source\LwIP\src\core/inet_chksum.c **** 
+ 213:Source\LwIP\src\core/inet_chksum.c ****   while (len > 7)  {
+ 214:Source\LwIP\src\core/inet_chksum.c ****     tmp = sum + *pl++;          /* ping */
+ 215:Source\LwIP\src\core/inet_chksum.c ****     if (tmp < sum) {
+ 216:Source\LwIP\src\core/inet_chksum.c ****       tmp++;                    /* add back carry */
+ 217:Source\LwIP\src\core/inet_chksum.c ****     }
+ 218:Source\LwIP\src\core/inet_chksum.c **** 
+ 219:Source\LwIP\src\core/inet_chksum.c ****     sum = tmp + *pl++;          /* pong */
+ 220:Source\LwIP\src\core/inet_chksum.c ****     if (sum < tmp) {
+ 221:Source\LwIP\src\core/inet_chksum.c ****       sum++;                    /* add back carry */
+ 222:Source\LwIP\src\core/inet_chksum.c ****     }
+ 223:Source\LwIP\src\core/inet_chksum.c **** 
+ 224:Source\LwIP\src\core/inet_chksum.c ****     len -= 8;
+ 225:Source\LwIP\src\core/inet_chksum.c ****   }
+ 226:Source\LwIP\src\core/inet_chksum.c **** 
+ 227:Source\LwIP\src\core/inet_chksum.c ****   /* make room in upper bits */
+ 228:Source\LwIP\src\core/inet_chksum.c ****   sum = FOLD_U32T(sum);
+ 229:Source\LwIP\src\core/inet_chksum.c **** 
+ 230:Source\LwIP\src\core/inet_chksum.c ****   ps = (const u16_t *)pl;
+ 231:Source\LwIP\src\core/inet_chksum.c **** 
+ 232:Source\LwIP\src\core/inet_chksum.c ****   /* 16-bit aligned word remaining? */
+ 233:Source\LwIP\src\core/inet_chksum.c ****   while (len > 1) {
+ 234:Source\LwIP\src\core/inet_chksum.c ****     sum += *ps++;
+ 235:Source\LwIP\src\core/inet_chksum.c ****     len -= 2;
+ 236:Source\LwIP\src\core/inet_chksum.c ****   }
+ 237:Source\LwIP\src\core/inet_chksum.c **** 
+ 238:Source\LwIP\src\core/inet_chksum.c ****   /* dangling tail byte remaining? */
+ 239:Source\LwIP\src\core/inet_chksum.c ****   if (len > 0) {                /* include odd byte */
+ 240:Source\LwIP\src\core/inet_chksum.c ****     ((u8_t *)&t)[0] = *(const u8_t *)ps;
+ 241:Source\LwIP\src\core/inet_chksum.c ****   }
+ 242:Source\LwIP\src\core/inet_chksum.c **** 
+ 243:Source\LwIP\src\core/inet_chksum.c ****   sum += t;                     /* add end bytes */
+ 244:Source\LwIP\src\core/inet_chksum.c **** 
+ 245:Source\LwIP\src\core/inet_chksum.c ****   /* Fold 32-bit sum to 16 bits
+ 246:Source\LwIP\src\core/inet_chksum.c ****      calling this twice is probably faster than if statements... */
+ 247:Source\LwIP\src\core/inet_chksum.c ****   sum = FOLD_U32T(sum);
+ 248:Source\LwIP\src\core/inet_chksum.c ****   sum = FOLD_U32T(sum);
+ 249:Source\LwIP\src\core/inet_chksum.c **** 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 8
+
+
+ 250:Source\LwIP\src\core/inet_chksum.c ****   if (odd) {
+ 251:Source\LwIP\src\core/inet_chksum.c ****     sum = SWAP_BYTES_IN_WORD(sum);
+ 252:Source\LwIP\src\core/inet_chksum.c ****   }
+ 253:Source\LwIP\src\core/inet_chksum.c **** 
+ 254:Source\LwIP\src\core/inet_chksum.c ****   return (u16_t)sum;
+ 255:Source\LwIP\src\core/inet_chksum.c **** }
+ 256:Source\LwIP\src\core/inet_chksum.c **** #endif
+ 257:Source\LwIP\src\core/inet_chksum.c **** 
+ 258:Source\LwIP\src\core/inet_chksum.c **** /** Parts of the pseudo checksum which are common to IPv4 and IPv6 */
+ 259:Source\LwIP\src\core/inet_chksum.c **** static u16_t
+ 260:Source\LwIP\src\core/inet_chksum.c **** inet_cksum_pseudo_base(struct pbuf *p, u8_t proto, u16_t proto_len, u32_t acc)
+ 261:Source\LwIP\src\core/inet_chksum.c **** {
+ 147              		.loc 1 261 0
+ 148              		.cfi_startproc
+ 149              		@ args = 0, pretend = 0, frame = 8
+ 150              		@ frame_needed = 0, uses_anonymous_args = 0
+ 151              	.LVL22:
+ 152 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 153              		.cfi_def_cfa_offset 20
+ 154              		.cfi_offset 4, -20
+ 155              		.cfi_offset 5, -16
+ 156              		.cfi_offset 6, -12
+ 157              		.cfi_offset 7, -8
+ 158              		.cfi_offset 14, -4
+ 159 0002 83B0     		sub	sp, sp, #12
+ 160              		.cfi_def_cfa_offset 32
+ 161 0004 0600     		movs	r6, r0
+ 162 0006 0191     		str	r1, [sp, #4]
+ 163 0008 1500     		movs	r5, r2
+ 164 000a 1C00     		movs	r4, r3
+ 165              	.LVL23:
+ 262:Source\LwIP\src\core/inet_chksum.c ****   struct pbuf *q;
+ 263:Source\LwIP\src\core/inet_chksum.c ****   u8_t swapped = 0;
+ 166              		.loc 1 263 0
+ 167 000c 0027     		movs	r7, #0
+ 264:Source\LwIP\src\core/inet_chksum.c **** 
+ 265:Source\LwIP\src\core/inet_chksum.c ****   /* iterate through all pbuf in chain */
+ 266:Source\LwIP\src\core/inet_chksum.c ****   for (q = p; q != NULL; q = q->next) {
+ 168              		.loc 1 266 0
+ 169 000e 16E0     		b	.L8
+ 170              	.LVL24:
+ 171              	.L10:
+ 267:Source\LwIP\src\core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 268:Source\LwIP\src\core/inet_chksum.c ****       (void *)q, (void *)q->next));
+ 269:Source\LwIP\src\core/inet_chksum.c ****     acc += LWIP_CHKSUM(q->payload, q->len);
+ 172              		.loc 1 269 0
+ 173 0010 7189     		ldrh	r1, [r6, #10]
+ 174 0012 7068     		ldr	r0, [r6, #4]
+ 175 0014 FFF7FEFF 		bl	lwip_standard_chksum
+ 176              	.LVL25:
+ 177 0018 0019     		adds	r0, r0, r4
+ 178              	.LVL26:
+ 270:Source\LwIP\src\core/inet_chksum.c ****     /*LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): unwrapped lwip_chksum()=%"X32_F" \n", acc));*
+ 271:Source\LwIP\src\core/inet_chksum.c ****     /* just executing this next line is probably faster that the if statement needed
+ 272:Source\LwIP\src\core/inet_chksum.c ****        to check whether we really need to execute it, and does no harm */
+ 273:Source\LwIP\src\core/inet_chksum.c ****     acc = FOLD_U32T(acc);
+ 179              		.loc 1 273 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 9
+
+
+ 180 001a 030C     		lsrs	r3, r0, #16
+ 181 001c 0004     		lsls	r0, r0, #16
+ 182              	.LVL27:
+ 183 001e 000C     		lsrs	r0, r0, #16
+ 184 0020 1C18     		adds	r4, r3, r0
+ 185              	.LVL28:
+ 274:Source\LwIP\src\core/inet_chksum.c ****     if (q->len % 2 != 0) {
+ 186              		.loc 1 274 0
+ 187 0022 7389     		ldrh	r3, [r6, #10]
+ 188 0024 DB07     		lsls	r3, r3, #31
+ 189 0026 09D5     		bpl	.L9
+ 275:Source\LwIP\src\core/inet_chksum.c ****       swapped = 1 - swapped;
+ 190              		.loc 1 275 0
+ 191 0028 0123     		movs	r3, #1
+ 192 002a DF1B     		subs	r7, r3, r7
+ 193              	.LVL29:
+ 194 002c FFB2     		uxtb	r7, r7
+ 195              	.LVL30:
+ 276:Source\LwIP\src\core/inet_chksum.c ****       acc = SWAP_BYTES_IN_WORD(acc);
+ 196              		.loc 1 276 0
+ 197 002e 2306     		lsls	r3, r4, #24
+ 198 0030 1B0C     		lsrs	r3, r3, #16
+ 199 0032 200A     		lsrs	r0, r4, #8
+ 200 0034 FF22     		movs	r2, #255
+ 201 0036 1040     		ands	r0, r2
+ 202 0038 0343     		orrs	r3, r0
+ 203 003a 1C00     		movs	r4, r3
+ 204              	.LVL31:
+ 205              	.L9:
+ 266:Source\LwIP\src\core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 206              		.loc 1 266 0 discriminator 2
+ 207 003c 3668     		ldr	r6, [r6]
+ 208              	.LVL32:
+ 209              	.L8:
+ 266:Source\LwIP\src\core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 210              		.loc 1 266 0 is_stmt 0 discriminator 1
+ 211 003e 002E     		cmp	r6, #0
+ 212 0040 E6D1     		bne	.L10
+ 277:Source\LwIP\src\core/inet_chksum.c ****     }
+ 278:Source\LwIP\src\core/inet_chksum.c ****     /*LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): wrapped lwip_chksum()=%"X32_F" \n", acc));*/
+ 279:Source\LwIP\src\core/inet_chksum.c ****   }
+ 280:Source\LwIP\src\core/inet_chksum.c **** 
+ 281:Source\LwIP\src\core/inet_chksum.c ****   if (swapped) {
+ 213              		.loc 1 281 0 is_stmt 1
+ 214 0042 002F     		cmp	r7, #0
+ 215 0044 06D0     		beq	.L11
+ 282:Source\LwIP\src\core/inet_chksum.c ****     acc = SWAP_BYTES_IN_WORD(acc);
+ 216              		.loc 1 282 0
+ 217 0046 2306     		lsls	r3, r4, #24
+ 218 0048 1B0C     		lsrs	r3, r3, #16
+ 219 004a 200A     		lsrs	r0, r4, #8
+ 220 004c FF22     		movs	r2, #255
+ 221 004e 1040     		ands	r0, r2
+ 222 0050 0343     		orrs	r3, r0
+ 223 0052 1C00     		movs	r4, r3
+ 224              	.LVL33:
+ 225              	.L11:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 10
+
+
+ 283:Source\LwIP\src\core/inet_chksum.c ****   }
+ 284:Source\LwIP\src\core/inet_chksum.c **** 
+ 285:Source\LwIP\src\core/inet_chksum.c ****   acc += (u32_t)lwip_htons((u16_t)proto);
+ 226              		.loc 1 285 0
+ 227 0054 6B46     		mov	r3, sp
+ 228 0056 9888     		ldrh	r0, [r3, #4]
+ 229 0058 FFF7FEFF 		bl	lwip_htons
+ 230              	.LVL34:
+ 231 005c 2418     		adds	r4, r4, r0
+ 232              	.LVL35:
+ 286:Source\LwIP\src\core/inet_chksum.c ****   acc += (u32_t)lwip_htons(proto_len);
+ 233              		.loc 1 286 0
+ 234 005e 2800     		movs	r0, r5
+ 235 0060 FFF7FEFF 		bl	lwip_htons
+ 236              	.LVL36:
+ 237 0064 2018     		adds	r0, r4, r0
+ 238              	.LVL37:
+ 287:Source\LwIP\src\core/inet_chksum.c **** 
+ 288:Source\LwIP\src\core/inet_chksum.c ****   /* Fold 32-bit sum to 16 bits
+ 289:Source\LwIP\src\core/inet_chksum.c ****      calling this twice is probably faster than if statements... */
+ 290:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 239              		.loc 1 290 0
+ 240 0066 030C     		lsrs	r3, r0, #16
+ 241 0068 0004     		lsls	r0, r0, #16
+ 242              	.LVL38:
+ 243 006a 000C     		lsrs	r0, r0, #16
+ 244 006c 1818     		adds	r0, r3, r0
+ 245              	.LVL39:
+ 291:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 246              		.loc 1 291 0
+ 247 006e 030C     		lsrs	r3, r0, #16
+ 248 0070 0004     		lsls	r0, r0, #16
+ 249              	.LVL40:
+ 250 0072 000C     		lsrs	r0, r0, #16
+ 251 0074 1818     		adds	r0, r3, r0
+ 252              	.LVL41:
+ 292:Source\LwIP\src\core/inet_chksum.c ****   LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): pbuf chain lwip_chksum()=%"X32_F"\n", acc));
+ 293:Source\LwIP\src\core/inet_chksum.c ****   return (u16_t)~(acc & 0xffffUL);
+ 253              		.loc 1 293 0
+ 254 0076 C043     		mvns	r0, r0
+ 255              	.LVL42:
+ 256 0078 80B2     		uxth	r0, r0
+ 257              	.LVL43:
+ 294:Source\LwIP\src\core/inet_chksum.c **** }
+ 258              		.loc 1 294 0
+ 259 007a 03B0     		add	sp, sp, #12
+ 260              		@ sp needed
+ 261              	.LVL44:
+ 262              	.LVL45:
+ 263 007c F0BD     		pop	{r4, r5, r6, r7, pc}
+ 264              		.cfi_endproc
+ 265              	.LFE54:
+ 266              		.size	inet_cksum_pseudo_base, .-inet_cksum_pseudo_base
+ 267 007e C046     		.section	.text.inet_cksum_pseudo_partial_base,"ax",%progbits
+ 268              		.align	2
+ 269              		.code	16
+ 270              		.thumb_func
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 11
+
+
+ 271              		.type	inet_cksum_pseudo_partial_base, %function
+ 272              	inet_cksum_pseudo_partial_base:
+ 273              	.LFB57:
+ 295:Source\LwIP\src\core/inet_chksum.c **** 
+ 296:Source\LwIP\src\core/inet_chksum.c **** #if LWIP_IPV4
+ 297:Source\LwIP\src\core/inet_chksum.c **** /* inet_chksum_pseudo:
+ 298:Source\LwIP\src\core/inet_chksum.c ****  *
+ 299:Source\LwIP\src\core/inet_chksum.c ****  * Calculates the IPv4 pseudo Internet checksum used by TCP and UDP for a pbuf chain.
+ 300:Source\LwIP\src\core/inet_chksum.c ****  * IP addresses are expected to be in network byte order.
+ 301:Source\LwIP\src\core/inet_chksum.c ****  *
+ 302:Source\LwIP\src\core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 303:Source\LwIP\src\core/inet_chksum.c ****  * @param src source ip address (used for checksum of pseudo header)
+ 304:Source\LwIP\src\core/inet_chksum.c ****  * @param dst destination ip address (used for checksum of pseudo header)
+ 305:Source\LwIP\src\core/inet_chksum.c ****  * @param proto ip protocol (used for checksum of pseudo header)
+ 306:Source\LwIP\src\core/inet_chksum.c ****  * @param proto_len length of the ip data part (used for checksum of pseudo header)
+ 307:Source\LwIP\src\core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 308:Source\LwIP\src\core/inet_chksum.c ****  */
+ 309:Source\LwIP\src\core/inet_chksum.c **** u16_t
+ 310:Source\LwIP\src\core/inet_chksum.c **** inet_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 311:Source\LwIP\src\core/inet_chksum.c ****        const ip4_addr_t *src, const ip4_addr_t *dest)
+ 312:Source\LwIP\src\core/inet_chksum.c **** {
+ 313:Source\LwIP\src\core/inet_chksum.c ****   u32_t acc;
+ 314:Source\LwIP\src\core/inet_chksum.c ****   u32_t addr;
+ 315:Source\LwIP\src\core/inet_chksum.c **** 
+ 316:Source\LwIP\src\core/inet_chksum.c ****   addr = ip4_addr_get_u32(src);
+ 317:Source\LwIP\src\core/inet_chksum.c ****   acc = (addr & 0xffffUL);
+ 318:Source\LwIP\src\core/inet_chksum.c ****   acc += ((addr >> 16) & 0xffffUL);
+ 319:Source\LwIP\src\core/inet_chksum.c ****   addr = ip4_addr_get_u32(dest);
+ 320:Source\LwIP\src\core/inet_chksum.c ****   acc += (addr & 0xffffUL);
+ 321:Source\LwIP\src\core/inet_chksum.c ****   acc += ((addr >> 16) & 0xffffUL);
+ 322:Source\LwIP\src\core/inet_chksum.c ****   /* fold down to 16 bits */
+ 323:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 324:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 325:Source\LwIP\src\core/inet_chksum.c **** 
+ 326:Source\LwIP\src\core/inet_chksum.c ****   return inet_cksum_pseudo_base(p, proto, proto_len, acc);
+ 327:Source\LwIP\src\core/inet_chksum.c **** }
+ 328:Source\LwIP\src\core/inet_chksum.c **** #endif /* LWIP_IPV4 */
+ 329:Source\LwIP\src\core/inet_chksum.c **** 
+ 330:Source\LwIP\src\core/inet_chksum.c **** #if LWIP_IPV6
+ 331:Source\LwIP\src\core/inet_chksum.c **** /**
+ 332:Source\LwIP\src\core/inet_chksum.c ****  * Calculates the checksum with IPv6 pseudo header used by TCP and UDP for a pbuf chain.
+ 333:Source\LwIP\src\core/inet_chksum.c ****  * IPv6 addresses are expected to be in network byte order.
+ 334:Source\LwIP\src\core/inet_chksum.c ****  *
+ 335:Source\LwIP\src\core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 336:Source\LwIP\src\core/inet_chksum.c ****  * @param proto ipv6 protocol/next header (used for checksum of pseudo header)
+ 337:Source\LwIP\src\core/inet_chksum.c ****  * @param proto_len length of the ipv6 payload (used for checksum of pseudo header)
+ 338:Source\LwIP\src\core/inet_chksum.c ****  * @param src source ipv6 address (used for checksum of pseudo header)
+ 339:Source\LwIP\src\core/inet_chksum.c ****  * @param dest destination ipv6 address (used for checksum of pseudo header)
+ 340:Source\LwIP\src\core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 341:Source\LwIP\src\core/inet_chksum.c ****  */
+ 342:Source\LwIP\src\core/inet_chksum.c **** u16_t
+ 343:Source\LwIP\src\core/inet_chksum.c **** ip6_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 344:Source\LwIP\src\core/inet_chksum.c ****        const ip6_addr_t *src, const ip6_addr_t *dest)
+ 345:Source\LwIP\src\core/inet_chksum.c **** {
+ 346:Source\LwIP\src\core/inet_chksum.c ****   u32_t acc = 0;
+ 347:Source\LwIP\src\core/inet_chksum.c ****   u32_t addr;
+ 348:Source\LwIP\src\core/inet_chksum.c ****   u8_t addr_part;
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 12
+
+
+ 349:Source\LwIP\src\core/inet_chksum.c **** 
+ 350:Source\LwIP\src\core/inet_chksum.c ****   for (addr_part = 0; addr_part < 4; addr_part++) {
+ 351:Source\LwIP\src\core/inet_chksum.c ****     addr = src->addr[addr_part];
+ 352:Source\LwIP\src\core/inet_chksum.c ****     acc += (addr & 0xffffUL);
+ 353:Source\LwIP\src\core/inet_chksum.c ****     acc += ((addr >> 16) & 0xffffUL);
+ 354:Source\LwIP\src\core/inet_chksum.c ****     addr = dest->addr[addr_part];
+ 355:Source\LwIP\src\core/inet_chksum.c ****     acc += (addr & 0xffffUL);
+ 356:Source\LwIP\src\core/inet_chksum.c ****     acc += ((addr >> 16) & 0xffffUL);
+ 357:Source\LwIP\src\core/inet_chksum.c ****   }
+ 358:Source\LwIP\src\core/inet_chksum.c ****   /* fold down to 16 bits */
+ 359:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 360:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 361:Source\LwIP\src\core/inet_chksum.c **** 
+ 362:Source\LwIP\src\core/inet_chksum.c ****   return inet_cksum_pseudo_base(p, proto, proto_len, acc);
+ 363:Source\LwIP\src\core/inet_chksum.c **** }
+ 364:Source\LwIP\src\core/inet_chksum.c **** #endif /* LWIP_IPV6 */
+ 365:Source\LwIP\src\core/inet_chksum.c **** 
+ 366:Source\LwIP\src\core/inet_chksum.c **** /* ip_chksum_pseudo:
+ 367:Source\LwIP\src\core/inet_chksum.c ****  *
+ 368:Source\LwIP\src\core/inet_chksum.c ****  * Calculates the IPv4 or IPv6 pseudo Internet checksum used by TCP and UDP for a pbuf chain.
+ 369:Source\LwIP\src\core/inet_chksum.c ****  * IP addresses are expected to be in network byte order.
+ 370:Source\LwIP\src\core/inet_chksum.c ****  *
+ 371:Source\LwIP\src\core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 372:Source\LwIP\src\core/inet_chksum.c ****  * @param src source ip address (used for checksum of pseudo header)
+ 373:Source\LwIP\src\core/inet_chksum.c ****  * @param dst destination ip address (used for checksum of pseudo header)
+ 374:Source\LwIP\src\core/inet_chksum.c ****  * @param proto ip protocol (used for checksum of pseudo header)
+ 375:Source\LwIP\src\core/inet_chksum.c ****  * @param proto_len length of the ip data part (used for checksum of pseudo header)
+ 376:Source\LwIP\src\core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 377:Source\LwIP\src\core/inet_chksum.c ****  */
+ 378:Source\LwIP\src\core/inet_chksum.c **** u16_t
+ 379:Source\LwIP\src\core/inet_chksum.c **** ip_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 380:Source\LwIP\src\core/inet_chksum.c ****        const ip_addr_t *src, const ip_addr_t *dest)
+ 381:Source\LwIP\src\core/inet_chksum.c **** {
+ 382:Source\LwIP\src\core/inet_chksum.c **** #if LWIP_IPV6
+ 383:Source\LwIP\src\core/inet_chksum.c ****   if (IP_IS_V6(dest)) {
+ 384:Source\LwIP\src\core/inet_chksum.c ****     return ip6_chksum_pseudo(p, proto, proto_len, ip_2_ip6(src), ip_2_ip6(dest));
+ 385:Source\LwIP\src\core/inet_chksum.c ****   }
+ 386:Source\LwIP\src\core/inet_chksum.c **** #endif /* LWIP_IPV6 */
+ 387:Source\LwIP\src\core/inet_chksum.c **** #if LWIP_IPV4 && LWIP_IPV6
+ 388:Source\LwIP\src\core/inet_chksum.c ****   else
+ 389:Source\LwIP\src\core/inet_chksum.c **** #endif /* LWIP_IPV4 && LWIP_IPV6 */
+ 390:Source\LwIP\src\core/inet_chksum.c **** #if LWIP_IPV4
+ 391:Source\LwIP\src\core/inet_chksum.c ****   {
+ 392:Source\LwIP\src\core/inet_chksum.c ****     return inet_chksum_pseudo(p, proto, proto_len, ip_2_ip4(src), ip_2_ip4(dest));
+ 393:Source\LwIP\src\core/inet_chksum.c ****   }
+ 394:Source\LwIP\src\core/inet_chksum.c **** #endif /* LWIP_IPV4 */
+ 395:Source\LwIP\src\core/inet_chksum.c **** }
+ 396:Source\LwIP\src\core/inet_chksum.c **** 
+ 397:Source\LwIP\src\core/inet_chksum.c **** /** Parts of the pseudo checksum which are common to IPv4 and IPv6 */
+ 398:Source\LwIP\src\core/inet_chksum.c **** static u16_t
+ 399:Source\LwIP\src\core/inet_chksum.c **** inet_cksum_pseudo_partial_base(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 400:Source\LwIP\src\core/inet_chksum.c ****        u16_t chksum_len, u32_t acc)
+ 401:Source\LwIP\src\core/inet_chksum.c **** {
+ 274              		.loc 1 401 0
+ 275              		.cfi_startproc
+ 276              		@ args = 4, pretend = 0, frame = 8
+ 277              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 13
+
+
+ 278              	.LVL46:
+ 279 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 280              		.cfi_def_cfa_offset 20
+ 281              		.cfi_offset 4, -20
+ 282              		.cfi_offset 5, -16
+ 283              		.cfi_offset 6, -12
+ 284              		.cfi_offset 7, -8
+ 285              		.cfi_offset 14, -4
+ 286 0002 4746     		mov	r7, r8
+ 287 0004 80B4     		push	{r7}
+ 288              		.cfi_def_cfa_offset 24
+ 289              		.cfi_offset 8, -24
+ 290 0006 82B0     		sub	sp, sp, #8
+ 291              		.cfi_def_cfa_offset 32
+ 292 0008 0600     		movs	r6, r0
+ 293 000a 0091     		str	r1, [sp]
+ 294 000c 0192     		str	r2, [sp, #4]
+ 295 000e 1F00     		movs	r7, r3
+ 296 0010 089C     		ldr	r4, [sp, #32]
+ 297              	.LVL47:
+ 402:Source\LwIP\src\core/inet_chksum.c ****   struct pbuf *q;
+ 403:Source\LwIP\src\core/inet_chksum.c ****   u8_t swapped = 0;
+ 298              		.loc 1 403 0
+ 299 0012 0023     		movs	r3, #0
+ 300              	.LVL48:
+ 301 0014 9846     		mov	r8, r3
+ 404:Source\LwIP\src\core/inet_chksum.c ****   u16_t chklen;
+ 405:Source\LwIP\src\core/inet_chksum.c **** 
+ 406:Source\LwIP\src\core/inet_chksum.c ****   /* iterate through all pbuf in chain */
+ 407:Source\LwIP\src\core/inet_chksum.c ****   for (q = p; (q != NULL) && (chksum_len > 0); q = q->next) {
+ 302              		.loc 1 407 0
+ 303 0016 1EE0     		b	.L13
+ 304              	.LVL49:
+ 305              	.L17:
+ 408:Source\LwIP\src\core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 409:Source\LwIP\src\core/inet_chksum.c ****       (void *)q, (void *)q->next));
+ 410:Source\LwIP\src\core/inet_chksum.c ****     chklen = q->len;
+ 306              		.loc 1 410 0
+ 307 0018 7589     		ldrh	r5, [r6, #10]
+ 308              	.LVL50:
+ 411:Source\LwIP\src\core/inet_chksum.c ****     if (chklen > chksum_len) {
+ 309              		.loc 1 411 0
+ 310 001a AF42     		cmp	r7, r5
+ 311 001c 00D2     		bcs	.L14
+ 412:Source\LwIP\src\core/inet_chksum.c ****       chklen = chksum_len;
+ 312              		.loc 1 412 0
+ 313 001e 3D00     		movs	r5, r7
+ 314              	.LVL51:
+ 315              	.L14:
+ 413:Source\LwIP\src\core/inet_chksum.c ****     }
+ 414:Source\LwIP\src\core/inet_chksum.c ****     acc += LWIP_CHKSUM(q->payload, chklen);
+ 316              		.loc 1 414 0
+ 317 0020 2900     		movs	r1, r5
+ 318 0022 7068     		ldr	r0, [r6, #4]
+ 319 0024 FFF7FEFF 		bl	lwip_standard_chksum
+ 320              	.LVL52:
+ 321 0028 0019     		adds	r0, r0, r4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 14
+
+
+ 322              	.LVL53:
+ 415:Source\LwIP\src\core/inet_chksum.c ****     chksum_len -= chklen;
+ 323              		.loc 1 415 0
+ 324 002a 7F1B     		subs	r7, r7, r5
+ 325              	.LVL54:
+ 326 002c BFB2     		uxth	r7, r7
+ 327              	.LVL55:
+ 416:Source\LwIP\src\core/inet_chksum.c ****     LWIP_ASSERT("delete me", chksum_len < 0x7fff);
+ 417:Source\LwIP\src\core/inet_chksum.c ****     /*LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): unwrapped lwip_chksum()=%"X32_F" \n", acc));*
+ 418:Source\LwIP\src\core/inet_chksum.c ****     /* fold the upper bit down */
+ 419:Source\LwIP\src\core/inet_chksum.c ****     acc = FOLD_U32T(acc);
+ 328              		.loc 1 419 0
+ 329 002e 030C     		lsrs	r3, r0, #16
+ 330 0030 0004     		lsls	r0, r0, #16
+ 331              	.LVL56:
+ 332 0032 000C     		lsrs	r0, r0, #16
+ 333 0034 1C18     		adds	r4, r3, r0
+ 334              	.LVL57:
+ 420:Source\LwIP\src\core/inet_chksum.c ****     if (q->len % 2 != 0) {
+ 335              		.loc 1 420 0
+ 336 0036 7389     		ldrh	r3, [r6, #10]
+ 337 0038 DB07     		lsls	r3, r3, #31
+ 338 003a 0BD5     		bpl	.L15
+ 421:Source\LwIP\src\core/inet_chksum.c ****       swapped = 1 - swapped;
+ 339              		.loc 1 421 0
+ 340 003c 0123     		movs	r3, #1
+ 341 003e 4246     		mov	r2, r8
+ 342 0040 9B1A     		subs	r3, r3, r2
+ 343 0042 DBB2     		uxtb	r3, r3
+ 344 0044 9846     		mov	r8, r3
+ 345              	.LVL58:
+ 422:Source\LwIP\src\core/inet_chksum.c ****       acc = SWAP_BYTES_IN_WORD(acc);
+ 346              		.loc 1 422 0
+ 347 0046 2306     		lsls	r3, r4, #24
+ 348 0048 1B0C     		lsrs	r3, r3, #16
+ 349 004a 200A     		lsrs	r0, r4, #8
+ 350 004c FF22     		movs	r2, #255
+ 351 004e 1040     		ands	r0, r2
+ 352 0050 0343     		orrs	r3, r0
+ 353 0052 1C00     		movs	r4, r3
+ 354              	.LVL59:
+ 355              	.L15:
+ 407:Source\LwIP\src\core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 356              		.loc 1 407 0 discriminator 2
+ 357 0054 3668     		ldr	r6, [r6]
+ 358              	.LVL60:
+ 359              	.L13:
+ 407:Source\LwIP\src\core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 360              		.loc 1 407 0 is_stmt 0 discriminator 1
+ 361 0056 002E     		cmp	r6, #0
+ 362 0058 01D0     		beq	.L16
+ 407:Source\LwIP\src\core/inet_chksum.c ****     LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): checksumming pbuf %p (has next %p) \n",
+ 363              		.loc 1 407 0 discriminator 3
+ 364 005a 002F     		cmp	r7, #0
+ 365 005c DCD1     		bne	.L17
+ 366              	.L16:
+ 423:Source\LwIP\src\core/inet_chksum.c ****     }
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 15
+
+
+ 424:Source\LwIP\src\core/inet_chksum.c ****     /*LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): wrapped lwip_chksum()=%"X32_F" \n", acc));*/
+ 425:Source\LwIP\src\core/inet_chksum.c ****   }
+ 426:Source\LwIP\src\core/inet_chksum.c **** 
+ 427:Source\LwIP\src\core/inet_chksum.c ****   if (swapped) {
+ 367              		.loc 1 427 0 is_stmt 1
+ 368 005e 4346     		mov	r3, r8
+ 369 0060 002B     		cmp	r3, #0
+ 370 0062 06D0     		beq	.L18
+ 428:Source\LwIP\src\core/inet_chksum.c ****     acc = SWAP_BYTES_IN_WORD(acc);
+ 371              		.loc 1 428 0
+ 372 0064 2306     		lsls	r3, r4, #24
+ 373 0066 1B0C     		lsrs	r3, r3, #16
+ 374 0068 200A     		lsrs	r0, r4, #8
+ 375 006a FF22     		movs	r2, #255
+ 376 006c 1040     		ands	r0, r2
+ 377 006e 0343     		orrs	r3, r0
+ 378 0070 1C00     		movs	r4, r3
+ 379              	.LVL61:
+ 380              	.L18:
+ 429:Source\LwIP\src\core/inet_chksum.c ****   }
+ 430:Source\LwIP\src\core/inet_chksum.c **** 
+ 431:Source\LwIP\src\core/inet_chksum.c ****   acc += (u32_t)lwip_htons((u16_t)proto);
+ 381              		.loc 1 431 0
+ 382 0072 6B46     		mov	r3, sp
+ 383 0074 1888     		ldrh	r0, [r3]
+ 384 0076 FFF7FEFF 		bl	lwip_htons
+ 385              	.LVL62:
+ 386 007a 2418     		adds	r4, r4, r0
+ 387              	.LVL63:
+ 432:Source\LwIP\src\core/inet_chksum.c ****   acc += (u32_t)lwip_htons(proto_len);
+ 388              		.loc 1 432 0
+ 389 007c 0198     		ldr	r0, [sp, #4]
+ 390 007e FFF7FEFF 		bl	lwip_htons
+ 391              	.LVL64:
+ 392 0082 2018     		adds	r0, r4, r0
+ 393              	.LVL65:
+ 433:Source\LwIP\src\core/inet_chksum.c **** 
+ 434:Source\LwIP\src\core/inet_chksum.c ****   /* Fold 32-bit sum to 16 bits
+ 435:Source\LwIP\src\core/inet_chksum.c ****      calling this twice is probably faster than if statements... */
+ 436:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 394              		.loc 1 436 0
+ 395 0084 030C     		lsrs	r3, r0, #16
+ 396 0086 0004     		lsls	r0, r0, #16
+ 397              	.LVL66:
+ 398 0088 000C     		lsrs	r0, r0, #16
+ 399 008a 1818     		adds	r0, r3, r0
+ 400              	.LVL67:
+ 437:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 401              		.loc 1 437 0
+ 402 008c 030C     		lsrs	r3, r0, #16
+ 403 008e 0004     		lsls	r0, r0, #16
+ 404              	.LVL68:
+ 405 0090 000C     		lsrs	r0, r0, #16
+ 406 0092 1818     		adds	r0, r3, r0
+ 407              	.LVL69:
+ 438:Source\LwIP\src\core/inet_chksum.c ****   LWIP_DEBUGF(INET_DEBUG, ("inet_chksum_pseudo(): pbuf chain lwip_chksum()=%"X32_F"\n", acc));
+ 439:Source\LwIP\src\core/inet_chksum.c ****   return (u16_t)~(acc & 0xffffUL);
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 16
+
+
+ 408              		.loc 1 439 0
+ 409 0094 C043     		mvns	r0, r0
+ 410              	.LVL70:
+ 411 0096 80B2     		uxth	r0, r0
+ 412              	.LVL71:
+ 440:Source\LwIP\src\core/inet_chksum.c **** }
+ 413              		.loc 1 440 0
+ 414 0098 02B0     		add	sp, sp, #8
+ 415              		@ sp needed
+ 416              	.LVL72:
+ 417              	.LVL73:
+ 418              	.LVL74:
+ 419 009a 04BC     		pop	{r2}
+ 420 009c 9046     		mov	r8, r2
+ 421 009e F0BD     		pop	{r4, r5, r6, r7, pc}
+ 422              		.cfi_endproc
+ 423              	.LFE57:
+ 424              		.size	inet_cksum_pseudo_partial_base, .-inet_cksum_pseudo_partial_base
+ 425              		.section	.text.inet_chksum_pseudo,"ax",%progbits
+ 426              		.align	2
+ 427              		.global	inet_chksum_pseudo
+ 428              		.code	16
+ 429              		.thumb_func
+ 430              		.type	inet_chksum_pseudo, %function
+ 431              	inet_chksum_pseudo:
+ 432              	.LFB55:
+ 312:Source\LwIP\src\core/inet_chksum.c ****   u32_t acc;
+ 433              		.loc 1 312 0
+ 434              		.cfi_startproc
+ 435              		@ args = 4, pretend = 0, frame = 0
+ 436              		@ frame_needed = 0, uses_anonymous_args = 0
+ 437              	.LVL75:
+ 438 0000 70B5     		push	{r4, r5, r6, lr}
+ 439              		.cfi_def_cfa_offset 16
+ 440              		.cfi_offset 4, -16
+ 441              		.cfi_offset 5, -12
+ 442              		.cfi_offset 6, -8
+ 443              		.cfi_offset 14, -4
+ 316:Source\LwIP\src\core/inet_chksum.c ****   acc = (addr & 0xffffUL);
+ 444              		.loc 1 316 0
+ 445 0002 1B68     		ldr	r3, [r3]
+ 446              	.LVL76:
+ 317:Source\LwIP\src\core/inet_chksum.c ****   acc += ((addr >> 16) & 0xffffUL);
+ 447              		.loc 1 317 0
+ 448 0004 1E04     		lsls	r6, r3, #16
+ 449 0006 360C     		lsrs	r6, r6, #16
+ 450              	.LVL77:
+ 318:Source\LwIP\src\core/inet_chksum.c ****   addr = ip4_addr_get_u32(dest);
+ 451              		.loc 1 318 0
+ 452 0008 1B0C     		lsrs	r3, r3, #16
+ 453              	.LVL78:
+ 454 000a F618     		adds	r6, r6, r3
+ 455              	.LVL79:
+ 319:Source\LwIP\src\core/inet_chksum.c ****   acc += (addr & 0xffffUL);
+ 456              		.loc 1 319 0
+ 457 000c 049B     		ldr	r3, [sp, #16]
+ 458 000e 1B68     		ldr	r3, [r3]
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 17
+
+
+ 459              	.LVL80:
+ 320:Source\LwIP\src\core/inet_chksum.c ****   acc += ((addr >> 16) & 0xffffUL);
+ 460              		.loc 1 320 0
+ 461 0010 1D04     		lsls	r5, r3, #16
+ 462 0012 2D0C     		lsrs	r5, r5, #16
+ 463 0014 7519     		adds	r5, r6, r5
+ 464              	.LVL81:
+ 321:Source\LwIP\src\core/inet_chksum.c ****   /* fold down to 16 bits */
+ 465              		.loc 1 321 0
+ 466 0016 1B0C     		lsrs	r3, r3, #16
+ 467              	.LVL82:
+ 468 0018 ED18     		adds	r5, r5, r3
+ 469              	.LVL83:
+ 323:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 470              		.loc 1 323 0
+ 471 001a 2C0C     		lsrs	r4, r5, #16
+ 472 001c 2D04     		lsls	r5, r5, #16
+ 473              	.LVL84:
+ 474 001e 2D0C     		lsrs	r5, r5, #16
+ 475 0020 6419     		adds	r4, r4, r5
+ 476              	.LVL85:
+ 324:Source\LwIP\src\core/inet_chksum.c **** 
+ 477              		.loc 1 324 0
+ 478 0022 230C     		lsrs	r3, r4, #16
+ 479 0024 2404     		lsls	r4, r4, #16
+ 480              	.LVL86:
+ 481 0026 240C     		lsrs	r4, r4, #16
+ 482 0028 1B19     		adds	r3, r3, r4
+ 483              	.LVL87:
+ 326:Source\LwIP\src\core/inet_chksum.c **** }
+ 484              		.loc 1 326 0
+ 485 002a FFF7FEFF 		bl	inet_cksum_pseudo_base
+ 486              	.LVL88:
+ 327:Source\LwIP\src\core/inet_chksum.c **** #endif /* LWIP_IPV4 */
+ 487              		.loc 1 327 0
+ 488              		@ sp needed
+ 489 002e 70BD     		pop	{r4, r5, r6, pc}
+ 490              		.cfi_endproc
+ 491              	.LFE55:
+ 492              		.size	inet_chksum_pseudo, .-inet_chksum_pseudo
+ 493              		.section	.text.ip_chksum_pseudo,"ax",%progbits
+ 494              		.align	2
+ 495              		.global	ip_chksum_pseudo
+ 496              		.code	16
+ 497              		.thumb_func
+ 498              		.type	ip_chksum_pseudo, %function
+ 499              	ip_chksum_pseudo:
+ 500              	.LFB56:
+ 381:Source\LwIP\src\core/inet_chksum.c **** #if LWIP_IPV6
+ 501              		.loc 1 381 0
+ 502              		.cfi_startproc
+ 503              		@ args = 4, pretend = 0, frame = 0
+ 504              		@ frame_needed = 0, uses_anonymous_args = 0
+ 505              	.LVL89:
+ 506 0000 10B5     		push	{r4, lr}
+ 507              		.cfi_def_cfa_offset 8
+ 508              		.cfi_offset 4, -8
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 18
+
+
+ 509              		.cfi_offset 14, -4
+ 510 0002 82B0     		sub	sp, sp, #8
+ 511              		.cfi_def_cfa_offset 16
+ 392:Source\LwIP\src\core/inet_chksum.c ****   }
+ 512              		.loc 1 392 0
+ 513 0004 049C     		ldr	r4, [sp, #16]
+ 514 0006 0094     		str	r4, [sp]
+ 515 0008 FFF7FEFF 		bl	inet_chksum_pseudo
+ 516              	.LVL90:
+ 395:Source\LwIP\src\core/inet_chksum.c **** 
+ 517              		.loc 1 395 0
+ 518 000c 02B0     		add	sp, sp, #8
+ 519              		@ sp needed
+ 520 000e 10BD     		pop	{r4, pc}
+ 521              		.cfi_endproc
+ 522              	.LFE56:
+ 523              		.size	ip_chksum_pseudo, .-ip_chksum_pseudo
+ 524              		.section	.text.inet_chksum_pseudo_partial,"ax",%progbits
+ 525              		.align	2
+ 526              		.global	inet_chksum_pseudo_partial
+ 527              		.code	16
+ 528              		.thumb_func
+ 529              		.type	inet_chksum_pseudo_partial, %function
+ 530              	inet_chksum_pseudo_partial:
+ 531              	.LFB58:
+ 441:Source\LwIP\src\core/inet_chksum.c **** 
+ 442:Source\LwIP\src\core/inet_chksum.c **** #if LWIP_IPV4
+ 443:Source\LwIP\src\core/inet_chksum.c **** /* inet_chksum_pseudo_partial:
+ 444:Source\LwIP\src\core/inet_chksum.c ****  *
+ 445:Source\LwIP\src\core/inet_chksum.c ****  * Calculates the IPv4 pseudo Internet checksum used by TCP and UDP for a pbuf chain.
+ 446:Source\LwIP\src\core/inet_chksum.c ****  * IP addresses are expected to be in network byte order.
+ 447:Source\LwIP\src\core/inet_chksum.c ****  *
+ 448:Source\LwIP\src\core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 449:Source\LwIP\src\core/inet_chksum.c ****  * @param src source ip address (used for checksum of pseudo header)
+ 450:Source\LwIP\src\core/inet_chksum.c ****  * @param dst destination ip address (used for checksum of pseudo header)
+ 451:Source\LwIP\src\core/inet_chksum.c ****  * @param proto ip protocol (used for checksum of pseudo header)
+ 452:Source\LwIP\src\core/inet_chksum.c ****  * @param proto_len length of the ip data part (used for checksum of pseudo header)
+ 453:Source\LwIP\src\core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 454:Source\LwIP\src\core/inet_chksum.c ****  */
+ 455:Source\LwIP\src\core/inet_chksum.c **** u16_t
+ 456:Source\LwIP\src\core/inet_chksum.c **** inet_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 457:Source\LwIP\src\core/inet_chksum.c ****        u16_t chksum_len, const ip4_addr_t *src, const ip4_addr_t *dest)
+ 458:Source\LwIP\src\core/inet_chksum.c **** {
+ 532              		.loc 1 458 0
+ 533              		.cfi_startproc
+ 534              		@ args = 8, pretend = 0, frame = 0
+ 535              		@ frame_needed = 0, uses_anonymous_args = 0
+ 536              	.LVL91:
+ 537 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 538              		.cfi_def_cfa_offset 20
+ 539              		.cfi_offset 4, -20
+ 540              		.cfi_offset 5, -16
+ 541              		.cfi_offset 6, -12
+ 542              		.cfi_offset 7, -8
+ 543              		.cfi_offset 14, -4
+ 544 0002 83B0     		sub	sp, sp, #12
+ 545              		.cfi_def_cfa_offset 32
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 19
+
+
+ 459:Source\LwIP\src\core/inet_chksum.c ****   u32_t acc;
+ 460:Source\LwIP\src\core/inet_chksum.c ****   u32_t addr;
+ 461:Source\LwIP\src\core/inet_chksum.c **** 
+ 462:Source\LwIP\src\core/inet_chksum.c ****   addr = ip4_addr_get_u32(src);
+ 546              		.loc 1 462 0
+ 547 0004 089C     		ldr	r4, [sp, #32]
+ 548 0006 2668     		ldr	r6, [r4]
+ 549              	.LVL92:
+ 463:Source\LwIP\src\core/inet_chksum.c ****   acc = (addr & 0xffffUL);
+ 550              		.loc 1 463 0
+ 551 0008 3704     		lsls	r7, r6, #16
+ 552 000a 3F0C     		lsrs	r7, r7, #16
+ 553              	.LVL93:
+ 464:Source\LwIP\src\core/inet_chksum.c ****   acc += ((addr >> 16) & 0xffffUL);
+ 554              		.loc 1 464 0
+ 555 000c 360C     		lsrs	r6, r6, #16
+ 556              	.LVL94:
+ 557 000e BF19     		adds	r7, r7, r6
+ 558              	.LVL95:
+ 465:Source\LwIP\src\core/inet_chksum.c ****   addr = ip4_addr_get_u32(dest);
+ 559              		.loc 1 465 0
+ 560 0010 099C     		ldr	r4, [sp, #36]
+ 561              	.LVL96:
+ 562 0012 2668     		ldr	r6, [r4]
+ 563              	.LVL97:
+ 466:Source\LwIP\src\core/inet_chksum.c ****   acc += (addr & 0xffffUL);
+ 564              		.loc 1 466 0
+ 565 0014 3504     		lsls	r5, r6, #16
+ 566 0016 2D0C     		lsrs	r5, r5, #16
+ 567 0018 7D19     		adds	r5, r7, r5
+ 568              	.LVL98:
+ 467:Source\LwIP\src\core/inet_chksum.c ****   acc += ((addr >> 16) & 0xffffUL);
+ 569              		.loc 1 467 0
+ 570 001a 360C     		lsrs	r6, r6, #16
+ 571              	.LVL99:
+ 572 001c AD19     		adds	r5, r5, r6
+ 573              	.LVL100:
+ 468:Source\LwIP\src\core/inet_chksum.c ****   /* fold down to 16 bits */
+ 469:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 574              		.loc 1 469 0
+ 575 001e 2C0C     		lsrs	r4, r5, #16
+ 576              	.LVL101:
+ 577 0020 2D04     		lsls	r5, r5, #16
+ 578              	.LVL102:
+ 579 0022 2D0C     		lsrs	r5, r5, #16
+ 580 0024 6419     		adds	r4, r4, r5
+ 581              	.LVL103:
+ 470:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 582              		.loc 1 470 0
+ 583 0026 250C     		lsrs	r5, r4, #16
+ 584 0028 2404     		lsls	r4, r4, #16
+ 585              	.LVL104:
+ 586 002a 240C     		lsrs	r4, r4, #16
+ 587 002c 2C19     		adds	r4, r5, r4
+ 588              	.LVL105:
+ 471:Source\LwIP\src\core/inet_chksum.c **** 
+ 472:Source\LwIP\src\core/inet_chksum.c ****   return inet_cksum_pseudo_partial_base(p, proto, proto_len, chksum_len, acc);
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 20
+
+
+ 589              		.loc 1 472 0
+ 590 002e 0094     		str	r4, [sp]
+ 591              	.LVL106:
+ 592 0030 FFF7FEFF 		bl	inet_cksum_pseudo_partial_base
+ 593              	.LVL107:
+ 473:Source\LwIP\src\core/inet_chksum.c **** }
+ 594              		.loc 1 473 0
+ 595 0034 03B0     		add	sp, sp, #12
+ 596              		@ sp needed
+ 597              	.LVL108:
+ 598 0036 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 599              		.cfi_endproc
+ 600              	.LFE58:
+ 601              		.size	inet_chksum_pseudo_partial, .-inet_chksum_pseudo_partial
+ 602              		.section	.text.ip_chksum_pseudo_partial,"ax",%progbits
+ 603              		.align	2
+ 604              		.global	ip_chksum_pseudo_partial
+ 605              		.code	16
+ 606              		.thumb_func
+ 607              		.type	ip_chksum_pseudo_partial, %function
+ 608              	ip_chksum_pseudo_partial:
+ 609              	.LFB59:
+ 474:Source\LwIP\src\core/inet_chksum.c **** #endif /* LWIP_IPV4 */
+ 475:Source\LwIP\src\core/inet_chksum.c **** 
+ 476:Source\LwIP\src\core/inet_chksum.c **** #if LWIP_IPV6
+ 477:Source\LwIP\src\core/inet_chksum.c **** /**
+ 478:Source\LwIP\src\core/inet_chksum.c ****  * Calculates the checksum with IPv6 pseudo header used by TCP and UDP for a pbuf chain.
+ 479:Source\LwIP\src\core/inet_chksum.c ****  * IPv6 addresses are expected to be in network byte order. Will only compute for a
+ 480:Source\LwIP\src\core/inet_chksum.c ****  * portion of the payload.
+ 481:Source\LwIP\src\core/inet_chksum.c ****  *
+ 482:Source\LwIP\src\core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 483:Source\LwIP\src\core/inet_chksum.c ****  * @param proto ipv6 protocol/next header (used for checksum of pseudo header)
+ 484:Source\LwIP\src\core/inet_chksum.c ****  * @param proto_len length of the ipv6 payload (used for checksum of pseudo header)
+ 485:Source\LwIP\src\core/inet_chksum.c ****  * @param chksum_len number of payload bytes used to compute chksum
+ 486:Source\LwIP\src\core/inet_chksum.c ****  * @param src source ipv6 address (used for checksum of pseudo header)
+ 487:Source\LwIP\src\core/inet_chksum.c ****  * @param dest destination ipv6 address (used for checksum of pseudo header)
+ 488:Source\LwIP\src\core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 489:Source\LwIP\src\core/inet_chksum.c ****  */
+ 490:Source\LwIP\src\core/inet_chksum.c **** u16_t
+ 491:Source\LwIP\src\core/inet_chksum.c **** ip6_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 492:Source\LwIP\src\core/inet_chksum.c ****        u16_t chksum_len, const ip6_addr_t *src, const ip6_addr_t *dest)
+ 493:Source\LwIP\src\core/inet_chksum.c **** {
+ 494:Source\LwIP\src\core/inet_chksum.c ****   u32_t acc = 0;
+ 495:Source\LwIP\src\core/inet_chksum.c ****   u32_t addr;
+ 496:Source\LwIP\src\core/inet_chksum.c ****   u8_t addr_part;
+ 497:Source\LwIP\src\core/inet_chksum.c **** 
+ 498:Source\LwIP\src\core/inet_chksum.c ****   for (addr_part = 0; addr_part < 4; addr_part++) {
+ 499:Source\LwIP\src\core/inet_chksum.c ****     addr = src->addr[addr_part];
+ 500:Source\LwIP\src\core/inet_chksum.c ****     acc += (addr & 0xffffUL);
+ 501:Source\LwIP\src\core/inet_chksum.c ****     acc += ((addr >> 16) & 0xffffUL);
+ 502:Source\LwIP\src\core/inet_chksum.c ****     addr = dest->addr[addr_part];
+ 503:Source\LwIP\src\core/inet_chksum.c ****     acc += (addr & 0xffffUL);
+ 504:Source\LwIP\src\core/inet_chksum.c ****     acc += ((addr >> 16) & 0xffffUL);
+ 505:Source\LwIP\src\core/inet_chksum.c ****   }
+ 506:Source\LwIP\src\core/inet_chksum.c ****   /* fold down to 16 bits */
+ 507:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ 508:Source\LwIP\src\core/inet_chksum.c ****   acc = FOLD_U32T(acc);
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 21
+
+
+ 509:Source\LwIP\src\core/inet_chksum.c **** 
+ 510:Source\LwIP\src\core/inet_chksum.c ****   return inet_cksum_pseudo_partial_base(p, proto, proto_len, chksum_len, acc);
+ 511:Source\LwIP\src\core/inet_chksum.c **** }
+ 512:Source\LwIP\src\core/inet_chksum.c **** #endif /* LWIP_IPV6 */
+ 513:Source\LwIP\src\core/inet_chksum.c **** 
+ 514:Source\LwIP\src\core/inet_chksum.c **** /* ip_chksum_pseudo_partial:
+ 515:Source\LwIP\src\core/inet_chksum.c ****  *
+ 516:Source\LwIP\src\core/inet_chksum.c ****  * Calculates the IPv4 or IPv6 pseudo Internet checksum used by TCP and UDP for a pbuf chain.
+ 517:Source\LwIP\src\core/inet_chksum.c ****  *
+ 518:Source\LwIP\src\core/inet_chksum.c ****  * @param p chain of pbufs over that a checksum should be calculated (ip data part)
+ 519:Source\LwIP\src\core/inet_chksum.c ****  * @param src source ip address (used for checksum of pseudo header)
+ 520:Source\LwIP\src\core/inet_chksum.c ****  * @param dst destination ip address (used for checksum of pseudo header)
+ 521:Source\LwIP\src\core/inet_chksum.c ****  * @param proto ip protocol (used for checksum of pseudo header)
+ 522:Source\LwIP\src\core/inet_chksum.c ****  * @param proto_len length of the ip data part (used for checksum of pseudo header)
+ 523:Source\LwIP\src\core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 524:Source\LwIP\src\core/inet_chksum.c ****  */
+ 525:Source\LwIP\src\core/inet_chksum.c **** u16_t
+ 526:Source\LwIP\src\core/inet_chksum.c **** ip_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
+ 527:Source\LwIP\src\core/inet_chksum.c ****        u16_t chksum_len, const ip_addr_t *src, const ip_addr_t *dest)
+ 528:Source\LwIP\src\core/inet_chksum.c **** {
+ 610              		.loc 1 528 0
+ 611              		.cfi_startproc
+ 612              		@ args = 8, pretend = 0, frame = 0
+ 613              		@ frame_needed = 0, uses_anonymous_args = 0
+ 614              	.LVL109:
+ 615 0000 10B5     		push	{r4, lr}
+ 616              		.cfi_def_cfa_offset 8
+ 617              		.cfi_offset 4, -8
+ 618              		.cfi_offset 14, -4
+ 619 0002 82B0     		sub	sp, sp, #8
+ 620              		.cfi_def_cfa_offset 16
+ 529:Source\LwIP\src\core/inet_chksum.c **** #if LWIP_IPV6
+ 530:Source\LwIP\src\core/inet_chksum.c ****   if (IP_IS_V6(dest)) {
+ 531:Source\LwIP\src\core/inet_chksum.c ****     return ip6_chksum_pseudo_partial(p, proto, proto_len, chksum_len, ip_2_ip6(src), ip_2_ip6(dest)
+ 532:Source\LwIP\src\core/inet_chksum.c ****   }
+ 533:Source\LwIP\src\core/inet_chksum.c **** #endif /* LWIP_IPV6 */
+ 534:Source\LwIP\src\core/inet_chksum.c **** #if LWIP_IPV4 && LWIP_IPV6
+ 535:Source\LwIP\src\core/inet_chksum.c ****   else
+ 536:Source\LwIP\src\core/inet_chksum.c **** #endif /* LWIP_IPV4 && LWIP_IPV6 */
+ 537:Source\LwIP\src\core/inet_chksum.c **** #if LWIP_IPV4
+ 538:Source\LwIP\src\core/inet_chksum.c ****   {
+ 539:Source\LwIP\src\core/inet_chksum.c ****     return inet_chksum_pseudo_partial(p, proto, proto_len, chksum_len, ip_2_ip4(src), ip_2_ip4(dest
+ 621              		.loc 1 539 0
+ 622 0004 059C     		ldr	r4, [sp, #20]
+ 623 0006 0194     		str	r4, [sp, #4]
+ 624 0008 049C     		ldr	r4, [sp, #16]
+ 625 000a 0094     		str	r4, [sp]
+ 626 000c FFF7FEFF 		bl	inet_chksum_pseudo_partial
+ 627              	.LVL110:
+ 540:Source\LwIP\src\core/inet_chksum.c ****   }
+ 541:Source\LwIP\src\core/inet_chksum.c **** #endif /* LWIP_IPV4 */
+ 542:Source\LwIP\src\core/inet_chksum.c **** }
+ 628              		.loc 1 542 0
+ 629 0010 02B0     		add	sp, sp, #8
+ 630              		@ sp needed
+ 631 0012 10BD     		pop	{r4, pc}
+ 632              		.cfi_endproc
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 22
+
+
+ 633              	.LFE59:
+ 634              		.size	ip_chksum_pseudo_partial, .-ip_chksum_pseudo_partial
+ 635              		.section	.text.inet_chksum,"ax",%progbits
+ 636              		.align	2
+ 637              		.global	inet_chksum
+ 638              		.code	16
+ 639              		.thumb_func
+ 640              		.type	inet_chksum, %function
+ 641              	inet_chksum:
+ 642              	.LFB60:
+ 543:Source\LwIP\src\core/inet_chksum.c **** 
+ 544:Source\LwIP\src\core/inet_chksum.c **** /* inet_chksum:
+ 545:Source\LwIP\src\core/inet_chksum.c ****  *
+ 546:Source\LwIP\src\core/inet_chksum.c ****  * Calculates the Internet checksum over a portion of memory. Used primarily for IP
+ 547:Source\LwIP\src\core/inet_chksum.c ****  * and ICMP.
+ 548:Source\LwIP\src\core/inet_chksum.c ****  *
+ 549:Source\LwIP\src\core/inet_chksum.c ****  * @param dataptr start of the buffer to calculate the checksum (no alignment needed)
+ 550:Source\LwIP\src\core/inet_chksum.c ****  * @param len length of the buffer to calculate the checksum
+ 551:Source\LwIP\src\core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 552:Source\LwIP\src\core/inet_chksum.c ****  */
+ 553:Source\LwIP\src\core/inet_chksum.c **** 
+ 554:Source\LwIP\src\core/inet_chksum.c **** u16_t
+ 555:Source\LwIP\src\core/inet_chksum.c **** inet_chksum(const void *dataptr, u16_t len)
+ 556:Source\LwIP\src\core/inet_chksum.c **** {
+ 643              		.loc 1 556 0
+ 644              		.cfi_startproc
+ 645              		@ args = 0, pretend = 0, frame = 0
+ 646              		@ frame_needed = 0, uses_anonymous_args = 0
+ 647              	.LVL111:
+ 648 0000 10B5     		push	{r4, lr}
+ 649              		.cfi_def_cfa_offset 8
+ 650              		.cfi_offset 4, -8
+ 651              		.cfi_offset 14, -4
+ 557:Source\LwIP\src\core/inet_chksum.c ****   return (u16_t)~(unsigned int)LWIP_CHKSUM(dataptr, len);
+ 652              		.loc 1 557 0
+ 653 0002 FFF7FEFF 		bl	lwip_standard_chksum
+ 654              	.LVL112:
+ 655 0006 C043     		mvns	r0, r0
+ 656 0008 80B2     		uxth	r0, r0
+ 558:Source\LwIP\src\core/inet_chksum.c **** }
+ 657              		.loc 1 558 0
+ 658              		@ sp needed
+ 659 000a 10BD     		pop	{r4, pc}
+ 660              		.cfi_endproc
+ 661              	.LFE60:
+ 662              		.size	inet_chksum, .-inet_chksum
+ 663              		.section	.text.inet_chksum_pbuf,"ax",%progbits
+ 664              		.align	2
+ 665              		.global	inet_chksum_pbuf
+ 666              		.code	16
+ 667              		.thumb_func
+ 668              		.type	inet_chksum_pbuf, %function
+ 669              	inet_chksum_pbuf:
+ 670              	.LFB61:
+ 559:Source\LwIP\src\core/inet_chksum.c **** 
+ 560:Source\LwIP\src\core/inet_chksum.c **** /**
+ 561:Source\LwIP\src\core/inet_chksum.c ****  * Calculate a checksum over a chain of pbufs (without pseudo-header, much like
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 23
+
+
+ 562:Source\LwIP\src\core/inet_chksum.c ****  * inet_chksum only pbufs are used).
+ 563:Source\LwIP\src\core/inet_chksum.c ****  *
+ 564:Source\LwIP\src\core/inet_chksum.c ****  * @param p pbuf chain over that the checksum should be calculated
+ 565:Source\LwIP\src\core/inet_chksum.c ****  * @return checksum (as u16_t) to be saved directly in the protocol header
+ 566:Source\LwIP\src\core/inet_chksum.c ****  */
+ 567:Source\LwIP\src\core/inet_chksum.c **** u16_t
+ 568:Source\LwIP\src\core/inet_chksum.c **** inet_chksum_pbuf(struct pbuf *p)
+ 569:Source\LwIP\src\core/inet_chksum.c **** {
+ 671              		.loc 1 569 0
+ 672              		.cfi_startproc
+ 673              		@ args = 0, pretend = 0, frame = 0
+ 674              		@ frame_needed = 0, uses_anonymous_args = 0
+ 675              	.LVL113:
+ 676 0000 70B5     		push	{r4, r5, r6, lr}
+ 677              		.cfi_def_cfa_offset 16
+ 678              		.cfi_offset 4, -16
+ 679              		.cfi_offset 5, -12
+ 680              		.cfi_offset 6, -8
+ 681              		.cfi_offset 14, -4
+ 682 0002 0500     		movs	r5, r0
+ 683              	.LVL114:
+ 570:Source\LwIP\src\core/inet_chksum.c ****   u32_t acc;
+ 571:Source\LwIP\src\core/inet_chksum.c ****   struct pbuf *q;
+ 572:Source\LwIP\src\core/inet_chksum.c ****   u8_t swapped;
+ 573:Source\LwIP\src\core/inet_chksum.c **** 
+ 574:Source\LwIP\src\core/inet_chksum.c ****   acc = 0;
+ 575:Source\LwIP\src\core/inet_chksum.c ****   swapped = 0;
+ 684              		.loc 1 575 0
+ 685 0004 0026     		movs	r6, #0
+ 574:Source\LwIP\src\core/inet_chksum.c ****   swapped = 0;
+ 686              		.loc 1 574 0
+ 687 0006 0024     		movs	r4, #0
+ 576:Source\LwIP\src\core/inet_chksum.c ****   for (q = p; q != NULL; q = q->next) {
+ 688              		.loc 1 576 0
+ 689 0008 16E0     		b	.L26
+ 690              	.LVL115:
+ 691              	.L28:
+ 577:Source\LwIP\src\core/inet_chksum.c ****     acc += LWIP_CHKSUM(q->payload, q->len);
+ 692              		.loc 1 577 0
+ 693 000a 6989     		ldrh	r1, [r5, #10]
+ 694 000c 6868     		ldr	r0, [r5, #4]
+ 695 000e FFF7FEFF 		bl	lwip_standard_chksum
+ 696              	.LVL116:
+ 697 0012 0019     		adds	r0, r0, r4
+ 698              	.LVL117:
+ 578:Source\LwIP\src\core/inet_chksum.c ****     acc = FOLD_U32T(acc);
+ 699              		.loc 1 578 0
+ 700 0014 040C     		lsrs	r4, r0, #16
+ 701 0016 0004     		lsls	r0, r0, #16
+ 702              	.LVL118:
+ 703 0018 000C     		lsrs	r0, r0, #16
+ 704 001a 2418     		adds	r4, r4, r0
+ 705              	.LVL119:
+ 579:Source\LwIP\src\core/inet_chksum.c ****     if (q->len % 2 != 0) {
+ 706              		.loc 1 579 0
+ 707 001c 6B89     		ldrh	r3, [r5, #10]
+ 708 001e DB07     		lsls	r3, r3, #31
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 24
+
+
+ 709 0020 09D5     		bpl	.L27
+ 580:Source\LwIP\src\core/inet_chksum.c ****       swapped = 1 - swapped;
+ 710              		.loc 1 580 0
+ 711 0022 0123     		movs	r3, #1
+ 712 0024 9E1B     		subs	r6, r3, r6
+ 713              	.LVL120:
+ 714 0026 F6B2     		uxtb	r6, r6
+ 715              	.LVL121:
+ 581:Source\LwIP\src\core/inet_chksum.c ****       acc = SWAP_BYTES_IN_WORD(acc);
+ 716              		.loc 1 581 0
+ 717 0028 2306     		lsls	r3, r4, #24
+ 718 002a 1B0C     		lsrs	r3, r3, #16
+ 719 002c 200A     		lsrs	r0, r4, #8
+ 720 002e FF24     		movs	r4, #255
+ 721              	.LVL122:
+ 722 0030 2040     		ands	r0, r4
+ 723 0032 0343     		orrs	r3, r0
+ 724 0034 1C00     		movs	r4, r3
+ 725              	.LVL123:
+ 726              	.L27:
+ 576:Source\LwIP\src\core/inet_chksum.c ****     acc += LWIP_CHKSUM(q->payload, q->len);
+ 727              		.loc 1 576 0 discriminator 2
+ 728 0036 2D68     		ldr	r5, [r5]
+ 729              	.LVL124:
+ 730              	.L26:
+ 576:Source\LwIP\src\core/inet_chksum.c ****     acc += LWIP_CHKSUM(q->payload, q->len);
+ 731              		.loc 1 576 0 is_stmt 0 discriminator 1
+ 732 0038 002D     		cmp	r5, #0
+ 733 003a E6D1     		bne	.L28
+ 582:Source\LwIP\src\core/inet_chksum.c ****     }
+ 583:Source\LwIP\src\core/inet_chksum.c ****   }
+ 584:Source\LwIP\src\core/inet_chksum.c **** 
+ 585:Source\LwIP\src\core/inet_chksum.c ****   if (swapped) {
+ 734              		.loc 1 585 0 is_stmt 1
+ 735 003c 002E     		cmp	r6, #0
+ 736 003e 06D0     		beq	.L29
+ 586:Source\LwIP\src\core/inet_chksum.c ****     acc = SWAP_BYTES_IN_WORD(acc);
+ 737              		.loc 1 586 0
+ 738 0040 2306     		lsls	r3, r4, #24
+ 739 0042 1B0C     		lsrs	r3, r3, #16
+ 740 0044 200A     		lsrs	r0, r4, #8
+ 741 0046 FF24     		movs	r4, #255
+ 742              	.LVL125:
+ 743 0048 2040     		ands	r0, r4
+ 744 004a 0343     		orrs	r3, r0
+ 745 004c 1C00     		movs	r4, r3
+ 746              	.LVL126:
+ 747              	.L29:
+ 587:Source\LwIP\src\core/inet_chksum.c ****   }
+ 588:Source\LwIP\src\core/inet_chksum.c ****   return (u16_t)~(acc & 0xffffUL);
+ 748              		.loc 1 588 0
+ 749 004e E043     		mvns	r0, r4
+ 750 0050 80B2     		uxth	r0, r0
+ 589:Source\LwIP\src\core/inet_chksum.c **** }
+ 751              		.loc 1 589 0
+ 752              		@ sp needed
+ 753              	.LVL127:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 25
+
+
+ 754              	.LVL128:
+ 755              	.LVL129:
+ 756 0052 70BD     		pop	{r4, r5, r6, pc}
+ 757              		.cfi_endproc
+ 758              	.LFE61:
+ 759              		.size	inet_chksum_pbuf, .-inet_chksum_pbuf
+ 760              		.text
+ 761              	.Letext0:
+ 762              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 763              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.2\\psoc creator\\import\\gnu\\arm\\5.4.
+ 764              		.file 4 ".\\Source\\LwIP\\src\\include/arch/cc.h"
+ 765              		.file 5 ".\\Source\\LwIP\\src\\include/lwip/arch.h"
+ 766              		.file 6 ".\\Source\\LwIP\\src\\include/lwip/pbuf.h"
+ 767              		.file 7 ".\\Source\\LwIP\\src\\include/lwip/ip4_addr.h"
+ 768              		.file 8 ".\\Source\\LwIP\\src\\include/lwip/ip_addr.h"
+ 769              		.file 9 ".\\Source\\LwIP\\src\\include/lwip/def.h"
+ 770              		.section	.debug_info,"",%progbits
+ 771              	.Ldebug_info0:
+ 772 0000 B7060000 		.4byte	0x6b7
+ 773 0004 0400     		.2byte	0x4
+ 774 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 775 000a 04       		.byte	0x4
+ 776 000b 01       		.uleb128 0x1
+ 777 000c E0020000 		.4byte	.LASF47
+ 778 0010 0C       		.byte	0xc
+ 779 0011 58010000 		.4byte	.LASF48
+ 780 0015 87000000 		.4byte	.LASF49
+ 781 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 782 001d 00000000 		.4byte	0
+ 783 0021 00000000 		.4byte	.Ldebug_line0
+ 784 0025 02       		.uleb128 0x2
+ 785 0026 01       		.byte	0x1
+ 786 0027 06       		.byte	0x6
+ 787 0028 72030000 		.4byte	.LASF0
+ 788 002c 02       		.uleb128 0x2
+ 789 002d 01       		.byte	0x1
+ 790 002e 08       		.byte	0x8
+ 791 002f 4A010000 		.4byte	.LASF1
+ 792 0033 02       		.uleb128 0x2
+ 793 0034 02       		.byte	0x2
+ 794 0035 05       		.byte	0x5
+ 795 0036 B6020000 		.4byte	.LASF2
+ 796 003a 02       		.uleb128 0x2
+ 797 003b 02       		.byte	0x2
+ 798 003c 07       		.byte	0x7
+ 799 003d 3A000000 		.4byte	.LASF3
+ 800 0041 02       		.uleb128 0x2
+ 801 0042 04       		.byte	0x4
+ 802 0043 05       		.byte	0x5
+ 803 0044 C6020000 		.4byte	.LASF4
+ 804 0048 02       		.uleb128 0x2
+ 805 0049 04       		.byte	0x4
+ 806 004a 07       		.byte	0x7
+ 807 004b 94010000 		.4byte	.LASF5
+ 808 004f 02       		.uleb128 0x2
+ 809 0050 08       		.byte	0x8
+ 810 0051 05       		.byte	0x5
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 26
+
+
+ 811 0052 73020000 		.4byte	.LASF6
+ 812 0056 02       		.uleb128 0x2
+ 813 0057 08       		.byte	0x8
+ 814 0058 07       		.byte	0x7
+ 815 0059 33020000 		.4byte	.LASF7
+ 816 005d 03       		.uleb128 0x3
+ 817 005e 28000000 		.4byte	.LASF12
+ 818 0062 02       		.byte	0x2
+ 819 0063 C8       		.byte	0xc8
+ 820 0064 68000000 		.4byte	0x68
+ 821 0068 04       		.uleb128 0x4
+ 822 0069 04       		.byte	0x4
+ 823 006a 05       		.byte	0x5
+ 824 006b 696E7400 		.ascii	"int\000"
+ 825 006f 02       		.uleb128 0x2
+ 826 0070 04       		.byte	0x4
+ 827 0071 07       		.byte	0x7
+ 828 0072 15020000 		.4byte	.LASF8
+ 829 0076 02       		.uleb128 0x2
+ 830 0077 08       		.byte	0x8
+ 831 0078 04       		.byte	0x4
+ 832 0079 D4020000 		.4byte	.LASF9
+ 833 007d 05       		.uleb128 0x5
+ 834 007e 04       		.byte	0x4
+ 835 007f 02       		.uleb128 0x2
+ 836 0080 04       		.byte	0x4
+ 837 0081 07       		.byte	0x7
+ 838 0082 6A020000 		.4byte	.LASF10
+ 839 0086 02       		.uleb128 0x2
+ 840 0087 01       		.byte	0x1
+ 841 0088 08       		.byte	0x8
+ 842 0089 CF020000 		.4byte	.LASF11
+ 843 008d 03       		.uleb128 0x3
+ 844 008e 0C020000 		.4byte	.LASF13
+ 845 0092 03       		.byte	0x3
+ 846 0093 43       		.byte	0x43
+ 847 0094 5D000000 		.4byte	0x5d
+ 848 0098 06       		.uleb128 0x6
+ 849 0099 04       		.byte	0x4
+ 850 009a 9E000000 		.4byte	0x9e
+ 851 009e 07       		.uleb128 0x7
+ 852 009f 02       		.uleb128 0x2
+ 853 00a0 04       		.byte	0x4
+ 854 00a1 04       		.byte	0x4
+ 855 00a2 37010000 		.4byte	.LASF14
+ 856 00a6 02       		.uleb128 0x2
+ 857 00a7 08       		.byte	0x8
+ 858 00a8 04       		.byte	0x4
+ 859 00a9 75000000 		.4byte	.LASF15
+ 860 00ad 03       		.uleb128 0x3
+ 861 00ae 4A020000 		.4byte	.LASF16
+ 862 00b2 04       		.byte	0x4
+ 863 00b3 31       		.byte	0x31
+ 864 00b4 2C000000 		.4byte	0x2c
+ 865 00b8 03       		.uleb128 0x3
+ 866 00b9 DF010000 		.4byte	.LASF17
+ 867 00bd 04       		.byte	0x4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 27
+
+
+ 868 00be 33       		.byte	0x33
+ 869 00bf 3A000000 		.4byte	0x3a
+ 870 00c3 03       		.uleb128 0x3
+ 871 00c4 C0020000 		.4byte	.LASF18
+ 872 00c8 04       		.byte	0x4
+ 873 00c9 34       		.byte	0x34
+ 874 00ca 33000000 		.4byte	0x33
+ 875 00ce 03       		.uleb128 0x3
+ 876 00cf E5010000 		.4byte	.LASF19
+ 877 00d3 04       		.byte	0x4
+ 878 00d4 35       		.byte	0x35
+ 879 00d5 48000000 		.4byte	0x48
+ 880 00d9 03       		.uleb128 0x3
+ 881 00da 16000000 		.4byte	.LASF20
+ 882 00de 05       		.byte	0x5
+ 883 00df 7D       		.byte	0x7d
+ 884 00e0 8D000000 		.4byte	0x8d
+ 885 00e4 08       		.uleb128 0x8
+ 886 00e5 A0020000 		.4byte	.LASF26
+ 887 00e9 10       		.byte	0x10
+ 888 00ea 06       		.byte	0x6
+ 889 00eb 8E       		.byte	0x8e
+ 890 00ec 45010000 		.4byte	0x145
+ 891 00f0 09       		.uleb128 0x9
+ 892 00f1 11000000 		.4byte	.LASF21
+ 893 00f5 06       		.byte	0x6
+ 894 00f6 90       		.byte	0x90
+ 895 00f7 45010000 		.4byte	0x145
+ 896 00fb 00       		.byte	0
+ 897 00fc 09       		.uleb128 0x9
+ 898 00fd 62020000 		.4byte	.LASF22
+ 899 0101 06       		.byte	0x6
+ 900 0102 93       		.byte	0x93
+ 901 0103 7D000000 		.4byte	0x7d
+ 902 0107 04       		.byte	0x4
+ 903 0108 09       		.uleb128 0x9
+ 904 0109 20000000 		.4byte	.LASF23
+ 905 010d 06       		.byte	0x6
+ 906 010e 9C       		.byte	0x9c
+ 907 010f B8000000 		.4byte	0xb8
+ 908 0113 08       		.byte	0x8
+ 909 0114 0A       		.uleb128 0xa
+ 910 0115 6C656E00 		.ascii	"len\000"
+ 911 0119 06       		.byte	0x6
+ 912 011a 9F       		.byte	0x9f
+ 913 011b B8000000 		.4byte	0xb8
+ 914 011f 0A       		.byte	0xa
+ 915 0120 09       		.uleb128 0x9
+ 916 0121 B1020000 		.4byte	.LASF24
+ 917 0125 06       		.byte	0x6
+ 918 0126 A2       		.byte	0xa2
+ 919 0127 AD000000 		.4byte	0xad
+ 920 012b 0C       		.byte	0xc
+ 921 012c 09       		.uleb128 0x9
+ 922 012d 22020000 		.4byte	.LASF25
+ 923 0131 06       		.byte	0x6
+ 924 0132 A5       		.byte	0xa5
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 28
+
+
+ 925 0133 AD000000 		.4byte	0xad
+ 926 0137 0D       		.byte	0xd
+ 927 0138 0A       		.uleb128 0xa
+ 928 0139 72656600 		.ascii	"ref\000"
+ 929 013d 06       		.byte	0x6
+ 930 013e AC       		.byte	0xac
+ 931 013f B8000000 		.4byte	0xb8
+ 932 0143 0E       		.byte	0xe
+ 933 0144 00       		.byte	0
+ 934 0145 06       		.uleb128 0x6
+ 935 0146 04       		.byte	0x4
+ 936 0147 E4000000 		.4byte	0xe4
+ 937 014b 08       		.uleb128 0x8
+ 938 014c 62000000 		.4byte	.LASF27
+ 939 0150 04       		.byte	0x4
+ 940 0151 07       		.byte	0x7
+ 941 0152 33       		.byte	0x33
+ 942 0153 64010000 		.4byte	0x164
+ 943 0157 09       		.uleb128 0x9
+ 944 0158 A6010000 		.4byte	.LASF28
+ 945 015c 07       		.byte	0x7
+ 946 015d 34       		.byte	0x34
+ 947 015e CE000000 		.4byte	0xce
+ 948 0162 00       		.byte	0
+ 949 0163 00       		.byte	0
+ 950 0164 03       		.uleb128 0x3
+ 951 0165 28020000 		.4byte	.LASF29
+ 952 0169 07       		.byte	0x7
+ 953 016a 39       		.byte	0x39
+ 954 016b 4B010000 		.4byte	0x14b
+ 955 016f 03       		.uleb128 0x3
+ 956 0170 02020000 		.4byte	.LASF30
+ 957 0174 08       		.byte	0x8
+ 958 0175 F4       		.byte	0xf4
+ 959 0176 64010000 		.4byte	0x164
+ 960 017a 0B       		.uleb128 0xb
+ 961 017b 4D000000 		.4byte	.LASF39
+ 962 017f 01       		.byte	0x1
+ 963 0180 85       		.byte	0x85
+ 964 0181 B8000000 		.4byte	0xb8
+ 965 0185 00000000 		.4byte	.LFB53
+ 966 0189 66000000 		.4byte	.LFE53-.LFB53
+ 967 018d 01       		.uleb128 0x1
+ 968 018e 9C       		.byte	0x9c
+ 969 018f F8010000 		.4byte	0x1f8
+ 970 0193 0C       		.uleb128 0xc
+ 971 0194 C6010000 		.4byte	.LASF31
+ 972 0198 01       		.byte	0x1
+ 973 0199 85       		.byte	0x85
+ 974 019a 98000000 		.4byte	0x98
+ 975 019e 00000000 		.4byte	.LLST0
+ 976 01a2 0D       		.uleb128 0xd
+ 977 01a3 6C656E00 		.ascii	"len\000"
+ 978 01a7 01       		.byte	0x1
+ 979 01a8 85       		.byte	0x85
+ 980 01a9 68000000 		.4byte	0x68
+ 981 01ad 21000000 		.4byte	.LLST1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 29
+
+
+ 982 01b1 0E       		.uleb128 0xe
+ 983 01b2 706200   		.ascii	"pb\000"
+ 984 01b5 01       		.byte	0x1
+ 985 01b6 87       		.byte	0x87
+ 986 01b7 F8010000 		.4byte	0x1f8
+ 987 01bb 3F000000 		.4byte	.LLST2
+ 988 01bf 0E       		.uleb128 0xe
+ 989 01c0 707300   		.ascii	"ps\000"
+ 990 01c3 01       		.byte	0x1
+ 991 01c4 88       		.byte	0x88
+ 992 01c5 03020000 		.4byte	0x203
+ 993 01c9 6A000000 		.4byte	.LLST3
+ 994 01cd 0F       		.uleb128 0xf
+ 995 01ce 7400     		.ascii	"t\000"
+ 996 01d0 01       		.byte	0x1
+ 997 01d1 89       		.byte	0x89
+ 998 01d2 B8000000 		.4byte	0xb8
+ 999 01d6 02       		.uleb128 0x2
+ 1000 01d7 91       		.byte	0x91
+ 1001 01d8 76       		.sleb128 -10
+ 1002 01d9 0E       		.uleb128 0xe
+ 1003 01da 73756D00 		.ascii	"sum\000"
+ 1004 01de 01       		.byte	0x1
+ 1005 01df 8A       		.byte	0x8a
+ 1006 01e0 CE000000 		.4byte	0xce
+ 1007 01e4 95000000 		.4byte	.LLST4
+ 1008 01e8 0E       		.uleb128 0xe
+ 1009 01e9 6F646400 		.ascii	"odd\000"
+ 1010 01ed 01       		.byte	0x1
+ 1011 01ee 8B       		.byte	0x8b
+ 1012 01ef 68000000 		.4byte	0x68
+ 1013 01f3 D5000000 		.4byte	.LLST5
+ 1014 01f7 00       		.byte	0
+ 1015 01f8 06       		.uleb128 0x6
+ 1016 01f9 04       		.byte	0x4
+ 1017 01fa FE010000 		.4byte	0x1fe
+ 1018 01fe 10       		.uleb128 0x10
+ 1019 01ff AD000000 		.4byte	0xad
+ 1020 0203 06       		.uleb128 0x6
+ 1021 0204 04       		.byte	0x4
+ 1022 0205 09020000 		.4byte	0x209
+ 1023 0209 10       		.uleb128 0x10
+ 1024 020a B8000000 		.4byte	0xb8
+ 1025 020e 11       		.uleb128 0x11
+ 1026 020f EB010000 		.4byte	.LASF35
+ 1027 0213 01       		.byte	0x1
+ 1028 0214 0401     		.2byte	0x104
+ 1029 0216 B8000000 		.4byte	0xb8
+ 1030 021a 00000000 		.4byte	.LFB54
+ 1031 021e 7E000000 		.4byte	.LFE54-.LFB54
+ 1032 0222 01       		.uleb128 0x1
+ 1033 0223 9C       		.byte	0x9c
+ 1034 0224 B4020000 		.4byte	0x2b4
+ 1035 0228 12       		.uleb128 0x12
+ 1036 0229 7000     		.ascii	"p\000"
+ 1037 022b 01       		.byte	0x1
+ 1038 022c 0401     		.2byte	0x104
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 30
+
+
+ 1039 022e 45010000 		.4byte	0x145
+ 1040 0232 F8000000 		.4byte	.LLST6
+ 1041 0236 13       		.uleb128 0x13
+ 1042 0237 7E030000 		.4byte	.LASF32
+ 1043 023b 01       		.byte	0x1
+ 1044 023c 0401     		.2byte	0x104
+ 1045 023e AD000000 		.4byte	0xad
+ 1046 0242 19010000 		.4byte	.LLST7
+ 1047 0246 13       		.uleb128 0x13
+ 1048 0247 6B000000 		.4byte	.LASF33
+ 1049 024b 01       		.byte	0x1
+ 1050 024c 0401     		.2byte	0x104
+ 1051 024e B8000000 		.4byte	0xb8
+ 1052 0252 3A010000 		.4byte	.LLST8
+ 1053 0256 12       		.uleb128 0x12
+ 1054 0257 61636300 		.ascii	"acc\000"
+ 1055 025b 01       		.byte	0x1
+ 1056 025c 0401     		.2byte	0x104
+ 1057 025e CE000000 		.4byte	0xce
+ 1058 0262 5B010000 		.4byte	.LLST9
+ 1059 0266 14       		.uleb128 0x14
+ 1060 0267 7100     		.ascii	"q\000"
+ 1061 0269 01       		.byte	0x1
+ 1062 026a 0601     		.2byte	0x106
+ 1063 026c 45010000 		.4byte	0x145
+ 1064 0270 BE010000 		.4byte	.LLST10
+ 1065 0274 15       		.uleb128 0x15
+ 1066 0275 42010000 		.4byte	.LASF34
+ 1067 0279 01       		.byte	0x1
+ 1068 027a 0701     		.2byte	0x107
+ 1069 027c AD000000 		.4byte	0xad
+ 1070 0280 DC010000 		.4byte	.LLST11
+ 1071 0284 16       		.uleb128 0x16
+ 1072 0285 18000000 		.4byte	.LVL25
+ 1073 0289 7A010000 		.4byte	0x17a
+ 1074 028d 17       		.uleb128 0x17
+ 1075 028e 5C000000 		.4byte	.LVL34
+ 1076 0292 AF060000 		.4byte	0x6af
+ 1077 0296 A3020000 		.4byte	0x2a3
+ 1078 029a 18       		.uleb128 0x18
+ 1079 029b 01       		.uleb128 0x1
+ 1080 029c 50       		.byte	0x50
+ 1081 029d 04       		.uleb128 0x4
+ 1082 029e 7D       		.byte	0x7d
+ 1083 029f 04       		.sleb128 4
+ 1084 02a0 94       		.byte	0x94
+ 1085 02a1 02       		.byte	0x2
+ 1086 02a2 00       		.byte	0
+ 1087 02a3 19       		.uleb128 0x19
+ 1088 02a4 64000000 		.4byte	.LVL36
+ 1089 02a8 AF060000 		.4byte	0x6af
+ 1090 02ac 18       		.uleb128 0x18
+ 1091 02ad 01       		.uleb128 0x1
+ 1092 02ae 50       		.byte	0x50
+ 1093 02af 02       		.uleb128 0x2
+ 1094 02b0 75       		.byte	0x75
+ 1095 02b1 00       		.sleb128 0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 31
+
+
+ 1096 02b2 00       		.byte	0
+ 1097 02b3 00       		.byte	0
+ 1098 02b4 11       		.uleb128 0x11
+ 1099 02b5 81020000 		.4byte	.LASF36
+ 1100 02b9 01       		.byte	0x1
+ 1101 02ba 8F01     		.2byte	0x18f
+ 1102 02bc B8000000 		.4byte	0xb8
+ 1103 02c0 00000000 		.4byte	.LFB57
+ 1104 02c4 A0000000 		.4byte	.LFE57-.LFB57
+ 1105 02c8 01       		.uleb128 0x1
+ 1106 02c9 9C       		.byte	0x9c
+ 1107 02ca 87030000 		.4byte	0x387
+ 1108 02ce 12       		.uleb128 0x12
+ 1109 02cf 7000     		.ascii	"p\000"
+ 1110 02d1 01       		.byte	0x1
+ 1111 02d2 8F01     		.2byte	0x18f
+ 1112 02d4 45010000 		.4byte	0x145
+ 1113 02d8 06020000 		.4byte	.LLST12
+ 1114 02dc 13       		.uleb128 0x13
+ 1115 02dd 7E030000 		.4byte	.LASF32
+ 1116 02e1 01       		.byte	0x1
+ 1117 02e2 8F01     		.2byte	0x18f
+ 1118 02e4 AD000000 		.4byte	0xad
+ 1119 02e8 27020000 		.4byte	.LLST13
+ 1120 02ec 13       		.uleb128 0x13
+ 1121 02ed 6B000000 		.4byte	.LASF33
+ 1122 02f1 01       		.byte	0x1
+ 1123 02f2 8F01     		.2byte	0x18f
+ 1124 02f4 B8000000 		.4byte	0xb8
+ 1125 02f8 48020000 		.4byte	.LLST14
+ 1126 02fc 13       		.uleb128 0x13
+ 1127 02fd 2C010000 		.4byte	.LASF37
+ 1128 0301 01       		.byte	0x1
+ 1129 0302 9001     		.2byte	0x190
+ 1130 0304 B8000000 		.4byte	0xb8
+ 1131 0308 69020000 		.4byte	.LLST15
+ 1132 030c 12       		.uleb128 0x12
+ 1133 030d 61636300 		.ascii	"acc\000"
+ 1134 0311 01       		.byte	0x1
+ 1135 0312 9001     		.2byte	0x190
+ 1136 0314 CE000000 		.4byte	0xce
+ 1137 0318 A0020000 		.4byte	.LLST16
+ 1138 031c 14       		.uleb128 0x14
+ 1139 031d 7100     		.ascii	"q\000"
+ 1140 031f 01       		.byte	0x1
+ 1141 0320 9201     		.2byte	0x192
+ 1142 0322 45010000 		.4byte	0x145
+ 1143 0326 04030000 		.4byte	.LLST17
+ 1144 032a 15       		.uleb128 0x15
+ 1145 032b 42010000 		.4byte	.LASF34
+ 1146 032f 01       		.byte	0x1
+ 1147 0330 9301     		.2byte	0x193
+ 1148 0332 AD000000 		.4byte	0xad
+ 1149 0336 22030000 		.4byte	.LLST18
+ 1150 033a 15       		.uleb128 0x15
+ 1151 033b 33000000 		.4byte	.LASF38
+ 1152 033f 01       		.byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 32
+
+
+ 1153 0340 9401     		.2byte	0x194
+ 1154 0342 B8000000 		.4byte	0xb8
+ 1155 0346 41030000 		.4byte	.LLST19
+ 1156 034a 17       		.uleb128 0x17
+ 1157 034b 28000000 		.4byte	.LVL52
+ 1158 034f 7A010000 		.4byte	0x17a
+ 1159 0353 5E030000 		.4byte	0x35e
+ 1160 0357 18       		.uleb128 0x18
+ 1161 0358 01       		.uleb128 0x1
+ 1162 0359 51       		.byte	0x51
+ 1163 035a 02       		.uleb128 0x2
+ 1164 035b 75       		.byte	0x75
+ 1165 035c 00       		.sleb128 0
+ 1166 035d 00       		.byte	0
+ 1167 035e 17       		.uleb128 0x17
+ 1168 035f 7A000000 		.4byte	.LVL62
+ 1169 0363 AF060000 		.4byte	0x6af
+ 1170 0367 74030000 		.4byte	0x374
+ 1171 036b 18       		.uleb128 0x18
+ 1172 036c 01       		.uleb128 0x1
+ 1173 036d 50       		.byte	0x50
+ 1174 036e 04       		.uleb128 0x4
+ 1175 036f 7D       		.byte	0x7d
+ 1176 0370 00       		.sleb128 0
+ 1177 0371 94       		.byte	0x94
+ 1178 0372 02       		.byte	0x2
+ 1179 0373 00       		.byte	0
+ 1180 0374 19       		.uleb128 0x19
+ 1181 0375 82000000 		.4byte	.LVL64
+ 1182 0379 AF060000 		.4byte	0x6af
+ 1183 037d 18       		.uleb128 0x18
+ 1184 037e 01       		.uleb128 0x1
+ 1185 037f 50       		.byte	0x50
+ 1186 0380 04       		.uleb128 0x4
+ 1187 0381 91       		.byte	0x91
+ 1188 0382 64       		.sleb128 -28
+ 1189 0383 94       		.byte	0x94
+ 1190 0384 02       		.byte	0x2
+ 1191 0385 00       		.byte	0
+ 1192 0386 00       		.byte	0
+ 1193 0387 1A       		.uleb128 0x1a
+ 1194 0388 4F020000 		.4byte	.LASF40
+ 1195 038c 01       		.byte	0x1
+ 1196 038d 3601     		.2byte	0x136
+ 1197 038f B8000000 		.4byte	0xb8
+ 1198 0393 00000000 		.4byte	.LFB55
+ 1199 0397 30000000 		.4byte	.LFE55-.LFB55
+ 1200 039b 01       		.uleb128 0x1
+ 1201 039c 9C       		.byte	0x9c
+ 1202 039d 20040000 		.4byte	0x420
+ 1203 03a1 12       		.uleb128 0x12
+ 1204 03a2 7000     		.ascii	"p\000"
+ 1205 03a4 01       		.byte	0x1
+ 1206 03a5 3601     		.2byte	0x136
+ 1207 03a7 45010000 		.4byte	0x145
+ 1208 03ab 54030000 		.4byte	.LLST20
+ 1209 03af 13       		.uleb128 0x13
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 33
+
+
+ 1210 03b0 7E030000 		.4byte	.LASF32
+ 1211 03b4 01       		.byte	0x1
+ 1212 03b5 3601     		.2byte	0x136
+ 1213 03b7 AD000000 		.4byte	0xad
+ 1214 03bb 75030000 		.4byte	.LLST21
+ 1215 03bf 13       		.uleb128 0x13
+ 1216 03c0 6B000000 		.4byte	.LASF33
+ 1217 03c4 01       		.byte	0x1
+ 1218 03c5 3601     		.2byte	0x136
+ 1219 03c7 B8000000 		.4byte	0xb8
+ 1220 03cb 96030000 		.4byte	.LLST22
+ 1221 03cf 12       		.uleb128 0x12
+ 1222 03d0 73726300 		.ascii	"src\000"
+ 1223 03d4 01       		.byte	0x1
+ 1224 03d5 3701     		.2byte	0x137
+ 1225 03d7 20040000 		.4byte	0x420
+ 1226 03db B7030000 		.4byte	.LLST23
+ 1227 03df 1B       		.uleb128 0x1b
+ 1228 03e0 3D010000 		.4byte	.LASF41
+ 1229 03e4 01       		.byte	0x1
+ 1230 03e5 3701     		.2byte	0x137
+ 1231 03e7 20040000 		.4byte	0x420
+ 1232 03eb 02       		.uleb128 0x2
+ 1233 03ec 91       		.byte	0x91
+ 1234 03ed 00       		.sleb128 0
+ 1235 03ee 14       		.uleb128 0x14
+ 1236 03ef 61636300 		.ascii	"acc\000"
+ 1237 03f3 01       		.byte	0x1
+ 1238 03f4 3901     		.2byte	0x139
+ 1239 03f6 CE000000 		.4byte	0xce
+ 1240 03fa D8030000 		.4byte	.LLST24
+ 1241 03fe 15       		.uleb128 0x15
+ 1242 03ff A6010000 		.4byte	.LASF28
+ 1243 0403 01       		.byte	0x1
+ 1244 0404 3A01     		.2byte	0x13a
+ 1245 0406 CE000000 		.4byte	0xce
+ 1246 040a 47040000 		.4byte	.LLST25
+ 1247 040e 19       		.uleb128 0x19
+ 1248 040f 2E000000 		.4byte	.LVL88
+ 1249 0413 0E020000 		.4byte	0x20e
+ 1250 0417 18       		.uleb128 0x18
+ 1251 0418 01       		.uleb128 0x1
+ 1252 0419 50       		.byte	0x50
+ 1253 041a 03       		.uleb128 0x3
+ 1254 041b F3       		.byte	0xf3
+ 1255 041c 01       		.uleb128 0x1
+ 1256 041d 50       		.byte	0x50
+ 1257 041e 00       		.byte	0
+ 1258 041f 00       		.byte	0
+ 1259 0420 06       		.uleb128 0x6
+ 1260 0421 04       		.byte	0x4
+ 1261 0422 26040000 		.4byte	0x426
+ 1262 0426 10       		.uleb128 0x10
+ 1263 0427 64010000 		.4byte	0x164
+ 1264 042b 1A       		.uleb128 0x1a
+ 1265 042c CE010000 		.4byte	.LASF42
+ 1266 0430 01       		.byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 34
+
+
+ 1267 0431 7B01     		.2byte	0x17b
+ 1268 0433 B8000000 		.4byte	0xb8
+ 1269 0437 00000000 		.4byte	.LFB56
+ 1270 043b 10000000 		.4byte	.LFE56-.LFB56
+ 1271 043f 01       		.uleb128 0x1
+ 1272 0440 9C       		.byte	0x9c
+ 1273 0441 B2040000 		.4byte	0x4b2
+ 1274 0445 12       		.uleb128 0x12
+ 1275 0446 7000     		.ascii	"p\000"
+ 1276 0448 01       		.byte	0x1
+ 1277 0449 7B01     		.2byte	0x17b
+ 1278 044b 45010000 		.4byte	0x145
+ 1279 044f 7F040000 		.4byte	.LLST26
+ 1280 0453 13       		.uleb128 0x13
+ 1281 0454 7E030000 		.4byte	.LASF32
+ 1282 0458 01       		.byte	0x1
+ 1283 0459 7B01     		.2byte	0x17b
+ 1284 045b AD000000 		.4byte	0xad
+ 1285 045f A0040000 		.4byte	.LLST27
+ 1286 0463 13       		.uleb128 0x13
+ 1287 0464 6B000000 		.4byte	.LASF33
+ 1288 0468 01       		.byte	0x1
+ 1289 0469 7B01     		.2byte	0x17b
+ 1290 046b B8000000 		.4byte	0xb8
+ 1291 046f C1040000 		.4byte	.LLST28
+ 1292 0473 12       		.uleb128 0x12
+ 1293 0474 73726300 		.ascii	"src\000"
+ 1294 0478 01       		.byte	0x1
+ 1295 0479 7C01     		.2byte	0x17c
+ 1296 047b B2040000 		.4byte	0x4b2
+ 1297 047f E2040000 		.4byte	.LLST29
+ 1298 0483 1B       		.uleb128 0x1b
+ 1299 0484 3D010000 		.4byte	.LASF41
+ 1300 0488 01       		.byte	0x1
+ 1301 0489 7C01     		.2byte	0x17c
+ 1302 048b B2040000 		.4byte	0x4b2
+ 1303 048f 02       		.uleb128 0x2
+ 1304 0490 91       		.byte	0x91
+ 1305 0491 00       		.sleb128 0
+ 1306 0492 19       		.uleb128 0x19
+ 1307 0493 0C000000 		.4byte	.LVL90
+ 1308 0497 87030000 		.4byte	0x387
+ 1309 049b 18       		.uleb128 0x18
+ 1310 049c 01       		.uleb128 0x1
+ 1311 049d 50       		.byte	0x50
+ 1312 049e 03       		.uleb128 0x3
+ 1313 049f F3       		.byte	0xf3
+ 1314 04a0 01       		.uleb128 0x1
+ 1315 04a1 50       		.byte	0x50
+ 1316 04a2 18       		.uleb128 0x18
+ 1317 04a3 01       		.uleb128 0x1
+ 1318 04a4 53       		.byte	0x53
+ 1319 04a5 03       		.uleb128 0x3
+ 1320 04a6 F3       		.byte	0xf3
+ 1321 04a7 01       		.uleb128 0x1
+ 1322 04a8 53       		.byte	0x53
+ 1323 04a9 18       		.uleb128 0x18
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 35
+
+
+ 1324 04aa 02       		.uleb128 0x2
+ 1325 04ab 7D       		.byte	0x7d
+ 1326 04ac 00       		.sleb128 0
+ 1327 04ad 02       		.uleb128 0x2
+ 1328 04ae 74       		.byte	0x74
+ 1329 04af 00       		.sleb128 0
+ 1330 04b0 00       		.byte	0
+ 1331 04b1 00       		.byte	0
+ 1332 04b2 06       		.uleb128 0x6
+ 1333 04b3 04       		.byte	0x4
+ 1334 04b4 B8040000 		.4byte	0x4b8
+ 1335 04b8 10       		.uleb128 0x10
+ 1336 04b9 6F010000 		.4byte	0x16f
+ 1337 04bd 1A       		.uleb128 0x1a
+ 1338 04be AB010000 		.4byte	.LASF43
+ 1339 04c2 01       		.byte	0x1
+ 1340 04c3 C801     		.2byte	0x1c8
+ 1341 04c5 B8000000 		.4byte	0xb8
+ 1342 04c9 00000000 		.4byte	.LFB58
+ 1343 04cd 38000000 		.4byte	.LFE58-.LFB58
+ 1344 04d1 01       		.uleb128 0x1
+ 1345 04d2 9C       		.byte	0x9c
+ 1346 04d3 6C050000 		.4byte	0x56c
+ 1347 04d7 12       		.uleb128 0x12
+ 1348 04d8 7000     		.ascii	"p\000"
+ 1349 04da 01       		.byte	0x1
+ 1350 04db C801     		.2byte	0x1c8
+ 1351 04dd 45010000 		.4byte	0x145
+ 1352 04e1 03050000 		.4byte	.LLST30
+ 1353 04e5 13       		.uleb128 0x13
+ 1354 04e6 7E030000 		.4byte	.LASF32
+ 1355 04ea 01       		.byte	0x1
+ 1356 04eb C801     		.2byte	0x1c8
+ 1357 04ed AD000000 		.4byte	0xad
+ 1358 04f1 24050000 		.4byte	.LLST31
+ 1359 04f5 13       		.uleb128 0x13
+ 1360 04f6 6B000000 		.4byte	.LASF33
+ 1361 04fa 01       		.byte	0x1
+ 1362 04fb C801     		.2byte	0x1c8
+ 1363 04fd B8000000 		.4byte	0xb8
+ 1364 0501 45050000 		.4byte	.LLST32
+ 1365 0505 13       		.uleb128 0x13
+ 1366 0506 2C010000 		.4byte	.LASF37
+ 1367 050a 01       		.byte	0x1
+ 1368 050b C901     		.2byte	0x1c9
+ 1369 050d B8000000 		.4byte	0xb8
+ 1370 0511 66050000 		.4byte	.LLST33
+ 1371 0515 1C       		.uleb128 0x1c
+ 1372 0516 73726300 		.ascii	"src\000"
+ 1373 051a 01       		.byte	0x1
+ 1374 051b C901     		.2byte	0x1c9
+ 1375 051d 20040000 		.4byte	0x420
+ 1376 0521 02       		.uleb128 0x2
+ 1377 0522 91       		.byte	0x91
+ 1378 0523 00       		.sleb128 0
+ 1379 0524 1B       		.uleb128 0x1b
+ 1380 0525 3D010000 		.4byte	.LASF41
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 36
+
+
+ 1381 0529 01       		.byte	0x1
+ 1382 052a C901     		.2byte	0x1c9
+ 1383 052c 20040000 		.4byte	0x420
+ 1384 0530 02       		.uleb128 0x2
+ 1385 0531 91       		.byte	0x91
+ 1386 0532 04       		.sleb128 4
+ 1387 0533 14       		.uleb128 0x14
+ 1388 0534 61636300 		.ascii	"acc\000"
+ 1389 0538 01       		.byte	0x1
+ 1390 0539 CB01     		.2byte	0x1cb
+ 1391 053b CE000000 		.4byte	0xce
+ 1392 053f 87050000 		.4byte	.LLST34
+ 1393 0543 15       		.uleb128 0x15
+ 1394 0544 A6010000 		.4byte	.LASF28
+ 1395 0548 01       		.byte	0x1
+ 1396 0549 CC01     		.2byte	0x1cc
+ 1397 054b CE000000 		.4byte	0xce
+ 1398 054f 02060000 		.4byte	.LLST35
+ 1399 0553 19       		.uleb128 0x19
+ 1400 0554 34000000 		.4byte	.LVL107
+ 1401 0558 B4020000 		.4byte	0x2b4
+ 1402 055c 18       		.uleb128 0x18
+ 1403 055d 01       		.uleb128 0x1
+ 1404 055e 50       		.byte	0x50
+ 1405 055f 03       		.uleb128 0x3
+ 1406 0560 F3       		.byte	0xf3
+ 1407 0561 01       		.uleb128 0x1
+ 1408 0562 50       		.byte	0x50
+ 1409 0563 18       		.uleb128 0x18
+ 1410 0564 02       		.uleb128 0x2
+ 1411 0565 7D       		.byte	0x7d
+ 1412 0566 00       		.sleb128 0
+ 1413 0567 02       		.uleb128 0x2
+ 1414 0568 74       		.byte	0x74
+ 1415 0569 00       		.sleb128 0
+ 1416 056a 00       		.byte	0
+ 1417 056b 00       		.byte	0
+ 1418 056c 1A       		.uleb128 0x1a
+ 1419 056d 7B010000 		.4byte	.LASF44
+ 1420 0571 01       		.byte	0x1
+ 1421 0572 0E02     		.2byte	0x20e
+ 1422 0574 B8000000 		.4byte	0xb8
+ 1423 0578 00000000 		.4byte	.LFB59
+ 1424 057c 14000000 		.4byte	.LFE59-.LFB59
+ 1425 0580 01       		.uleb128 0x1
+ 1426 0581 9C       		.byte	0x9c
+ 1427 0582 03060000 		.4byte	0x603
+ 1428 0586 12       		.uleb128 0x12
+ 1429 0587 7000     		.ascii	"p\000"
+ 1430 0589 01       		.byte	0x1
+ 1431 058a 0E02     		.2byte	0x20e
+ 1432 058c 45010000 		.4byte	0x145
+ 1433 0590 52060000 		.4byte	.LLST36
+ 1434 0594 13       		.uleb128 0x13
+ 1435 0595 7E030000 		.4byte	.LASF32
+ 1436 0599 01       		.byte	0x1
+ 1437 059a 0E02     		.2byte	0x20e
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 37
+
+
+ 1438 059c AD000000 		.4byte	0xad
+ 1439 05a0 73060000 		.4byte	.LLST37
+ 1440 05a4 13       		.uleb128 0x13
+ 1441 05a5 6B000000 		.4byte	.LASF33
+ 1442 05a9 01       		.byte	0x1
+ 1443 05aa 0E02     		.2byte	0x20e
+ 1444 05ac B8000000 		.4byte	0xb8
+ 1445 05b0 94060000 		.4byte	.LLST38
+ 1446 05b4 13       		.uleb128 0x13
+ 1447 05b5 2C010000 		.4byte	.LASF37
+ 1448 05b9 01       		.byte	0x1
+ 1449 05ba 0F02     		.2byte	0x20f
+ 1450 05bc B8000000 		.4byte	0xb8
+ 1451 05c0 B5060000 		.4byte	.LLST39
+ 1452 05c4 1C       		.uleb128 0x1c
+ 1453 05c5 73726300 		.ascii	"src\000"
+ 1454 05c9 01       		.byte	0x1
+ 1455 05ca 0F02     		.2byte	0x20f
+ 1456 05cc B2040000 		.4byte	0x4b2
+ 1457 05d0 02       		.uleb128 0x2
+ 1458 05d1 91       		.byte	0x91
+ 1459 05d2 00       		.sleb128 0
+ 1460 05d3 1B       		.uleb128 0x1b
+ 1461 05d4 3D010000 		.4byte	.LASF41
+ 1462 05d8 01       		.byte	0x1
+ 1463 05d9 0F02     		.2byte	0x20f
+ 1464 05db B2040000 		.4byte	0x4b2
+ 1465 05df 02       		.uleb128 0x2
+ 1466 05e0 91       		.byte	0x91
+ 1467 05e1 04       		.sleb128 4
+ 1468 05e2 19       		.uleb128 0x19
+ 1469 05e3 10000000 		.4byte	.LVL110
+ 1470 05e7 BD040000 		.4byte	0x4bd
+ 1471 05eb 18       		.uleb128 0x18
+ 1472 05ec 01       		.uleb128 0x1
+ 1473 05ed 50       		.byte	0x50
+ 1474 05ee 03       		.uleb128 0x3
+ 1475 05ef F3       		.byte	0xf3
+ 1476 05f0 01       		.uleb128 0x1
+ 1477 05f1 50       		.byte	0x50
+ 1478 05f2 18       		.uleb128 0x18
+ 1479 05f3 02       		.uleb128 0x2
+ 1480 05f4 7D       		.byte	0x7d
+ 1481 05f5 00       		.sleb128 0
+ 1482 05f6 02       		.uleb128 0x2
+ 1483 05f7 74       		.byte	0x74
+ 1484 05f8 00       		.sleb128 0
+ 1485 05f9 18       		.uleb128 0x18
+ 1486 05fa 02       		.uleb128 0x2
+ 1487 05fb 7D       		.byte	0x7d
+ 1488 05fc 04       		.sleb128 4
+ 1489 05fd 03       		.uleb128 0x3
+ 1490 05fe 91       		.byte	0x91
+ 1491 05ff 04       		.sleb128 4
+ 1492 0600 06       		.byte	0x6
+ 1493 0601 00       		.byte	0
+ 1494 0602 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 38
+
+
+ 1495 0603 1A       		.uleb128 0x1a
+ 1496 0604 A5020000 		.4byte	.LASF45
+ 1497 0608 01       		.byte	0x1
+ 1498 0609 2B02     		.2byte	0x22b
+ 1499 060b B8000000 		.4byte	0xb8
+ 1500 060f 00000000 		.4byte	.LFB60
+ 1501 0613 0C000000 		.4byte	.LFE60-.LFB60
+ 1502 0617 01       		.uleb128 0x1
+ 1503 0618 9C       		.byte	0x9c
+ 1504 0619 4F060000 		.4byte	0x64f
+ 1505 061d 13       		.uleb128 0x13
+ 1506 061e C6010000 		.4byte	.LASF31
+ 1507 0622 01       		.byte	0x1
+ 1508 0623 2B02     		.2byte	0x22b
+ 1509 0625 98000000 		.4byte	0x98
+ 1510 0629 D6060000 		.4byte	.LLST40
+ 1511 062d 12       		.uleb128 0x12
+ 1512 062e 6C656E00 		.ascii	"len\000"
+ 1513 0632 01       		.byte	0x1
+ 1514 0633 2B02     		.2byte	0x22b
+ 1515 0635 B8000000 		.4byte	0xb8
+ 1516 0639 F7060000 		.4byte	.LLST41
+ 1517 063d 19       		.uleb128 0x19
+ 1518 063e 06000000 		.4byte	.LVL112
+ 1519 0642 7A010000 		.4byte	0x17a
+ 1520 0646 18       		.uleb128 0x18
+ 1521 0647 01       		.uleb128 0x1
+ 1522 0648 50       		.byte	0x50
+ 1523 0649 03       		.uleb128 0x3
+ 1524 064a F3       		.byte	0xf3
+ 1525 064b 01       		.uleb128 0x1
+ 1526 064c 50       		.byte	0x50
+ 1527 064d 00       		.byte	0
+ 1528 064e 00       		.byte	0
+ 1529 064f 1A       		.uleb128 0x1a
+ 1530 0650 00000000 		.4byte	.LASF46
+ 1531 0654 01       		.byte	0x1
+ 1532 0655 3802     		.2byte	0x238
+ 1533 0657 B8000000 		.4byte	0xb8
+ 1534 065b 00000000 		.4byte	.LFB61
+ 1535 065f 54000000 		.4byte	.LFE61-.LFB61
+ 1536 0663 01       		.uleb128 0x1
+ 1537 0664 9C       		.byte	0x9c
+ 1538 0665 AF060000 		.4byte	0x6af
+ 1539 0669 12       		.uleb128 0x12
+ 1540 066a 7000     		.ascii	"p\000"
+ 1541 066c 01       		.byte	0x1
+ 1542 066d 3802     		.2byte	0x238
+ 1543 066f 45010000 		.4byte	0x145
+ 1544 0673 18070000 		.4byte	.LLST42
+ 1545 0677 14       		.uleb128 0x14
+ 1546 0678 61636300 		.ascii	"acc\000"
+ 1547 067c 01       		.byte	0x1
+ 1548 067d 3A02     		.2byte	0x23a
+ 1549 067f CE000000 		.4byte	0xce
+ 1550 0683 39070000 		.4byte	.LLST43
+ 1551 0687 14       		.uleb128 0x14
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 39
+
+
+ 1552 0688 7100     		.ascii	"q\000"
+ 1553 068a 01       		.byte	0x1
+ 1554 068b 3B02     		.2byte	0x23b
+ 1555 068d 45010000 		.4byte	0x145
+ 1556 0691 84070000 		.4byte	.LLST44
+ 1557 0695 15       		.uleb128 0x15
+ 1558 0696 42010000 		.4byte	.LASF34
+ 1559 069a 01       		.byte	0x1
+ 1560 069b 3C02     		.2byte	0x23c
+ 1561 069d AD000000 		.4byte	0xad
+ 1562 06a1 A2070000 		.4byte	.LLST45
+ 1563 06a5 16       		.uleb128 0x16
+ 1564 06a6 12000000 		.4byte	.LVL116
+ 1565 06aa 7A010000 		.4byte	0x17a
+ 1566 06ae 00       		.byte	0
+ 1567 06af 1D       		.uleb128 0x1d
+ 1568 06b0 7C000000 		.4byte	.LASF50
+ 1569 06b4 7C000000 		.4byte	.LASF50
+ 1570 06b8 09       		.byte	0x9
+ 1571 06b9 55       		.byte	0x55
+ 1572 06ba 00       		.byte	0
+ 1573              		.section	.debug_abbrev,"",%progbits
+ 1574              	.Ldebug_abbrev0:
+ 1575 0000 01       		.uleb128 0x1
+ 1576 0001 11       		.uleb128 0x11
+ 1577 0002 01       		.byte	0x1
+ 1578 0003 25       		.uleb128 0x25
+ 1579 0004 0E       		.uleb128 0xe
+ 1580 0005 13       		.uleb128 0x13
+ 1581 0006 0B       		.uleb128 0xb
+ 1582 0007 03       		.uleb128 0x3
+ 1583 0008 0E       		.uleb128 0xe
+ 1584 0009 1B       		.uleb128 0x1b
+ 1585 000a 0E       		.uleb128 0xe
+ 1586 000b 55       		.uleb128 0x55
+ 1587 000c 17       		.uleb128 0x17
+ 1588 000d 11       		.uleb128 0x11
+ 1589 000e 01       		.uleb128 0x1
+ 1590 000f 10       		.uleb128 0x10
+ 1591 0010 17       		.uleb128 0x17
+ 1592 0011 00       		.byte	0
+ 1593 0012 00       		.byte	0
+ 1594 0013 02       		.uleb128 0x2
+ 1595 0014 24       		.uleb128 0x24
+ 1596 0015 00       		.byte	0
+ 1597 0016 0B       		.uleb128 0xb
+ 1598 0017 0B       		.uleb128 0xb
+ 1599 0018 3E       		.uleb128 0x3e
+ 1600 0019 0B       		.uleb128 0xb
+ 1601 001a 03       		.uleb128 0x3
+ 1602 001b 0E       		.uleb128 0xe
+ 1603 001c 00       		.byte	0
+ 1604 001d 00       		.byte	0
+ 1605 001e 03       		.uleb128 0x3
+ 1606 001f 16       		.uleb128 0x16
+ 1607 0020 00       		.byte	0
+ 1608 0021 03       		.uleb128 0x3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 40
+
+
+ 1609 0022 0E       		.uleb128 0xe
+ 1610 0023 3A       		.uleb128 0x3a
+ 1611 0024 0B       		.uleb128 0xb
+ 1612 0025 3B       		.uleb128 0x3b
+ 1613 0026 0B       		.uleb128 0xb
+ 1614 0027 49       		.uleb128 0x49
+ 1615 0028 13       		.uleb128 0x13
+ 1616 0029 00       		.byte	0
+ 1617 002a 00       		.byte	0
+ 1618 002b 04       		.uleb128 0x4
+ 1619 002c 24       		.uleb128 0x24
+ 1620 002d 00       		.byte	0
+ 1621 002e 0B       		.uleb128 0xb
+ 1622 002f 0B       		.uleb128 0xb
+ 1623 0030 3E       		.uleb128 0x3e
+ 1624 0031 0B       		.uleb128 0xb
+ 1625 0032 03       		.uleb128 0x3
+ 1626 0033 08       		.uleb128 0x8
+ 1627 0034 00       		.byte	0
+ 1628 0035 00       		.byte	0
+ 1629 0036 05       		.uleb128 0x5
+ 1630 0037 0F       		.uleb128 0xf
+ 1631 0038 00       		.byte	0
+ 1632 0039 0B       		.uleb128 0xb
+ 1633 003a 0B       		.uleb128 0xb
+ 1634 003b 00       		.byte	0
+ 1635 003c 00       		.byte	0
+ 1636 003d 06       		.uleb128 0x6
+ 1637 003e 0F       		.uleb128 0xf
+ 1638 003f 00       		.byte	0
+ 1639 0040 0B       		.uleb128 0xb
+ 1640 0041 0B       		.uleb128 0xb
+ 1641 0042 49       		.uleb128 0x49
+ 1642 0043 13       		.uleb128 0x13
+ 1643 0044 00       		.byte	0
+ 1644 0045 00       		.byte	0
+ 1645 0046 07       		.uleb128 0x7
+ 1646 0047 26       		.uleb128 0x26
+ 1647 0048 00       		.byte	0
+ 1648 0049 00       		.byte	0
+ 1649 004a 00       		.byte	0
+ 1650 004b 08       		.uleb128 0x8
+ 1651 004c 13       		.uleb128 0x13
+ 1652 004d 01       		.byte	0x1
+ 1653 004e 03       		.uleb128 0x3
+ 1654 004f 0E       		.uleb128 0xe
+ 1655 0050 0B       		.uleb128 0xb
+ 1656 0051 0B       		.uleb128 0xb
+ 1657 0052 3A       		.uleb128 0x3a
+ 1658 0053 0B       		.uleb128 0xb
+ 1659 0054 3B       		.uleb128 0x3b
+ 1660 0055 0B       		.uleb128 0xb
+ 1661 0056 01       		.uleb128 0x1
+ 1662 0057 13       		.uleb128 0x13
+ 1663 0058 00       		.byte	0
+ 1664 0059 00       		.byte	0
+ 1665 005a 09       		.uleb128 0x9
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 41
+
+
+ 1666 005b 0D       		.uleb128 0xd
+ 1667 005c 00       		.byte	0
+ 1668 005d 03       		.uleb128 0x3
+ 1669 005e 0E       		.uleb128 0xe
+ 1670 005f 3A       		.uleb128 0x3a
+ 1671 0060 0B       		.uleb128 0xb
+ 1672 0061 3B       		.uleb128 0x3b
+ 1673 0062 0B       		.uleb128 0xb
+ 1674 0063 49       		.uleb128 0x49
+ 1675 0064 13       		.uleb128 0x13
+ 1676 0065 38       		.uleb128 0x38
+ 1677 0066 0B       		.uleb128 0xb
+ 1678 0067 00       		.byte	0
+ 1679 0068 00       		.byte	0
+ 1680 0069 0A       		.uleb128 0xa
+ 1681 006a 0D       		.uleb128 0xd
+ 1682 006b 00       		.byte	0
+ 1683 006c 03       		.uleb128 0x3
+ 1684 006d 08       		.uleb128 0x8
+ 1685 006e 3A       		.uleb128 0x3a
+ 1686 006f 0B       		.uleb128 0xb
+ 1687 0070 3B       		.uleb128 0x3b
+ 1688 0071 0B       		.uleb128 0xb
+ 1689 0072 49       		.uleb128 0x49
+ 1690 0073 13       		.uleb128 0x13
+ 1691 0074 38       		.uleb128 0x38
+ 1692 0075 0B       		.uleb128 0xb
+ 1693 0076 00       		.byte	0
+ 1694 0077 00       		.byte	0
+ 1695 0078 0B       		.uleb128 0xb
+ 1696 0079 2E       		.uleb128 0x2e
+ 1697 007a 01       		.byte	0x1
+ 1698 007b 3F       		.uleb128 0x3f
+ 1699 007c 19       		.uleb128 0x19
+ 1700 007d 03       		.uleb128 0x3
+ 1701 007e 0E       		.uleb128 0xe
+ 1702 007f 3A       		.uleb128 0x3a
+ 1703 0080 0B       		.uleb128 0xb
+ 1704 0081 3B       		.uleb128 0x3b
+ 1705 0082 0B       		.uleb128 0xb
+ 1706 0083 27       		.uleb128 0x27
+ 1707 0084 19       		.uleb128 0x19
+ 1708 0085 49       		.uleb128 0x49
+ 1709 0086 13       		.uleb128 0x13
+ 1710 0087 11       		.uleb128 0x11
+ 1711 0088 01       		.uleb128 0x1
+ 1712 0089 12       		.uleb128 0x12
+ 1713 008a 06       		.uleb128 0x6
+ 1714 008b 40       		.uleb128 0x40
+ 1715 008c 18       		.uleb128 0x18
+ 1716 008d 9742     		.uleb128 0x2117
+ 1717 008f 19       		.uleb128 0x19
+ 1718 0090 01       		.uleb128 0x1
+ 1719 0091 13       		.uleb128 0x13
+ 1720 0092 00       		.byte	0
+ 1721 0093 00       		.byte	0
+ 1722 0094 0C       		.uleb128 0xc
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 42
+
+
+ 1723 0095 05       		.uleb128 0x5
+ 1724 0096 00       		.byte	0
+ 1725 0097 03       		.uleb128 0x3
+ 1726 0098 0E       		.uleb128 0xe
+ 1727 0099 3A       		.uleb128 0x3a
+ 1728 009a 0B       		.uleb128 0xb
+ 1729 009b 3B       		.uleb128 0x3b
+ 1730 009c 0B       		.uleb128 0xb
+ 1731 009d 49       		.uleb128 0x49
+ 1732 009e 13       		.uleb128 0x13
+ 1733 009f 02       		.uleb128 0x2
+ 1734 00a0 17       		.uleb128 0x17
+ 1735 00a1 00       		.byte	0
+ 1736 00a2 00       		.byte	0
+ 1737 00a3 0D       		.uleb128 0xd
+ 1738 00a4 05       		.uleb128 0x5
+ 1739 00a5 00       		.byte	0
+ 1740 00a6 03       		.uleb128 0x3
+ 1741 00a7 08       		.uleb128 0x8
+ 1742 00a8 3A       		.uleb128 0x3a
+ 1743 00a9 0B       		.uleb128 0xb
+ 1744 00aa 3B       		.uleb128 0x3b
+ 1745 00ab 0B       		.uleb128 0xb
+ 1746 00ac 49       		.uleb128 0x49
+ 1747 00ad 13       		.uleb128 0x13
+ 1748 00ae 02       		.uleb128 0x2
+ 1749 00af 17       		.uleb128 0x17
+ 1750 00b0 00       		.byte	0
+ 1751 00b1 00       		.byte	0
+ 1752 00b2 0E       		.uleb128 0xe
+ 1753 00b3 34       		.uleb128 0x34
+ 1754 00b4 00       		.byte	0
+ 1755 00b5 03       		.uleb128 0x3
+ 1756 00b6 08       		.uleb128 0x8
+ 1757 00b7 3A       		.uleb128 0x3a
+ 1758 00b8 0B       		.uleb128 0xb
+ 1759 00b9 3B       		.uleb128 0x3b
+ 1760 00ba 0B       		.uleb128 0xb
+ 1761 00bb 49       		.uleb128 0x49
+ 1762 00bc 13       		.uleb128 0x13
+ 1763 00bd 02       		.uleb128 0x2
+ 1764 00be 17       		.uleb128 0x17
+ 1765 00bf 00       		.byte	0
+ 1766 00c0 00       		.byte	0
+ 1767 00c1 0F       		.uleb128 0xf
+ 1768 00c2 34       		.uleb128 0x34
+ 1769 00c3 00       		.byte	0
+ 1770 00c4 03       		.uleb128 0x3
+ 1771 00c5 08       		.uleb128 0x8
+ 1772 00c6 3A       		.uleb128 0x3a
+ 1773 00c7 0B       		.uleb128 0xb
+ 1774 00c8 3B       		.uleb128 0x3b
+ 1775 00c9 0B       		.uleb128 0xb
+ 1776 00ca 49       		.uleb128 0x49
+ 1777 00cb 13       		.uleb128 0x13
+ 1778 00cc 02       		.uleb128 0x2
+ 1779 00cd 18       		.uleb128 0x18
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 43
+
+
+ 1780 00ce 00       		.byte	0
+ 1781 00cf 00       		.byte	0
+ 1782 00d0 10       		.uleb128 0x10
+ 1783 00d1 26       		.uleb128 0x26
+ 1784 00d2 00       		.byte	0
+ 1785 00d3 49       		.uleb128 0x49
+ 1786 00d4 13       		.uleb128 0x13
+ 1787 00d5 00       		.byte	0
+ 1788 00d6 00       		.byte	0
+ 1789 00d7 11       		.uleb128 0x11
+ 1790 00d8 2E       		.uleb128 0x2e
+ 1791 00d9 01       		.byte	0x1
+ 1792 00da 03       		.uleb128 0x3
+ 1793 00db 0E       		.uleb128 0xe
+ 1794 00dc 3A       		.uleb128 0x3a
+ 1795 00dd 0B       		.uleb128 0xb
+ 1796 00de 3B       		.uleb128 0x3b
+ 1797 00df 05       		.uleb128 0x5
+ 1798 00e0 27       		.uleb128 0x27
+ 1799 00e1 19       		.uleb128 0x19
+ 1800 00e2 49       		.uleb128 0x49
+ 1801 00e3 13       		.uleb128 0x13
+ 1802 00e4 11       		.uleb128 0x11
+ 1803 00e5 01       		.uleb128 0x1
+ 1804 00e6 12       		.uleb128 0x12
+ 1805 00e7 06       		.uleb128 0x6
+ 1806 00e8 40       		.uleb128 0x40
+ 1807 00e9 18       		.uleb128 0x18
+ 1808 00ea 9742     		.uleb128 0x2117
+ 1809 00ec 19       		.uleb128 0x19
+ 1810 00ed 01       		.uleb128 0x1
+ 1811 00ee 13       		.uleb128 0x13
+ 1812 00ef 00       		.byte	0
+ 1813 00f0 00       		.byte	0
+ 1814 00f1 12       		.uleb128 0x12
+ 1815 00f2 05       		.uleb128 0x5
+ 1816 00f3 00       		.byte	0
+ 1817 00f4 03       		.uleb128 0x3
+ 1818 00f5 08       		.uleb128 0x8
+ 1819 00f6 3A       		.uleb128 0x3a
+ 1820 00f7 0B       		.uleb128 0xb
+ 1821 00f8 3B       		.uleb128 0x3b
+ 1822 00f9 05       		.uleb128 0x5
+ 1823 00fa 49       		.uleb128 0x49
+ 1824 00fb 13       		.uleb128 0x13
+ 1825 00fc 02       		.uleb128 0x2
+ 1826 00fd 17       		.uleb128 0x17
+ 1827 00fe 00       		.byte	0
+ 1828 00ff 00       		.byte	0
+ 1829 0100 13       		.uleb128 0x13
+ 1830 0101 05       		.uleb128 0x5
+ 1831 0102 00       		.byte	0
+ 1832 0103 03       		.uleb128 0x3
+ 1833 0104 0E       		.uleb128 0xe
+ 1834 0105 3A       		.uleb128 0x3a
+ 1835 0106 0B       		.uleb128 0xb
+ 1836 0107 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 44
+
+
+ 1837 0108 05       		.uleb128 0x5
+ 1838 0109 49       		.uleb128 0x49
+ 1839 010a 13       		.uleb128 0x13
+ 1840 010b 02       		.uleb128 0x2
+ 1841 010c 17       		.uleb128 0x17
+ 1842 010d 00       		.byte	0
+ 1843 010e 00       		.byte	0
+ 1844 010f 14       		.uleb128 0x14
+ 1845 0110 34       		.uleb128 0x34
+ 1846 0111 00       		.byte	0
+ 1847 0112 03       		.uleb128 0x3
+ 1848 0113 08       		.uleb128 0x8
+ 1849 0114 3A       		.uleb128 0x3a
+ 1850 0115 0B       		.uleb128 0xb
+ 1851 0116 3B       		.uleb128 0x3b
+ 1852 0117 05       		.uleb128 0x5
+ 1853 0118 49       		.uleb128 0x49
+ 1854 0119 13       		.uleb128 0x13
+ 1855 011a 02       		.uleb128 0x2
+ 1856 011b 17       		.uleb128 0x17
+ 1857 011c 00       		.byte	0
+ 1858 011d 00       		.byte	0
+ 1859 011e 15       		.uleb128 0x15
+ 1860 011f 34       		.uleb128 0x34
+ 1861 0120 00       		.byte	0
+ 1862 0121 03       		.uleb128 0x3
+ 1863 0122 0E       		.uleb128 0xe
+ 1864 0123 3A       		.uleb128 0x3a
+ 1865 0124 0B       		.uleb128 0xb
+ 1866 0125 3B       		.uleb128 0x3b
+ 1867 0126 05       		.uleb128 0x5
+ 1868 0127 49       		.uleb128 0x49
+ 1869 0128 13       		.uleb128 0x13
+ 1870 0129 02       		.uleb128 0x2
+ 1871 012a 17       		.uleb128 0x17
+ 1872 012b 00       		.byte	0
+ 1873 012c 00       		.byte	0
+ 1874 012d 16       		.uleb128 0x16
+ 1875 012e 898201   		.uleb128 0x4109
+ 1876 0131 00       		.byte	0
+ 1877 0132 11       		.uleb128 0x11
+ 1878 0133 01       		.uleb128 0x1
+ 1879 0134 31       		.uleb128 0x31
+ 1880 0135 13       		.uleb128 0x13
+ 1881 0136 00       		.byte	0
+ 1882 0137 00       		.byte	0
+ 1883 0138 17       		.uleb128 0x17
+ 1884 0139 898201   		.uleb128 0x4109
+ 1885 013c 01       		.byte	0x1
+ 1886 013d 11       		.uleb128 0x11
+ 1887 013e 01       		.uleb128 0x1
+ 1888 013f 31       		.uleb128 0x31
+ 1889 0140 13       		.uleb128 0x13
+ 1890 0141 01       		.uleb128 0x1
+ 1891 0142 13       		.uleb128 0x13
+ 1892 0143 00       		.byte	0
+ 1893 0144 00       		.byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 45
+
+
+ 1894 0145 18       		.uleb128 0x18
+ 1895 0146 8A8201   		.uleb128 0x410a
+ 1896 0149 00       		.byte	0
+ 1897 014a 02       		.uleb128 0x2
+ 1898 014b 18       		.uleb128 0x18
+ 1899 014c 9142     		.uleb128 0x2111
+ 1900 014e 18       		.uleb128 0x18
+ 1901 014f 00       		.byte	0
+ 1902 0150 00       		.byte	0
+ 1903 0151 19       		.uleb128 0x19
+ 1904 0152 898201   		.uleb128 0x4109
+ 1905 0155 01       		.byte	0x1
+ 1906 0156 11       		.uleb128 0x11
+ 1907 0157 01       		.uleb128 0x1
+ 1908 0158 31       		.uleb128 0x31
+ 1909 0159 13       		.uleb128 0x13
+ 1910 015a 00       		.byte	0
+ 1911 015b 00       		.byte	0
+ 1912 015c 1A       		.uleb128 0x1a
+ 1913 015d 2E       		.uleb128 0x2e
+ 1914 015e 01       		.byte	0x1
+ 1915 015f 3F       		.uleb128 0x3f
+ 1916 0160 19       		.uleb128 0x19
+ 1917 0161 03       		.uleb128 0x3
+ 1918 0162 0E       		.uleb128 0xe
+ 1919 0163 3A       		.uleb128 0x3a
+ 1920 0164 0B       		.uleb128 0xb
+ 1921 0165 3B       		.uleb128 0x3b
+ 1922 0166 05       		.uleb128 0x5
+ 1923 0167 27       		.uleb128 0x27
+ 1924 0168 19       		.uleb128 0x19
+ 1925 0169 49       		.uleb128 0x49
+ 1926 016a 13       		.uleb128 0x13
+ 1927 016b 11       		.uleb128 0x11
+ 1928 016c 01       		.uleb128 0x1
+ 1929 016d 12       		.uleb128 0x12
+ 1930 016e 06       		.uleb128 0x6
+ 1931 016f 40       		.uleb128 0x40
+ 1932 0170 18       		.uleb128 0x18
+ 1933 0171 9742     		.uleb128 0x2117
+ 1934 0173 19       		.uleb128 0x19
+ 1935 0174 01       		.uleb128 0x1
+ 1936 0175 13       		.uleb128 0x13
+ 1937 0176 00       		.byte	0
+ 1938 0177 00       		.byte	0
+ 1939 0178 1B       		.uleb128 0x1b
+ 1940 0179 05       		.uleb128 0x5
+ 1941 017a 00       		.byte	0
+ 1942 017b 03       		.uleb128 0x3
+ 1943 017c 0E       		.uleb128 0xe
+ 1944 017d 3A       		.uleb128 0x3a
+ 1945 017e 0B       		.uleb128 0xb
+ 1946 017f 3B       		.uleb128 0x3b
+ 1947 0180 05       		.uleb128 0x5
+ 1948 0181 49       		.uleb128 0x49
+ 1949 0182 13       		.uleb128 0x13
+ 1950 0183 02       		.uleb128 0x2
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 46
+
+
+ 1951 0184 18       		.uleb128 0x18
+ 1952 0185 00       		.byte	0
+ 1953 0186 00       		.byte	0
+ 1954 0187 1C       		.uleb128 0x1c
+ 1955 0188 05       		.uleb128 0x5
+ 1956 0189 00       		.byte	0
+ 1957 018a 03       		.uleb128 0x3
+ 1958 018b 08       		.uleb128 0x8
+ 1959 018c 3A       		.uleb128 0x3a
+ 1960 018d 0B       		.uleb128 0xb
+ 1961 018e 3B       		.uleb128 0x3b
+ 1962 018f 05       		.uleb128 0x5
+ 1963 0190 49       		.uleb128 0x49
+ 1964 0191 13       		.uleb128 0x13
+ 1965 0192 02       		.uleb128 0x2
+ 1966 0193 18       		.uleb128 0x18
+ 1967 0194 00       		.byte	0
+ 1968 0195 00       		.byte	0
+ 1969 0196 1D       		.uleb128 0x1d
+ 1970 0197 2E       		.uleb128 0x2e
+ 1971 0198 00       		.byte	0
+ 1972 0199 3F       		.uleb128 0x3f
+ 1973 019a 19       		.uleb128 0x19
+ 1974 019b 3C       		.uleb128 0x3c
+ 1975 019c 19       		.uleb128 0x19
+ 1976 019d 6E       		.uleb128 0x6e
+ 1977 019e 0E       		.uleb128 0xe
+ 1978 019f 03       		.uleb128 0x3
+ 1979 01a0 0E       		.uleb128 0xe
+ 1980 01a1 3A       		.uleb128 0x3a
+ 1981 01a2 0B       		.uleb128 0xb
+ 1982 01a3 3B       		.uleb128 0x3b
+ 1983 01a4 0B       		.uleb128 0xb
+ 1984 01a5 00       		.byte	0
+ 1985 01a6 00       		.byte	0
+ 1986 01a7 00       		.byte	0
+ 1987              		.section	.debug_loc,"",%progbits
+ 1988              	.Ldebug_loc0:
+ 1989              	.LLST0:
+ 1990 0000 00000000 		.4byte	.LVL0
+ 1991 0004 1E000000 		.4byte	.LVL6
+ 1992 0008 0100     		.2byte	0x1
+ 1993 000a 50       		.byte	0x50
+ 1994 000b 1E000000 		.4byte	.LVL6
+ 1995 000f 66000000 		.4byte	.LFE53
+ 1996 0013 0400     		.2byte	0x4
+ 1997 0015 F3       		.byte	0xf3
+ 1998 0016 01       		.uleb128 0x1
+ 1999 0017 50       		.byte	0x50
+ 2000 0018 9F       		.byte	0x9f
+ 2001 0019 00000000 		.4byte	0
+ 2002 001d 00000000 		.4byte	0
+ 2003              	.LLST1:
+ 2004 0021 00000000 		.4byte	.LVL0
+ 2005 0025 1C000000 		.4byte	.LVL5
+ 2006 0029 0100     		.2byte	0x1
+ 2007 002b 51       		.byte	0x51
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 47
+
+
+ 2008 002c 1C000000 		.4byte	.LVL5
+ 2009 0030 34000000 		.4byte	.LVL11
+ 2010 0034 0100     		.2byte	0x1
+ 2011 0036 51       		.byte	0x51
+ 2012 0037 00000000 		.4byte	0
+ 2013 003b 00000000 		.4byte	0
+ 2014              	.LLST2:
+ 2015 003f 04000000 		.4byte	.LVL1
+ 2016 0043 14000000 		.4byte	.LVL4
+ 2017 0047 0100     		.2byte	0x1
+ 2018 0049 50       		.byte	0x50
+ 2019 004a 14000000 		.4byte	.LVL4
+ 2020 004e 1E000000 		.4byte	.LVL6
+ 2021 0052 0300     		.2byte	0x3
+ 2022 0054 70       		.byte	0x70
+ 2023 0055 01       		.sleb128 1
+ 2024 0056 9F       		.byte	0x9f
+ 2025 0057 1E000000 		.4byte	.LVL6
+ 2026 005b 22000000 		.4byte	.LVL7
+ 2027 005f 0100     		.2byte	0x1
+ 2028 0061 50       		.byte	0x50
+ 2029 0062 00000000 		.4byte	0
+ 2030 0066 00000000 		.4byte	0
+ 2031              	.LLST3:
+ 2032 006a 1E000000 		.4byte	.LVL6
+ 2033 006e 22000000 		.4byte	.LVL7
+ 2034 0072 0100     		.2byte	0x1
+ 2035 0074 50       		.byte	0x50
+ 2036 0075 22000000 		.4byte	.LVL7
+ 2037 0079 2A000000 		.4byte	.LVL10
+ 2038 007d 0300     		.2byte	0x3
+ 2039 007f 70       		.byte	0x70
+ 2040 0080 02       		.sleb128 2
+ 2041 0081 9F       		.byte	0x9f
+ 2042 0082 2A000000 		.4byte	.LVL10
+ 2043 0086 42000000 		.4byte	.LVL13
+ 2044 008a 0100     		.2byte	0x1
+ 2045 008c 50       		.byte	0x50
+ 2046 008d 00000000 		.4byte	0
+ 2047 0091 00000000 		.4byte	0
+ 2048              	.LLST4:
+ 2049 0095 0A000000 		.4byte	.LVL2
+ 2050 0099 22000000 		.4byte	.LVL7
+ 2051 009d 0200     		.2byte	0x2
+ 2052 009f 30       		.byte	0x30
+ 2053 00a0 9F       		.byte	0x9f
+ 2054 00a1 22000000 		.4byte	.LVL7
+ 2055 00a5 44000000 		.4byte	.LVL14
+ 2056 00a9 0100     		.2byte	0x1
+ 2057 00ab 53       		.byte	0x53
+ 2058 00ac 48000000 		.4byte	.LVL15
+ 2059 00b0 4C000000 		.4byte	.LVL16
+ 2060 00b4 0100     		.2byte	0x1
+ 2061 00b6 53       		.byte	0x53
+ 2062 00b7 50000000 		.4byte	.LVL17
+ 2063 00bb 5A000000 		.4byte	.LVL18
+ 2064 00bf 0100     		.2byte	0x1
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 48
+
+
+ 2065 00c1 50       		.byte	0x50
+ 2066 00c2 60000000 		.4byte	.LVL19
+ 2067 00c6 62000000 		.4byte	.LVL20
+ 2068 00ca 0100     		.2byte	0x1
+ 2069 00cc 50       		.byte	0x50
+ 2070 00cd 00000000 		.4byte	0
+ 2071 00d1 00000000 		.4byte	0
+ 2072              	.LLST5:
+ 2073 00d5 0E000000 		.4byte	.LVL3
+ 2074 00d9 64000000 		.4byte	.LVL21
+ 2075 00dd 0100     		.2byte	0x1
+ 2076 00df 54       		.byte	0x54
+ 2077 00e0 64000000 		.4byte	.LVL21
+ 2078 00e4 66000000 		.4byte	.LFE53
+ 2079 00e8 0600     		.2byte	0x6
+ 2080 00ea F3       		.byte	0xf3
+ 2081 00eb 01       		.uleb128 0x1
+ 2082 00ec 50       		.byte	0x50
+ 2083 00ed 31       		.byte	0x31
+ 2084 00ee 1A       		.byte	0x1a
+ 2085 00ef 9F       		.byte	0x9f
+ 2086 00f0 00000000 		.4byte	0
+ 2087 00f4 00000000 		.4byte	0
+ 2088              	.LLST6:
+ 2089 00f8 00000000 		.4byte	.LVL22
+ 2090 00fc 10000000 		.4byte	.LVL24
+ 2091 0100 0100     		.2byte	0x1
+ 2092 0102 50       		.byte	0x50
+ 2093 0103 10000000 		.4byte	.LVL24
+ 2094 0107 7E000000 		.4byte	.LFE54
+ 2095 010b 0400     		.2byte	0x4
+ 2096 010d F3       		.byte	0xf3
+ 2097 010e 01       		.uleb128 0x1
+ 2098 010f 50       		.byte	0x50
+ 2099 0110 9F       		.byte	0x9f
+ 2100 0111 00000000 		.4byte	0
+ 2101 0115 00000000 		.4byte	0
+ 2102              	.LLST7:
+ 2103 0119 00000000 		.4byte	.LVL22
+ 2104 011d 10000000 		.4byte	.LVL24
+ 2105 0121 0100     		.2byte	0x1
+ 2106 0123 51       		.byte	0x51
+ 2107 0124 10000000 		.4byte	.LVL24
+ 2108 0128 7E000000 		.4byte	.LFE54
+ 2109 012c 0400     		.2byte	0x4
+ 2110 012e F3       		.byte	0xf3
+ 2111 012f 01       		.uleb128 0x1
+ 2112 0130 51       		.byte	0x51
+ 2113 0131 9F       		.byte	0x9f
+ 2114 0132 00000000 		.4byte	0
+ 2115 0136 00000000 		.4byte	0
+ 2116              	.LLST8:
+ 2117 013a 00000000 		.4byte	.LVL22
+ 2118 013e 10000000 		.4byte	.LVL24
+ 2119 0142 0100     		.2byte	0x1
+ 2120 0144 52       		.byte	0x52
+ 2121 0145 10000000 		.4byte	.LVL24
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 49
+
+
+ 2122 0149 7E000000 		.4byte	.LFE54
+ 2123 014d 0400     		.2byte	0x4
+ 2124 014f F3       		.byte	0xf3
+ 2125 0150 01       		.uleb128 0x1
+ 2126 0151 52       		.byte	0x52
+ 2127 0152 9F       		.byte	0x9f
+ 2128 0153 00000000 		.4byte	0
+ 2129 0157 00000000 		.4byte	0
+ 2130              	.LLST9:
+ 2131 015b 00000000 		.4byte	.LVL22
+ 2132 015f 10000000 		.4byte	.LVL24
+ 2133 0163 0100     		.2byte	0x1
+ 2134 0165 53       		.byte	0x53
+ 2135 0166 10000000 		.4byte	.LVL24
+ 2136 016a 1A000000 		.4byte	.LVL26
+ 2137 016e 0100     		.2byte	0x1
+ 2138 0170 54       		.byte	0x54
+ 2139 0171 1A000000 		.4byte	.LVL26
+ 2140 0175 1E000000 		.4byte	.LVL27
+ 2141 0179 0100     		.2byte	0x1
+ 2142 017b 50       		.byte	0x50
+ 2143 017c 22000000 		.4byte	.LVL28
+ 2144 0180 66000000 		.4byte	.LVL37
+ 2145 0184 0100     		.2byte	0x1
+ 2146 0186 54       		.byte	0x54
+ 2147 0187 66000000 		.4byte	.LVL37
+ 2148 018b 6A000000 		.4byte	.LVL38
+ 2149 018f 0100     		.2byte	0x1
+ 2150 0191 50       		.byte	0x50
+ 2151 0192 6E000000 		.4byte	.LVL39
+ 2152 0196 72000000 		.4byte	.LVL40
+ 2153 019a 0100     		.2byte	0x1
+ 2154 019c 50       		.byte	0x50
+ 2155 019d 76000000 		.4byte	.LVL41
+ 2156 01a1 78000000 		.4byte	.LVL42
+ 2157 01a5 0100     		.2byte	0x1
+ 2158 01a7 50       		.byte	0x50
+ 2159 01a8 78000000 		.4byte	.LVL42
+ 2160 01ac 7A000000 		.4byte	.LVL43
+ 2161 01b0 0400     		.2byte	0x4
+ 2162 01b2 70       		.byte	0x70
+ 2163 01b3 00       		.sleb128 0
+ 2164 01b4 20       		.byte	0x20
+ 2165 01b5 9F       		.byte	0x9f
+ 2166 01b6 00000000 		.4byte	0
+ 2167 01ba 00000000 		.4byte	0
+ 2168              	.LLST10:
+ 2169 01be 0C000000 		.4byte	.LVL23
+ 2170 01c2 10000000 		.4byte	.LVL24
+ 2171 01c6 0100     		.2byte	0x1
+ 2172 01c8 50       		.byte	0x50
+ 2173 01c9 10000000 		.4byte	.LVL24
+ 2174 01cd 7C000000 		.4byte	.LVL44
+ 2175 01d1 0100     		.2byte	0x1
+ 2176 01d3 56       		.byte	0x56
+ 2177 01d4 00000000 		.4byte	0
+ 2178 01d8 00000000 		.4byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 50
+
+
+ 2179              	.LLST11:
+ 2180 01dc 0C000000 		.4byte	.LVL23
+ 2181 01e0 10000000 		.4byte	.LVL24
+ 2182 01e4 0200     		.2byte	0x2
+ 2183 01e6 30       		.byte	0x30
+ 2184 01e7 9F       		.byte	0x9f
+ 2185 01e8 10000000 		.4byte	.LVL24
+ 2186 01ec 2C000000 		.4byte	.LVL29
+ 2187 01f0 0100     		.2byte	0x1
+ 2188 01f2 57       		.byte	0x57
+ 2189 01f3 2E000000 		.4byte	.LVL30
+ 2190 01f7 7C000000 		.4byte	.LVL45
+ 2191 01fb 0100     		.2byte	0x1
+ 2192 01fd 57       		.byte	0x57
+ 2193 01fe 00000000 		.4byte	0
+ 2194 0202 00000000 		.4byte	0
+ 2195              	.LLST12:
+ 2196 0206 00000000 		.4byte	.LVL46
+ 2197 020a 18000000 		.4byte	.LVL49
+ 2198 020e 0100     		.2byte	0x1
+ 2199 0210 50       		.byte	0x50
+ 2200 0211 18000000 		.4byte	.LVL49
+ 2201 0215 A0000000 		.4byte	.LFE57
+ 2202 0219 0400     		.2byte	0x4
+ 2203 021b F3       		.byte	0xf3
+ 2204 021c 01       		.uleb128 0x1
+ 2205 021d 50       		.byte	0x50
+ 2206 021e 9F       		.byte	0x9f
+ 2207 021f 00000000 		.4byte	0
+ 2208 0223 00000000 		.4byte	0
+ 2209              	.LLST13:
+ 2210 0227 00000000 		.4byte	.LVL46
+ 2211 022b 18000000 		.4byte	.LVL49
+ 2212 022f 0100     		.2byte	0x1
+ 2213 0231 51       		.byte	0x51
+ 2214 0232 18000000 		.4byte	.LVL49
+ 2215 0236 A0000000 		.4byte	.LFE57
+ 2216 023a 0400     		.2byte	0x4
+ 2217 023c F3       		.byte	0xf3
+ 2218 023d 01       		.uleb128 0x1
+ 2219 023e 51       		.byte	0x51
+ 2220 023f 9F       		.byte	0x9f
+ 2221 0240 00000000 		.4byte	0
+ 2222 0244 00000000 		.4byte	0
+ 2223              	.LLST14:
+ 2224 0248 00000000 		.4byte	.LVL46
+ 2225 024c 18000000 		.4byte	.LVL49
+ 2226 0250 0100     		.2byte	0x1
+ 2227 0252 52       		.byte	0x52
+ 2228 0253 18000000 		.4byte	.LVL49
+ 2229 0257 A0000000 		.4byte	.LFE57
+ 2230 025b 0400     		.2byte	0x4
+ 2231 025d F3       		.byte	0xf3
+ 2232 025e 01       		.uleb128 0x1
+ 2233 025f 52       		.byte	0x52
+ 2234 0260 9F       		.byte	0x9f
+ 2235 0261 00000000 		.4byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 51
+
+
+ 2236 0265 00000000 		.4byte	0
+ 2237              	.LLST15:
+ 2238 0269 00000000 		.4byte	.LVL46
+ 2239 026d 14000000 		.4byte	.LVL48
+ 2240 0271 0100     		.2byte	0x1
+ 2241 0273 53       		.byte	0x53
+ 2242 0274 14000000 		.4byte	.LVL48
+ 2243 0278 18000000 		.4byte	.LVL49
+ 2244 027c 0400     		.2byte	0x4
+ 2245 027e F3       		.byte	0xf3
+ 2246 027f 01       		.uleb128 0x1
+ 2247 0280 53       		.byte	0x53
+ 2248 0281 9F       		.byte	0x9f
+ 2249 0282 18000000 		.4byte	.LVL49
+ 2250 0286 2C000000 		.4byte	.LVL54
+ 2251 028a 0100     		.2byte	0x1
+ 2252 028c 57       		.byte	0x57
+ 2253 028d 2E000000 		.4byte	.LVL55
+ 2254 0291 9A000000 		.4byte	.LVL73
+ 2255 0295 0100     		.2byte	0x1
+ 2256 0297 57       		.byte	0x57
+ 2257 0298 00000000 		.4byte	0
+ 2258 029c 00000000 		.4byte	0
+ 2259              	.LLST16:
+ 2260 02a0 00000000 		.4byte	.LVL46
+ 2261 02a4 18000000 		.4byte	.LVL49
+ 2262 02a8 0200     		.2byte	0x2
+ 2263 02aa 91       		.byte	0x91
+ 2264 02ab 00       		.sleb128 0
+ 2265 02ac 18000000 		.4byte	.LVL49
+ 2266 02b0 2A000000 		.4byte	.LVL53
+ 2267 02b4 0100     		.2byte	0x1
+ 2268 02b6 54       		.byte	0x54
+ 2269 02b7 2A000000 		.4byte	.LVL53
+ 2270 02bb 32000000 		.4byte	.LVL56
+ 2271 02bf 0100     		.2byte	0x1
+ 2272 02c1 50       		.byte	0x50
+ 2273 02c2 36000000 		.4byte	.LVL57
+ 2274 02c6 84000000 		.4byte	.LVL65
+ 2275 02ca 0100     		.2byte	0x1
+ 2276 02cc 54       		.byte	0x54
+ 2277 02cd 84000000 		.4byte	.LVL65
+ 2278 02d1 88000000 		.4byte	.LVL66
+ 2279 02d5 0100     		.2byte	0x1
+ 2280 02d7 50       		.byte	0x50
+ 2281 02d8 8C000000 		.4byte	.LVL67
+ 2282 02dc 90000000 		.4byte	.LVL68
+ 2283 02e0 0100     		.2byte	0x1
+ 2284 02e2 50       		.byte	0x50
+ 2285 02e3 94000000 		.4byte	.LVL69
+ 2286 02e7 96000000 		.4byte	.LVL70
+ 2287 02eb 0100     		.2byte	0x1
+ 2288 02ed 50       		.byte	0x50
+ 2289 02ee 96000000 		.4byte	.LVL70
+ 2290 02f2 98000000 		.4byte	.LVL71
+ 2291 02f6 0400     		.2byte	0x4
+ 2292 02f8 70       		.byte	0x70
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 52
+
+
+ 2293 02f9 00       		.sleb128 0
+ 2294 02fa 20       		.byte	0x20
+ 2295 02fb 9F       		.byte	0x9f
+ 2296 02fc 00000000 		.4byte	0
+ 2297 0300 00000000 		.4byte	0
+ 2298              	.LLST17:
+ 2299 0304 12000000 		.4byte	.LVL47
+ 2300 0308 18000000 		.4byte	.LVL49
+ 2301 030c 0100     		.2byte	0x1
+ 2302 030e 50       		.byte	0x50
+ 2303 030f 18000000 		.4byte	.LVL49
+ 2304 0313 9A000000 		.4byte	.LVL72
+ 2305 0317 0100     		.2byte	0x1
+ 2306 0319 56       		.byte	0x56
+ 2307 031a 00000000 		.4byte	0
+ 2308 031e 00000000 		.4byte	0
+ 2309              	.LLST18:
+ 2310 0322 12000000 		.4byte	.LVL47
+ 2311 0326 18000000 		.4byte	.LVL49
+ 2312 032a 0200     		.2byte	0x2
+ 2313 032c 30       		.byte	0x30
+ 2314 032d 9F       		.byte	0x9f
+ 2315 032e 18000000 		.4byte	.LVL49
+ 2316 0332 9A000000 		.4byte	.LVL74
+ 2317 0336 0100     		.2byte	0x1
+ 2318 0338 58       		.byte	0x58
+ 2319 0339 00000000 		.4byte	0
+ 2320 033d 00000000 		.4byte	0
+ 2321              	.LLST19:
+ 2322 0341 1A000000 		.4byte	.LVL50
+ 2323 0345 56000000 		.4byte	.LVL60
+ 2324 0349 0100     		.2byte	0x1
+ 2325 034b 55       		.byte	0x55
+ 2326 034c 00000000 		.4byte	0
+ 2327 0350 00000000 		.4byte	0
+ 2328              	.LLST20:
+ 2329 0354 00000000 		.4byte	.LVL75
+ 2330 0358 2D000000 		.4byte	.LVL88-1
+ 2331 035c 0100     		.2byte	0x1
+ 2332 035e 50       		.byte	0x50
+ 2333 035f 2D000000 		.4byte	.LVL88-1
+ 2334 0363 30000000 		.4byte	.LFE55
+ 2335 0367 0400     		.2byte	0x4
+ 2336 0369 F3       		.byte	0xf3
+ 2337 036a 01       		.uleb128 0x1
+ 2338 036b 50       		.byte	0x50
+ 2339 036c 9F       		.byte	0x9f
+ 2340 036d 00000000 		.4byte	0
+ 2341 0371 00000000 		.4byte	0
+ 2342              	.LLST21:
+ 2343 0375 00000000 		.4byte	.LVL75
+ 2344 0379 2D000000 		.4byte	.LVL88-1
+ 2345 037d 0100     		.2byte	0x1
+ 2346 037f 51       		.byte	0x51
+ 2347 0380 2D000000 		.4byte	.LVL88-1
+ 2348 0384 30000000 		.4byte	.LFE55
+ 2349 0388 0400     		.2byte	0x4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 53
+
+
+ 2350 038a F3       		.byte	0xf3
+ 2351 038b 01       		.uleb128 0x1
+ 2352 038c 51       		.byte	0x51
+ 2353 038d 9F       		.byte	0x9f
+ 2354 038e 00000000 		.4byte	0
+ 2355 0392 00000000 		.4byte	0
+ 2356              	.LLST22:
+ 2357 0396 00000000 		.4byte	.LVL75
+ 2358 039a 2D000000 		.4byte	.LVL88-1
+ 2359 039e 0100     		.2byte	0x1
+ 2360 03a0 52       		.byte	0x52
+ 2361 03a1 2D000000 		.4byte	.LVL88-1
+ 2362 03a5 30000000 		.4byte	.LFE55
+ 2363 03a9 0400     		.2byte	0x4
+ 2364 03ab F3       		.byte	0xf3
+ 2365 03ac 01       		.uleb128 0x1
+ 2366 03ad 52       		.byte	0x52
+ 2367 03ae 9F       		.byte	0x9f
+ 2368 03af 00000000 		.4byte	0
+ 2369 03b3 00000000 		.4byte	0
+ 2370              	.LLST23:
+ 2371 03b7 00000000 		.4byte	.LVL75
+ 2372 03bb 04000000 		.4byte	.LVL76
+ 2373 03bf 0100     		.2byte	0x1
+ 2374 03c1 53       		.byte	0x53
+ 2375 03c2 04000000 		.4byte	.LVL76
+ 2376 03c6 30000000 		.4byte	.LFE55
+ 2377 03ca 0400     		.2byte	0x4
+ 2378 03cc F3       		.byte	0xf3
+ 2379 03cd 01       		.uleb128 0x1
+ 2380 03ce 53       		.byte	0x53
+ 2381 03cf 9F       		.byte	0x9f
+ 2382 03d0 00000000 		.4byte	0
+ 2383 03d4 00000000 		.4byte	0
+ 2384              	.LLST24:
+ 2385 03d8 08000000 		.4byte	.LVL77
+ 2386 03dc 16000000 		.4byte	.LVL81
+ 2387 03e0 0100     		.2byte	0x1
+ 2388 03e2 56       		.byte	0x56
+ 2389 03e3 16000000 		.4byte	.LVL81
+ 2390 03e7 1E000000 		.4byte	.LVL84
+ 2391 03eb 0100     		.2byte	0x1
+ 2392 03ed 55       		.byte	0x55
+ 2393 03ee 1E000000 		.4byte	.LVL84
+ 2394 03f2 22000000 		.4byte	.LVL85
+ 2395 03f6 0F00     		.2byte	0xf
+ 2396 03f8 91       		.byte	0x91
+ 2397 03f9 00       		.sleb128 0
+ 2398 03fa 06       		.byte	0x6
+ 2399 03fb 06       		.byte	0x6
+ 2400 03fc 40       		.byte	0x40
+ 2401 03fd 24       		.byte	0x24
+ 2402 03fe 40       		.byte	0x40
+ 2403 03ff 25       		.byte	0x25
+ 2404 0400 73       		.byte	0x73
+ 2405 0401 00       		.sleb128 0
+ 2406 0402 22       		.byte	0x22
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 54
+
+
+ 2407 0403 76       		.byte	0x76
+ 2408 0404 00       		.sleb128 0
+ 2409 0405 22       		.byte	0x22
+ 2410 0406 9F       		.byte	0x9f
+ 2411 0407 22000000 		.4byte	.LVL85
+ 2412 040b 26000000 		.4byte	.LVL86
+ 2413 040f 0100     		.2byte	0x1
+ 2414 0411 54       		.byte	0x54
+ 2415 0412 26000000 		.4byte	.LVL86
+ 2416 0416 2A000000 		.4byte	.LVL87
+ 2417 041a 1800     		.2byte	0x18
+ 2418 041c 91       		.byte	0x91
+ 2419 041d 00       		.sleb128 0
+ 2420 041e 06       		.byte	0x6
+ 2421 041f 06       		.byte	0x6
+ 2422 0420 40       		.byte	0x40
+ 2423 0421 24       		.byte	0x24
+ 2424 0422 40       		.byte	0x40
+ 2425 0423 25       		.byte	0x25
+ 2426 0424 91       		.byte	0x91
+ 2427 0425 00       		.sleb128 0
+ 2428 0426 06       		.byte	0x6
+ 2429 0427 06       		.byte	0x6
+ 2430 0428 40       		.byte	0x40
+ 2431 0429 25       		.byte	0x25
+ 2432 042a 22       		.byte	0x22
+ 2433 042b 76       		.byte	0x76
+ 2434 042c 00       		.sleb128 0
+ 2435 042d 22       		.byte	0x22
+ 2436 042e 40       		.byte	0x40
+ 2437 042f 25       		.byte	0x25
+ 2438 0430 75       		.byte	0x75
+ 2439 0431 00       		.sleb128 0
+ 2440 0432 22       		.byte	0x22
+ 2441 0433 9F       		.byte	0x9f
+ 2442 0434 2A000000 		.4byte	.LVL87
+ 2443 0438 2D000000 		.4byte	.LVL88-1
+ 2444 043c 0100     		.2byte	0x1
+ 2445 043e 53       		.byte	0x53
+ 2446 043f 00000000 		.4byte	0
+ 2447 0443 00000000 		.4byte	0
+ 2448              	.LLST25:
+ 2449 0447 04000000 		.4byte	.LVL76
+ 2450 044b 0A000000 		.4byte	.LVL78
+ 2451 044f 0100     		.2byte	0x1
+ 2452 0451 53       		.byte	0x53
+ 2453 0452 0A000000 		.4byte	.LVL78
+ 2454 0456 10000000 		.4byte	.LVL80
+ 2455 045a 0300     		.2byte	0x3
+ 2456 045c F3       		.byte	0xf3
+ 2457 045d 01       		.uleb128 0x1
+ 2458 045e 53       		.byte	0x53
+ 2459 045f 10000000 		.4byte	.LVL80
+ 2460 0463 18000000 		.4byte	.LVL82
+ 2461 0467 0100     		.2byte	0x1
+ 2462 0469 53       		.byte	0x53
+ 2463 046a 18000000 		.4byte	.LVL82
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 55
+
+
+ 2464 046e 2D000000 		.4byte	.LVL88-1
+ 2465 0472 0300     		.2byte	0x3
+ 2466 0474 91       		.byte	0x91
+ 2467 0475 00       		.sleb128 0
+ 2468 0476 06       		.byte	0x6
+ 2469 0477 00000000 		.4byte	0
+ 2470 047b 00000000 		.4byte	0
+ 2471              	.LLST26:
+ 2472 047f 00000000 		.4byte	.LVL89
+ 2473 0483 0B000000 		.4byte	.LVL90-1
+ 2474 0487 0100     		.2byte	0x1
+ 2475 0489 50       		.byte	0x50
+ 2476 048a 0B000000 		.4byte	.LVL90-1
+ 2477 048e 10000000 		.4byte	.LFE56
+ 2478 0492 0400     		.2byte	0x4
+ 2479 0494 F3       		.byte	0xf3
+ 2480 0495 01       		.uleb128 0x1
+ 2481 0496 50       		.byte	0x50
+ 2482 0497 9F       		.byte	0x9f
+ 2483 0498 00000000 		.4byte	0
+ 2484 049c 00000000 		.4byte	0
+ 2485              	.LLST27:
+ 2486 04a0 00000000 		.4byte	.LVL89
+ 2487 04a4 0B000000 		.4byte	.LVL90-1
+ 2488 04a8 0100     		.2byte	0x1
+ 2489 04aa 51       		.byte	0x51
+ 2490 04ab 0B000000 		.4byte	.LVL90-1
+ 2491 04af 10000000 		.4byte	.LFE56
+ 2492 04b3 0400     		.2byte	0x4
+ 2493 04b5 F3       		.byte	0xf3
+ 2494 04b6 01       		.uleb128 0x1
+ 2495 04b7 51       		.byte	0x51
+ 2496 04b8 9F       		.byte	0x9f
+ 2497 04b9 00000000 		.4byte	0
+ 2498 04bd 00000000 		.4byte	0
+ 2499              	.LLST28:
+ 2500 04c1 00000000 		.4byte	.LVL89
+ 2501 04c5 0B000000 		.4byte	.LVL90-1
+ 2502 04c9 0100     		.2byte	0x1
+ 2503 04cb 52       		.byte	0x52
+ 2504 04cc 0B000000 		.4byte	.LVL90-1
+ 2505 04d0 10000000 		.4byte	.LFE56
+ 2506 04d4 0400     		.2byte	0x4
+ 2507 04d6 F3       		.byte	0xf3
+ 2508 04d7 01       		.uleb128 0x1
+ 2509 04d8 52       		.byte	0x52
+ 2510 04d9 9F       		.byte	0x9f
+ 2511 04da 00000000 		.4byte	0
+ 2512 04de 00000000 		.4byte	0
+ 2513              	.LLST29:
+ 2514 04e2 00000000 		.4byte	.LVL89
+ 2515 04e6 0B000000 		.4byte	.LVL90-1
+ 2516 04ea 0100     		.2byte	0x1
+ 2517 04ec 53       		.byte	0x53
+ 2518 04ed 0B000000 		.4byte	.LVL90-1
+ 2519 04f1 10000000 		.4byte	.LFE56
+ 2520 04f5 0400     		.2byte	0x4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 56
+
+
+ 2521 04f7 F3       		.byte	0xf3
+ 2522 04f8 01       		.uleb128 0x1
+ 2523 04f9 53       		.byte	0x53
+ 2524 04fa 9F       		.byte	0x9f
+ 2525 04fb 00000000 		.4byte	0
+ 2526 04ff 00000000 		.4byte	0
+ 2527              	.LLST30:
+ 2528 0503 00000000 		.4byte	.LVL91
+ 2529 0507 33000000 		.4byte	.LVL107-1
+ 2530 050b 0100     		.2byte	0x1
+ 2531 050d 50       		.byte	0x50
+ 2532 050e 33000000 		.4byte	.LVL107-1
+ 2533 0512 38000000 		.4byte	.LFE58
+ 2534 0516 0400     		.2byte	0x4
+ 2535 0518 F3       		.byte	0xf3
+ 2536 0519 01       		.uleb128 0x1
+ 2537 051a 50       		.byte	0x50
+ 2538 051b 9F       		.byte	0x9f
+ 2539 051c 00000000 		.4byte	0
+ 2540 0520 00000000 		.4byte	0
+ 2541              	.LLST31:
+ 2542 0524 00000000 		.4byte	.LVL91
+ 2543 0528 33000000 		.4byte	.LVL107-1
+ 2544 052c 0100     		.2byte	0x1
+ 2545 052e 51       		.byte	0x51
+ 2546 052f 33000000 		.4byte	.LVL107-1
+ 2547 0533 38000000 		.4byte	.LFE58
+ 2548 0537 0400     		.2byte	0x4
+ 2549 0539 F3       		.byte	0xf3
+ 2550 053a 01       		.uleb128 0x1
+ 2551 053b 51       		.byte	0x51
+ 2552 053c 9F       		.byte	0x9f
+ 2553 053d 00000000 		.4byte	0
+ 2554 0541 00000000 		.4byte	0
+ 2555              	.LLST32:
+ 2556 0545 00000000 		.4byte	.LVL91
+ 2557 0549 33000000 		.4byte	.LVL107-1
+ 2558 054d 0100     		.2byte	0x1
+ 2559 054f 52       		.byte	0x52
+ 2560 0550 33000000 		.4byte	.LVL107-1
+ 2561 0554 38000000 		.4byte	.LFE58
+ 2562 0558 0400     		.2byte	0x4
+ 2563 055a F3       		.byte	0xf3
+ 2564 055b 01       		.uleb128 0x1
+ 2565 055c 52       		.byte	0x52
+ 2566 055d 9F       		.byte	0x9f
+ 2567 055e 00000000 		.4byte	0
+ 2568 0562 00000000 		.4byte	0
+ 2569              	.LLST33:
+ 2570 0566 00000000 		.4byte	.LVL91
+ 2571 056a 33000000 		.4byte	.LVL107-1
+ 2572 056e 0100     		.2byte	0x1
+ 2573 0570 53       		.byte	0x53
+ 2574 0571 33000000 		.4byte	.LVL107-1
+ 2575 0575 38000000 		.4byte	.LFE58
+ 2576 0579 0400     		.2byte	0x4
+ 2577 057b F3       		.byte	0xf3
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 57
+
+
+ 2578 057c 01       		.uleb128 0x1
+ 2579 057d 53       		.byte	0x53
+ 2580 057e 9F       		.byte	0x9f
+ 2581 057f 00000000 		.4byte	0
+ 2582 0583 00000000 		.4byte	0
+ 2583              	.LLST34:
+ 2584 0587 0C000000 		.4byte	.LVL93
+ 2585 058b 1A000000 		.4byte	.LVL98
+ 2586 058f 0100     		.2byte	0x1
+ 2587 0591 57       		.byte	0x57
+ 2588 0592 1A000000 		.4byte	.LVL98
+ 2589 0596 22000000 		.4byte	.LVL102
+ 2590 059a 0100     		.2byte	0x1
+ 2591 059c 55       		.byte	0x55
+ 2592 059d 22000000 		.4byte	.LVL102
+ 2593 05a1 26000000 		.4byte	.LVL103
+ 2594 05a5 0F00     		.2byte	0xf
+ 2595 05a7 91       		.byte	0x91
+ 2596 05a8 04       		.sleb128 4
+ 2597 05a9 06       		.byte	0x6
+ 2598 05aa 06       		.byte	0x6
+ 2599 05ab 40       		.byte	0x40
+ 2600 05ac 24       		.byte	0x24
+ 2601 05ad 40       		.byte	0x40
+ 2602 05ae 25       		.byte	0x25
+ 2603 05af 76       		.byte	0x76
+ 2604 05b0 00       		.sleb128 0
+ 2605 05b1 22       		.byte	0x22
+ 2606 05b2 77       		.byte	0x77
+ 2607 05b3 00       		.sleb128 0
+ 2608 05b4 22       		.byte	0x22
+ 2609 05b5 9F       		.byte	0x9f
+ 2610 05b6 26000000 		.4byte	.LVL103
+ 2611 05ba 2A000000 		.4byte	.LVL104
+ 2612 05be 0100     		.2byte	0x1
+ 2613 05c0 54       		.byte	0x54
+ 2614 05c1 2A000000 		.4byte	.LVL104
+ 2615 05c5 2E000000 		.4byte	.LVL105
+ 2616 05c9 2400     		.2byte	0x24
+ 2617 05cb 91       		.byte	0x91
+ 2618 05cc 04       		.sleb128 4
+ 2619 05cd 06       		.byte	0x6
+ 2620 05ce 06       		.byte	0x6
+ 2621 05cf 40       		.byte	0x40
+ 2622 05d0 24       		.byte	0x24
+ 2623 05d1 40       		.byte	0x40
+ 2624 05d2 25       		.byte	0x25
+ 2625 05d3 76       		.byte	0x76
+ 2626 05d4 00       		.sleb128 0
+ 2627 05d5 22       		.byte	0x22
+ 2628 05d6 77       		.byte	0x77
+ 2629 05d7 00       		.sleb128 0
+ 2630 05d8 22       		.byte	0x22
+ 2631 05d9 40       		.byte	0x40
+ 2632 05da 25       		.byte	0x25
+ 2633 05db 91       		.byte	0x91
+ 2634 05dc 04       		.sleb128 4
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 58
+
+
+ 2635 05dd 06       		.byte	0x6
+ 2636 05de 06       		.byte	0x6
+ 2637 05df 40       		.byte	0x40
+ 2638 05e0 24       		.byte	0x24
+ 2639 05e1 40       		.byte	0x40
+ 2640 05e2 25       		.byte	0x25
+ 2641 05e3 76       		.byte	0x76
+ 2642 05e4 00       		.sleb128 0
+ 2643 05e5 22       		.byte	0x22
+ 2644 05e6 77       		.byte	0x77
+ 2645 05e7 00       		.sleb128 0
+ 2646 05e8 22       		.byte	0x22
+ 2647 05e9 40       		.byte	0x40
+ 2648 05ea 24       		.byte	0x24
+ 2649 05eb 40       		.byte	0x40
+ 2650 05ec 25       		.byte	0x25
+ 2651 05ed 22       		.byte	0x22
+ 2652 05ee 9F       		.byte	0x9f
+ 2653 05ef 2E000000 		.4byte	.LVL105
+ 2654 05f3 36000000 		.4byte	.LVL108
+ 2655 05f7 0100     		.2byte	0x1
+ 2656 05f9 54       		.byte	0x54
+ 2657 05fa 00000000 		.4byte	0
+ 2658 05fe 00000000 		.4byte	0
+ 2659              	.LLST35:
+ 2660 0602 08000000 		.4byte	.LVL92
+ 2661 0606 0E000000 		.4byte	.LVL94
+ 2662 060a 0100     		.2byte	0x1
+ 2663 060c 56       		.byte	0x56
+ 2664 060d 0E000000 		.4byte	.LVL94
+ 2665 0611 12000000 		.4byte	.LVL96
+ 2666 0615 0200     		.2byte	0x2
+ 2667 0617 74       		.byte	0x74
+ 2668 0618 00       		.sleb128 0
+ 2669 0619 12000000 		.4byte	.LVL96
+ 2670 061d 14000000 		.4byte	.LVL97
+ 2671 0621 0300     		.2byte	0x3
+ 2672 0623 91       		.byte	0x91
+ 2673 0624 00       		.sleb128 0
+ 2674 0625 06       		.byte	0x6
+ 2675 0626 14000000 		.4byte	.LVL97
+ 2676 062a 1C000000 		.4byte	.LVL99
+ 2677 062e 0100     		.2byte	0x1
+ 2678 0630 56       		.byte	0x56
+ 2679 0631 1C000000 		.4byte	.LVL99
+ 2680 0635 20000000 		.4byte	.LVL101
+ 2681 0639 0200     		.2byte	0x2
+ 2682 063b 74       		.byte	0x74
+ 2683 063c 00       		.sleb128 0
+ 2684 063d 20000000 		.4byte	.LVL101
+ 2685 0641 30000000 		.4byte	.LVL106
+ 2686 0645 0300     		.2byte	0x3
+ 2687 0647 91       		.byte	0x91
+ 2688 0648 04       		.sleb128 4
+ 2689 0649 06       		.byte	0x6
+ 2690 064a 00000000 		.4byte	0
+ 2691 064e 00000000 		.4byte	0
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 59
+
+
+ 2692              	.LLST36:
+ 2693 0652 00000000 		.4byte	.LVL109
+ 2694 0656 0F000000 		.4byte	.LVL110-1
+ 2695 065a 0100     		.2byte	0x1
+ 2696 065c 50       		.byte	0x50
+ 2697 065d 0F000000 		.4byte	.LVL110-1
+ 2698 0661 14000000 		.4byte	.LFE59
+ 2699 0665 0400     		.2byte	0x4
+ 2700 0667 F3       		.byte	0xf3
+ 2701 0668 01       		.uleb128 0x1
+ 2702 0669 50       		.byte	0x50
+ 2703 066a 9F       		.byte	0x9f
+ 2704 066b 00000000 		.4byte	0
+ 2705 066f 00000000 		.4byte	0
+ 2706              	.LLST37:
+ 2707 0673 00000000 		.4byte	.LVL109
+ 2708 0677 0F000000 		.4byte	.LVL110-1
+ 2709 067b 0100     		.2byte	0x1
+ 2710 067d 51       		.byte	0x51
+ 2711 067e 0F000000 		.4byte	.LVL110-1
+ 2712 0682 14000000 		.4byte	.LFE59
+ 2713 0686 0400     		.2byte	0x4
+ 2714 0688 F3       		.byte	0xf3
+ 2715 0689 01       		.uleb128 0x1
+ 2716 068a 51       		.byte	0x51
+ 2717 068b 9F       		.byte	0x9f
+ 2718 068c 00000000 		.4byte	0
+ 2719 0690 00000000 		.4byte	0
+ 2720              	.LLST38:
+ 2721 0694 00000000 		.4byte	.LVL109
+ 2722 0698 0F000000 		.4byte	.LVL110-1
+ 2723 069c 0100     		.2byte	0x1
+ 2724 069e 52       		.byte	0x52
+ 2725 069f 0F000000 		.4byte	.LVL110-1
+ 2726 06a3 14000000 		.4byte	.LFE59
+ 2727 06a7 0400     		.2byte	0x4
+ 2728 06a9 F3       		.byte	0xf3
+ 2729 06aa 01       		.uleb128 0x1
+ 2730 06ab 52       		.byte	0x52
+ 2731 06ac 9F       		.byte	0x9f
+ 2732 06ad 00000000 		.4byte	0
+ 2733 06b1 00000000 		.4byte	0
+ 2734              	.LLST39:
+ 2735 06b5 00000000 		.4byte	.LVL109
+ 2736 06b9 0F000000 		.4byte	.LVL110-1
+ 2737 06bd 0100     		.2byte	0x1
+ 2738 06bf 53       		.byte	0x53
+ 2739 06c0 0F000000 		.4byte	.LVL110-1
+ 2740 06c4 14000000 		.4byte	.LFE59
+ 2741 06c8 0400     		.2byte	0x4
+ 2742 06ca F3       		.byte	0xf3
+ 2743 06cb 01       		.uleb128 0x1
+ 2744 06cc 53       		.byte	0x53
+ 2745 06cd 9F       		.byte	0x9f
+ 2746 06ce 00000000 		.4byte	0
+ 2747 06d2 00000000 		.4byte	0
+ 2748              	.LLST40:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 60
+
+
+ 2749 06d6 00000000 		.4byte	.LVL111
+ 2750 06da 05000000 		.4byte	.LVL112-1
+ 2751 06de 0100     		.2byte	0x1
+ 2752 06e0 50       		.byte	0x50
+ 2753 06e1 05000000 		.4byte	.LVL112-1
+ 2754 06e5 0C000000 		.4byte	.LFE60
+ 2755 06e9 0400     		.2byte	0x4
+ 2756 06eb F3       		.byte	0xf3
+ 2757 06ec 01       		.uleb128 0x1
+ 2758 06ed 50       		.byte	0x50
+ 2759 06ee 9F       		.byte	0x9f
+ 2760 06ef 00000000 		.4byte	0
+ 2761 06f3 00000000 		.4byte	0
+ 2762              	.LLST41:
+ 2763 06f7 00000000 		.4byte	.LVL111
+ 2764 06fb 05000000 		.4byte	.LVL112-1
+ 2765 06ff 0100     		.2byte	0x1
+ 2766 0701 51       		.byte	0x51
+ 2767 0702 05000000 		.4byte	.LVL112-1
+ 2768 0706 0C000000 		.4byte	.LFE60
+ 2769 070a 0400     		.2byte	0x4
+ 2770 070c F3       		.byte	0xf3
+ 2771 070d 01       		.uleb128 0x1
+ 2772 070e 51       		.byte	0x51
+ 2773 070f 9F       		.byte	0x9f
+ 2774 0710 00000000 		.4byte	0
+ 2775 0714 00000000 		.4byte	0
+ 2776              	.LLST42:
+ 2777 0718 00000000 		.4byte	.LVL113
+ 2778 071c 0A000000 		.4byte	.LVL115
+ 2779 0720 0100     		.2byte	0x1
+ 2780 0722 50       		.byte	0x50
+ 2781 0723 0A000000 		.4byte	.LVL115
+ 2782 0727 54000000 		.4byte	.LFE61
+ 2783 072b 0400     		.2byte	0x4
+ 2784 072d F3       		.byte	0xf3
+ 2785 072e 01       		.uleb128 0x1
+ 2786 072f 50       		.byte	0x50
+ 2787 0730 9F       		.byte	0x9f
+ 2788 0731 00000000 		.4byte	0
+ 2789 0735 00000000 		.4byte	0
+ 2790              	.LLST43:
+ 2791 0739 04000000 		.4byte	.LVL114
+ 2792 073d 0A000000 		.4byte	.LVL115
+ 2793 0741 0200     		.2byte	0x2
+ 2794 0743 30       		.byte	0x30
+ 2795 0744 9F       		.byte	0x9f
+ 2796 0745 0A000000 		.4byte	.LVL115
+ 2797 0749 14000000 		.4byte	.LVL117
+ 2798 074d 0100     		.2byte	0x1
+ 2799 074f 54       		.byte	0x54
+ 2800 0750 14000000 		.4byte	.LVL117
+ 2801 0754 18000000 		.4byte	.LVL118
+ 2802 0758 0100     		.2byte	0x1
+ 2803 075a 50       		.byte	0x50
+ 2804 075b 1C000000 		.4byte	.LVL119
+ 2805 075f 30000000 		.4byte	.LVL122
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 61
+
+
+ 2806 0763 0100     		.2byte	0x1
+ 2807 0765 54       		.byte	0x54
+ 2808 0766 36000000 		.4byte	.LVL123
+ 2809 076a 48000000 		.4byte	.LVL125
+ 2810 076e 0100     		.2byte	0x1
+ 2811 0770 54       		.byte	0x54
+ 2812 0771 4E000000 		.4byte	.LVL126
+ 2813 0775 52000000 		.4byte	.LVL127
+ 2814 0779 0100     		.2byte	0x1
+ 2815 077b 54       		.byte	0x54
+ 2816 077c 00000000 		.4byte	0
+ 2817 0780 00000000 		.4byte	0
+ 2818              	.LLST44:
+ 2819 0784 04000000 		.4byte	.LVL114
+ 2820 0788 0A000000 		.4byte	.LVL115
+ 2821 078c 0100     		.2byte	0x1
+ 2822 078e 50       		.byte	0x50
+ 2823 078f 0A000000 		.4byte	.LVL115
+ 2824 0793 52000000 		.4byte	.LVL128
+ 2825 0797 0100     		.2byte	0x1
+ 2826 0799 55       		.byte	0x55
+ 2827 079a 00000000 		.4byte	0
+ 2828 079e 00000000 		.4byte	0
+ 2829              	.LLST45:
+ 2830 07a2 04000000 		.4byte	.LVL114
+ 2831 07a6 0A000000 		.4byte	.LVL115
+ 2832 07aa 0200     		.2byte	0x2
+ 2833 07ac 30       		.byte	0x30
+ 2834 07ad 9F       		.byte	0x9f
+ 2835 07ae 0A000000 		.4byte	.LVL115
+ 2836 07b2 26000000 		.4byte	.LVL120
+ 2837 07b6 0100     		.2byte	0x1
+ 2838 07b8 56       		.byte	0x56
+ 2839 07b9 28000000 		.4byte	.LVL121
+ 2840 07bd 52000000 		.4byte	.LVL129
+ 2841 07c1 0100     		.2byte	0x1
+ 2842 07c3 56       		.byte	0x56
+ 2843 07c4 00000000 		.4byte	0
+ 2844 07c8 00000000 		.4byte	0
+ 2845              		.section	.debug_aranges,"",%progbits
+ 2846 0000 5C000000 		.4byte	0x5c
+ 2847 0004 0200     		.2byte	0x2
+ 2848 0006 00000000 		.4byte	.Ldebug_info0
+ 2849 000a 04       		.byte	0x4
+ 2850 000b 00       		.byte	0
+ 2851 000c 0000     		.2byte	0
+ 2852 000e 0000     		.2byte	0
+ 2853 0010 00000000 		.4byte	.LFB53
+ 2854 0014 66000000 		.4byte	.LFE53-.LFB53
+ 2855 0018 00000000 		.4byte	.LFB54
+ 2856 001c 7E000000 		.4byte	.LFE54-.LFB54
+ 2857 0020 00000000 		.4byte	.LFB57
+ 2858 0024 A0000000 		.4byte	.LFE57-.LFB57
+ 2859 0028 00000000 		.4byte	.LFB55
+ 2860 002c 30000000 		.4byte	.LFE55-.LFB55
+ 2861 0030 00000000 		.4byte	.LFB56
+ 2862 0034 10000000 		.4byte	.LFE56-.LFB56
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 62
+
+
+ 2863 0038 00000000 		.4byte	.LFB58
+ 2864 003c 38000000 		.4byte	.LFE58-.LFB58
+ 2865 0040 00000000 		.4byte	.LFB59
+ 2866 0044 14000000 		.4byte	.LFE59-.LFB59
+ 2867 0048 00000000 		.4byte	.LFB60
+ 2868 004c 0C000000 		.4byte	.LFE60-.LFB60
+ 2869 0050 00000000 		.4byte	.LFB61
+ 2870 0054 54000000 		.4byte	.LFE61-.LFB61
+ 2871 0058 00000000 		.4byte	0
+ 2872 005c 00000000 		.4byte	0
+ 2873              		.section	.debug_ranges,"",%progbits
+ 2874              	.Ldebug_ranges0:
+ 2875 0000 00000000 		.4byte	.LFB53
+ 2876 0004 66000000 		.4byte	.LFE53
+ 2877 0008 00000000 		.4byte	.LFB54
+ 2878 000c 7E000000 		.4byte	.LFE54
+ 2879 0010 00000000 		.4byte	.LFB57
+ 2880 0014 A0000000 		.4byte	.LFE57
+ 2881 0018 00000000 		.4byte	.LFB55
+ 2882 001c 30000000 		.4byte	.LFE55
+ 2883 0020 00000000 		.4byte	.LFB56
+ 2884 0024 10000000 		.4byte	.LFE56
+ 2885 0028 00000000 		.4byte	.LFB58
+ 2886 002c 38000000 		.4byte	.LFE58
+ 2887 0030 00000000 		.4byte	.LFB59
+ 2888 0034 14000000 		.4byte	.LFE59
+ 2889 0038 00000000 		.4byte	.LFB60
+ 2890 003c 0C000000 		.4byte	.LFE60
+ 2891 0040 00000000 		.4byte	.LFB61
+ 2892 0044 54000000 		.4byte	.LFE61
+ 2893 0048 00000000 		.4byte	0
+ 2894 004c 00000000 		.4byte	0
+ 2895              		.section	.debug_line,"",%progbits
+ 2896              	.Ldebug_line0:
+ 2897 0000 E7020000 		.section	.debug_str,"MS",%progbits,1
+ 2897      0200B401 
+ 2897      00000201 
+ 2897      FB0E0D00 
+ 2897      01010101 
+ 2898              	.LASF46:
+ 2899 0000 696E6574 		.ascii	"inet_chksum_pbuf\000"
+ 2899      5F63686B 
+ 2899      73756D5F 
+ 2899      70627566 
+ 2899      00
+ 2900              	.LASF21:
+ 2901 0011 6E657874 		.ascii	"next\000"
+ 2901      00
+ 2902              	.LASF20:
+ 2903 0016 6D656D5F 		.ascii	"mem_ptr_t\000"
+ 2903      7074725F 
+ 2903      7400
+ 2904              	.LASF23:
+ 2905 0020 746F745F 		.ascii	"tot_len\000"
+ 2905      6C656E00 
+ 2906              	.LASF12:
+ 2907 0028 5F5F696E 		.ascii	"__intptr_t\000"
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 63
+
+
+ 2907      74707472 
+ 2907      5F7400
+ 2908              	.LASF38:
+ 2909 0033 63686B6C 		.ascii	"chklen\000"
+ 2909      656E00
+ 2910              	.LASF3:
+ 2911 003a 73686F72 		.ascii	"short unsigned int\000"
+ 2911      7420756E 
+ 2911      7369676E 
+ 2911      65642069 
+ 2911      6E7400
+ 2912              	.LASF39:
+ 2913 004d 6C776970 		.ascii	"lwip_standard_chksum\000"
+ 2913      5F737461 
+ 2913      6E646172 
+ 2913      645F6368 
+ 2913      6B73756D 
+ 2914              	.LASF27:
+ 2915 0062 6970345F 		.ascii	"ip4_addr\000"
+ 2915      61646472 
+ 2915      00
+ 2916              	.LASF33:
+ 2917 006b 70726F74 		.ascii	"proto_len\000"
+ 2917      6F5F6C65 
+ 2917      6E00
+ 2918              	.LASF15:
+ 2919 0075 646F7562 		.ascii	"double\000"
+ 2919      6C6500
+ 2920              	.LASF50:
+ 2921 007c 6C776970 		.ascii	"lwip_htons\000"
+ 2921      5F68746F 
+ 2921      6E7300
+ 2922              	.LASF49:
+ 2923 0087 433A5C55 		.ascii	"C:\\Users\\Phuong\\Documents\\PSoC Creator\\Dec0820"
+ 2923      73657273 
+ 2923      5C506875 
+ 2923      6F6E675C 
+ 2923      446F6375 
+ 2924 00b5 31385C69 		.ascii	"18\\iot-sdk-iot-dev\\PSOC6_FreeRTOS+LwIP+MbedTLS_Az"
+ 2924      6F742D73 
+ 2924      646B2D69 
+ 2924      6F742D64 
+ 2924      65765C50 
+ 2925 00e6 7572652D 		.ascii	"ure-IOT-Hub-Demo\\PSOC6_FreeRTOS+LwIP+MbedTLS_Azure"
+ 2925      494F542D 
+ 2925      4875622D 
+ 2925      44656D6F 
+ 2925      5C50534F 
+ 2926 0118 2D494F54 		.ascii	"-IOT-Hub-Demo.cydsn\000"
+ 2926      2D487562 
+ 2926      2D44656D 
+ 2926      6F2E6379 
+ 2926      64736E00 
+ 2927              	.LASF37:
+ 2928 012c 63686B73 		.ascii	"chksum_len\000"
+ 2928      756D5F6C 
+ 2928      656E00
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 64
+
+
+ 2929              	.LASF14:
+ 2930 0137 666C6F61 		.ascii	"float\000"
+ 2930      7400
+ 2931              	.LASF41:
+ 2932 013d 64657374 		.ascii	"dest\000"
+ 2932      00
+ 2933              	.LASF34:
+ 2934 0142 73776170 		.ascii	"swapped\000"
+ 2934      70656400 
+ 2935              	.LASF1:
+ 2936 014a 756E7369 		.ascii	"unsigned char\000"
+ 2936      676E6564 
+ 2936      20636861 
+ 2936      7200
+ 2937              	.LASF48:
+ 2938 0158 536F7572 		.ascii	"Source\\LwIP\\src\\core\\inet_chksum.c\000"
+ 2938      63655C4C 
+ 2938      7749505C 
+ 2938      7372635C 
+ 2938      636F7265 
+ 2939              	.LASF44:
+ 2940 017b 69705F63 		.ascii	"ip_chksum_pseudo_partial\000"
+ 2940      686B7375 
+ 2940      6D5F7073 
+ 2940      6575646F 
+ 2940      5F706172 
+ 2941              	.LASF5:
+ 2942 0194 6C6F6E67 		.ascii	"long unsigned int\000"
+ 2942      20756E73 
+ 2942      69676E65 
+ 2942      6420696E 
+ 2942      7400
+ 2943              	.LASF28:
+ 2944 01a6 61646472 		.ascii	"addr\000"
+ 2944      00
+ 2945              	.LASF43:
+ 2946 01ab 696E6574 		.ascii	"inet_chksum_pseudo_partial\000"
+ 2946      5F63686B 
+ 2946      73756D5F 
+ 2946      70736575 
+ 2946      646F5F70 
+ 2947              	.LASF31:
+ 2948 01c6 64617461 		.ascii	"dataptr\000"
+ 2948      70747200 
+ 2949              	.LASF42:
+ 2950 01ce 69705F63 		.ascii	"ip_chksum_pseudo\000"
+ 2950      686B7375 
+ 2950      6D5F7073 
+ 2950      6575646F 
+ 2950      00
+ 2951              	.LASF17:
+ 2952 01df 7531365F 		.ascii	"u16_t\000"
+ 2952      7400
+ 2953              	.LASF19:
+ 2954 01e5 7533325F 		.ascii	"u32_t\000"
+ 2954      7400
+ 2955              	.LASF35:
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 65
+
+
+ 2956 01eb 696E6574 		.ascii	"inet_cksum_pseudo_base\000"
+ 2956      5F636B73 
+ 2956      756D5F70 
+ 2956      73657564 
+ 2956      6F5F6261 
+ 2957              	.LASF30:
+ 2958 0202 69705F61 		.ascii	"ip_addr_t\000"
+ 2958      6464725F 
+ 2958      7400
+ 2959              	.LASF13:
+ 2960 020c 696E7470 		.ascii	"intptr_t\000"
+ 2960      74725F74 
+ 2960      00
+ 2961              	.LASF8:
+ 2962 0215 756E7369 		.ascii	"unsigned int\000"
+ 2962      676E6564 
+ 2962      20696E74 
+ 2962      00
+ 2963              	.LASF25:
+ 2964 0222 666C6167 		.ascii	"flags\000"
+ 2964      7300
+ 2965              	.LASF29:
+ 2966 0228 6970345F 		.ascii	"ip4_addr_t\000"
+ 2966      61646472 
+ 2966      5F7400
+ 2967              	.LASF7:
+ 2968 0233 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 2968      206C6F6E 
+ 2968      6720756E 
+ 2968      7369676E 
+ 2968      65642069 
+ 2969              	.LASF16:
+ 2970 024a 75385F74 		.ascii	"u8_t\000"
+ 2970      00
+ 2971              	.LASF40:
+ 2972 024f 696E6574 		.ascii	"inet_chksum_pseudo\000"
+ 2972      5F63686B 
+ 2972      73756D5F 
+ 2972      70736575 
+ 2972      646F00
+ 2973              	.LASF22:
+ 2974 0262 7061796C 		.ascii	"payload\000"
+ 2974      6F616400 
+ 2975              	.LASF10:
+ 2976 026a 73697A65 		.ascii	"sizetype\000"
+ 2976      74797065 
+ 2976      00
+ 2977              	.LASF6:
+ 2978 0273 6C6F6E67 		.ascii	"long long int\000"
+ 2978      206C6F6E 
+ 2978      6720696E 
+ 2978      7400
+ 2979              	.LASF36:
+ 2980 0281 696E6574 		.ascii	"inet_cksum_pseudo_partial_base\000"
+ 2980      5F636B73 
+ 2980      756D5F70 
+ 2980      73657564 
+ARM GAS  C:\Users\Phuong\AppData\Local\Temp\ccG70vIr.s 			page 66
+
+
+ 2980      6F5F7061 
+ 2981              	.LASF26:
+ 2982 02a0 70627566 		.ascii	"pbuf\000"
+ 2982      00
+ 2983              	.LASF45:
+ 2984 02a5 696E6574 		.ascii	"inet_chksum\000"
+ 2984      5F63686B 
+ 2984      73756D00 
+ 2985              	.LASF24:
+ 2986 02b1 74797065 		.ascii	"type\000"
+ 2986      00
+ 2987              	.LASF2:
+ 2988 02b6 73686F72 		.ascii	"short int\000"
+ 2988      7420696E 
+ 2988      7400
+ 2989              	.LASF18:
+ 2990 02c0 7331365F 		.ascii	"s16_t\000"
+ 2990      7400
+ 2991              	.LASF4:
+ 2992 02c6 6C6F6E67 		.ascii	"long int\000"
+ 2992      20696E74 
+ 2992      00
+ 2993              	.LASF11:
+ 2994 02cf 63686172 		.ascii	"char\000"
+ 2994      00
+ 2995              	.LASF9:
+ 2996 02d4 6C6F6E67 		.ascii	"long double\000"
+ 2996      20646F75 
+ 2996      626C6500 
+ 2997              	.LASF47:
+ 2998 02e0 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 2998      43313120 
+ 2998      352E342E 
+ 2998      31203230 
+ 2998      31363036 
+ 2999 0313 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0plus -mthumb -"
+ 2999      20726576 
+ 2999      6973696F 
+ 2999      6E203233 
+ 2999      37373135 
+ 3000 0346 67202D4F 		.ascii	"g -Og -ffunction-sections -ffat-lto-objects\000"
+ 3000      67202D66 
+ 3000      66756E63 
+ 3000      74696F6E 
+ 3000      2D736563 
+ 3001              	.LASF0:
+ 3002 0372 7369676E 		.ascii	"signed char\000"
+ 3002      65642063 
+ 3002      68617200 
+ 3003              	.LASF32:
+ 3004 037e 70726F74 		.ascii	"proto\000"
+ 3004      6F00
+ 3005              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

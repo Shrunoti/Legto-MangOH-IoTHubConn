@@ -1,0 +1,68 @@
+\hypertarget{daemon_8c}{}\section{framework/liblegato/linux/daemon.c File Reference}
+\label{daemon_8c}\index{framework/liblegato/linux/daemon.\+c@{framework/liblegato/linux/daemon.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}daemon.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{daemon_8c_ada02dd176247368f485bbccf80e4809b}{Redirect\+Stderr} (const char $\ast$file\+Path\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{daemon_8c_a000749784b7cc8dff239042311ab2852}{daemon\+\_\+\+Daemonize} (uint timeout\+Ms)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Implementation of process daemonization.
+
+Copyright (C), Sierra Wireless Inc. 
+
+\subsection{Function Documentation}
+\index{daemon.\+c@{daemon.\+c}!daemon\+\_\+\+Daemonize@{daemon\+\_\+\+Daemonize}}
+\index{daemon\+\_\+\+Daemonize@{daemon\+\_\+\+Daemonize}!daemon.\+c@{daemon.\+c}}
+\subsubsection[{\texorpdfstring{daemon\+\_\+\+Daemonize(uint timeout\+Ms)}{daemon_Daemonize(uint timeoutMs)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} daemon\+\_\+\+Daemonize (
+\begin{DoxyParamCaption}
+\item[{uint}]{timeout\+Ms}
+\end{DoxyParamCaption}
+)}\hypertarget{daemon_8c_a000749784b7cc8dff239042311ab2852}{}\label{daemon_8c_a000749784b7cc8dff239042311ab2852}
+Daemonizes the calling process.
+
+This function only returns in the child process. In the parent, it waits until the child process its stdin, then terminates itself with a 0 (E\+X\+I\+T\+\_\+\+S\+U\+C\+C\+E\+SS) exit code.
+
+The child process should use code like the following to close stdin and reopen it to /dev/null when it wants the parent process to exit.
+
+
+\begin{DoxyCode}
+1 LE\_FATAL\_IF(freopen("/dev/null", "r", stdin) == NULL,
+2             "Failed to redirect stdin to /dev/null.  %m.");
+\end{DoxyCode}
+
+
+If anything goes wrong, a fatal error is logged and the process exits with E\+X\+I\+T\+\_\+\+F\+A\+I\+L\+U\+RE.
+
+If the parent times out, it logs a warning message and exits with E\+X\+I\+T\+\_\+\+S\+U\+C\+C\+E\+SS. 
+\begin{DoxyParams}{Parameters}
+{\em timeout\+Ms} & Max time to wait for child to close its stdin (in millisecs). -\/1 = forever. \\
+\hline
+\end{DoxyParams}
+\index{daemon.\+c@{daemon.\+c}!Redirect\+Stderr@{Redirect\+Stderr}}
+\index{Redirect\+Stderr@{Redirect\+Stderr}!daemon.\+c@{daemon.\+c}}
+\subsubsection[{\texorpdfstring{Redirect\+Stderr(const char $\ast$file\+Path\+Ptr)}{RedirectStderr(const char *filePathPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Redirect\+Stderr (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{file\+Path\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{daemon_8c_ada02dd176247368f485bbccf80e4809b}{}\label{daemon_8c_ada02dd176247368f485bbccf80e4809b}
+Redirect stderr to file specified in parameter.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if successful.
+\item L\+E\+\_\+\+F\+A\+U\+LT otherwise. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em file\+Path\+Ptr} & File path where stderr should be redirected. \\
+\hline
+\end{DoxyParams}

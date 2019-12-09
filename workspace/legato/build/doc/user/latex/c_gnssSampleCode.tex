@@ -1,0 +1,1376 @@
+
+\begin{DoxyCodeInclude}
+\textcolor{comment}{ /**}
+\textcolor{comment}{  * This module implements a test for GNSS device starting.}
+\textcolor{comment}{  *}
+\textcolor{comment}{  * Copyright (C) Sierra Wireless Inc.}
+\textcolor{comment}{  *}
+\textcolor{comment}{  */}
+
+\textcolor{preprocessor}{#include "\hyperlink{legato_8h}{legato.h}"}
+\textcolor{preprocessor}{#include "interfaces.h"}
+
+\textcolor{comment}{// Include macros for printing out values}
+\textcolor{preprocessor}{#include "\hyperlink{le__print_8h}{le\_print.h}"}
+
+\textcolor{keyword}{static} \hyperlink{le__gnss__interface_8h_a55a27b330b348c8d78073fe0e3e784eb}{le\_gnss\_PositionHandlerRef\_t} PositionHandlerRef = NULL;
+
+\textcolor{comment}{//Wait up to 60 seconds for a 3D fix}
+\textcolor{preprocessor}{#define WAIT\_MAX\_FOR\_3DFIX  60}
+
+\textcolor{comment}{// Unknown constallation bitmask}
+\textcolor{preprocessor}{#define UNKNOWN\_CONSTELLATION  0x80}
+
+\textcolor{keywordtype}{char} ShortSuplCertificate[50]=\{0\};
+
+\textcolor{comment}{// The epoch time is the number of seconds elapsed since January 1, 1970}
+\textcolor{comment}{// not counting leaps seconds.}
+\textcolor{keyword}{static} uint64\_t EpochTime=0;
+\textcolor{comment}{// Time uncertainty in Milliseconds}
+\textcolor{keyword}{static} uint32\_t TimeAccuracy=0;
+
+\textcolor{comment}{// DOP resolution}
+\textcolor{keyword}{static} \hyperlink{le__gnss__interface_8h_aaf5d256c75737a2189c8da7bfed5da0d}{le\_gnss\_Resolution\_t} DopRes = 
+      \hyperlink{le__gnss__interface_8h_aaf5d256c75737a2189c8da7bfed5da0da4c6bce2bb0595f9683e7333ce637cb5c}{LE\_GNSS\_RES\_THREE\_DECIMAL};
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{comment}{//                                       Test Functions}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{comment}{}
+\textcolor{comment}{//! [GnssEnable]}
+\textcolor{comment}{}\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: Legato GNSS functions.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} TestLeGnssDevice
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    uint32\_t ttffValue;
+    uint32\_t acqRate;
+    uint8\_t  minElevation;
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result;
+
+    \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efc}{le\_gnss\_ConstellationBitMask\_t} constellationMask;
+    \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4}{le\_gnss\_NmeaBitMask\_t} nmeaMask = 0;
+    \hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3d}{le\_gnss\_ConstellationArea\_t} constellationArea;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start Test Testle\_gnss\_DeviceTest"});
+    \textcolor{comment}{// GNSS device enabled by default}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a097601f67898305de45d190e857c6b55}{le\_gnss\_GetState}()) == 
+      \hyperlink{le__gnss__interface_8h_a9afbfc8305e79ba6c12f89e2fe9bab7daba105da38c57efe1ee610d92bdfc9d8a}{LE\_GNSS\_STATE\_READY});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a8e1d96b1b64055b298a74cad1acfbbf8}{le\_gnss\_Enable}()) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac26034778a666ee720b110c2fb1647ea}{LE\_DUPLICATE});
+    \textcolor{comment}{// Disable GNSS device (DISABLED state)}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_aa2cd87c616f968370e9e2113570437ea}{le\_gnss\_Disable}()) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_aa2cd87c616f968370e9e2113570437ea}{le\_gnss\_Disable}()) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac26034778a666ee720b110c2fb1647ea}{LE\_DUPLICATE});
+    \textcolor{comment}{// Check Disabled state}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a097601f67898305de45d190e857c6b55}{le\_gnss\_GetState}()) == 
+      \hyperlink{le__gnss__interface_8h_a9afbfc8305e79ba6c12f89e2fe9bab7da35b704f64b7bf50e24cbd46357df4485}{LE\_GNSS\_STATE\_DISABLED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_add90639835a531c4b9d15554e4f3ba16}{le\_gnss\_Start}()) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a29ff5b1e5bada1a9d15d19b3a0d2d4d1}{le\_gnss\_ForceHotRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a1f5b3008db50d34c7962fb73c306f3d1}{le\_gnss\_ForceWarmRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_aa702703bbeebbefd65dd51b1f9fd4ce5}{le\_gnss\_ForceColdRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a18219097f3e8c8e6e613462a5467f546}{le\_gnss\_ForceFactoryRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a6b2fbb3902c9fd3336b5940b2abacb12}{le\_gnss\_GetTtff}(&ttffValue)) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a93d63fdc76dbced071956b87de2abff7}{le\_gnss\_Stop}()) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(
+      \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS})) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a150835481ab3751e3ab1821362e34e84}{le\_gnss\_GetConstellation}(&constellationMask)) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED} == (
+      \hyperlink{le__gnss__interface_8h_a954fcc8ecae822195e30a2af5e93fd0e}{le\_gnss\_SetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9ac6f47b9be468f8cda7beda6afe0e1324}{LE\_GNSS\_SV\_CONSTELLATION\_GPS},
+                                                                
+      \hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3dacb2cc82376d1eee7b25dc169e856fef0}{LE\_GNSS\_WORLDWIDE\_AREA})));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED} == (
+      \hyperlink{le__gnss__interface_8h_a2904b06453428ad1d71609f06b440e08}{le\_gnss\_GetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9ac6f47b9be468f8cda7beda6afe0e1324}{LE\_GNSS\_SV\_CONSTELLATION\_GPS},
+                                                                &constellationArea)));
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED} == (
+      \hyperlink{le__gnss__interface_8h_a954fcc8ecae822195e30a2af5e93fd0e}{le\_gnss\_SetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9ab349eed6d7964f39ae97645bd84c219c}{LE\_GNSS\_SV\_CONSTELLATION\_GLONASS},
+                                                                
+      \hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3dacb2cc82376d1eee7b25dc169e856fef0}{LE\_GNSS\_WORLDWIDE\_AREA})));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED} == (
+      \hyperlink{le__gnss__interface_8h_a2904b06453428ad1d71609f06b440e08}{le\_gnss\_GetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9ab349eed6d7964f39ae97645bd84c219c}{LE\_GNSS\_SV\_CONSTELLATION\_GLONASS},
+                                                                &constellationArea)));
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_acfa9b25ac13f601921bd9123a1d0daba}{le\_gnss\_GetAcquisitionRate}(&acqRate)) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    result = \hyperlink{le__gnss__interface_8h_a75d96ec7ac6e0d6b58525e4c523d3b2c}{le\_gnss\_SetAcquisitionRate}(acqRate);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})||(result == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE}));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(nmeaMask)) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask)) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+
+    \textcolor{comment}{// test le\_gnss\_Get/SetMinElevation when GNSS device is disabled and the engine is not started.}
+    minElevation = 40;
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a78982eb8669530eef1bbc79ff79347e4}{le\_gnss\_SetMinElevation}(minElevation)) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_ad8476e020a2eb0188703e78eed5818da}{le\_gnss\_GetMinElevation}(&minElevation)) == LE\_OK);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"GNSS min elevation obtained: %d"},minElevation);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(minElevation == 40);
+
+    \textcolor{comment}{// Enable GNSS device (READY state)}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a8e1d96b1b64055b298a74cad1acfbbf8}{le\_gnss\_Enable}()) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a097601f67898305de45d190e857c6b55}{le\_gnss\_GetState}()) == 
+      \hyperlink{le__gnss__interface_8h_a9afbfc8305e79ba6c12f89e2fe9bab7daba105da38c57efe1ee610d92bdfc9d8a}{LE\_GNSS\_STATE\_READY});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_aa2cd87c616f968370e9e2113570437ea}{le\_gnss\_Disable}()) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a097601f67898305de45d190e857c6b55}{le\_gnss\_GetState}()) == 
+      \hyperlink{le__gnss__interface_8h_a9afbfc8305e79ba6c12f89e2fe9bab7da35b704f64b7bf50e24cbd46357df4485}{LE\_GNSS\_STATE\_DISABLED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a8e1d96b1b64055b298a74cad1acfbbf8}{le\_gnss\_Enable}()) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a097601f67898305de45d190e857c6b55}{le\_gnss\_GetState}()) == 
+      \hyperlink{le__gnss__interface_8h_a9afbfc8305e79ba6c12f89e2fe9bab7daba105da38c57efe1ee610d92bdfc9d8a}{LE\_GNSS\_STATE\_READY});
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(
+      \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a150835481ab3751e3ab1821362e34e84}{le\_gnss\_GetConstellation}(&constellationMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(constellationMask == \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS});
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cabe505065132f6e8850da6f476d8fb783}{LE\_BAD\_PARAMETER} == (
+      \hyperlink{le__gnss__interface_8h_a954fcc8ecae822195e30a2af5e93fd0e}{le\_gnss\_SetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9af8c46789e88c3fa8a3c6d8e2661e7844}{LE\_GNSS\_SV\_CONSTELLATION\_GALILEO},
+                                                                
+      \hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3da52d6e610f024102cbdef30accf248c45}{LE\_GNSS\_UNSET\_AREA})));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a954fcc8ecae822195e30a2af5e93fd0e}{le\_gnss\_SetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9af8c46789e88c3fa8a3c6d8e2661e7844}{LE\_GNSS\_SV\_CONSTELLATION\_GALILEO},
+                                              \hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3da39a95a5a06e051b523727732b6d1f8c4}{LE\_GNSS\_OUTSIDE\_US\_AREA}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a2904b06453428ad1d71609f06b440e08}{le\_gnss\_GetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9af8c46789e88c3fa8a3c6d8e2661e7844}{LE\_GNSS\_SV\_CONSTELLATION\_GALILEO},
+                                              &constellationArea));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3da39a95a5a06e051b523727732b6d1f8c4}{LE\_GNSS\_OUTSIDE\_US\_AREA} == constellationArea);
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a954fcc8ecae822195e30a2af5e93fd0e}{le\_gnss\_SetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9af8c46789e88c3fa8a3c6d8e2661e7844}{LE\_GNSS\_SV\_CONSTELLATION\_GALILEO},
+                                              \hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3dacb2cc82376d1eee7b25dc169e856fef0}{LE\_GNSS\_WORLDWIDE\_AREA}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a2904b06453428ad1d71609f06b440e08}{le\_gnss\_GetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9af8c46789e88c3fa8a3c6d8e2661e7844}{LE\_GNSS\_SV\_CONSTELLATION\_GALILEO},
+                                              &constellationArea));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3dacb2cc82376d1eee7b25dc169e856fef0}{LE\_GNSS\_WORLDWIDE\_AREA} == constellationArea);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a93d63fdc76dbced071956b87de2abff7}{le\_gnss\_Stop}()) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac26034778a666ee720b110c2fb1647ea}{LE\_DUPLICATE});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a29ff5b1e5bada1a9d15d19b3a0d2d4d1}{le\_gnss\_ForceHotRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a1f5b3008db50d34c7962fb73c306f3d1}{le\_gnss\_ForceWarmRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_aa702703bbeebbefd65dd51b1f9fd4ce5}{le\_gnss\_ForceColdRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a18219097f3e8c8e6e613462a5467f546}{le\_gnss\_ForceFactoryRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_acfa9b25ac13f601921bd9123a1d0daba}{le\_gnss\_GetAcquisitionRate}(&acqRate)) == LE\_OK);
+    acqRate = 0;
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a75d96ec7ac6e0d6b58525e4c523d3b2c}{le\_gnss\_SetAcquisitionRate}(acqRate)) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE});
+    acqRate = 1100;
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a75d96ec7ac6e0d6b58525e4c523d3b2c}{le\_gnss\_SetAcquisitionRate}(acqRate)) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask)) == LE\_OK);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"NMEA mask: %x"},nmeaMask);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(nmeaMask)) == LE\_OK);
+
+    \textcolor{comment}{// test le\_gnss\_Get/SetMinElevation when GNSS device is enabled and the engine is not started.}
+    minElevation = 0;
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a78982eb8669530eef1bbc79ff79347e4}{le\_gnss\_SetMinElevation}(minElevation)) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_ad8476e020a2eb0188703e78eed5818da}{le\_gnss\_GetMinElevation}(&minElevation)) == LE\_OK);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"GNSS min elevation obtained: %d"},minElevation);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(minElevation == 0);
+
+    \textcolor{comment}{// Start GNSS device (ACTIVE state)}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_add90639835a531c4b9d15554e4f3ba16}{le\_gnss\_Start}()) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a097601f67898305de45d190e857c6b55}{le\_gnss\_GetState}()) == 
+      \hyperlink{le__gnss__interface_8h_a9afbfc8305e79ba6c12f89e2fe9bab7da7405696d29345255b3a5d3bfe9e410c1}{LE\_GNSS\_STATE\_ACTIVE});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_add90639835a531c4b9d15554e4f3ba16}{le\_gnss\_Start}()) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac26034778a666ee720b110c2fb1647ea}{LE\_DUPLICATE});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a8e1d96b1b64055b298a74cad1acfbbf8}{le\_gnss\_Enable}()) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac26034778a666ee720b110c2fb1647ea}{LE\_DUPLICATE});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_aa2cd87c616f968370e9e2113570437ea}{le\_gnss\_Disable}()) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(
+      \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS})) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a150835481ab3751e3ab1821362e34e84}{le\_gnss\_GetConstellation}(&constellationMask)) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_acfa9b25ac13f601921bd9123a1d0daba}{le\_gnss\_GetAcquisitionRate}(&acqRate)) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    result = \hyperlink{le__gnss__interface_8h_a75d96ec7ac6e0d6b58525e4c523d3b2c}{le\_gnss\_SetAcquisitionRate}(acqRate);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED})||(result == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE}));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(nmeaMask)) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask)) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+
+    \textcolor{comment}{// test le\_gnss\_Get/SetMinElevation when le\_gnss\_ENABLE ON and le\_gnss\_Start ON}
+    minElevation = \hyperlink{le__gnss__interface_8h_a572e640b32639643c838350241f99b22}{LE\_GNSS\_MIN\_ELEVATION\_MAX\_DEGREE};
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a78982eb8669530eef1bbc79ff79347e4}{le\_gnss\_SetMinElevation}(minElevation)) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_ad8476e020a2eb0188703e78eed5818da}{le\_gnss\_GetMinElevation}(&minElevation)) == LE\_OK);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"GNSS min elevation obtained: %d"},minElevation);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(minElevation == \hyperlink{le__gnss__interface_8h_a572e640b32639643c838350241f99b22}{LE\_GNSS\_MIN\_ELEVATION\_MAX\_DEGREE});
+
+    \textcolor{comment}{// test le\_gnss\_SetMinElevation wrong value (when le\_gnss\_ENABLE ON and le\_gnss\_Start ON)}
+    minElevation = \hyperlink{le__gnss__interface_8h_a572e640b32639643c838350241f99b22}{LE\_GNSS\_MIN\_ELEVATION\_MAX\_DEGREE}+1;
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a78982eb8669530eef1bbc79ff79347e4}{le\_gnss\_SetMinElevation}(minElevation)) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE});
+
+    \textcolor{comment}{// Stop GNSS device (READY state)}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a93d63fdc76dbced071956b87de2abff7}{le\_gnss\_Stop}()) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a097601f67898305de45d190e857c6b55}{le\_gnss\_GetState}()) == 
+      \hyperlink{le__gnss__interface_8h_a9afbfc8305e79ba6c12f89e2fe9bab7daba105da38c57efe1ee610d92bdfc9d8a}{LE\_GNSS\_STATE\_READY});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a8e1d96b1b64055b298a74cad1acfbbf8}{le\_gnss\_Enable}()) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac26034778a666ee720b110c2fb1647ea}{LE\_DUPLICATE});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_aa2cd87c616f968370e9e2113570437ea}{le\_gnss\_Disable}()) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a097601f67898305de45d190e857c6b55}{le\_gnss\_GetState}()) == 
+      \hyperlink{le__gnss__interface_8h_a9afbfc8305e79ba6c12f89e2fe9bab7da35b704f64b7bf50e24cbd46357df4485}{LE\_GNSS\_STATE\_DISABLED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a8e1d96b1b64055b298a74cad1acfbbf8}{le\_gnss\_Enable}()) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a097601f67898305de45d190e857c6b55}{le\_gnss\_GetState}()) == 
+      \hyperlink{le__gnss__interface_8h_a9afbfc8305e79ba6c12f89e2fe9bab7daba105da38c57efe1ee610d92bdfc9d8a}{LE\_GNSS\_STATE\_READY});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(
+      \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS})) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a150835481ab3751e3ab1821362e34e84}{le\_gnss\_GetConstellation}(&constellationMask)) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(constellationMask == \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a93d63fdc76dbced071956b87de2abff7}{le\_gnss\_Stop}()) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac26034778a666ee720b110c2fb1647ea}{LE\_DUPLICATE});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a29ff5b1e5bada1a9d15d19b3a0d2d4d1}{le\_gnss\_ForceHotRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a1f5b3008db50d34c7962fb73c306f3d1}{le\_gnss\_ForceWarmRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_aa702703bbeebbefd65dd51b1f9fd4ce5}{le\_gnss\_ForceColdRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a18219097f3e8c8e6e613462a5467f546}{le\_gnss\_ForceFactoryRestart}()) == 
+      \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac6c0cac62213b786dabd7bf3e73bcec1}{LE\_NOT\_PERMITTED});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_acfa9b25ac13f601921bd9123a1d0daba}{le\_gnss\_GetAcquisitionRate}(&acqRate)) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a75d96ec7ac6e0d6b58525e4c523d3b2c}{le\_gnss\_SetAcquisitionRate}(acqRate)) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask)) == LE\_OK);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(nmeaMask)) == LE\_OK);
+\}\textcolor{comment}{}
+\textcolor{comment}{//! [GnssEnable]}
+\textcolor{comment}{}\textcolor{comment}{}
+\textcolor{comment}{//! [GnssPosition]}
+\textcolor{comment}{}\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Handler function for Position Notifications.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} PositionHandlerFunction
+(
+    \hyperlink{le__gnss__interface_8h_ac9577035f26d6b7f48615670eb72102a}{le\_gnss\_SampleRef\_t} positionSampleRef,
+    \textcolor{keywordtype}{void}* contextPtr
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result;
+    \textcolor{comment}{// Date parameters}
+    uint16\_t year;
+    uint16\_t month;
+    uint16\_t day;
+    \textcolor{comment}{// Time parameters}
+    uint16\_t hours;
+    uint16\_t minutes;
+    uint16\_t seconds;
+    uint16\_t milliseconds;
+    \textcolor{comment}{// GPS time}
+    uint32\_t gpsWeek;
+    uint32\_t gpsTimeOfWeek;
+    \textcolor{comment}{// Leap seconds in advance}
+    uint8\_t leapSeconds;
+    \textcolor{comment}{// Position state}
+    \hyperlink{le__gnss__interface_8h_abcb86aa054abc7a32d2f5a7363387ef1}{le\_gnss\_FixState\_t} state;
+    \textcolor{comment}{// Location}
+    int32\_t     latitude;
+    int32\_t     longitude;
+    int32\_t     altitude;
+    int32\_t     altitudeOnWgs84;
+    int32\_t     hAccuracy;
+    int32\_t     vAccuracy;
+    int32\_t     magneticDeviation;
+    \textcolor{comment}{// DOP parameter}
+    uint16\_t dop;
+    \textcolor{comment}{// Horizontal speed}
+    uint32\_t hSpeed;
+    uint32\_t hSpeedAccuracy;
+    \textcolor{comment}{// Vertical speed}
+    int32\_t vSpeed;
+    int32\_t vSpeedAccuracy;
+    \textcolor{comment}{// Direction}
+    uint32\_t direction;
+    uint32\_t directionAccuracy;
+    \hyperlink{le__gnss__interface_8h_aa3dbc8648a864e2c1e67095034150678}{le\_gnss\_DopType\_t} dopType = \hyperlink{le__gnss__interface_8h_aa3dbc8648a864e2c1e67095034150678af07053c03690aaf0e246ff9462abaafe}{LE\_GNSS\_PDOP};
+
+    \textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{char} *tabDop[] =
+    \{
+        \textcolor{stringliteral}{"Position dilution of precision (PDOP)"},
+        \textcolor{stringliteral}{"Horizontal dilution of precision (HDOP)"},
+        \textcolor{stringliteral}{"Vertical dilution of precision (VDOP)"},
+        \textcolor{stringliteral}{"Geometric dilution of precision (GDOP)"},
+        \textcolor{stringliteral}{"Time dilution of precision (TDOP)"}
+    \};
+
+    \textcolor{keywordflow}{if} (NULL == positionSampleRef)
+    \{
+        \hyperlink{le__log_8h_a353590f91b3143a7ba3a416ae5a50c3d}{LE\_ERROR}(\textcolor{stringliteral}{"New Position sample is NULL!"});
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a2a91ea8857cf190fde71d85ba930a498}{LE\_DEBUG}(\textcolor{stringliteral}{"New Position sample %p"}, positionSampleRef);
+    \}
+
+    \textcolor{comment}{// Get UTC date}
+    result = \hyperlink{le__gnss__interface_8h_a29602d1e12325d0076802af0db7f23ca}{le\_gnss\_GetDate}(positionSampleRef, &year, &month, &day);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+
+    \textcolor{comment}{// Get UTC time}
+    result = \hyperlink{le__gnss__interface_8h_a0d014a96fc8b15b736d04747d51082d9}{le\_gnss\_GetTime}(positionSampleRef, &hours, &minutes, &seconds, &milliseconds);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+
+    \textcolor{comment}{// Get Epoch time}
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a38c21e7f7f7da5481f67e118fb3ea89c}{le\_gnss\_GetEpochTime}(positionSampleRef, &EpochTime));
+
+    \textcolor{comment}{// Display time/date format 13:45:30 2009-06-15}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"%02d:%02d:%02d %d-%02d-%02d,"}, hours, minutes, seconds, year, month, day);
+
+    \textcolor{comment}{// Display Epoch time}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"epoch time: %llu:"}, (\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{long} \textcolor{keywordtype}{long} \textcolor{keywordtype}{int}) EpochTime);
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab058224c242c97d458fcc8ad03b1f1c9}{le\_gnss\_InjectUtcTime}(EpochTime , 0));
+
+    \textcolor{comment}{// Get GPS time}
+    result = \hyperlink{le__gnss__interface_8h_a4e9966df8185978aaef75399d5aff2d3}{le\_gnss\_GetGpsTime}(positionSampleRef, &gpsWeek, &gpsTimeOfWeek);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"GPS time W %02d:ToW %dms"}, gpsWeek, gpsTimeOfWeek);
+
+    \textcolor{comment}{// Get time accuracy}
+    result = \hyperlink{le__gnss__interface_8h_ad41698ff4a68651b9fb81b862d4274f6}{le\_gnss\_GetTimeAccuracy}(positionSampleRef, &TimeAccuracy);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"GPS time acc %d"}, TimeAccuracy);
+
+    \textcolor{comment}{// Get UTC leap seconds in advance}
+    result = \hyperlink{le__gnss__interface_8h_a9e2b23f2420e53ca86f48a0f0c43f2d0}{le\_gnss\_GetGpsLeapSeconds}(positionSampleRef, &leapSeconds);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"UTC leap seconds in advance %d"}, leapSeconds);
+
+    \textcolor{comment}{// Get position state}
+    result = \hyperlink{le__gnss__interface_8h_a0a0df2ffe42b6277f43af0e52e617339}{le\_gnss\_GetPositionState}(positionSampleRef, &state);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result));
+    \hyperlink{le__log_8h_a2a91ea8857cf190fde71d85ba930a498}{LE\_DEBUG}(\textcolor{stringliteral}{"Position state: %s"}, (\hyperlink{le__gnss__interface_8h_abcb86aa054abc7a32d2f5a7363387ef1a8d85fe09a65c69af21102b4bacc64055}{LE\_GNSS\_STATE\_FIX\_NO\_POS} == state)?\textcolor{stringliteral}{"No
+       Fix"}
+                                 :(\hyperlink{le__gnss__interface_8h_abcb86aa054abc7a32d2f5a7363387ef1a1325f1c092b36936bb75b5087499b82b}{LE\_GNSS\_STATE\_FIX\_2D} == state)?\textcolor{stringliteral}{"2D Fix"}
+                                 :(\hyperlink{le__gnss__interface_8h_abcb86aa054abc7a32d2f5a7363387ef1a6eef37535d6eb582771825a1e0ccbb90}{LE\_GNSS\_STATE\_FIX\_3D} == state)?\textcolor{stringliteral}{"3D Fix"}
+                                 : \textcolor{stringliteral}{"Unknown"});
+
+    \textcolor{comment}{// Get Location}
+    result = \hyperlink{le__gnss__interface_8h_ada100f53f9ad9f3df852fcc6639c15bc}{le\_gnss\_GetLocation}(positionSampleRef, &latitude, &longitude, &hAccuracy);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+
+    \textcolor{keywordflow}{if} (LE\_OK == result)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Position lat.%f, long.%f, hAccuracy.%f"},
+                (\textcolor{keywordtype}{float})latitude/1000000.0,
+                (\textcolor{keywordtype}{float})longitude/1000000.0,
+                (\textcolor{keywordtype}{float})hAccuracy/100.0);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Position unknown [%d,%d,%d]"}, latitude, longitude, hAccuracy);
+    \}
+
+    \textcolor{comment}{// Get altitude}
+    result = \hyperlink{le__gnss__interface_8h_a5cc278268a4e75c5e2a5f8c1ffb64fa9}{le\_gnss\_GetAltitude}( positionSampleRef, &altitude, &vAccuracy);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+
+    \textcolor{keywordflow}{if} (LE\_OK == result)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Altitude.%f, vAccuracy.%f"}, (\textcolor{keywordtype}{float})altitude/1000.0, (\textcolor{keywordtype}{float})vAccuracy/10.0);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Altitude unknown [%d,%d]"}, altitude, vAccuracy);
+    \}
+
+    \textcolor{comment}{// Get altitude in meters, between WGS-84 earth ellipsoid}
+    \textcolor{comment}{// and mean sea level [resolution 1e-3]}
+    result = \hyperlink{le__gnss__interface_8h_a59727ef079dc93dfadef75dd6a021cd0}{le\_gnss\_GetAltitudeOnWgs84}(positionSampleRef, &altitudeOnWgs84);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+
+    \textcolor{keywordflow}{if} (LE\_OK == result)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"AltitudeOnWgs84.%d"}, altitudeOnWgs84/1000);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"AltitudeOnWgs84 unknown [%d]"}, altitudeOnWgs84);
+    \}
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Dop parameters: \(\backslash\)n"});
+
+    \textcolor{comment}{// Set the DOP resolution}
+    \textcolor{keywordflow}{if} (\hyperlink{le__gnss__interface_8h_aaf5d256c75737a2189c8da7bfed5da0dac09593667cfb123368ea6890f081ade9}{LE\_GNSS\_RES\_UNKNOWN} == ++DopRes)
+    \{
+        DopRes = \hyperlink{le__gnss__interface_8h_aaf5d256c75737a2189c8da7bfed5da0da17a6752c8b3a5f04e6e32503eb8336ab}{LE\_GNSS\_RES\_ZERO\_DECIMAL};
+    \}
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ae7345052efc38f199989aafcd27224e2}{le\_gnss\_SetDopResolution}(DopRes));
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Set DOP resolution: %d decimal place\(\backslash\)n"}, DopRes);
+
+    \textcolor{keywordflow}{do}
+    \{
+        \textcolor{comment}{// Get DOP parameter}
+        result = \hyperlink{le__gnss__interface_8h_a87cbadea6fe7ebd8ef74d45bdeef1416}{le\_gnss\_GetDilutionOfPrecision}(positionSampleRef, dopType, &
+      dop);
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((result == LE\_OK)||(result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE}));
+        \textcolor{keywordflow}{if} (LE\_OK == result)
+        \{
+            \textcolor{keywordflow}{switch}(DopRes)
+
+            \{
+                \textcolor{keywordflow}{case} \hyperlink{le__gnss__interface_8h_aaf5d256c75737a2189c8da7bfed5da0da17a6752c8b3a5f04e6e32503eb8336ab}{LE\_GNSS\_RES\_ZERO\_DECIMAL}:
+                     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"resolution: %d decimal place, %s %.1f\(\backslash\)n"},
+                            DopRes, tabDop[dopType], (\textcolor{keywordtype}{float})dop);
+                     \textcolor{keywordflow}{break};
+                \textcolor{keywordflow}{case} \hyperlink{le__gnss__interface_8h_aaf5d256c75737a2189c8da7bfed5da0dacd7af80b5388b3c771774b6af99c775d}{LE\_GNSS\_RES\_ONE\_DECIMAL}:
+                     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"resolution: %d decimal place, %s %.1f\(\backslash\)n"},
+                            DopRes, tabDop[dopType], (\textcolor{keywordtype}{float})(dop)/10);
+                     \textcolor{keywordflow}{break};
+                \textcolor{keywordflow}{case} \hyperlink{le__gnss__interface_8h_aaf5d256c75737a2189c8da7bfed5da0da46a03303cc05c2c2d48ae05217ed596e}{LE\_GNSS\_RES\_TWO\_DECIMAL}:
+                     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"resolution: %d decimal place, %s %.2f\(\backslash\)n"},
+                            DopRes, tabDop[dopType], (\textcolor{keywordtype}{float})(dop)/100);
+                     \textcolor{keywordflow}{break};
+                \textcolor{keywordflow}{case} \hyperlink{le__gnss__interface_8h_aaf5d256c75737a2189c8da7bfed5da0da4c6bce2bb0595f9683e7333ce637cb5c}{LE\_GNSS\_RES\_THREE\_DECIMAL}:
+                \textcolor{keywordflow}{default}:
+                     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"resolution: %d decimal place, %s %.3f\(\backslash\)n"},
+                            DopRes, tabDop[dopType], (\textcolor{keywordtype}{float})(dop)/1000);
+                     \textcolor{keywordflow}{break};
+            \}
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"%s invalid %d\(\backslash\)n"}, tabDop[dopType], dop);
+        \}
+        dopType++;
+    \}
+    \textcolor{keywordflow}{while} (dopType != LE\_GNSS\_DOP\_LAST);
+
+    \textcolor{comment}{// Get horizontal speed}
+    result = \hyperlink{le__gnss__interface_8h_a483fba8fc6b0fa116bcbd889af95fc4f}{le\_gnss\_GetHorizontalSpeed}( positionSampleRef, &hSpeed, &
+      hSpeedAccuracy);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+    \textcolor{keywordflow}{if} (LE\_OK == result)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"hSpeed %u - Accuracy %u"}, hSpeed/100, hSpeedAccuracy/10);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"hSpeed unknown [%u,%u]"}, hSpeed, hSpeedAccuracy);
+    \}
+
+    \textcolor{comment}{// Get vertical speed}
+    result = \hyperlink{le__gnss__interface_8h_a37a370cec19610be1f99d9c9db291a1e}{le\_gnss\_GetVerticalSpeed}( positionSampleRef, &vSpeed, &vSpeedAccuracy)
+      ;
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+    \textcolor{keywordflow}{if} (LE\_OK == result)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"vSpeed %d - Accuracy %d"}, vSpeed/100, vSpeedAccuracy/10);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"vSpeed unknown [%d,%d]"}, vSpeed, vSpeedAccuracy);
+    \}
+
+    \textcolor{comment}{// Get direction}
+    result = \hyperlink{le__gnss__interface_8h_aabc2432ec207a1e6cb74d444407aad11}{le\_gnss\_GetDirection}( positionSampleRef, &direction, &directionAccuracy);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+    \textcolor{keywordflow}{if} (LE\_OK == result)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"direction %u - Accuracy %u"}, direction/10, directionAccuracy/10);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"direction unknown [%u,%u]"}, direction, directionAccuracy);
+    \}
+
+    \textcolor{comment}{// Get the magnetic deviation}
+    result = \hyperlink{le__gnss__interface_8h_a0f47ace8d52f0a525a6abfccc24a11ec}{le\_gnss\_GetMagneticDeviation}( positionSampleRef, &
+      magneticDeviation);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+    \textcolor{keywordflow}{if} (LE\_OK == result)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"magnetic deviation %d"}, magneticDeviation/10);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"magnetic deviation unknown [%d]"},magneticDeviation);
+    \}
+
+
+    \textcolor{comment}{/* Satellites status */}
+    uint8\_t satsInViewCount;
+    uint8\_t satsTrackingCount;
+    uint8\_t satsUsedCount;
+    result =  \hyperlink{le__gnss__interface_8h_a5ae945ad1921b621e9631e4286f40784}{le\_gnss\_GetSatellitesStatus}(positionSampleRef,
+                                          &satsInViewCount,
+                                          &satsTrackingCount,
+                                          &satsUsedCount);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"satsInView %d - satsTracking %d - satsUsed %d"},
+            satsInViewCount,
+            satsTrackingCount,
+            satsUsedCount);
+
+    \textcolor{comment}{/* Satellites information */}
+    uint16\_t satIdPtr[\hyperlink{le__gnss__interface_8h_a507cc757f9629ad56d7a0767c0356e76}{LE\_GNSS\_SV\_INFO\_MAX\_LEN}];
+    \textcolor{keywordtype}{size\_t} satIdNumElements = \textcolor{keyword}{sizeof}(satIdPtr);
+    \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9}{le\_gnss\_Constellation\_t} satConstPtr[
+      \hyperlink{le__gnss__interface_8h_a507cc757f9629ad56d7a0767c0356e76}{LE\_GNSS\_SV\_INFO\_MAX\_LEN}];
+    \textcolor{keywordtype}{size\_t} satConstNumElements = \textcolor{keyword}{sizeof}(satConstPtr);
+    \textcolor{keywordtype}{bool} satUsedPtr[\hyperlink{le__gnss__interface_8h_a507cc757f9629ad56d7a0767c0356e76}{LE\_GNSS\_SV\_INFO\_MAX\_LEN}];
+    \textcolor{keywordtype}{size\_t} satUsedNumElements = \textcolor{keyword}{sizeof}(satUsedPtr);
+    uint8\_t satSnrPtr[\hyperlink{le__gnss__interface_8h_a507cc757f9629ad56d7a0767c0356e76}{LE\_GNSS\_SV\_INFO\_MAX\_LEN}];
+    \textcolor{keywordtype}{size\_t} satSnrNumElements = \textcolor{keyword}{sizeof}(satSnrPtr);
+    uint16\_t satAzimPtr[\hyperlink{le__gnss__interface_8h_a507cc757f9629ad56d7a0767c0356e76}{LE\_GNSS\_SV\_INFO\_MAX\_LEN}];
+    \textcolor{keywordtype}{size\_t} satAzimNumElements = \textcolor{keyword}{sizeof}(satAzimPtr);
+    uint8\_t satElevPtr[\hyperlink{le__gnss__interface_8h_a507cc757f9629ad56d7a0767c0356e76}{LE\_GNSS\_SV\_INFO\_MAX\_LEN}];
+    \textcolor{keywordtype}{size\_t} satElevNumElements = \textcolor{keyword}{sizeof}(satElevPtr);
+    \textcolor{keywordtype}{int} i;
+
+    result =  \hyperlink{le__gnss__interface_8h_a08654437579b3e033ba1c54c860febab}{le\_gnss\_GetSatellitesInfo}(positionSampleRef,
+                                        satIdPtr,
+                                        &satIdNumElements,
+                                        satConstPtr,
+                                        &satConstNumElements,
+                                        satUsedPtr,
+                                        &satUsedNumElements,
+                                        satSnrPtr,
+                                        &satSnrNumElements,
+                                        satAzimPtr,
+                                        &satAzimNumElements,
+                                        satElevPtr,
+                                        &satElevNumElements);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+
+    \textcolor{comment}{// Satellite Vehicle information}
+    \textcolor{keywordflow}{for}(i=0; i<satIdNumElements; i++)
+    \{
+        \textcolor{keywordflow}{if} ((0 != satIdPtr[i]) && (UINT16\_MAX != satIdPtr[i]))
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"[%02d] SVid %03d - C%01d - U%d - SNR%02d - Azim%03d - Elev%02d"},
+                    i,
+                    satIdPtr[i],
+                    satConstPtr[i],
+                    satUsedPtr[i],
+                    satSnrPtr[i],
+                    satAzimPtr[i],
+                    satElevPtr[i]);
+
+            \textcolor{keywordflow}{if} (\hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9a0f5d345dd7b9260cd219a4836572d419}{LE\_GNSS\_SV\_CONSTELLATION\_SBAS} == satConstPtr[i])
+            \{
+                \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SBAS category : %d"}, 
+      \hyperlink{le__gnss__interface_8h_a4ea5971e6495429ab28c41207cba37d7}{le\_gnss\_GetSbasConstellationCategory}(satIdPtr[i]));
+            \}
+        \}
+    \}
+
+    \textcolor{comment}{// Release provided Position sample reference}
+    \hyperlink{le__gnss__interface_8h_a89cdf0fb25e8204befc65db7aa6837db}{le\_gnss\_ReleaseSampleRef}(positionSampleRef);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: Add Position Handler}
+\textcolor{comment}{ *}
+\textcolor{comment}{*/}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void}* PositionThread
+(
+    \textcolor{keywordtype}{void}* context
+)
+\{
+
+    \hyperlink{le__gnss__interface_8h_a3b352251c2764092c56f20592f5894ca}{le\_gnss\_ConnectService}();
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== Position Handler thread  ========"});
+    PositionHandlerRef = \hyperlink{le__gnss__interface_8h_ac300457f532757caf79d60b6dba60d67}{le\_gnss\_AddPositionHandler}(PositionHandlerFunction, NULL
+      );
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((PositionHandlerRef != NULL));
+
+    \hyperlink{le__event_loop_8h_ae313b457994371c658be9fe0494a01ff}{le\_event\_RunLoop}();
+    \textcolor{keywordflow}{return} NULL;
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: GNSS position handler}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} TestLeGnssPositionHandler
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result;
+    \hyperlink{le__thread_8h_a32121104c6b4ca39008eb79a4d6862f2}{le\_thread\_Ref\_t} positionThreadRef;
+    \hyperlink{le__gnss__interface_8h_ac9577035f26d6b7f48615670eb72102a}{le\_gnss\_SampleRef\_t} positionSampleRef;
+    uint64\_t epochTime;
+    uint32\_t ttff = 0;
+    uint8\_t  minElevation;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start Test Testle\_gnss\_PositionHandlerTest"});
+
+    \textcolor{comment}{// NMEA frame GPGSA is checked that no SV with elevation below 10}
+    \textcolor{comment}{// degrees are given.}
+    minElevation = 10;
+    result = \hyperlink{le__gnss__interface_8h_a78982eb8669530eef1bbc79ff79347e4}{le\_gnss\_SetMinElevation}(minElevation);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result) || (\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == result));
+    \textcolor{keywordflow}{if} (LE\_OK == result)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Set minElevation %d"},minElevation);
+    \}
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start GNSS"});
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_add90639835a531c4b9d15554e4f3ba16}{le\_gnss\_Start}());
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wait 5 seconds"});
+    sleep(5);
+
+    \textcolor{comment}{// Add Position Handler Test}
+    positionThreadRef = \hyperlink{le__thread_8h_a87e02a46f92e9e3e11ed28a2b265872f}{le\_thread\_Create}(\textcolor{stringliteral}{"PositionThread"},PositionThread,NULL);
+    \hyperlink{le__thread_8h_a38df3877ee5ab9fac17b2fc0be46c27e}{le\_thread\_Start}(positionThreadRef);
+
+    \textcolor{comment}{// test Cold Restart boosted by le\_gnss\_InjectUtcTime}
+    \textcolor{comment}{// EpochTime and timeAccuracy should be valid and saved by now}
+    sleep(2);
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Ask for a Cold restart"});
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_aa702703bbeebbefd65dd51b1f9fd4ce5}{le\_gnss\_ForceColdRestart}());
+
+    \textcolor{comment}{// Last accurate epochTime and timeAccuracy are used}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(0 != EpochTime);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TimeAccuracy %d EpochTime %llu"},TimeAccuracy, (\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{long} \textcolor{keywordtype}{long} \textcolor{keywordtype}{int})EpochTime);
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab058224c242c97d458fcc8ad03b1f1c9}{le\_gnss\_InjectUtcTime}(EpochTime , TimeAccuracy));
+
+    \textcolor{comment}{// Get TTFF,position fix should be still in progress for the FACTORY start}
+    result = \hyperlink{le__gnss__interface_8h_a6b2fbb3902c9fd3336b5940b2abacb12}{le\_gnss\_GetTtff}(&ttff);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY} == result);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF is checked as not available immediatly after a Cold restart"});
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cabe505065132f6e8850da6f476d8fb783}{LE\_BAD\_PARAMETER} == 
+      \hyperlink{le__gnss__interface_8h_ae7345052efc38f199989aafcd27224e2}{le\_gnss\_SetDopResolution}(\hyperlink{le__gnss__interface_8h_aaf5d256c75737a2189c8da7bfed5da0dac09593667cfb123368ea6890f081ade9}{LE\_GNSS\_RES\_UNKNOWN}));
+
+    \textcolor{comment}{// first test in ConvertDop() in le\_gnss.c to find the default resolution.}
+    \textcolor{comment}{// Test that the chosen resolution in PositionHandlerFunction is LE\_GNSS\_RES\_THREE\_DECIMAL}
+
+    \textcolor{comment}{// Wait for a 3D fix}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wait 60 seconds for a 3D fix"});
+    sleep(60);
+    \textcolor{comment}{// Get TTFF}
+    result = \hyperlink{le__gnss__interface_8h_a6b2fbb3902c9fd3336b5940b2abacb12}{le\_gnss\_GetTtff}(&ttff);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((LE\_OK == result)||(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY} == result));
+    \textcolor{keywordflow}{if}(result == LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF cold restart = %d msec"}, ttff);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF cold restart not available"});
+    \}
+
+    \hyperlink{le__gnss__interface_8h_a3c257c3c2d2f8d54402a91f685924fd5}{le\_gnss\_RemovePositionHandler}(PositionHandlerRef);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wait 5 seconds"});
+    sleep(5);
+
+    \textcolor{comment}{// stop thread}
+    \hyperlink{le__thread_8h_a0f1c1b98f354a96e6e31e55a71b58f6a}{le\_thread\_Cancel}(positionThreadRef);
+    \textcolor{comment}{// Get Epoch time, get last position sample}
+    positionSampleRef = \hyperlink{le__gnss__interface_8h_a07ee55596c930fe47981ba0a4d018bd2}{le\_gnss\_GetLastSampleRef}();
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a38c21e7f7f7da5481f67e118fb3ea89c}{le\_gnss\_GetEpochTime}(positionSampleRef, &epochTime));
+
+    \textcolor{comment}{// Display epoch time}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"epoch time: %llu:"}, (\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{long} \textcolor{keywordtype}{long} \textcolor{keywordtype}{int}) epochTime);
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Stop GNSS"});
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a93d63fdc76dbced071956b87de2abff7}{le\_gnss\_Stop}());
+    EpochTime=0;
+    TimeAccuracy=0;
+\}
+\textcolor{comment}{}
+\textcolor{comment}{//! [GnssPosition]}
+\textcolor{comment}{}\textcolor{comment}{}
+\textcolor{comment}{//! [GnssControl]}
+\textcolor{comment}{}\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: GNSS Position request.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} TestLeGnssStart
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    uint32\_t rate = 0;
+    \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efc}{le\_gnss\_ConstellationBitMask\_t} constellationMask;
+    \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4}{le\_gnss\_NmeaBitMask\_t} nmeaMask;
+    uint32\_t ttff = 0;
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result = \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start Test Testle\_gnss\_StartTest"});
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_acfa9b25ac13f601921bd9123a1d0daba}{le\_gnss\_GetAcquisitionRate}(&rate)) == LE\_OK);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Acquisition rate %d ms"}, rate);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a75d96ec7ac6e0d6b58525e4c523d3b2c}{le\_gnss\_SetAcquisitionRate}(rate)) == LE\_OK);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a150835481ab3751e3ab1821362e34e84}{le\_gnss\_GetConstellation}(&constellationMask) == LE\_OK);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Constellation 0x%X"}, constellationMask);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(constellationMask) == LE\_OK);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask)) == LE\_OK);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Enabled NMEA sentences 0x%08X"}, nmeaMask);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(nmeaMask)) == LE\_OK);
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start GNSS"});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_add90639835a531c4b9d15554e4f3ba16}{le\_gnss\_Start}()) == LE\_OK);
+
+    \textcolor{comment}{/* Wait for a position fix */}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wait 120 seconds for a 3D fix"});
+    sleep(120);
+
+    \textcolor{comment}{// Get TTFF}
+    result = \hyperlink{le__gnss__interface_8h_a6b2fbb3902c9fd3336b5940b2abacb12}{le\_gnss\_GetTtff}(&ttff);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((result == LE\_OK)||(result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY}));
+    \textcolor{keywordflow}{if}(result == LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF start = %d msec"}, ttff);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF start not available"});
+    \}
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Stop GNSS"});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a93d63fdc76dbced071956b87de2abff7}{le\_gnss\_Stop}()) == LE\_OK);
+    EpochTime=0;
+    TimeAccuracy=0;
+
+\}\textcolor{comment}{}
+\textcolor{comment}{//! [GnssControl]}
+\textcolor{comment}{}\textcolor{comment}{}
+\textcolor{comment}{//! [GnssReStart]}
+\textcolor{comment}{}\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: Restart to Cold start.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} TestLeGnssRestart
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    uint32\_t ttff = 0;
+    uint64\_t epochTime;
+    \hyperlink{le__gnss__interface_8h_ac9577035f26d6b7f48615670eb72102a}{le\_gnss\_SampleRef\_t} positionSampleRef;
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result = \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT};
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start Test le\_pos\_RestartTest"});
+
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_add90639835a531c4b9d15554e4f3ba16}{le\_gnss\_Start}()) == LE\_OK);
+
+    \textcolor{comment}{/* Wait for a position fix */}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wait 60 seconds for a 3D fix"});
+    sleep(60);
+    \textcolor{comment}{// Get TTFF}
+    result = \hyperlink{le__gnss__interface_8h_a6b2fbb3902c9fd3336b5940b2abacb12}{le\_gnss\_GetTtff}(&ttff);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((result == LE\_OK)||(result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY}));
+    \textcolor{keywordflow}{if}(result == LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF start = %d msec"}, ttff);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF start not available"});
+    \}
+
+    \textcolor{comment}{/* HOT Restart */}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Ask for a Hot restart in 3 seconds..."});
+    sleep(3);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a29ff5b1e5bada1a9d15d19b3a0d2d4d1}{le\_gnss\_ForceHotRestart}() == LE\_OK);
+    \textcolor{comment}{// Wait for a 3D fix}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wait 60 seconds for a 3D fix"});
+    sleep(60);
+    \textcolor{comment}{// Get TTFF}
+    result = \hyperlink{le__gnss__interface_8h_a6b2fbb3902c9fd3336b5940b2abacb12}{le\_gnss\_GetTtff}(&ttff);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((result == LE\_OK)||(result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY}));
+    \textcolor{keywordflow}{if}(result == LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF Hot restart = %d msec"}, ttff);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF Hot restart not available"});
+    \}
+
+    \textcolor{comment}{/* WARM Restart */}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Ask for a Warm restart in 3 seconds..."});
+    sleep(3);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a1f5b3008db50d34c7962fb73c306f3d1}{le\_gnss\_ForceWarmRestart}() == LE\_OK);
+    \textcolor{comment}{// Wait for a 3D fix}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wait 60 seconds for a 3D fix"});
+    sleep(60);
+    \textcolor{comment}{// Get TTFF}
+    result = \hyperlink{le__gnss__interface_8h_a6b2fbb3902c9fd3336b5940b2abacb12}{le\_gnss\_GetTtff}(&ttff);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((result == LE\_OK)||(result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY}));
+    \textcolor{keywordflow}{if}(result == LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF Warm restart = %d msec"}, ttff);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF Warm restart not available"});
+    \}
+
+    \textcolor{comment}{/* COLD Restart */}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Ask for a Cold restart in 3 seconds..."});
+    sleep(3);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_aa702703bbeebbefd65dd51b1f9fd4ce5}{le\_gnss\_ForceColdRestart}() == LE\_OK);
+
+    sleep(1);
+    \textcolor{comment}{// Get Epoch time : it should be 0 after a COLD restart}
+    positionSampleRef = \hyperlink{le__gnss__interface_8h_a07ee55596c930fe47981ba0a4d018bd2}{le\_gnss\_GetLastSampleRef}();
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == \hyperlink{le__gnss__interface_8h_a38c21e7f7f7da5481f67e118fb3ea89c}{le\_gnss\_GetEpochTime}(
+      positionSampleRef, &epochTime)));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(0 == epochTime);
+
+    \textcolor{comment}{// Wait for a 3D fix}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wait 60 seconds for a 3D fix"});
+    sleep(60);
+    \textcolor{comment}{// Get TTFF}
+    result = \hyperlink{le__gnss__interface_8h_a6b2fbb3902c9fd3336b5940b2abacb12}{le\_gnss\_GetTtff}(&ttff);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((result == LE\_OK)||(result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY}));
+    \textcolor{keywordflow}{if}(result == LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF Cold restart = %d msec"}, ttff);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF Cold restart not available"});
+    \}
+
+    \textcolor{comment}{/* FACTORY Restart */}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Ask for a Factory restart in 3 seconds..."});
+    sleep(3);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a18219097f3e8c8e6e613462a5467f546}{le\_gnss\_ForceFactoryRestart}() == LE\_OK);
+    \textcolor{comment}{// Get TTFF,position fix should be still in progress for the FACTORY start}
+    result = \hyperlink{le__gnss__interface_8h_a6b2fbb3902c9fd3336b5940b2abacb12}{le\_gnss\_GetTtff}(&ttff);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY});
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF is checked as not available immediatly after a FACTORY start"});
+
+    sleep(1);
+    \textcolor{comment}{// Get Epoch time : it should be 0 after a FACTORY restart}
+    positionSampleRef = \hyperlink{le__gnss__interface_8h_a07ee55596c930fe47981ba0a4d018bd2}{le\_gnss\_GetLastSampleRef}();
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86caef8ecf11fa8556fd2d3ca8faab697717}{LE\_OUT\_OF\_RANGE} == \hyperlink{le__gnss__interface_8h_a38c21e7f7f7da5481f67e118fb3ea89c}{le\_gnss\_GetEpochTime}(
+      positionSampleRef, &epochTime)));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(0 == epochTime);
+
+    \textcolor{comment}{// Wait for a 3D fix}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wait 60 seconds for a 3D fix"});
+    sleep(60);
+    \textcolor{comment}{// Get TTFF}
+    result = \hyperlink{le__gnss__interface_8h_a6b2fbb3902c9fd3336b5940b2abacb12}{le\_gnss\_GetTtff}(&ttff);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((result == LE\_OK)||(result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY}));
+    \textcolor{keywordflow}{if}(result == LE\_OK)
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF Factory restart = %d msec"}, ttff);
+    \}
+    \textcolor{keywordflow}{else}
+    \{
+        \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF Factory restart not available"});
+    \}
+
+    \textcolor{comment}{/* Stop GNSS engine*/}
+    sleep(1);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a93d63fdc76dbced071956b87de2abff7}{le\_gnss\_Stop}()) == LE\_OK);
+    EpochTime=0;
+    TimeAccuracy=0;
+
+\}\textcolor{comment}{}
+\textcolor{comment}{//! [GnssReStart]}
+\textcolor{comment}{}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: loop to get the time to first fix}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} LoopToGet3Dfix
+(
+    uint32\_t *ttffPtr
+)
+\{
+    int32\_t  cnt=0;
+    \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\_result\_t} result = \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY};
+
+    \textcolor{keywordflow}{while} ((result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY}) && (cnt < WAIT\_MAX\_FOR\_3DFIX))
+    \{
+        \textcolor{comment}{// Get TTFF}
+        result = \hyperlink{le__gnss__interface_8h_a6b2fbb3902c9fd3336b5940b2abacb12}{le\_gnss\_GetTtff}(ttffPtr);
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((result == LE\_OK)||(result == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca92b0367090993d8b41d1560663d01e8d}{LE\_BUSY}));
+        \textcolor{keywordflow}{if}(result == LE\_OK)
+        \{
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF start = %d msec"}, *ttffPtr);
+        \}
+        \textcolor{keywordflow}{else}
+        \{
+            cnt++;
+            \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF not calculated (Position not fixed) BUSY"});
+            sleep(1);
+        \}
+    \}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: get TTFF}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} TestLeGnssTtffMeasurement
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    uint32\_t ttff = 0;
+    uint32\_t ttffSave = 0;
+    \hyperlink{le__thread_8h_a32121104c6b4ca39008eb79a4d6862f2}{le\_thread\_Ref\_t} positionThreadRef;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start Test Testle\_gnss\_ttffTest"});
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start GNSS"});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_add90639835a531c4b9d15554e4f3ba16}{le\_gnss\_Start}()) == LE\_OK);
+
+    \textcolor{comment}{// Add Position Handler Test}
+    positionThreadRef = \hyperlink{le__thread_8h_a87e02a46f92e9e3e11ed28a2b265872f}{le\_thread\_Create}(\textcolor{stringliteral}{"PositionThread"},PositionThread,NULL);
+    \hyperlink{le__thread_8h_a38df3877ee5ab9fac17b2fc0be46c27e}{le\_thread\_Start}(positionThreadRef);
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"loop to Wait for a 3D fix"});
+    LoopToGet3Dfix(&ttff);
+    ttffSave = ttff;
+
+    \textcolor{comment}{/* HOT Restart */}
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Ask for a Hot restart in 3 seconds..."});
+    sleep(3);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a29ff5b1e5bada1a9d15d19b3a0d2d4d1}{le\_gnss\_ForceHotRestart}() == LE\_OK);
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"loop to Wait for a 3D fix"});
+    LoopToGet3Dfix(&ttff);
+
+    \hyperlink{le__gnss__interface_8h_a3c257c3c2d2f8d54402a91f685924fd5}{le\_gnss\_RemovePositionHandler}(PositionHandlerRef);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Wait 5 seconds"});
+    sleep(5);
+
+    \textcolor{comment}{// stop thread}
+    \hyperlink{le__thread_8h_a0f1c1b98f354a96e6e31e55a71b58f6a}{le\_thread\_Cancel}(positionThreadRef);
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Stop GNSS"});
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a93d63fdc76dbced071956b87de2abff7}{le\_gnss\_Stop}()) == LE\_OK);
+    EpochTime=0;
+    TimeAccuracy=0;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF start = %d msec"}, ttffSave);
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"TTFF Hot restart = %d msec"}, ttff);
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: test Setting/Getting constellation mask}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} TestLeGnssConstellations
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efc}{le\_gnss\_ConstellationBitMask\_t} constellationMask;
+    \hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3d}{le\_gnss\_ConstellationArea\_t} constellationArea;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start Test TestLeGnssConstellationsTest"});
+
+    \textcolor{comment}{// error test}
+    constellationMask = 0;
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5377262702e8434207b03533259e0c5f}{LE\_UNSUPPORTED} == \hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(
+      constellationMask)));
+    constellationMask = \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca97ef7a6d6cf0ef9da15c1637b46f2a96}{LE\_GNSS\_CONSTELLATION\_SBAS};
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5377262702e8434207b03533259e0c5f}{LE\_UNSUPPORTED} == \hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(
+      constellationMask)));
+
+    \textcolor{comment}{// GPS+SBAS}
+    constellationMask = \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS} | 
+      \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca97ef7a6d6cf0ef9da15c1637b46f2a96}{LE\_GNSS\_CONSTELLATION\_SBAS};
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5377262702e8434207b03533259e0c5f}{LE\_UNSUPPORTED} == \hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(
+      constellationMask));
+
+    \textcolor{comment}{// GPS+Glonass selection}
+    constellationMask = \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS} | 
+      \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca8031dcacac5aac40d2b2e1b574c5b878}{LE\_GNSS\_CONSTELLATION\_GLONASS};
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(constellationMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__gnss__interface_8h_a150835481ab3751e3ab1821362e34e84}{le\_gnss\_GetConstellation}(&constellationMask));
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS} | 
+      \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca8031dcacac5aac40d2b2e1b574c5b878}{LE\_GNSS\_CONSTELLATION\_GLONASS}) == constellationMask);
+
+    \textcolor{comment}{// GPS constellation is not set and Beidou is unknown for mdm9x15}
+    constellationMask = \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca06b4d29c1057f5337ada61a1958995db}{LE\_GNSS\_CONSTELLATION\_BEIDOU};
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5377262702e8434207b03533259e0c5f}{LE\_UNSUPPORTED} == \hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(
+      constellationMask)));
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a150835481ab3751e3ab1821362e34e84}{le\_gnss\_GetConstellation}(&constellationMask) == LE\_OK);
+    \textcolor{comment}{// test constellationMask has not changed after previous error}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS} | 
+      \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca8031dcacac5aac40d2b2e1b574c5b878}{LE\_GNSS\_CONSTELLATION\_GLONASS}) == constellationMask);
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5377262702e8434207b03533259e0c5f}{LE\_UNSUPPORTED} == (
+      \hyperlink{le__gnss__interface_8h_a954fcc8ecae822195e30a2af5e93fd0e}{le\_gnss\_SetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9ac6f47b9be468f8cda7beda6afe0e1324}{LE\_GNSS\_SV\_CONSTELLATION\_GPS},
+                                                              
+      \hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3da39a95a5a06e051b523727732b6d1f8c4}{LE\_GNSS\_OUTSIDE\_US\_AREA})));
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5377262702e8434207b03533259e0c5f}{LE\_UNSUPPORTED} == (
+      \hyperlink{le__gnss__interface_8h_a954fcc8ecae822195e30a2af5e93fd0e}{le\_gnss\_SetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9ab349eed6d7964f39ae97645bd84c219c}{LE\_GNSS\_SV\_CONSTELLATION\_GLONASS},
+                                                              
+      \hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3da39a95a5a06e051b523727732b6d1f8c4}{LE\_GNSS\_OUTSIDE\_US\_AREA})));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a2904b06453428ad1d71609f06b440e08}{le\_gnss\_GetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9ab349eed6d7964f39ae97645bd84c219c}{LE\_GNSS\_SV\_CONSTELLATION\_GLONASS},
+                                              &constellationArea));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3dacb2cc82376d1eee7b25dc169e856fef0}{LE\_GNSS\_WORLDWIDE\_AREA} == constellationArea);
+
+    \textcolor{comment}{// next tests have same results as test4 for mdm9x15}
+\textcolor{preprocessor}{#if defined(SIERRA\_MDM9X40) || defined(SIERRA\_MDM9X28)}
+
+    \textcolor{comment}{// Gps selection (LE\_GNSS\_CONSTELLATION\_SBAS and LE\_GNSS\_CONSTELLATION\_QZSS are present}
+    \textcolor{comment}{// in the constellationMask)}
+    constellationMask = \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS} |
+                        \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca97ef7a6d6cf0ef9da15c1637b46f2a96}{LE\_GNSS\_CONSTELLATION\_SBAS} |
+                        \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca5f1e79b875bc85f3f29de5c3aff76780}{LE\_GNSS\_CONSTELLATION\_QZSS};
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5377262702e8434207b03533259e0c5f}{LE\_UNSUPPORTED} ==\hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(
+      constellationMask));
+
+    \textcolor{comment}{// Gps+Glonass+Beidou selection}
+    constellationMask = \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS} |
+                        \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca8031dcacac5aac40d2b2e1b574c5b878}{LE\_GNSS\_CONSTELLATION\_GLONASS} |
+                        \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca06b4d29c1057f5337ada61a1958995db}{LE\_GNSS\_CONSTELLATION\_BEIDOU};
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(constellationMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__gnss__interface_8h_a150835481ab3751e3ab1821362e34e84}{le\_gnss\_GetConstellation}(&constellationMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS} |
+               \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca8031dcacac5aac40d2b2e1b574c5b878}{LE\_GNSS\_CONSTELLATION\_GLONASS} |
+               \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca06b4d29c1057f5337ada61a1958995db}{LE\_GNSS\_CONSTELLATION\_BEIDOU}) == constellationMask);
+
+    \textcolor{comment}{// Gps+Glonass+Beidou+Galileo+Qzss selection}
+    constellationMask = \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS} |
+                        \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca8031dcacac5aac40d2b2e1b574c5b878}{LE\_GNSS\_CONSTELLATION\_GLONASS} |
+                        \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca06b4d29c1057f5337ada61a1958995db}{LE\_GNSS\_CONSTELLATION\_BEIDOU} |
+                        \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcae4a1c35e91652aaa43d2b09267314d4d}{LE\_GNSS\_CONSTELLATION\_GALILEO} |
+                        \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca5f1e79b875bc85f3f29de5c3aff76780}{LE\_GNSS\_CONSTELLATION\_QZSS};
+
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(constellationMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__gnss__interface_8h_a150835481ab3751e3ab1821362e34e84}{le\_gnss\_GetConstellation}(&constellationMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS} |
+               \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca8031dcacac5aac40d2b2e1b574c5b878}{LE\_GNSS\_CONSTELLATION\_GLONASS} |
+               \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca06b4d29c1057f5337ada61a1958995db}{LE\_GNSS\_CONSTELLATION\_BEIDOU} |
+               \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcae4a1c35e91652aaa43d2b09267314d4d}{LE\_GNSS\_CONSTELLATION\_GALILEO} |
+               \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca5f1e79b875bc85f3f29de5c3aff76780}{LE\_GNSS\_CONSTELLATION\_QZSS}) == constellationMask);
+
+    \textcolor{comment}{// add unknown constellation}
+    constellationMask |= UNKNOWN\_CONSTELLATION;
+
+    \textcolor{comment}{// test constellationMask has not changed after previous error}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__gnss__interface_8h_a6dbdc58f23e480e65ea16c583ef5340f}{le\_gnss\_SetConstellation}(constellationMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == \hyperlink{le__gnss__interface_8h_a150835481ab3751e3ab1821362e34e84}{le\_gnss\_GetConstellation}(&constellationMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcad8f92688bcc53bb744cb1466609d49a7}{LE\_GNSS\_CONSTELLATION\_GPS} |
+               \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca8031dcacac5aac40d2b2e1b574c5b878}{LE\_GNSS\_CONSTELLATION\_GLONASS} |
+               \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca06b4d29c1057f5337ada61a1958995db}{LE\_GNSS\_CONSTELLATION\_BEIDOU} |
+               \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efcae4a1c35e91652aaa43d2b09267314d4d}{LE\_GNSS\_CONSTELLATION\_GALILEO} |
+               \hyperlink{le__gnss__interface_8h_adac6fdd4f73229bc9af14e0a11335efca5f1e79b875bc85f3f29de5c3aff76780}{LE\_GNSS\_CONSTELLATION\_QZSS}) == constellationMask);
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a954fcc8ecae822195e30a2af5e93fd0e}{le\_gnss\_SetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9a3df8a8f6031f47eeeca301fac5226e7d}{LE\_GNSS\_SV\_CONSTELLATION\_BEIDOU},
+                                            \hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3dacb2cc82376d1eee7b25dc169e856fef0}{LE\_GNSS\_WORLDWIDE\_AREA}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a2904b06453428ad1d71609f06b440e08}{le\_gnss\_GetConstellationArea}(
+      \hyperlink{le__gnss__interface_8h_a30697e968cedd1935e7ca5f3ebe2fea9a3df8a8f6031f47eeeca301fac5226e7d}{LE\_GNSS\_SV\_CONSTELLATION\_BEIDOU},
+                                            &constellationArea));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a5e928e23604366956aea1b049e290d3dacb2cc82376d1eee7b25dc169e856fef0}{LE\_GNSS\_WORLDWIDE\_AREA} == constellationArea);
+\textcolor{preprocessor}{#endif}
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: test Setting/Getting enabled NMEA sentences mask}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} TestLeGnssNmeaSentences
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \textcolor{keywordtype}{int} i = 0;
+    \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4}{le\_gnss\_NmeaBitMask\_t} nmeaMask;
+    \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4}{le\_gnss\_NmeaBitMask\_t} saveNmeaMask;
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Start Test TestLeGnssNmeaSentences"});
+
+    \textcolor{comment}{// Test 1: bit mask too big, error}
+    nmeaMask = (\hyperlink{le__gnss__interface_8h_ad7ff9650b50aa065a23279e2cdc80c4e}{LE\_GNSS\_NMEA\_SENTENCES\_MAX} << 1) | 1;
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cabe505065132f6e8850da6f476d8fb783}{LE\_BAD\_PARAMETER} == 
+      \hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(nmeaMask));
+
+    \textcolor{comment}{// Test 2: test all bits from the bit mask}
+    \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4}{le\_gnss\_NmeaBitMask\_t} nmeaSentencesList[] = \{
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4ae3a9186e2509a5818697532fd4f553f1}{LE\_GNSS\_NMEA\_MASK\_GPGGA},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a162dab2523203626145738b7329e03ba}{LE\_GNSS\_NMEA\_MASK\_GPGSA},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a7879eb2c11fd2dac854e8222405536a0}{LE\_GNSS\_NMEA\_MASK\_GPGSV},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a3d7307ca9fd8908afcfad5818a2ef466}{LE\_GNSS\_NMEA\_MASK\_GPRMC},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a48d8dceba710b63a9d5813099e5915f3}{LE\_GNSS\_NMEA\_MASK\_GPVTG},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a67fb788dfc55bfad0773dceb88c736c2}{LE\_GNSS\_NMEA\_MASK\_GLGSV},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a328c4676306676d2233ff7617c526b19}{LE\_GNSS\_NMEA\_MASK\_GNGNS},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a7eed82378f4d839e6ebfcea58685de60}{LE\_GNSS\_NMEA\_MASK\_GNGSA},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a36d49a8762bab4b27e56bf81ccba8c37}{LE\_GNSS\_NMEA\_MASK\_GAGGA},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4ad90d4e63d87610e3cac2325e56ee3b0b}{LE\_GNSS\_NMEA\_MASK\_GAGSA},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a4dd1a5984838c1495bac06e506050fd6}{LE\_GNSS\_NMEA\_MASK\_GAGSV},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a1e0f185e66f2218c783997e81832a22b}{LE\_GNSS\_NMEA\_MASK\_GARMC},
+        \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a4824507c2b2d01c7969408f11ecc98d0}{LE\_GNSS\_NMEA\_MASK\_GAVTG},
+        0
+    \};
+
+    \textcolor{keywordflow}{for} (i = 0; nmeaSentencesList[i]; i++)
+    \{
+        \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(nmeaSentencesList[i]));
+        \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+        \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(nmeaMask == nmeaSentencesList[i]);
+    \}
+
+    \textcolor{comment}{// @deprecated, PQXFI is deprecated. PTYPE is used instead.}
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(
+      \hyperlink{le__gnss__interface_8h_ad40fd63901477f695a1d5936a5ade316}{LE\_GNSS\_NMEA\_MASK\_PQXFI}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(nmeaMask == (\hyperlink{le__gnss__interface_8h_ad40fd63901477f695a1d5936a5ade316}{LE\_GNSS\_NMEA\_MASK\_PQXFI} | 
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4adb6dfcb014641193a2bb3bd405cd2b84}{LE\_GNSS\_NMEA\_MASK\_PTYPE}));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4adb6dfcb014641193a2bb3bd405cd2b84}{LE\_GNSS\_NMEA\_MASK\_PTYPE}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(nmeaMask == (\hyperlink{le__gnss__interface_8h_ad40fd63901477f695a1d5936a5ade316}{LE\_GNSS\_NMEA\_MASK\_PQXFI} | 
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4adb6dfcb014641193a2bb3bd405cd2b84}{LE\_GNSS\_NMEA\_MASK\_PTYPE}));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a72adb2f4e8e68ff4abb56a36feb107bd}{LE\_GNSS\_NMEA\_MASK\_PSTIS}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a6b3cff1334d21099306d2f53c579801c}{LE\_GNSS\_NMEA\_MASK\_GPGRS} == nmeaMask) || (0 == nmeaMask));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a6b3cff1334d21099306d2f53c579801c}{LE\_GNSS\_NMEA\_MASK\_GPGRS}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a6b3cff1334d21099306d2f53c579801c}{LE\_GNSS\_NMEA\_MASK\_GPGRS} == nmeaMask) || (0 == nmeaMask));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a43e87babb9e5e97f128d62c29db81156}{LE\_GNSS\_NMEA\_MASK\_GPGLL}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a43e87babb9e5e97f128d62c29db81156}{LE\_GNSS\_NMEA\_MASK\_GPGLL} == nmeaMask) || (0 == nmeaMask));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4ad641bed7cd679267833705d9ea06113b}{LE\_GNSS\_NMEA\_MASK\_DEBUG}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4ad641bed7cd679267833705d9ea06113b}{LE\_GNSS\_NMEA\_MASK\_DEBUG} == nmeaMask) || (0 == nmeaMask));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a5e8dfce6b645922c02f91deed92a6c79}{LE\_GNSS\_NMEA\_MASK\_GPDTM}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a5e8dfce6b645922c02f91deed92a6c79}{LE\_GNSS\_NMEA\_MASK\_GPDTM} == nmeaMask) || (0 == nmeaMask));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4acae1ec186d42dedafbfad2a7d66efc97}{LE\_GNSS\_NMEA\_MASK\_GAGNS}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4acae1ec186d42dedafbfad2a7d66efc97}{LE\_GNSS\_NMEA\_MASK\_GAGNS} == nmeaMask) || (0 == nmeaMask));
+    \textcolor{comment}{// Test 3: test bit mask combinations}
+    saveNmeaMask = \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4ae3a9186e2509a5818697532fd4f553f1}{LE\_GNSS\_NMEA\_MASK\_GPGGA} | 
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a162dab2523203626145738b7329e03ba}{LE\_GNSS\_NMEA\_MASK\_GPGSA} | \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a7879eb2c11fd2dac854e8222405536a0}{LE\_GNSS\_NMEA\_MASK\_GPGSV} |
+                   \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a3d7307ca9fd8908afcfad5818a2ef466}{LE\_GNSS\_NMEA\_MASK\_GPRMC} | 
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a48d8dceba710b63a9d5813099e5915f3}{LE\_GNSS\_NMEA\_MASK\_GPVTG} | \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a67fb788dfc55bfad0773dceb88c736c2}{LE\_GNSS\_NMEA\_MASK\_GLGSV} |
+                   \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a328c4676306676d2233ff7617c526b19}{LE\_GNSS\_NMEA\_MASK\_GNGNS} | 
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a7eed82378f4d839e6ebfcea58685de60}{LE\_GNSS\_NMEA\_MASK\_GNGSA} | \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a36d49a8762bab4b27e56bf81ccba8c37}{LE\_GNSS\_NMEA\_MASK\_GAGGA} |
+                   \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4ad90d4e63d87610e3cac2325e56ee3b0b}{LE\_GNSS\_NMEA\_MASK\_GAGSA} | 
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a4dd1a5984838c1495bac06e506050fd6}{LE\_GNSS\_NMEA\_MASK\_GAGSV} | \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a1e0f185e66f2218c783997e81832a22b}{LE\_GNSS\_NMEA\_MASK\_GARMC} |
+                   \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a4824507c2b2d01c7969408f11ecc98d0}{LE\_GNSS\_NMEA\_MASK\_GAVTG} | 
+      \hyperlink{le__gnss__interface_8h_ad40fd63901477f695a1d5936a5ade316}{LE\_GNSS\_NMEA\_MASK\_PQXFI} | \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4adb6dfcb014641193a2bb3bd405cd2b84}{LE\_GNSS\_NMEA\_MASK\_PTYPE};
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(saveNmeaMask));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(nmeaMask == saveNmeaMask);
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(saveNmeaMask | 
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a6b3cff1334d21099306d2f53c579801c}{LE\_GNSS\_NMEA\_MASK\_GPGRS}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(((saveNmeaMask | \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a6b3cff1334d21099306d2f53c579801c}{LE\_GNSS\_NMEA\_MASK\_GPGRS}) == nmeaMask) || (
+      saveNmeaMask == nmeaMask));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(saveNmeaMask | 
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a43e87babb9e5e97f128d62c29db81156}{LE\_GNSS\_NMEA\_MASK\_GPGLL}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(((saveNmeaMask | \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a43e87babb9e5e97f128d62c29db81156}{LE\_GNSS\_NMEA\_MASK\_GPGLL}) == nmeaMask) || (
+      saveNmeaMask == nmeaMask));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(saveNmeaMask | 
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4ad641bed7cd679267833705d9ea06113b}{LE\_GNSS\_NMEA\_MASK\_DEBUG}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(((saveNmeaMask | \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4ad641bed7cd679267833705d9ea06113b}{LE\_GNSS\_NMEA\_MASK\_DEBUG}) == nmeaMask) || (
+      saveNmeaMask == nmeaMask));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(saveNmeaMask | 
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a5e8dfce6b645922c02f91deed92a6c79}{LE\_GNSS\_NMEA\_MASK\_GPDTM}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(((saveNmeaMask | \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4a5e8dfce6b645922c02f91deed92a6c79}{LE\_GNSS\_NMEA\_MASK\_GPDTM}) == nmeaMask) || (
+      saveNmeaMask == nmeaMask));
+
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_ab9253e29d74cae6e962dcc8b94f0e3c1}{le\_gnss\_SetNmeaSentences}(saveNmeaMask | 
+      \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4acae1ec186d42dedafbfad2a7d66efc97}{LE\_GNSS\_NMEA\_MASK\_GAGNS}));
+    \hyperlink{le__log_8h_a7cd2daa3d4af1de4d29e0eed95187484}{LE\_ASSERT\_OK}(\hyperlink{le__gnss__interface_8h_a985845ac33d35c34ac3099b6557ca8ea}{le\_gnss\_GetNmeaSentences}(&nmeaMask));
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(((saveNmeaMask | \hyperlink{le__gnss__interface_8h_a5949bae89e9510d51fc15eb400e345d4acae1ec186d42dedafbfad2a7d66efc97}{LE\_GNSS\_NMEA\_MASK\_GAGNS}) == nmeaMask) || (
+      saveNmeaMask == nmeaMask));
+
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Test TestLeGnssNmeaSentences OK"});
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * Test: test SUPL certificate}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\textcolor{keyword}{static} \textcolor{keywordtype}{void} TestSuplCertificate
+(
+    \textcolor{keywordtype}{void}
+)
+\{
+    \hyperlink{le__gnss__interface_8h_a70085fe9ff78ec5c7426fd4c9dc2f9dc}{le\_gnss\_AssistedMode\_t} gnssMode;
+
+    memset(&ShortSuplCertificate, 0x69, \textcolor{keyword}{sizeof}(ShortSuplCertificate));
+
+    \textcolor{comment}{//Gets the SUPL Assisted-GNSS LE\_GNSS\_STANDALONE\_MODE mode.}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_a2b5eb5e1efbc31683e717dd7181ff1d3}{le\_gnss\_GetSuplAssistedMode}(&gnssMode)));
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Supl Assisted Mode obtained: %d"},gnssMode);
+
+    \textcolor{comment}{//Set the SUPL Assisted-GNSS mode.}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_a5d74c2ad91a504a1d0ac35b4f4f2c382}{le\_gnss\_SetSuplAssistedMode}(
+      \hyperlink{le__gnss__interface_8h_a70085fe9ff78ec5c7426fd4c9dc2f9dca32336a5d9f3cf42251c081fbc0ae7b36}{LE\_GNSS\_STANDALONE\_MODE})));
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SUPL Stand alone mode set"});
+
+    \textcolor{comment}{//Gets the SUPL Assisted-GNSS mode.}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_a2b5eb5e1efbc31683e717dd7181ff1d3}{le\_gnss\_GetSuplAssistedMode}(&gnssMode)));
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Supl Assisted Mode obtained: %d"},gnssMode);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a70085fe9ff78ec5c7426fd4c9dc2f9dca32336a5d9f3cf42251c081fbc0ae7b36}{LE\_GNSS\_STANDALONE\_MODE} == gnssMode);
+
+    \textcolor{comment}{//Set the SUPL Assisted-GNSSLE\_GNSS\_MS\_BASED\_MODE mode.}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_a5d74c2ad91a504a1d0ac35b4f4f2c382}{le\_gnss\_SetSuplAssistedMode}(
+      \hyperlink{le__gnss__interface_8h_a70085fe9ff78ec5c7426fd4c9dc2f9dca4d21852db64fad5ca5c90b35efaaefff}{LE\_GNSS\_MS\_BASED\_MODE})));
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SUPL Ms based mode set"});
+
+    \textcolor{comment}{//Gets the SUPL Assisted-GNSS mode.}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_a2b5eb5e1efbc31683e717dd7181ff1d3}{le\_gnss\_GetSuplAssistedMode}(&gnssMode)));
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Supl Assisted Mode obtained: %d"},gnssMode);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a70085fe9ff78ec5c7426fd4c9dc2f9dca4d21852db64fad5ca5c90b35efaaefff}{LE\_GNSS\_MS\_BASED\_MODE} == gnssMode);
+
+    \textcolor{comment}{//Set the SUPL Assisted-GNSS mode LE\_GNSS\_MS\_ASSISTED\_MODE.}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_a5d74c2ad91a504a1d0ac35b4f4f2c382}{le\_gnss\_SetSuplAssistedMode}(
+      \hyperlink{le__gnss__interface_8h_a70085fe9ff78ec5c7426fd4c9dc2f9dca185c89cade65e4e40dc69c55327c726a}{LE\_GNSS\_MS\_ASSISTED\_MODE})));
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"SUPL Assisted mode set"});
+
+    \textcolor{comment}{//Gets the SUPL Assisted-GNSS mode.}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_a2b5eb5e1efbc31683e717dd7181ff1d3}{le\_gnss\_GetSuplAssistedMode}(&gnssMode)));
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Supl Assisted Mode obtained: %d"},gnssMode);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a70085fe9ff78ec5c7426fd4c9dc2f9dca185c89cade65e4e40dc69c55327c726a}{LE\_GNSS\_MS\_ASSISTED\_MODE} == gnssMode);
+
+    \textcolor{comment}{//Set the SUPL Assisted-GNSS mode LE\_GNSS\_MS\_ASSISTED\_MODE.}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}((\hyperlink{le__gnss__interface_8h_a5d74c2ad91a504a1d0ac35b4f4f2c382}{le\_gnss\_SetSuplAssistedMode}(
+      \hyperlink{le__gnss__interface_8h_a70085fe9ff78ec5c7426fd4c9dc2f9dca185c89cade65e4e40dc69c55327c726a}{LE\_GNSS\_MS\_ASSISTED\_MODE}+10)) == \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86ca5377262702e8434207b03533259e0c5f}{LE\_UNSUPPORTED});
+
+    \textcolor{comment}{//Gets the SUPL Assisted-GNSS mode.}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_a2b5eb5e1efbc31683e717dd7181ff1d3}{le\_gnss\_GetSuplAssistedMode}(&gnssMode)));
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"Supl Assisted Mode obtained: %d"},gnssMode);
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__gnss__interface_8h_a70085fe9ff78ec5c7426fd4c9dc2f9dca185c89cade65e4e40dc69c55327c726a}{LE\_GNSS\_MS\_ASSISTED\_MODE} == gnssMode);
+
+    \textcolor{comment}{//Set the SUPL server URL}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_a92e3a26e2ba3c220a282fad8817c41be}{le\_gnss\_SetSuplServerUrl}(\textcolor{stringliteral}{"http://sls1.sirf"})));
+
+    \textcolor{comment}{//Set the SUPL server URL}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_a92e3a26e2ba3c220a282fad8817c41be}{le\_gnss\_SetSuplServerUrl}(\textcolor{stringliteral}{"http://sls1.sirf.com"})))
+      ;
+    \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"le\_gnss\_SetSuplServerUrl OK"});
+
+    \textcolor{comment}{//Injects the SUPL certificate with lenght zero :}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cabe505065132f6e8850da6f476d8fb783}{LE\_BAD\_PARAMETER} == (
+      \hyperlink{le__gnss__interface_8h_a85bda68acc951ee14f5678dd8d1b532f}{le\_gnss\_InjectSuplCertificate}(0,0,ShortSuplCertificate)));
+    \textcolor{comment}{//Injects the SUPL certificate with ID error}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cabe505065132f6e8850da6f476d8fb783}{LE\_BAD\_PARAMETER} == (
+      \hyperlink{le__gnss__interface_8h_a85bda68acc951ee14f5678dd8d1b532f}{le\_gnss\_InjectSuplCertificate}(10,
+                               strlen(ShortSuplCertificate),ShortSuplCertificate)));
+
+    \textcolor{comment}{//Injects the SUPL certificate to be used in A-GNSS sessions}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_a85bda68acc951ee14f5678dd8d1b532f}{le\_gnss\_InjectSuplCertificate}(0,
+                               strlen(ShortSuplCertificate),ShortSuplCertificate)));
+
+    \textcolor{comment}{// cannot test certificate with lenght greater than LE\_GNSS\_SUPL\_CERTIFICATE\_MAX\_BYTES}
+    \textcolor{comment}{// there is no return code in this case.}
+    \textcolor{comment}{//Delete the SUPL certificate 10 (out of range)}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cabe505065132f6e8850da6f476d8fb783}{LE\_BAD\_PARAMETER} == (
+      \hyperlink{le__gnss__interface_8h_aec8d50c209ce21a979b7e9f552353aec}{le\_gnss\_DeleteSuplCertificate}(10)));
+
+    \textcolor{comment}{//Delete a SUPL certificate not used in A-GNSS sessions}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86cac409634423b6b1ef09643529f6224798}{LE\_FAULT} == (\hyperlink{le__gnss__interface_8h_aec8d50c209ce21a979b7e9f552353aec}{le\_gnss\_DeleteSuplCertificate}(1)))
+      ;
+
+    \textcolor{comment}{//Delete the SUPL certificate used in A-GNSS sessions}
+    \hyperlink{le__log_8h_ac0dbbef91dc0fed449d0092ff0557b39}{LE\_ASSERT}(LE\_OK == (\hyperlink{le__gnss__interface_8h_aec8d50c209ce21a979b7e9f552353aec}{le\_gnss\_DeleteSuplCertificate}(0)));
+
+\}
+
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}\textcolor{comment}{}
+\textcolor{comment}{/**}
+\textcolor{comment}{ * App init.}
+\textcolor{comment}{ *}
+\textcolor{comment}{ */}
+\textcolor{comment}{//--------------------------------------------------------------------------------------------------}
+\hyperlink{le__event_loop_8h_abdb9187a56836a93d19cc793cbd4b7ec}{COMPONENT\_INIT}
+\{
+     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== GNSS device Test  ========"});
+     TestLeGnssDevice();
+     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== GNSS device Start Test  ========"});
+     TestLeGnssStart();
+     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== GNSS device Restart Test  ========"});
+     TestLeGnssRestart();
+     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== GNSS position handler Test  ========"});
+     TestLeGnssPositionHandler();
+     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== GNSS TTFF Test  ========"});
+     TestLeGnssTtffMeasurement();
+     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== GNSS Constellation Test  ========"});
+     TestLeGnssConstellations();
+     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== GNSS NMEA sentences Test  ========"});
+     TestLeGnssNmeaSentences();
+     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== Supl Certificate Test  ========"});
+     TestSuplCertificate();
+     \hyperlink{le__log_8h_a23e6d206faa64f612045d688cdde5808}{LE\_INFO}(\textcolor{stringliteral}{"======== GNSS Test SUCCESS ========"});
+     exit(EXIT\_SUCCESS);
+\}
+\end{DoxyCodeInclude}
+ 

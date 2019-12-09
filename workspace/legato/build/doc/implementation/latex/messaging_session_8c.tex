@@ -1,0 +1,1180 @@
+\hypertarget{messaging_session_8c}{}\section{framework/liblegato/linux/messaging\+Session.c File Reference}
+\label{messaging_session_8c}\index{framework/liblegato/linux/messaging\+Session.\+c@{framework/liblegato/linux/messaging\+Session.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}unix\+Socket.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}service\+Directory/service\+Directory\+Protocol.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}messaging\+Interface.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}messaging\+Session.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}messaging\+Protocol.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}messaging\+Message.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{messaging_session_8c_ad8aac8f68a446439a1f367a7610644af}{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+X\+NS}~32
+\item 
+\#define \hyperlink{messaging_session_8c_a0376b2ead2de10bb7ab6a4d21ec304e9}{L\+O\+CK}~\hyperlink{sbtrace_8c_a7c6c2e5e914cf8eca19d150e90f3b106}{L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+lock(\&\hyperlink{thread_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{Mutex}) == 0);
+\item 
+\#define \hyperlink{messaging_session_8c_ac82effb31e82e32254efc8b57251d59e}{U\+N\+L\+O\+CK}~\hyperlink{sbtrace_8c_a7c6c2e5e914cf8eca19d150e90f3b106}{L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+unlock(\&\hyperlink{thread_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{Mutex}) == 0);
+\item 
+\#define \hyperlink{messaging_session_8c_a5f6aa8edcd99914757600b5d3b259bb7}{T\+R\+A\+CE}(...)~\hyperlink{le__log_8h_a331fb6c78ccddeafc455ad9c64e42008}{L\+E\+\_\+\+T\+R\+A\+CE}(\hyperlink{timer_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref}, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+)
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_aad630c6f09acee4dd69c1c4f89a8c0aa}{Attempt\+Open} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a054fe8b7e70ea77b397a76144a8f74ef}{Push\+Transmit\+Queue} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr, \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+static \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{messaging_session_8c_a8c92046961e15450becb2961eb587caf}{Pop\+Transmit\+Queue} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_abb7fec792c6592e2c4e5fc34bd868439}{Un\+Pop\+Transmit\+Queue} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr, \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a866b278ff42babaa0d600979f52cf5de}{Push\+Receive\+Queue} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr, \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+static \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{messaging_session_8c_a15241be26c7e3d84458b3ee6e16d6f06}{Pop\+Receive\+Queue} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a64beebb9a8c7f511227830ef250a2bbb}{Create\+Txn\+Id} (\hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+static \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{messaging_session_8c_aaa230814717d697fa0bf2937c975b3d7}{Lookup\+Txn\+Id} (\hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_aea18336634713cb3a859f1a3add04407}{Delete\+Txn\+Id} (\hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_abdb59b1b77ac85b3e6b0d9bfad7b84f2}{Add\+To\+Txn\+List} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr, \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a54f0972c88c2797a55ff07b82c9a59a6}{Remove\+From\+Txn\+List} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr, \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a56cd751abdef8b86df1e55d258383d60}{Purge\+Txn\+List} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a4a5670aef718154fbef5445387fc273e}{Purge\+Transmit\+Queue} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a7d60500bf46b58bf7a2aae7d50032078}{Purge\+Receive\+Queue} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$ \hyperlink{messaging_session_8c_ae1401a34483329819e6c849a3307e00e}{Create\+Session} (\hyperlink{le__messaging_8h_a67826f96880f776bda0a3b9117304b45}{le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t} interface\+Ref)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a48d891f9fc1b815f15d634ddb7c0b837}{Close\+Session} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a20ce77683a5ce1d12ade64604156ed8c}{Delete\+Session} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static int \hyperlink{messaging_session_8c_a7e0063c4cbfa5a8c104c386ef325878e}{Create\+Socket} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{messaging_session_8c_a2b4244217dc995b63fcd5b53cc1b5280}{Connect\+To\+Service\+Directory} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_ac2cf1a018a7d8a4f74a40fc47279df4b}{Enable\+Writeability\+Notification} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a24b69957220fad472110d59c466662a1}{Disable\+Writeability\+Notification} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_acdc5d8b23e1ddc75b246f87f9324e6d1}{Retry\+Open} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{messaging_session_8c_acc7ef8c6b03679892f7c389cb90a91eb}{Receive\+Session\+Open\+Response} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{messaging_session_8c_a652e64f50c89f10a69b4a273b3009c0c}{Send\+Session\+Open\+Response} (int socket\+Fd)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a46097c087af1589a6ac2b5c0e3d80122}{Process\+Message\+From\+Server} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr, \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_aa44a91ccf3c2cf7383d90df8ddc5a363}{Process\+Received\+Messages} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_ac6ca1a32df361bc1f82cdd021d0e5b62}{Client\+Socket\+Hang\+Up} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a1310f9a3ca0f40c98d654d4deed7ddee}{Client\+Socket\+Error} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a96431b5ec1eb708c002dd5416060cfcc}{Receive\+Messages} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a0fedf5237e24cd7a34cbcb51f10dbdad}{Server\+Socket\+Hang\+Up} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_afb0d96ed0dea89527c4c0db932da9bbf}{Server\+Socket\+Error} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_aee7927c85a2c413f43ea9ede7d2573d5}{Send\+From\+Transmit\+Queue} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_ab61ef2852f84269b8bc9e89ff4f1eadf}{Client\+Socket\+Readable} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_ae0ec8c6b91826702d21feb1cee96100d}{Client\+Socket\+Writeable} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a099d0d1401ef242266bfa0bc4fccc9f3}{Client\+Socket\+Event\+Handler} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, short events)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_ab7dc31f9c36831a3b414e54ddfc6af21}{Server\+Socket\+Readable} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_abfc64b02e4b823a5cb215842042c5d96}{Server\+Socket\+Writeable} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a01cc59b18cd9ddb7812105d75566516c}{Server\+Socket\+Event\+Handler} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, short events)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a49be5f107618eecebed39539e6026c58}{Start\+Socket\+Monitoring} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr, \hyperlink{le__fd_monitor_8h_ac2d5531f6fae37076c9a79682091a161}{le\+\_\+fd\+Monitor\+\_\+\+Handler\+Func\+\_\+t} handler\+Func)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{messaging_session_8c_a067a2dbe351cbcf764698c69c17e03fc}{Start\+Session\+Open\+Attempt} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr, bool should\+Wait)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{messaging_session_8c_a5677517fd9dba33ad79ebbcd314a7dc5}{Attempt\+Open\+Sync} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr, bool should\+Wait)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a299a52d21783d641bd32f79ac87ba32a}{Process\+Deferred\+Messages} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$param1\+Ptr, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$param2\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_ac17425690b46212458953438b15ed654}{Trigger\+Deferred\+Processing} (\hyperlink{structmsg_session___session__t}{msg\+Session\+\_\+\+Session\+\_\+t} $\ast$session\+Ptr)
+\item 
+size\+\_\+t $\ast$$\ast$ \hyperlink{messaging_session_8c_aeb080c025229e520487fe529160a5a10}{msg\+Session\+\_\+\+Get\+Session\+Obj\+List\+Chg\+Cnt\+Ref} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_ab4c031a82b80e4191b18f78c37ccb9ae}{msg\+Session\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{messaging_interface_8h_a4030c9bdeebdff523f6bce9f545e0f58}{msg\+Interface\+\_\+\+Type\+\_\+t} \hyperlink{messaging_session_8c_a5debe49b612d01db3559e1d0886e2281}{msg\+Session\+\_\+\+Get\+Interface\+Type} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+bool \hyperlink{messaging_session_8c_a9d6bfac0b85573b66d14e0ba498aaa2d}{msg\+Session\+\_\+\+Is\+Open} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a437772a607fe574d55c4b86e71ffae6d}{msg\+Session\+\_\+\+Send\+Message} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} message\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a76ceaaa7dff5e86dc363afdf73f4ef02}{msg\+Session\+\_\+\+Request\+Response} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+\hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{messaging_session_8c_a459264f04154b5ace3e64549ef8ed6bd}{msg\+Session\+\_\+\+Do\+Sync\+Request\+Response} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, \hyperlink{le__messaging_8h_a1e5c37fdd50a4d6d24cad82cb166f770}{le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} \hyperlink{log_tool_8c_a42c1c76c43e8d3aac1aaa1dcd535b278}{msg\+Ref})
+\item 
+\hyperlink{le__messaging_8h_a67826f96880f776bda0a3b9117304b45}{le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t} \hyperlink{messaging_session_8c_a9c3b45683bb34d184735ca0be67e7ce7}{msg\+Session\+\_\+\+Get\+Interface\+Ref} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{structle__dls___link__t}{le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$ \hyperlink{messaging_session_8c_a9940717c7914653cac4926da45cccc73}{msg\+Session\+\_\+\+Get\+List\+Link} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{messaging_session_8c_abdcdd17220e022fd6995d589ab23e8c0}{msg\+Session\+\_\+\+Get\+Session\+Containing\+Link} (\hyperlink{structle__dls___link__t}{le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$link\+Ptr)
+\item 
+\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{messaging_session_8c_a1eab8e34c05c26a8fcf42831845c44db}{msg\+Session\+\_\+\+Create\+Server\+Side\+Session} (\hyperlink{le__messaging_8h_ad9f0b13cde1d8c1eab5318dbcf0d9e28}{le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t} \hyperlink{log_daemon_8c_af9d57679b1e534ea2de7a838066d1354}{service\+Ref}, int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd})
+\item 
+\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{messaging_session_8c_a696d7c2d4e3725d3ddb5dd2d79d2d732}{le\+\_\+msg\+\_\+\+Create\+Session} (\hyperlink{le__messaging_8h_ac05e9b3268f8fb5776adab6fe11410e5}{le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} \hyperlink{log_daemon_8c_ab68a489ae7e59226149411d7282358cd}{protocol\+Ref}, const char $\ast$interface\+Name)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a2d2c311bf66a28d99cc21dc5264d7432}{le\+\_\+msg\+\_\+\+Set\+Session\+Context\+Ptr} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$ \hyperlink{messaging_session_8c_aa6af290efb4f6f28a0438811859506b2}{le\+\_\+msg\+\_\+\+Get\+Session\+Context\+Ptr} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a8d950c4b07741177d2c0927c31e3e29f}{le\+\_\+msg\+\_\+\+Delete\+Session} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_ac726cc93219d326e1b10a7d13a0f4f65}{le\+\_\+msg\+\_\+\+Set\+Session\+Recv\+Handler} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, \hyperlink{le__messaging_8h_a9aa36465329fb00e85fb3cbdf034298a}{le\+\_\+msg\+\_\+\+Receive\+Handler\+\_\+t} handler\+Func, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a981b1b0714abba85efc19293ac6d2744}{le\+\_\+msg\+\_\+\+Set\+Session\+Close\+Handler} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, \hyperlink{le__messaging_8h_a2db32a8ef90eced02789aee366c9dda2}{le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t} handler\+Func, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a574d37960a07c4fc2bde310408619cff}{le\+\_\+msg\+\_\+\+Open\+Session} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, \hyperlink{le__messaging_8h_a2db32a8ef90eced02789aee366c9dda2}{le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t} callback\+Func, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a8c6480e3708e20e1f9da032a93c80bc0}{le\+\_\+msg\+\_\+\+Open\+Session\+Sync} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{messaging_session_8c_a2ee1410da1dc345c86d6958b6cdda5e1}{le\+\_\+msg\+\_\+\+Try\+Open\+Session\+Sync} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{messaging_session_8c_a1af0671de74160d99be5bfe212c39369}{le\+\_\+msg\+\_\+\+Close\+Session} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{le__messaging_8h_ac05e9b3268f8fb5776adab6fe11410e5}{le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} \hyperlink{messaging_session_8c_a729fb1891da6ec1255debd04e2a0efdb}{le\+\_\+msg\+\_\+\+Get\+Session\+Protocol} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{le__messaging_8h_a67826f96880f776bda0a3b9117304b45}{le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t} \hyperlink{messaging_session_8c_a708715b598d1ecbe3f62f52f5955a61c}{le\+\_\+msg\+\_\+\+Get\+Session\+Interface} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{messaging_session_8c_a8c04f9cad0a768b4922a9987df84b65f}{le\+\_\+msg\+\_\+\+Get\+Client\+User\+Id} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, uid\+\_\+t $\ast$user\+Id\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{messaging_session_8c_a4fe4cb3d7a13f0b999aeb20eb5107f8b}{le\+\_\+msg\+\_\+\+Get\+Client\+Process\+Id} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, pid\+\_\+t $\ast$process\+Id\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{messaging_session_8c_ae17fcad4c9bc442dfb2403a50b5143a4}{le\+\_\+msg\+\_\+\+Get\+Client\+User\+Creds} (\hyperlink{le__messaging_8h_aebfc01e15b430a5b4f3038a5bd518904}{le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} \hyperlink{log_tool_8c_a0ba04d68f0faec00ca0db1c014f248be}{session\+Ref}, uid\+\_\+t $\ast$user\+Id\+Ptr, pid\+\_\+t $\ast$process\+Id\+Ptr)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static pthread\+\_\+mutex\+\_\+t \hyperlink{messaging_session_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{Mutex} = P\+T\+H\+R\+E\+A\+D\+\_\+\+M\+U\+T\+E\+X\+\_\+\+I\+N\+I\+T\+I\+A\+L\+I\+Z\+ER
+\item 
+static \hyperlink{le__log_8h_a055e29785e8d1c5bf1b3a230df8d65b7}{le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} \hyperlink{messaging_session_8c_a84d541f37420ace8bdf697deca689deb}{Trace\+Ref}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{messaging_session_8c_ac268acd60a7eabab6c180b3af299cb0e}{Session\+Pool\+Ref}
+\item 
+static \hyperlink{le__safe_ref_8h_aaf8fb3412fb840cb50366856affaf69b}{le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} \hyperlink{messaging_session_8c_a0112da11f693c41d9f3d8d49c72a8df1}{Txn\+Map\+Ref}
+\item 
+static size\+\_\+t \hyperlink{messaging_session_8c_a1053ea16f845a6b35af87e74ed81b8a3}{Session\+Obj\+List\+Change\+Count} = 0
+\item 
+static size\+\_\+t $\ast$ \hyperlink{messaging_session_8c_a48ae1900bb59ec957df0b6bab28ebe8f}{Session\+Obj\+List\+Change\+Count\+Ref} = \&\hyperlink{messaging_session_8c_a1053ea16f845a6b35af87e74ed81b8a3}{Session\+Obj\+List\+Change\+Count}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The Session module of the \hyperlink{c_messaging}{Low-\/level Messaging A\+PI} implementation.
+
+See \hyperlink{messaging_8c}{messaging.\+c} for an overview of the \hyperlink{c_messaging}{Low-\/level Messaging A\+PI} implementation.
+
+\begin{DoxyWarning}{Warning}
+The code in this file {\bfseries must} be thread safe and re-\/entrant.
+\end{DoxyWarning}
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!L\+O\+CK@{L\+O\+CK}}
+\index{L\+O\+CK@{L\+O\+CK}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{L\+O\+CK}{LOCK}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+CK~{\bf L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+lock(\&{\bf Mutex}) == 0);}\hypertarget{messaging_session_8c_a0376b2ead2de10bb7ab6a4d21ec304e9}{}\label{messaging_session_8c_a0376b2ead2de10bb7ab6a4d21ec304e9}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+X\+NS@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+X\+NS}}
+\index{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+X\+NS@{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+X\+NS}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+X\+NS}{MAX_EXPECTED_TXNS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+T\+X\+NS~32}\hypertarget{messaging_session_8c_ad8aac8f68a446439a1f367a7610644af}{}\label{messaging_session_8c_ad8aac8f68a446439a1f367a7610644af}
+The peak number of outstanding request-\/response transactions that we expect to have ongoing at the same time in the same process. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!T\+R\+A\+CE@{T\+R\+A\+CE}}
+\index{T\+R\+A\+CE@{T\+R\+A\+CE}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{T\+R\+A\+CE}{TRACE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define T\+R\+A\+CE(
+\begin{DoxyParamCaption}
+\item[{}]{...}
+\end{DoxyParamCaption}
+)~{\bf L\+E\+\_\+\+T\+R\+A\+CE}({\bf Trace\+Ref}, \#\#\+\_\+\+\_\+\+V\+A\+\_\+\+A\+R\+G\+S\+\_\+\+\_\+)}\hypertarget{messaging_session_8c_a5f6aa8edcd99914757600b5d3b259bb7}{}\label{messaging_session_8c_a5f6aa8edcd99914757600b5d3b259bb7}
+Macro used to generate trace output in this module. Takes the same parameters as \hyperlink{le__log_8h_a2a91ea8857cf190fde71d85ba930a498}{L\+E\+\_\+\+D\+E\+B\+U\+G()} et. al. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!U\+N\+L\+O\+CK@{U\+N\+L\+O\+CK}}
+\index{U\+N\+L\+O\+CK@{U\+N\+L\+O\+CK}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{U\+N\+L\+O\+CK}{UNLOCK}}]{\setlength{\rightskip}{0pt plus 5cm}\#define U\+N\+L\+O\+CK~{\bf L\+E\+\_\+\+A\+S\+S\+E\+RT}(pthread\+\_\+mutex\+\_\+unlock(\&{\bf Mutex}) == 0);}\hypertarget{messaging_session_8c_ac82effb31e82e32254efc8b57251d59e}{}\label{messaging_session_8c_ac82effb31e82e32254efc8b57251d59e}
+
+
+\subsection{Function Documentation}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Add\+To\+Txn\+List@{Add\+To\+Txn\+List}}
+\index{Add\+To\+Txn\+List@{Add\+To\+Txn\+List}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Add\+To\+Txn\+List(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr, le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{AddToTxnList(msgSession_Session_t *sessionPtr, le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Add\+To\+Txn\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_abdb59b1b77ac85b3e6b0d9bfad7b84f2}{}\label{messaging_session_8c_abdb59b1b77ac85b3e6b0d9bfad7b84f2}
+Adds a given message to a given session\textquotesingle{}s transaction list.
+
+This is only done on the client side after the message has been written to the socket. The server side doesn\textquotesingle{}t use a transaction list.
+
+\begin{DoxyWarning}{Warning}
+The Message object must have already had a transaction ID assigned to it using \hyperlink{messaging_session_8c_a64beebb9a8c7f511227830ef250a2bbb}{Create\+Txn\+Id()}. 
+\end{DoxyWarning}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Attempt\+Open@{Attempt\+Open}}
+\index{Attempt\+Open@{Attempt\+Open}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Attempt\+Open(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{AttemptOpen(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Attempt\+Open (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_aad630c6f09acee4dd69c1c4f89a8c0aa}{}\label{messaging_session_8c_aad630c6f09acee4dd69c1c4f89a8c0aa}
+Attempts to open a connection to a service (via the Service Directory\textquotesingle{}s client connection socket). \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Attempt\+Open\+Sync@{Attempt\+Open\+Sync}}
+\index{Attempt\+Open\+Sync@{Attempt\+Open\+Sync}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Attempt\+Open\+Sync(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr, bool should\+Wait)}{AttemptOpenSync(msgSession_Session_t *sessionPtr, bool shouldWait)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Attempt\+Open\+Sync (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr, }
+\item[{bool}]{should\+Wait}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a5677517fd9dba33ad79ebbcd314a7dc5}{}\label{messaging_session_8c_a5677517fd9dba33ad79ebbcd314a7dc5}
+Attempts to open a session, blocking (not returning) until the attempt is complete.
+
+Updates the session state to either O\+P\+EN or C\+L\+O\+S\+ED, depending on the result.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if the session was successfully opened.
+\item L\+E\+\_\+\+U\+N\+A\+V\+A\+I\+L\+A\+B\+LE if should\+Wait and server not currently offering service client i/f bound to.
+\item L\+E\+\_\+\+N\+O\+T\+\_\+\+P\+E\+R\+M\+I\+T\+T\+ED if should\+Wait and the client interface is not bound to any service.
+\item L\+E\+\_\+\+C\+O\+M\+M\+\_\+\+E\+R\+R\+OR if the Service Directory cannot be reached. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em should\+Wait} & true = if the client interface is not bound or the server is not advertising the service at this time, then wait until the binding or advertisement happens. false = don\textquotesingle{}t wait for a binding or advertisement if either is missing at this time. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Client\+Socket\+Error@{Client\+Socket\+Error}}
+\index{Client\+Socket\+Error@{Client\+Socket\+Error}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Socket\+Error(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{ClientSocketError(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Socket\+Error (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a1310f9a3ca0f40c98d654d4deed7ddee}{}\label{messaging_session_8c_a1310f9a3ca0f40c98d654d4deed7ddee}
+Client-\/side handler for an error on a session\textquotesingle{}s socket. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Client\+Socket\+Event\+Handler@{Client\+Socket\+Event\+Handler}}
+\index{Client\+Socket\+Event\+Handler@{Client\+Socket\+Event\+Handler}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Socket\+Event\+Handler(int fd, short events)}{ClientSocketEventHandler(int fd, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Socket\+Event\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a099d0d1401ef242266bfa0bc4fccc9f3}{}\label{messaging_session_8c_a099d0d1401ef242266bfa0bc4fccc9f3}
+File descriptor monitoring event handler function for client-\/side of I\+PC sockets. 
+\begin{DoxyParams}{Parameters}
+{\em fd} & Socket file descriptor. \\
+\hline
+{\em events} & Bit map of events that occurred (see \textquotesingle{}man 2 poll\textquotesingle{}) \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Client\+Socket\+Hang\+Up@{Client\+Socket\+Hang\+Up}}
+\index{Client\+Socket\+Hang\+Up@{Client\+Socket\+Hang\+Up}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Socket\+Hang\+Up(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{ClientSocketHangUp(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Socket\+Hang\+Up (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_ac6ca1a32df361bc1f82cdd021d0e5b62}{}\label{messaging_session_8c_ac6ca1a32df361bc1f82cdd021d0e5b62}
+Client-\/side handler for when the server closes a session\textquotesingle{}s socket connection. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Client\+Socket\+Readable@{Client\+Socket\+Readable}}
+\index{Client\+Socket\+Readable@{Client\+Socket\+Readable}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Socket\+Readable(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{ClientSocketReadable(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Socket\+Readable (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_ab61ef2852f84269b8bc9e89ff4f1eadf}{}\label{messaging_session_8c_ab61ef2852f84269b8bc9e89ff4f1eadf}
+Client-\/side handler for when a Session\textquotesingle{}s socket becomes ready for reading (i.\+e., handle an incoming message). \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Client\+Socket\+Writeable@{Client\+Socket\+Writeable}}
+\index{Client\+Socket\+Writeable@{Client\+Socket\+Writeable}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Client\+Socket\+Writeable(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{ClientSocketWriteable(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Client\+Socket\+Writeable (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_ae0ec8c6b91826702d21feb1cee96100d}{}\label{messaging_session_8c_ae0ec8c6b91826702d21feb1cee96100d}
+Client-\/side handler for a session\textquotesingle{}s socket becoming writeable. We only use this event when the socket has previously reported that it couldn\textquotesingle{}t accept any more messages and so we need to queue messages on the session\textquotesingle{}s Transmit Queue until the socket becomes writable again. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Close\+Session@{Close\+Session}}
+\index{Close\+Session@{Close\+Session}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Close\+Session(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{CloseSession(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Close\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a48d891f9fc1b815f15d634ddb7c0b837}{}\label{messaging_session_8c_a48d891f9fc1b815f15d634ddb7c0b837}
+Closes a session.
+
+\begin{DoxyNote}{Note}
+This is used on both the client side and the server side. 
+\end{DoxyNote}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Connect\+To\+Service\+Directory@{Connect\+To\+Service\+Directory}}
+\index{Connect\+To\+Service\+Directory@{Connect\+To\+Service\+Directory}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Connect\+To\+Service\+Directory(int fd)}{ConnectToServiceDirectory(int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Connect\+To\+Service\+Directory (
+\begin{DoxyParamCaption}
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a2b4244217dc995b63fcd5b53cc1b5280}{}\label{messaging_session_8c_a2b4244217dc995b63fcd5b53cc1b5280}
+Connect a local socket to the Service Directory\textquotesingle{}s client connection socket.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+C\+O\+M\+M\+\_\+\+E\+R\+R\+OR if failed to connect to the Service Directory. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor of socket to be connected. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Create\+Session@{Create\+Session}}
+\index{Create\+Session@{Create\+Session}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Session(le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t interface\+Ref)}{CreateSession(le_msg_InterfaceRef_t interfaceRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf msg\+Session\+\_\+\+Session\+\_\+t}$\ast$ Create\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t}}]{interface\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_ae1401a34483329819e6c849a3307e00e}{}\label{messaging_session_8c_ae1401a34483329819e6c849a3307e00e}
+Creates a Session object.
+
+\begin{DoxyReturn}{Returns}
+Pointer to the Session object.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+This is used on both the client side and the server side. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em interface\+Ref} & Reference to the session\textquotesingle{}s interface. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Create\+Socket@{Create\+Socket}}
+\index{Create\+Socket@{Create\+Socket}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Socket(void)}{CreateSocket(void)}}]{\setlength{\rightskip}{0pt plus 5cm}static int Create\+Socket (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a7e0063c4cbfa5a8c104c386ef325878e}{}\label{messaging_session_8c_a7e0063c4cbfa5a8c104c386ef325878e}
+Creates an I\+PC socket \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Create\+Txn\+Id@{Create\+Txn\+Id}}
+\index{Create\+Txn\+Id@{Create\+Txn\+Id}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Txn\+Id(le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{CreateTxnId(le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Create\+Txn\+Id (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a64beebb9a8c7f511227830ef250a2bbb}{}\label{messaging_session_8c_a64beebb9a8c7f511227830ef250a2bbb}
+Creates a transaction ID for a given message and stores it inside the Message object. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Delete\+Session@{Delete\+Session}}
+\index{Delete\+Session@{Delete\+Session}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Session(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{DeleteSession(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a20ce77683a5ce1d12ade64604156ed8c}{}\label{messaging_session_8c_a20ce77683a5ce1d12ade64604156ed8c}
+Deletes a session object.
+
+\begin{DoxyNote}{Note}
+This function is common to both the client side and the server side. 
+\end{DoxyNote}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Delete\+Txn\+Id@{Delete\+Txn\+Id}}
+\index{Delete\+Txn\+Id@{Delete\+Txn\+Id}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Delete\+Txn\+Id(le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{DeleteTxnId(le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Delete\+Txn\+Id (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_aea18336634713cb3a859f1a3add04407}{}\label{messaging_session_8c_aea18336634713cb3a859f1a3add04407}
+Invalidates the transaction ID of a given message. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Disable\+Writeability\+Notification@{Disable\+Writeability\+Notification}}
+\index{Disable\+Writeability\+Notification@{Disable\+Writeability\+Notification}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Disable\+Writeability\+Notification(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{DisableWriteabilityNotification(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Disable\+Writeability\+Notification (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}\hypertarget{messaging_session_8c_a24b69957220fad472110d59c466662a1}{}\label{messaging_session_8c_a24b69957220fad472110d59c466662a1}
+Tells a Session object\textquotesingle{}s FD Monitor to stop notifying us when the session\textquotesingle{}s socket FD is writeable. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Enable\+Writeability\+Notification@{Enable\+Writeability\+Notification}}
+\index{Enable\+Writeability\+Notification@{Enable\+Writeability\+Notification}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Enable\+Writeability\+Notification(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{EnableWriteabilityNotification(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Enable\+Writeability\+Notification (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_ac2cf1a018a7d8a4f74a40fc47279df4b}{}\label{messaging_session_8c_ac2cf1a018a7d8a4f74a40fc47279df4b}
+Tells a Session object\textquotesingle{}s FD Monitor to start notifying us when the session\textquotesingle{}s socket FD becomes writeable. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Close\+Session@{le\+\_\+msg\+\_\+\+Close\+Session}}
+\index{le\+\_\+msg\+\_\+\+Close\+Session@{le\+\_\+msg\+\_\+\+Close\+Session}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Close\+Session(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{le_msg_CloseSession(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Close\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a1af0671de74160d99be5bfe212c39369}{}\label{messaging_session_8c_a1af0671de74160d99be5bfe212c39369}
+Terminates a session. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Create\+Session@{le\+\_\+msg\+\_\+\+Create\+Session}}
+\index{le\+\_\+msg\+\_\+\+Create\+Session@{le\+\_\+msg\+\_\+\+Create\+Session}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Create\+Session(le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t protocol\+Ref, const char $\ast$interface\+Name)}{le_msg_CreateSession(le_msg_ProtocolRef_t protocolRef, const char *interfaceName)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} le\+\_\+msg\+\_\+\+Create\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t}}]{protocol\+Ref, }
+\item[{const char $\ast$}]{interface\+Name}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a696d7c2d4e3725d3ddb5dd2d79d2d732}{}\label{messaging_session_8c_a696d7c2d4e3725d3ddb5dd2d79d2d732}
+Creates a session that will make use of a protocol to talk to a service on a given client interface.
+
+\begin{DoxyNote}{Note}
+This does not actually attempt to open the session. It just creates the session object, allowing the client the opportunity to register handlers for the session before attempting to open it using \hyperlink{messaging_session_8c_a574d37960a07c4fc2bde310408619cff}{le\+\_\+msg\+\_\+\+Open\+Session()}.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+The Session reference. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em protocol\+Ref} & Reference to the protocol to be used. \\
+\hline
+\mbox{\tt in}  & {\em interface\+Name} & Name of the client-\/side interface. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Delete\+Session@{le\+\_\+msg\+\_\+\+Delete\+Session}}
+\index{le\+\_\+msg\+\_\+\+Delete\+Session@{le\+\_\+msg\+\_\+\+Delete\+Session}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Delete\+Session(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{le_msg_DeleteSession(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Delete\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a8d950c4b07741177d2c0927c31e3e29f}{}\label{messaging_session_8c_a8d950c4b07741177d2c0927c31e3e29f}
+Deletes a session. This will end the session and free up any resources associated with it. Any pending request-\/response transactions in this sesssion will be terminated. If the far end has registered a session close handler callback, then it will be called. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Get\+Client\+Process\+Id@{le\+\_\+msg\+\_\+\+Get\+Client\+Process\+Id}}
+\index{le\+\_\+msg\+\_\+\+Get\+Client\+Process\+Id@{le\+\_\+msg\+\_\+\+Get\+Client\+Process\+Id}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Get\+Client\+Process\+Id(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, pid\+\_\+t $\ast$process\+Id\+Ptr)}{le_msg_GetClientProcessId(le_msg_SessionRef_t sessionRef, pid_t *processIdPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+msg\+\_\+\+Get\+Client\+Process\+Id (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{pid\+\_\+t $\ast$}]{process\+Id\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a4fe4cb3d7a13f0b999aeb20eb5107f8b}{}\label{messaging_session_8c_a4fe4cb3d7a13f0b999aeb20eb5107f8b}
+Fetches the user P\+ID of the client at the far end of a given I\+PC session.
+
+\begin{DoxyWarning}{Warning}
+This function can only be called for the server-\/side of a session.
+\end{DoxyWarning}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+C\+L\+O\+S\+ED if the session has closed. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\mbox{\tt out}  & {\em process\+Id\+Ptr} & Ptr to where the result is to be stored on success. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Get\+Client\+User\+Creds@{le\+\_\+msg\+\_\+\+Get\+Client\+User\+Creds}}
+\index{le\+\_\+msg\+\_\+\+Get\+Client\+User\+Creds@{le\+\_\+msg\+\_\+\+Get\+Client\+User\+Creds}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Get\+Client\+User\+Creds(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, uid\+\_\+t $\ast$user\+Id\+Ptr, pid\+\_\+t $\ast$process\+Id\+Ptr)}{le_msg_GetClientUserCreds(le_msg_SessionRef_t sessionRef, uid_t *userIdPtr, pid_t *processIdPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+msg\+\_\+\+Get\+Client\+User\+Creds (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{uid\+\_\+t $\ast$}]{user\+Id\+Ptr, }
+\item[{pid\+\_\+t $\ast$}]{process\+Id\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_ae17fcad4c9bc442dfb2403a50b5143a4}{}\label{messaging_session_8c_ae17fcad4c9bc442dfb2403a50b5143a4}
+Fetches the user credentials of the client at the far end of a given I\+PC session.
+
+\begin{DoxyWarning}{Warning}
+This function can only be called for the server-\/side of a session.
+\end{DoxyWarning}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+C\+L\+O\+S\+ED if the session has closed. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\mbox{\tt out}  & {\em user\+Id\+Ptr} & Ptr to where the uid is to be stored on success. \\
+\hline
+\mbox{\tt out}  & {\em process\+Id\+Ptr} & Ptr to where the pid is to be stored on success. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Get\+Client\+User\+Id@{le\+\_\+msg\+\_\+\+Get\+Client\+User\+Id}}
+\index{le\+\_\+msg\+\_\+\+Get\+Client\+User\+Id@{le\+\_\+msg\+\_\+\+Get\+Client\+User\+Id}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Get\+Client\+User\+Id(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, uid\+\_\+t $\ast$user\+Id\+Ptr)}{le_msg_GetClientUserId(le_msg_SessionRef_t sessionRef, uid_t *userIdPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+msg\+\_\+\+Get\+Client\+User\+Id (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{uid\+\_\+t $\ast$}]{user\+Id\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a8c04f9cad0a768b4922a9987df84b65f}{}\label{messaging_session_8c_a8c04f9cad0a768b4922a9987df84b65f}
+Fetches the user ID of the client at the far end of a given I\+PC session.
+
+\begin{DoxyWarning}{Warning}
+This function can only be called for the server-\/side of a session.
+\end{DoxyWarning}
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+C\+L\+O\+S\+ED if the session has closed. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\mbox{\tt out}  & {\em user\+Id\+Ptr} & Ptr to where the result is to be stored on success. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Get\+Session\+Context\+Ptr@{le\+\_\+msg\+\_\+\+Get\+Session\+Context\+Ptr}}
+\index{le\+\_\+msg\+\_\+\+Get\+Session\+Context\+Ptr@{le\+\_\+msg\+\_\+\+Get\+Session\+Context\+Ptr}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Get\+Session\+Context\+Ptr(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{le_msg_GetSessionContextPtr(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void}$\ast$ le\+\_\+msg\+\_\+\+Get\+Session\+Context\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_aa6af290efb4f6f28a0438811859506b2}{}\label{messaging_session_8c_aa6af290efb4f6f28a0438811859506b2}
+Fetches the opaque context value (void pointer) that was set earlier using \hyperlink{messaging_session_8c_a2d2c311bf66a28d99cc21dc5264d7432}{le\+\_\+msg\+\_\+\+Set\+Session\+Context\+Ptr()}.
+
+\begin{DoxyReturn}{Returns}
+The context\+Ptr value passed into \hyperlink{messaging_session_8c_a2d2c311bf66a28d99cc21dc5264d7432}{le\+\_\+msg\+\_\+\+Set\+Session\+Context\+Ptr()}, or N\+U\+LL if \hyperlink{messaging_session_8c_a2d2c311bf66a28d99cc21dc5264d7432}{le\+\_\+msg\+\_\+\+Set\+Session\+Context\+Ptr()} has not been called for this session yet. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Get\+Session\+Interface@{le\+\_\+msg\+\_\+\+Get\+Session\+Interface}}
+\index{le\+\_\+msg\+\_\+\+Get\+Session\+Interface@{le\+\_\+msg\+\_\+\+Get\+Session\+Interface}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Get\+Session\+Interface(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{le_msg_GetSessionInterface(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t} le\+\_\+msg\+\_\+\+Get\+Session\+Interface (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a708715b598d1ecbe3f62f52f5955a61c}{}\label{messaging_session_8c_a708715b598d1ecbe3f62f52f5955a61c}
+Fetches a reference to the interface that is associated with a given session.
+
+\begin{DoxyReturn}{Returns}
+A reference to the interface. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Get\+Session\+Protocol@{le\+\_\+msg\+\_\+\+Get\+Session\+Protocol}}
+\index{le\+\_\+msg\+\_\+\+Get\+Session\+Protocol@{le\+\_\+msg\+\_\+\+Get\+Session\+Protocol}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Get\+Session\+Protocol(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{le_msg_GetSessionProtocol(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Protocol\+Ref\+\_\+t} le\+\_\+msg\+\_\+\+Get\+Session\+Protocol (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a729fb1891da6ec1255debd04e2a0efdb}{}\label{messaging_session_8c_a729fb1891da6ec1255debd04e2a0efdb}
+Fetches a reference to the protocol that is being used for a given session.
+
+\begin{DoxyReturn}{Returns}
+A reference to the protocol. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Open\+Session@{le\+\_\+msg\+\_\+\+Open\+Session}}
+\index{le\+\_\+msg\+\_\+\+Open\+Session@{le\+\_\+msg\+\_\+\+Open\+Session}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Open\+Session(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t callback\+Func, void $\ast$context\+Ptr)}{le_msg_OpenSession(le_msg_SessionRef_t sessionRef, le_msg_SessionEventHandler_t callbackFunc, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Open\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t}}]{callback\+Func, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a574d37960a07c4fc2bde310408619cff}{}\label{messaging_session_8c_a574d37960a07c4fc2bde310408619cff}
+Opens a session with a service, providing a function to be called-\/back when the session is open.
+
+\begin{DoxyNote}{Note}
+Only clients open sessions. Servers must patiently wait for clients to open sessions with them.
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+If the client and server don\textquotesingle{}t agree on the protocol ID and maximum message size for the protocol, an attempt to open a session between that client and server will result in a fata error being logged and the client process being killed. 
+\end{DoxyWarning}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\mbox{\tt in}  & {\em callback\+Func} & Function to be called when open. N\+U\+LL if no notification is needed. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Opaque value to pass to the callback. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Open\+Session\+Sync@{le\+\_\+msg\+\_\+\+Open\+Session\+Sync}}
+\index{le\+\_\+msg\+\_\+\+Open\+Session\+Sync@{le\+\_\+msg\+\_\+\+Open\+Session\+Sync}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Open\+Session\+Sync(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{le_msg_OpenSessionSync(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Open\+Session\+Sync (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a8c6480e3708e20e1f9da032a93c80bc0}{}\label{messaging_session_8c_a8c6480e3708e20e1f9da032a93c80bc0}
+Synchronously open a session with a service. Blocks until the session is open or the attempt is rejected.
+
+This function logs a fatal error and terminates the calling process if unsuccessful.
+
+\begin{DoxyNote}{Note}
+Only clients open sessions. Servers must patiently wait for clients to open sessions with them.
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+If the client and server do not agree on the protocol ID and maximum message size for the protocol, then an attempt to open a session between that client and server will result in a fatal error being logged and the client process being killed. 
+\end{DoxyWarning}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Set\+Session\+Close\+Handler@{le\+\_\+msg\+\_\+\+Set\+Session\+Close\+Handler}}
+\index{le\+\_\+msg\+\_\+\+Set\+Session\+Close\+Handler@{le\+\_\+msg\+\_\+\+Set\+Session\+Close\+Handler}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Set\+Session\+Close\+Handler(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t handler\+Func, void $\ast$context\+Ptr)}{le_msg_SetSessionCloseHandler(le_msg_SessionRef_t sessionRef, le_msg_SessionEventHandler_t handlerFunc, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Set\+Session\+Close\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Event\+Handler\+\_\+t}}]{handler\+Func, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a981b1b0714abba85efc19293ac6d2744}{}\label{messaging_session_8c_a981b1b0714abba85efc19293ac6d2744}
+Sets the handler callback function to be called when the session is closed from the other end. A local termination of the session will not trigger this callback.
+
+The handler function will be called by the Legato event loop of the thread that created the session.
+
+\begin{DoxyNote}{Note}
+
+\begin{DoxyItemize}
+\item If not set on the client side, then the framework assumes that the client is not designed to recover from the server terminating the session, and the client process will terminate if the session is terminated by the server.
+\item This is a client-\/only function. Servers are expected to use \hyperlink{config_tree_8c_a382eae022f6c1c1aaadb2b48badec686}{le\+\_\+msg\+\_\+\+Add\+Service\+Close\+Handler()} instead. 
+\end{DoxyItemize}
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\mbox{\tt in}  & {\em handler\+Func} & Handler function. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Opaque pointer value to pass to handler. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Set\+Session\+Context\+Ptr@{le\+\_\+msg\+\_\+\+Set\+Session\+Context\+Ptr}}
+\index{le\+\_\+msg\+\_\+\+Set\+Session\+Context\+Ptr@{le\+\_\+msg\+\_\+\+Set\+Session\+Context\+Ptr}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Set\+Session\+Context\+Ptr(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, void $\ast$context\+Ptr)}{le_msg_SetSessionContextPtr(le_msg_SessionRef_t sessionRef, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Set\+Session\+Context\+Ptr (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a2d2c311bf66a28d99cc21dc5264d7432}{}\label{messaging_session_8c_a2d2c311bf66a28d99cc21dc5264d7432}
+Sets an opaque context value (void pointer) that can be retrieved from that session later using \hyperlink{messaging_session_8c_aa6af290efb4f6f28a0438811859506b2}{le\+\_\+msg\+\_\+\+Get\+Session\+Context\+Ptr()}. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Opaque value to be returned by \hyperlink{messaging_session_8c_aa6af290efb4f6f28a0438811859506b2}{le\+\_\+msg\+\_\+\+Get\+Session\+Context\+Ptr()}. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Set\+Session\+Recv\+Handler@{le\+\_\+msg\+\_\+\+Set\+Session\+Recv\+Handler}}
+\index{le\+\_\+msg\+\_\+\+Set\+Session\+Recv\+Handler@{le\+\_\+msg\+\_\+\+Set\+Session\+Recv\+Handler}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Set\+Session\+Recv\+Handler(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, le\+\_\+msg\+\_\+\+Receive\+Handler\+\_\+t handler\+Func, void $\ast$context\+Ptr)}{le_msg_SetSessionRecvHandler(le_msg_SessionRef_t sessionRef, le_msg_ReceiveHandler_t handlerFunc, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} le\+\_\+msg\+\_\+\+Set\+Session\+Recv\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Receive\+Handler\+\_\+t}}]{handler\+Func, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_ac726cc93219d326e1b10a7d13a0f4f65}{}\label{messaging_session_8c_ac726cc93219d326e1b10a7d13a0f4f65}
+Sets the receive handler callback function to be called when a non-\/response message arrives on this session.
+
+The handler function will be called by the Legato event loop of the thread that created the session.
+
+\begin{DoxyNote}{Note}
+This is a client-\/only function. Servers are expected to use \hyperlink{log_daemon_8c_a97f4b7f70e40fe5df7736de98c75c900}{le\+\_\+msg\+\_\+\+Set\+Service\+Recv\+Handler()} instead. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\mbox{\tt in}  & {\em handler\+Func} & Handler function. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Opaque pointer value to pass to the handler. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!le\+\_\+msg\+\_\+\+Try\+Open\+Session\+Sync@{le\+\_\+msg\+\_\+\+Try\+Open\+Session\+Sync}}
+\index{le\+\_\+msg\+\_\+\+Try\+Open\+Session\+Sync@{le\+\_\+msg\+\_\+\+Try\+Open\+Session\+Sync}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{le\+\_\+msg\+\_\+\+Try\+Open\+Session\+Sync(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{le_msg_TryOpenSessionSync(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} le\+\_\+msg\+\_\+\+Try\+Open\+Session\+Sync (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a2ee1410da1dc345c86d6958b6cdda5e1}{}\label{messaging_session_8c_a2ee1410da1dc345c86d6958b6cdda5e1}
+Synchronously open a session with a service. Does not wait for the session to become available if not available.
+
+\hyperlink{messaging_session_8c_a2ee1410da1dc345c86d6958b6cdda5e1}{le\+\_\+msg\+\_\+\+Try\+Open\+Session\+Sync()} differs from \hyperlink{messaging_session_8c_a8c6480e3708e20e1f9da032a93c80bc0}{le\+\_\+msg\+\_\+\+Open\+Session\+Sync()} in that \hyperlink{messaging_session_8c_a2ee1410da1dc345c86d6958b6cdda5e1}{le\+\_\+msg\+\_\+\+Try\+Open\+Session\+Sync()} will not wait for a server session to become available if it is not already available at the time of the call. That is, if the client\textquotesingle{}s interface is not bound to any service, or if the service that it is bound to is not currently advertised by the server, then \hyperlink{messaging_session_8c_a2ee1410da1dc345c86d6958b6cdda5e1}{le\+\_\+msg\+\_\+\+Try\+Open\+Session\+Sync()} will return an error code, while \hyperlink{messaging_session_8c_a8c6480e3708e20e1f9da032a93c80bc0}{le\+\_\+msg\+\_\+\+Open\+Session\+Sync()} will wait until the binding is created or the server advertises the service (or both).
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if the session was successfully opened.
+\item L\+E\+\_\+\+U\+N\+A\+V\+A\+I\+L\+A\+B\+LE if the server is not currently offering the service to which the client is bound.
+\item L\+E\+\_\+\+N\+O\+T\+\_\+\+P\+E\+R\+M\+I\+T\+T\+ED if the client interface is not bound to any service.
+\item L\+E\+\_\+\+C\+O\+M\+M\+\_\+\+E\+R\+R\+OR if the Service Directory cannot be reached.
+\end{DoxyItemize}
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Only clients open sessions. Servers\textquotesingle{} must patiently wait for clients to open sessions with them.
+\end{DoxyNote}
+\begin{DoxyWarning}{Warning}
+If the client and server do not agree on the maximum message size for the protocol, then an attempt to open a session between that client and server will result in a fatal error being logged and the client process being killed. 
+\end{DoxyWarning}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em session\+Ref} & Reference to the session. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Lookup\+Txn\+Id@{Lookup\+Txn\+Id}}
+\index{Lookup\+Txn\+Id@{Lookup\+Txn\+Id}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Lookup\+Txn\+Id(le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{LookupTxnId(le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} Lookup\+Txn\+Id (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_aaa230814717d697fa0bf2937c975b3d7}{}\label{messaging_session_8c_aaa230814717d697fa0bf2937c975b3d7}
+Looks for a request message that matches a received message\textquotesingle{}s transaction ID.
+
+\begin{DoxyReturn}{Returns}
+A reference to the matching request message, or N\+U\+LL if not found. 
+\end{DoxyReturn}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!msg\+Session\+\_\+\+Create\+Server\+Side\+Session@{msg\+Session\+\_\+\+Create\+Server\+Side\+Session}}
+\index{msg\+Session\+\_\+\+Create\+Server\+Side\+Session@{msg\+Session\+\_\+\+Create\+Server\+Side\+Session}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Session\+\_\+\+Create\+Server\+Side\+Session(le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t service\+Ref, int fd)}{msgSession_CreateServerSideSession(le_msg_ServiceRef_t serviceRef, int fd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} msg\+Session\+\_\+\+Create\+Server\+Side\+Session (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Service\+Ref\+\_\+t}}]{service\+Ref, }
+\item[{int}]{fd}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a1eab8e34c05c26a8fcf42831845c44db}{}\label{messaging_session_8c_a1eab8e34c05c26a8fcf42831845c44db}
+Creates a server-\/side Session object for a given client connection to a given Service.
+
+\begin{DoxyReturn}{Returns}
+A reference to the newly created Session object, or N\+U\+LL if failed.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Closes the file descriptor on failure. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & File descriptor of socket connected to client. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!msg\+Session\+\_\+\+Do\+Sync\+Request\+Response@{msg\+Session\+\_\+\+Do\+Sync\+Request\+Response}}
+\index{msg\+Session\+\_\+\+Do\+Sync\+Request\+Response@{msg\+Session\+\_\+\+Do\+Sync\+Request\+Response}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Session\+\_\+\+Do\+Sync\+Request\+Response(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{msgSession_DoSyncRequestResponse(le_msg_SessionRef_t sessionRef, le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} msg\+Session\+\_\+\+Do\+Sync\+Request\+Response (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a459264f04154b5ace3e64549ef8ed6bd}{}\label{messaging_session_8c_a459264f04154b5ace3e64549ef8ed6bd}
+Do a synchronous request-\/response transaction. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!msg\+Session\+\_\+\+Get\+Interface\+Ref@{msg\+Session\+\_\+\+Get\+Interface\+Ref}}
+\index{msg\+Session\+\_\+\+Get\+Interface\+Ref@{msg\+Session\+\_\+\+Get\+Interface\+Ref}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Session\+\_\+\+Get\+Interface\+Ref(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{msgSession_GetInterfaceRef(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Interface\+Ref\+\_\+t} msg\+Session\+\_\+\+Get\+Interface\+Ref (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a9c3b45683bb34d184735ca0be67e7ce7}{}\label{messaging_session_8c_a9c3b45683bb34d184735ca0be67e7ce7}
+Fetches the interface reference for a given Session object.
+
+\begin{DoxyReturn}{Returns}
+The interface reference. 
+\end{DoxyReturn}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!msg\+Session\+\_\+\+Get\+Interface\+Type@{msg\+Session\+\_\+\+Get\+Interface\+Type}}
+\index{msg\+Session\+\_\+\+Get\+Interface\+Type@{msg\+Session\+\_\+\+Get\+Interface\+Type}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Session\+\_\+\+Get\+Interface\+Type(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{msgSession_GetInterfaceType(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf msg\+Interface\+\_\+\+Type\+\_\+t} msg\+Session\+\_\+\+Get\+Interface\+Type (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a5debe49b612d01db3559e1d0886e2281}{}\label{messaging_session_8c_a5debe49b612d01db3559e1d0886e2281}
+Checks the interface type of a given Session reference.
+
+\begin{DoxyReturn}{Returns}
+interface object type. 
+\end{DoxyReturn}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!msg\+Session\+\_\+\+Get\+List\+Link@{msg\+Session\+\_\+\+Get\+List\+Link}}
+\index{msg\+Session\+\_\+\+Get\+List\+Link@{msg\+Session\+\_\+\+Get\+List\+Link}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Session\+\_\+\+Get\+List\+Link(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{msgSession_GetListLink(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+dls\+\_\+\+Link\+\_\+t}$\ast$ msg\+Session\+\_\+\+Get\+List\+Link (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a9940717c7914653cac4926da45cccc73}{}\label{messaging_session_8c_a9940717c7914653cac4926da45cccc73}
+Gets a pointer to the list link inside of a Session object. This is used to link the Session onto a Service\textquotesingle{}s list of open sessions.
+
+\begin{DoxyReturn}{Returns}
+Pointer to a link. 
+\end{DoxyReturn}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!msg\+Session\+\_\+\+Get\+Session\+Containing\+Link@{msg\+Session\+\_\+\+Get\+Session\+Containing\+Link}}
+\index{msg\+Session\+\_\+\+Get\+Session\+Containing\+Link@{msg\+Session\+\_\+\+Get\+Session\+Containing\+Link}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Session\+\_\+\+Get\+Session\+Containing\+Link(le\+\_\+dls\+\_\+\+Link\+\_\+t $\ast$link\+Ptr)}{msgSession_GetSessionContainingLink(le_dls_Link_t *linkPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t} msg\+Session\+\_\+\+Get\+Session\+Containing\+Link (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+dls\+\_\+\+Link\+\_\+t} $\ast$}]{link\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_abdcdd17220e022fd6995d589ab23e8c0}{}\label{messaging_session_8c_abdcdd17220e022fd6995d589ab23e8c0}
+Gets a reference to the Session object in which a given list link exists.
+
+\begin{DoxyReturn}{Returns}
+The reference. 
+\end{DoxyReturn}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!msg\+Session\+\_\+\+Get\+Session\+Obj\+List\+Chg\+Cnt\+Ref@{msg\+Session\+\_\+\+Get\+Session\+Obj\+List\+Chg\+Cnt\+Ref}}
+\index{msg\+Session\+\_\+\+Get\+Session\+Obj\+List\+Chg\+Cnt\+Ref@{msg\+Session\+\_\+\+Get\+Session\+Obj\+List\+Chg\+Cnt\+Ref}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Session\+\_\+\+Get\+Session\+Obj\+List\+Chg\+Cnt\+Ref(void)}{msgSession_GetSessionObjListChgCntRef(void)}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t$\ast$$\ast$ msg\+Session\+\_\+\+Get\+Session\+Obj\+List\+Chg\+Cnt\+Ref (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_aeb080c025229e520487fe529160a5a10}{}\label{messaging_session_8c_aeb080c025229e520487fe529160a5a10}
+Exposing the session object list change counter; mainly for the Inspect tool. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!msg\+Session\+\_\+\+Init@{msg\+Session\+\_\+\+Init}}
+\index{msg\+Session\+\_\+\+Init@{msg\+Session\+\_\+\+Init}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Session\+\_\+\+Init(void)}{msgSession_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} msg\+Session\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_ab4c031a82b80e4191b18f78c37ccb9ae}{}\label{messaging_session_8c_ab4c031a82b80e4191b18f78c37ccb9ae}
+Initializes the messaging\+Session module. This must be called only once at start-\/up, before any other functions in that module are called. \begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000048}{Todo}]Make this configurable. \end{DoxyRefDesc}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!msg\+Session\+\_\+\+Is\+Open@{msg\+Session\+\_\+\+Is\+Open}}
+\index{msg\+Session\+\_\+\+Is\+Open@{msg\+Session\+\_\+\+Is\+Open}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Session\+\_\+\+Is\+Open(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref)}{msgSession_IsOpen(le_msg_SessionRef_t sessionRef)}}]{\setlength{\rightskip}{0pt plus 5cm}bool msg\+Session\+\_\+\+Is\+Open (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a9d6bfac0b85573b66d14e0ba498aaa2d}{}\label{messaging_session_8c_a9d6bfac0b85573b66d14e0ba498aaa2d}
+Checks whether a given Session reference is for an open session.
+
+\begin{DoxyReturn}{Returns}
+true if the session is still open, false if it is closed. 
+\end{DoxyReturn}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!msg\+Session\+\_\+\+Request\+Response@{msg\+Session\+\_\+\+Request\+Response}}
+\index{msg\+Session\+\_\+\+Request\+Response@{msg\+Session\+\_\+\+Request\+Response}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Session\+\_\+\+Request\+Response(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{msgSession_RequestResponse(le_msg_SessionRef_t sessionRef, le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} msg\+Session\+\_\+\+Request\+Response (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a76ceaaa7dff5e86dc363afdf73f4ef02}{}\label{messaging_session_8c_a76ceaaa7dff5e86dc363afdf73f4ef02}
+Start an asynchronous request-\/response transaction. \begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000050}{Todo}]Allow other threads to send? \end{DoxyRefDesc}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!msg\+Session\+\_\+\+Send\+Message@{msg\+Session\+\_\+\+Send\+Message}}
+\index{msg\+Session\+\_\+\+Send\+Message@{msg\+Session\+\_\+\+Send\+Message}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{msg\+Session\+\_\+\+Send\+Message(le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t session\+Ref, le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t message\+Ref)}{msgSession_SendMessage(le_msg_SessionRef_t sessionRef, le_msg_MessageRef_t messageRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} msg\+Session\+\_\+\+Send\+Message (
+\begin{DoxyParamCaption}
+\item[{{\bf le\+\_\+msg\+\_\+\+Session\+Ref\+\_\+t}}]{session\+Ref, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{message\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{messaging_session_8c_a437772a607fe574d55c4b86e71ffae6d}{}\label{messaging_session_8c_a437772a607fe574d55c4b86e71ffae6d}
+Sends a given Message object through a given Session. \begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000049}{Todo}]Allow other threads to send? \end{DoxyRefDesc}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Pop\+Receive\+Queue@{Pop\+Receive\+Queue}}
+\index{Pop\+Receive\+Queue@{Pop\+Receive\+Queue}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Pop\+Receive\+Queue(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{PopReceiveQueue(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} Pop\+Receive\+Queue (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a15241be26c7e3d84458b3ee6e16d6f06}{}\label{messaging_session_8c_a15241be26c7e3d84458b3ee6e16d6f06}
+Pops a message off of the Receive Queue.
+
+\begin{DoxyReturn}{Returns}
+A reference to the Message object that was popped from the queue, or N\+U\+LL if the queue is empty. 
+\end{DoxyReturn}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Pop\+Transmit\+Queue@{Pop\+Transmit\+Queue}}
+\index{Pop\+Transmit\+Queue@{Pop\+Transmit\+Queue}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Pop\+Transmit\+Queue(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{PopTransmitQueue(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t} Pop\+Transmit\+Queue (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a8c92046961e15450becb2961eb587caf}{}\label{messaging_session_8c_a8c92046961e15450becb2961eb587caf}
+Pops a message off of the Transmit Queue.
+
+\begin{DoxyReturn}{Returns}
+A reference to the Message object that was popped from the queue, or N\+U\+LL if the queue is empty.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+This is used on both the client side and the server side. 
+\end{DoxyNote}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Process\+Deferred\+Messages@{Process\+Deferred\+Messages}}
+\index{Process\+Deferred\+Messages@{Process\+Deferred\+Messages}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Deferred\+Messages(void $\ast$param1\+Ptr, void $\ast$param2\+Ptr)}{ProcessDeferredMessages(void *param1Ptr, void *param2Ptr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Process\+Deferred\+Messages (
+\begin{DoxyParamCaption}
+\item[{{\bf void} $\ast$}]{param1\+Ptr, }
+\item[{{\bf void} $\ast$}]{param2\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a299a52d21783d641bd32f79ac87ba32a}{}\label{messaging_session_8c_a299a52d21783d641bd32f79ac87ba32a}
+Do deferred processing of the Receive Queue for a session.
+
+This is really just a way to kick start processing of messages on the session\textquotesingle{}s Receive Queue later, when they couldn\textquotesingle{}t be processed immediately because a synchronous transaction was underway at the time.
+
+The that Receive Queue could have already been drained before this function was run, so don\textquotesingle{}t get upset if there aren\textquotesingle{}t any messages left to process.
+
+\begin{DoxyWarning}{Warning}
+The Session may have already been closed, reopened, or even deleted since the function call was queued to the Event Queue.
+\end{DoxyWarning}
+\begin{DoxyNote}{Note}
+This function is called by the Event Loop as a \char`\"{}queued function\char`\"{}. That\textquotesingle{}s why the parameter list looks unusual. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em param1\+Ptr} & Pointer to a Session object. \\
+\hline
+ & {\em param2\+Ptr} & not used \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Process\+Message\+From\+Server@{Process\+Message\+From\+Server}}
+\index{Process\+Message\+From\+Server@{Process\+Message\+From\+Server}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Message\+From\+Server(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr, le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{ProcessMessageFromServer(msgSession_Session_t *sessionPtr, le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Process\+Message\+From\+Server (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a46097c087af1589a6ac2b5c0e3d80122}{}\label{messaging_session_8c_a46097c087af1589a6ac2b5c0e3d80122}
+Process a message that was received from a server. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Process\+Received\+Messages@{Process\+Received\+Messages}}
+\index{Process\+Received\+Messages@{Process\+Received\+Messages}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Received\+Messages(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{ProcessReceivedMessages(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Process\+Received\+Messages (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_aa44a91ccf3c2cf7383d90df8ddc5a363}{}\label{messaging_session_8c_aa44a91ccf3c2cf7383d90df8ddc5a363}
+Process all the messages waiting in the Receive Queue. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Purge\+Receive\+Queue@{Purge\+Receive\+Queue}}
+\index{Purge\+Receive\+Queue@{Purge\+Receive\+Queue}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Purge\+Receive\+Queue(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{PurgeReceiveQueue(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Purge\+Receive\+Queue (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a7d60500bf46b58bf7a2aae7d50032078}{}\label{messaging_session_8c_a7d60500bf46b58bf7a2aae7d50032078}
+Removes all messages from the Receive Queue and deletes them. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Purge\+Transmit\+Queue@{Purge\+Transmit\+Queue}}
+\index{Purge\+Transmit\+Queue@{Purge\+Transmit\+Queue}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Purge\+Transmit\+Queue(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{PurgeTransmitQueue(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Purge\+Transmit\+Queue (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a4a5670aef718154fbef5445387fc273e}{}\label{messaging_session_8c_a4a5670aef718154fbef5445387fc273e}
+Removes all messages from the Transmit Queue and deletes them. On the client side, for those Request messages that expect a response, their completion callback will be called (indicating transaction failure).
+
+\begin{DoxyNote}{Note}
+This is used on both the client side and the server side. 
+\end{DoxyNote}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Purge\+Txn\+List@{Purge\+Txn\+List}}
+\index{Purge\+Txn\+List@{Purge\+Txn\+List}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Purge\+Txn\+List(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{PurgeTxnList(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Purge\+Txn\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a56cd751abdef8b86df1e55d258383d60}{}\label{messaging_session_8c_a56cd751abdef8b86df1e55d258383d60}
+Removes all messages from the Transaction List, calls their completion callbacks (indicating transaction failure for each) and deletes them.
+
+\begin{DoxyNote}{Note}
+This is used only on the server side. 
+\end{DoxyNote}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Push\+Receive\+Queue@{Push\+Receive\+Queue}}
+\index{Push\+Receive\+Queue@{Push\+Receive\+Queue}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Push\+Receive\+Queue(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr, le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{PushReceiveQueue(msgSession_Session_t *sessionPtr, le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Push\+Receive\+Queue (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}\hypertarget{messaging_session_8c_a866b278ff42babaa0d600979f52cf5de}{}\label{messaging_session_8c_a866b278ff42babaa0d600979f52cf5de}
+Pushes a message onto the tail of the Receive Queue. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Push\+Transmit\+Queue@{Push\+Transmit\+Queue}}
+\index{Push\+Transmit\+Queue@{Push\+Transmit\+Queue}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Push\+Transmit\+Queue(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr, le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{PushTransmitQueue(msgSession_Session_t *sessionPtr, le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Push\+Transmit\+Queue (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a054fe8b7e70ea77b397a76144a8f74ef}{}\label{messaging_session_8c_a054fe8b7e70ea77b397a76144a8f74ef}
+Pushes a message onto the tail of the Transmit Queue.
+
+\begin{DoxyNote}{Note}
+This is used on both the client side and the server side. 
+\end{DoxyNote}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Receive\+Messages@{Receive\+Messages}}
+\index{Receive\+Messages@{Receive\+Messages}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Receive\+Messages(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{ReceiveMessages(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Receive\+Messages (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a96431b5ec1eb708c002dd5416060cfcc}{}\label{messaging_session_8c_a96431b5ec1eb708c002dd5416060cfcc}
+Receive messages from the socket and put them on the Receive Queue. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Receive\+Session\+Open\+Response@{Receive\+Session\+Open\+Response}}
+\index{Receive\+Session\+Open\+Response@{Receive\+Session\+Open\+Response}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Receive\+Session\+Open\+Response(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{ReceiveSessionOpenResponse(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Receive\+Session\+Open\+Response (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_acc7ef8c6b03679892f7c389cb90a91eb}{}\label{messaging_session_8c_acc7ef8c6b03679892f7c389cb90a91eb}
+Receives an L\+E\+\_\+\+OK session open response from the server.
+
+\begin{DoxyNote}{Note}
+This is used only on the client side.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if the session was successfully opened.
+\item L\+E\+\_\+\+U\+N\+A\+V\+A\+I\+L\+A\+B\+LE if \char`\"{}try\char`\"{} option selected and server not currently offering the service.
+\item L\+E\+\_\+\+N\+O\+T\+\_\+\+P\+E\+R\+M\+I\+T\+T\+ED if \char`\"{}try\char`\"{} option selected and client interface not bound to any service.
+\item L\+E\+\_\+\+C\+L\+O\+S\+ED if the connection closed. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Remove\+From\+Txn\+List@{Remove\+From\+Txn\+List}}
+\index{Remove\+From\+Txn\+List@{Remove\+From\+Txn\+List}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Remove\+From\+Txn\+List(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr, le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{RemoveFromTxnList(msgSession_Session_t *sessionPtr, le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Remove\+From\+Txn\+List (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a54f0972c88c2797a55ff07b82c9a59a6}{}\label{messaging_session_8c_a54f0972c88c2797a55ff07b82c9a59a6}
+Removes a given message from a given session\textquotesingle{}s transaction list and from the Transaction Map. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Retry\+Open@{Retry\+Open}}
+\index{Retry\+Open@{Retry\+Open}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Retry\+Open(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{RetryOpen(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Retry\+Open (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_acdc5d8b23e1ddc75b246f87f9324e6d1}{}\label{messaging_session_8c_acdc5d8b23e1ddc75b246f87f9324e6d1}
+Performs a retry on a failed attempt to open a session.
+
+\begin{DoxyNote}{Note}
+This is used only on the client side. 
+\end{DoxyNote}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Send\+From\+Transmit\+Queue@{Send\+From\+Transmit\+Queue}}
+\index{Send\+From\+Transmit\+Queue@{Send\+From\+Transmit\+Queue}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Send\+From\+Transmit\+Queue(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{SendFromTransmitQueue(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Send\+From\+Transmit\+Queue (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_aee7927c85a2c413f43ea9ede7d2573d5}{}\label{messaging_session_8c_aee7927c85a2c413f43ea9ede7d2573d5}
+Send messages from a session\textquotesingle{}s Transmit Queue until either the socket becomes full or there are no more messages waiting on the queue. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Send\+Session\+Open\+Response@{Send\+Session\+Open\+Response}}
+\index{Send\+Session\+Open\+Response@{Send\+Session\+Open\+Response}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Send\+Session\+Open\+Response(int socket\+Fd)}{SendSessionOpenResponse(int socketFd)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Send\+Session\+Open\+Response (
+\begin{DoxyParamCaption}
+\item[{int}]{socket\+Fd}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a652e64f50c89f10a69b4a273b3009c0c}{}\label{messaging_session_8c_a652e64f50c89f10a69b4a273b3009c0c}
+Sends an L\+E\+\_\+\+OK session open response to the client.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful, L\+E\+\_\+\+C\+O\+M\+M\+\_\+\+E\+R\+R\+OR if failed.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+This is used only on the server side. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em socket\+Fd} & Connected socket to send through. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Server\+Socket\+Error@{Server\+Socket\+Error}}
+\index{Server\+Socket\+Error@{Server\+Socket\+Error}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Socket\+Error(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{ServerSocketError(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Server\+Socket\+Error (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_afb0d96ed0dea89527c4c0db932da9bbf}{}\label{messaging_session_8c_afb0d96ed0dea89527c4c0db932da9bbf}
+Server-\/side handler for an error on a session\textquotesingle{}s socket. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Server\+Socket\+Event\+Handler@{Server\+Socket\+Event\+Handler}}
+\index{Server\+Socket\+Event\+Handler@{Server\+Socket\+Event\+Handler}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Socket\+Event\+Handler(int fd, short events)}{ServerSocketEventHandler(int fd, short events)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Server\+Socket\+Event\+Handler (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{short}]{events}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a01cc59b18cd9ddb7812105d75566516c}{}\label{messaging_session_8c_a01cc59b18cd9ddb7812105d75566516c}
+File descriptor monitoring event handler function for server-\/side of I\+PC sockets. 
+\begin{DoxyParams}{Parameters}
+{\em fd} & Socket file descriptor. \\
+\hline
+{\em events} & Bit map of events that occurred (see \textquotesingle{}man 2 poll\textquotesingle{}) \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Server\+Socket\+Hang\+Up@{Server\+Socket\+Hang\+Up}}
+\index{Server\+Socket\+Hang\+Up@{Server\+Socket\+Hang\+Up}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Socket\+Hang\+Up(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{ServerSocketHangUp(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Server\+Socket\+Hang\+Up (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a0fedf5237e24cd7a34cbcb51f10dbdad}{}\label{messaging_session_8c_a0fedf5237e24cd7a34cbcb51f10dbdad}
+Server-\/side handler for when the client closes a session\textquotesingle{}s socket connection. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Server\+Socket\+Readable@{Server\+Socket\+Readable}}
+\index{Server\+Socket\+Readable@{Server\+Socket\+Readable}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Socket\+Readable(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{ServerSocketReadable(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Server\+Socket\+Readable (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_ab7dc31f9c36831a3b414e54ddfc6af21}{}\label{messaging_session_8c_ab7dc31f9c36831a3b414e54ddfc6af21}
+Server-\/side handler for when a Session\textquotesingle{}s socket becomes ready for reading (i.\+e., handle an incoming message). \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Server\+Socket\+Writeable@{Server\+Socket\+Writeable}}
+\index{Server\+Socket\+Writeable@{Server\+Socket\+Writeable}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Server\+Socket\+Writeable(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{ServerSocketWriteable(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Server\+Socket\+Writeable (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_abfc64b02e4b823a5cb215842042c5d96}{}\label{messaging_session_8c_abfc64b02e4b823a5cb215842042c5d96}
+Server-\/side handler for a session\textquotesingle{}s socket becoming writeable. We only use this event when the socket has previously reported that it couldn\textquotesingle{}t accept any more messages and so we need to queue messages on the session\textquotesingle{}s Transmit Queue until the socket becomes writable again. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Start\+Session\+Open\+Attempt@{Start\+Session\+Open\+Attempt}}
+\index{Start\+Session\+Open\+Attempt@{Start\+Session\+Open\+Attempt}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Start\+Session\+Open\+Attempt(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr, bool should\+Wait)}{StartSessionOpenAttempt(msgSession_Session_t *sessionPtr, bool shouldWait)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Start\+Session\+Open\+Attempt (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr, }
+\item[{bool}]{should\+Wait}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a067a2dbe351cbcf764698c69c17e03fc}{}\label{messaging_session_8c_a067a2dbe351cbcf764698c69c17e03fc}
+Start an attempt to open a session by connecting to the Service Directory and sending it a request to open a session.
+
+If successful, puts the Session object in the O\+P\+E\+N\+I\+NG state, leaves the connection socket open and stores its file descriptor in the Session object.
+
+If fails, leaves the Session object in the C\+L\+O\+S\+ED state.
+
+\begin{DoxyReturn}{Returns}
+
+\begin{DoxyItemize}
+\item L\+E\+\_\+\+OK if successful.
+\item L\+E\+\_\+\+C\+O\+M\+M\+\_\+\+E\+R\+R\+OR if failed to connect to the Service Directory. 
+\end{DoxyItemize}
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em should\+Wait} & true = ask the Service Directory to hold onto the request until the binding or advertisement happens if the client interface is not bound or the server is not advertising the service at this time. false = fail immediately if either a binding or advertisement is missing at this time. \\
+\hline
+\end{DoxyParams}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Start\+Socket\+Monitoring@{Start\+Socket\+Monitoring}}
+\index{Start\+Socket\+Monitoring@{Start\+Socket\+Monitoring}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Start\+Socket\+Monitoring(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr, le\+\_\+fd\+Monitor\+\_\+\+Handler\+Func\+\_\+t handler\+Func)}{StartSocketMonitoring(msgSession_Session_t *sessionPtr, le_fdMonitor_HandlerFunc_t handlerFunc)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Start\+Socket\+Monitoring (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr, }
+\item[{{\bf le\+\_\+fd\+Monitor\+\_\+\+Handler\+Func\+\_\+t}}]{handler\+Func}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a49be5f107618eecebed39539e6026c58}{}\label{messaging_session_8c_a49be5f107618eecebed39539e6026c58}
+Start monitoring for events on a given Session\textquotesingle{}s connected socket.
+
+\begin{DoxyNote}{Note}
+This function is used for both clients and servers. 
+\end{DoxyNote}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Trigger\+Deferred\+Processing@{Trigger\+Deferred\+Processing}}
+\index{Trigger\+Deferred\+Processing@{Trigger\+Deferred\+Processing}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Trigger\+Deferred\+Processing(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr)}{TriggerDeferredProcessing(msgSession_Session_t *sessionPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Trigger\+Deferred\+Processing (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_ac17425690b46212458953438b15ed654}{}\label{messaging_session_8c_ac17425690b46212458953438b15ed654}
+Trigger deferred message queue processing. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Un\+Pop\+Transmit\+Queue@{Un\+Pop\+Transmit\+Queue}}
+\index{Un\+Pop\+Transmit\+Queue@{Un\+Pop\+Transmit\+Queue}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Un\+Pop\+Transmit\+Queue(msg\+Session\+\_\+\+Session\+\_\+t $\ast$session\+Ptr, le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t msg\+Ref)}{UnPopTransmitQueue(msgSession_Session_t *sessionPtr, le_msg_MessageRef_t msgRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Un\+Pop\+Transmit\+Queue (
+\begin{DoxyParamCaption}
+\item[{{\bf msg\+Session\+\_\+\+Session\+\_\+t} $\ast$}]{session\+Ptr, }
+\item[{{\bf le\+\_\+msg\+\_\+\+Message\+Ref\+\_\+t}}]{msg\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_abb7fec792c6592e2c4e5fc34bd868439}{}\label{messaging_session_8c_abb7fec792c6592e2c4e5fc34bd868439}
+Puts a message back onto the head of the Transmit Queue.
+
+\begin{DoxyNote}{Note}
+This is used on both the client side and the server side. 
+\end{DoxyNote}
+
+
+\subsection{Variable Documentation}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Mutex@{Mutex}}
+\index{Mutex@{Mutex}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Mutex}{Mutex}}]{\setlength{\rightskip}{0pt plus 5cm}pthread\+\_\+mutex\+\_\+t Mutex = P\+T\+H\+R\+E\+A\+D\+\_\+\+M\+U\+T\+E\+X\+\_\+\+I\+N\+I\+T\+I\+A\+L\+I\+Z\+ER\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_abc03085ccf7c38e092cdf06bf6b98ea6}{}\label{messaging_session_8c_abc03085ccf7c38e092cdf06bf6b98ea6}
+Mutex used to protect data structures in this module from multi-\/threaded race conditions.
+
+\begin{DoxyNote}{Note}
+This is a pthreads F\+A\+ST mutex, chosen to minimize overhead. It is non-\/recursive. 
+\end{DoxyNote}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Session\+Obj\+List\+Change\+Count@{Session\+Obj\+List\+Change\+Count}}
+\index{Session\+Obj\+List\+Change\+Count@{Session\+Obj\+List\+Change\+Count}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Session\+Obj\+List\+Change\+Count}{SessionObjListChangeCount}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t Session\+Obj\+List\+Change\+Count = 0\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a1053ea16f845a6b35af87e74ed81b8a3}{}\label{messaging_session_8c_a1053ea16f845a6b35af87e74ed81b8a3}
+A counter that increments every time a change is made to a session list in A\+NY interface obj. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Session\+Obj\+List\+Change\+Count\+Ref@{Session\+Obj\+List\+Change\+Count\+Ref}}
+\index{Session\+Obj\+List\+Change\+Count\+Ref@{Session\+Obj\+List\+Change\+Count\+Ref}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Session\+Obj\+List\+Change\+Count\+Ref}{SessionObjListChangeCountRef}}]{\setlength{\rightskip}{0pt plus 5cm}size\+\_\+t$\ast$ Session\+Obj\+List\+Change\+Count\+Ref = \&{\bf Session\+Obj\+List\+Change\+Count}\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a48ae1900bb59ec957df0b6bab28ebe8f}{}\label{messaging_session_8c_a48ae1900bb59ec957df0b6bab28ebe8f}
+\index{messaging\+Session.\+c@{messaging\+Session.\+c}!Session\+Pool\+Ref@{Session\+Pool\+Ref}}
+\index{Session\+Pool\+Ref@{Session\+Pool\+Ref}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Session\+Pool\+Ref}{SessionPoolRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Session\+Pool\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_ac268acd60a7eabab6c180b3af299cb0e}{}\label{messaging_session_8c_ac268acd60a7eabab6c180b3af299cb0e}
+Pool from which Session objects are allocated. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Trace\+Ref@{Trace\+Ref}}
+\index{Trace\+Ref@{Trace\+Ref}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Trace\+Ref}{TraceRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+log\+\_\+\+Trace\+Ref\+\_\+t} Trace\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a84d541f37420ace8bdf697deca689deb}{}\label{messaging_session_8c_a84d541f37420ace8bdf697deca689deb}
+Trace reference used for controlling tracing in this module. \index{messaging\+Session.\+c@{messaging\+Session.\+c}!Txn\+Map\+Ref@{Txn\+Map\+Ref}}
+\index{Txn\+Map\+Ref@{Txn\+Map\+Ref}!messaging\+Session.\+c@{messaging\+Session.\+c}}
+\subsubsection[{\texorpdfstring{Txn\+Map\+Ref}{TxnMapRef}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+ref\+\_\+\+Map\+Ref\+\_\+t} Txn\+Map\+Ref\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{messaging_session_8c_a0112da11f693c41d9f3d8d49c72a8df1}{}\label{messaging_session_8c_a0112da11f693c41d9f3d8d49c72a8df1}
+Transaction Map. This is a Safe Reference Map used to generate and match up transaction I\+Ds for request-\/response transactions.
+
+\begin{DoxyNote}{Note}
+Because this is shared by multiple threads, it must be protected using the Mutex. 
+\end{DoxyNote}

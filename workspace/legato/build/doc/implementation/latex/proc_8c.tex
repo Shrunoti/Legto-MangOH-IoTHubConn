@@ -1,0 +1,1017 @@
+\hypertarget{proc_8c}{}\section{framework/daemons/linux/supervisor/proc.c File Reference}
+\label{proc_8c}\index{framework/daemons/linux/supervisor/proc.\+c@{framework/daemons/linux/supervisor/proc.\+c}}
+{\ttfamily \#include \char`\"{}legato.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}watchdog\+Action.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}app.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}proc.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}limit.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}le\+\_\+cfg\+\_\+interface.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}resource\+Limits.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}file\+Descriptor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}user.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}log.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}smack.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}supervisor.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kill\+Proc.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}interfaces.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}sys\+Status.\+h\char`\"{}}\\*
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_process__t}{Process\+\_\+t}
+\begin{DoxyCompactList}\small\item\em Process class. \end{DoxyCompactList}\item 
+struct \hyperlink{struct_arg__t}{Arg\+\_\+t}
+\item 
+struct \hyperlink{struct_env_var__t}{Env\+Var\+\_\+t}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{proc_8c_a482d2b346d3bbc1cba0b7ac1e50ffb0b}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+R\+GS}~\char`\"{}args\char`\"{}
+\item 
+\#define \hyperlink{proc_8c_a5ee88cec06fcafdc62e9645fee222ef4}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+E\+N\+V\+\_\+\+V\+A\+RS}~\char`\"{}env\+Vars\char`\"{}
+\item 
+\#define \hyperlink{proc_8c_a64b3c947c0fffa66e71c46fdf240bb67}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+I\+O\+R\+I\+TY}~\char`\"{}priority\char`\"{}
+\item 
+\#define \hyperlink{proc_8c_af66b423b1ece4abb422630a5d26f6128}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+A\+U\+L\+T\+\_\+\+A\+C\+T\+I\+ON}~\char`\"{}fault\+Action\char`\"{}
+\item 
+\#define \hyperlink{proc_8c_a203cca1c0beaab05ddaa09bc39f7ebe6}{I\+G\+N\+O\+R\+E\+\_\+\+S\+TR}~\char`\"{}ignore\char`\"{}
+\item 
+\#define \hyperlink{proc_8c_aa5c91d794384be14bebf0786ce074087}{R\+E\+S\+T\+A\+R\+T\+\_\+\+S\+TR}~\char`\"{}restart\char`\"{}
+\item 
+\#define \hyperlink{proc_8c_a9a5cace55fcb8215d9c39c892f750a23}{R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+P\+P\+\_\+\+S\+TR}~\char`\"{}restart\+App\char`\"{}
+\item 
+\#define \hyperlink{proc_8c_a069c89c4a3e0d4c993fc0e07d381b26a}{S\+T\+O\+P\+\_\+\+A\+P\+P\+\_\+\+S\+TR}~\char`\"{}stop\+App\char`\"{}
+\item 
+\#define \hyperlink{proc_8c_a1ac8ec7fda3bbe44c42876c75dbf9d22}{R\+E\+B\+O\+O\+T\+\_\+\+S\+TR}~\char`\"{}reboot\char`\"{}
+\item 
+\#define \hyperlink{proc_8c_a508c00775774dbf9925c5cc59bd6a10a}{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+A\+C\+T\+I\+ON}~\char`\"{}watchdog\+Action\char`\"{}
+\item 
+\#define \hyperlink{proc_8c_ad746d5989fbd6451d713c1c44c7e6d62}{M\+I\+N\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY}~1
+\item 
+\#define \hyperlink{proc_8c_aa610aebbe87c008f6db8f9f674532236}{M\+A\+X\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY}~32
+\item 
+\#define \hyperlink{proc_8c_ad9c81cfe5ed594ce38f9242a39f4d1cd}{N\+U\+M\+\_\+\+A\+R\+G\+S\+\_\+\+P\+T\+RS}~\hyperlink{limit_8h_a1eea8293f25a3677c0c86da5cb8fc248}{L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+N\+U\+M\+\_\+\+C\+M\+D\+\_\+\+L\+I\+N\+E\+\_\+\+A\+R\+GS} + 3
+\item 
+\#define \hyperlink{proc_8c_aa3207fbc0e620cf42be4430f633d6c3d}{L\+O\+W\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}~10
+\item 
+\#define \hyperlink{proc_8c_a9d2ccb139807e16cba2b84675629a245}{M\+E\+D\+I\+U\+M\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}~0
+\item 
+\#define \hyperlink{proc_8c_a67686c612e0bb8187fca32db47d24079}{H\+I\+G\+H\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}~-\/10
+\item 
+\#define \hyperlink{proc_8c_a031d8f477e47a415d1ed8c486001f106}{R\+E\+A\+D\+\_\+\+P\+I\+PE}~0
+\item 
+\#define \hyperlink{proc_8c_adb459b61592e1d436a934c7db53678c2}{W\+R\+I\+T\+E\+\_\+\+P\+I\+PE}~1
+\item 
+\#define \hyperlink{proc_8c_a2029b9157d992cc83c22bd6351c8057e}{F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+RT}~10
+\item 
+\#define \hyperlink{proc_8c_a69b18cc6f9a34f2adaf9ce145998a902}{F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+PP}~10
+\item 
+\#define \hyperlink{proc_8c_ae43eb8915e5434cd82c49c7fe25fba0d}{O\+V\+E\+R\+\_\+\+W\+R\+I\+T\+E\+\_\+\+E\+N\+V\+\_\+\+V\+AR}~1
+\item 
+\#define \hyperlink{proc_8c_ab2bdf7ea033e298542f90b2975f5d428}{I\+N\+D\+E\+X\+\_\+\+E\+X\+EC}~0
+\item 
+\#define \hyperlink{proc_8c_a74d857c0b6fd5a8101ffe934b6bb6eb0}{I\+N\+D\+E\+X\+\_\+\+P\+R\+OC}~\hyperlink{proc_8c_ab2bdf7ea033e298542f90b2975f5d428}{I\+N\+D\+E\+X\+\_\+\+E\+X\+EC} + 1
+\item 
+\#define \hyperlink{proc_8c_a18309602a083b3d78f421168f439bba9}{I\+N\+D\+E\+X\+\_\+\+A\+R\+GS}~\hyperlink{proc_8c_a74d857c0b6fd5a8101ffe934b6bb6eb0}{I\+N\+D\+E\+X\+\_\+\+P\+R\+OC} + 1
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a7533244cc85491288b37ffecb2115a0c}{Get\+Fault\+Action} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, \hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} proc\+Cfg)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a8e819dff906c03977796408549bec53c}{Get\+Watchdog\+Action} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, \hyperlink{le__cfg__interface_8h_a646829934bb23a878e19ade2c3e01eba}{le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t} proc\+Cfg)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a6955614a4a48ceac8598d28e2a553723}{proc\+\_\+\+Init} (\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void})
+\item 
+\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} \hyperlink{proc_8c_a69b7379e3a8941bd36fdbaeaa11860f6}{proc\+\_\+\+Create} (const char $\ast$name\+Ptr, \hyperlink{daemons_2linux_2supervisor_2app_8h_abe19231bb456bb0f61b343fd1d85ba42}{app\+\_\+\+Ref\+\_\+t} app\+Ref, const char $\ast$cfg\+Path\+Root\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_aecce034b5ef776ed02d94ef33652bbed}{proc\+\_\+\+Delete} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{proc_8c_a1fbf2f2d941578f75637132d014569c9}{Set\+Proc\+Priority} (const char $\ast$prior\+Str, pid\+\_\+t pid)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a58e7c4362b314f44d4353b4964c8d515}{Set\+Scheduling\+Priority} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{proc_8c_aadb7c2e769c743e7bba700229c8f203e}{Get\+Environment\+Variables} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, \hyperlink{struct_env_var__t}{Env\+Var\+\_\+t} env\+Vars\mbox{[}$\,$\mbox{]}, size\+\_\+t max\+Num\+Env\+Vars)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a4faadcbc4b4d5bf2dfa99619b92c49ac}{Set\+Environment\+Variables} (\hyperlink{struct_env_var__t}{Env\+Var\+\_\+t} env\+Vars\mbox{[}$\,$\mbox{]}, int num\+Env\+Vars)
+\item 
+static \hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{proc_8c_a6883b9a3058f054e75827661a8d8a12d}{Get\+Args} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, char args\+Buffers\mbox{[}\hyperlink{limit_8h_a1eea8293f25a3677c0c86da5cb8fc248}{L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+N\+U\+M\+\_\+\+C\+M\+D\+\_\+\+L\+I\+N\+E\+\_\+\+A\+R\+GS}\mbox{]}\mbox{[}\hyperlink{limit_8h_a114bcf4f0392737194fe523f88b51ba2}{L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+A\+R\+G\+S\+\_\+\+S\+T\+R\+\_\+\+B\+Y\+T\+ES}\mbox{]}, char $\ast$args\+Ptr\mbox{[}\hyperlink{proc_8c_ad9c81cfe5ed594ce38f9242a39f4d1cd}{N\+U\+M\+\_\+\+A\+R\+G\+S\+\_\+\+P\+T\+RS}\mbox{]})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a8816ed728593fa4bdd296c114dd90a70}{Config\+Non\+Sandboxed\+Process} (const char $\ast$working\+Dir\+Ptr)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_ab39f46af487c31e0d373859fef33512c}{Send\+Std\+Pipe\+To\+Log\+Daemon} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, int pipefd\mbox{[}2\mbox{]}, int stream\+Num)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a33834cd1c3779e34abf91fce44fc48aa}{Redirect\+Std\+Stream} (int \hyperlink{app_stop_client_8c_a44f21d5190b5a6df8089f54799628d7e}{fd}, int log\+Pipe\mbox{[}2\mbox{]}, int stream\+Num)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a98f497641be04428204739f7a141e7d1}{Redirect\+Std\+Streams} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, int std\+Out\+Log\+Pipe\mbox{[}2\mbox{]}, int std\+Err\+Log\+Pipe\mbox{[}2\mbox{]})
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a53adb25d65f73fce8e516d214a8ead5d}{Create\+Log\+Pipe} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, int pipefd\mbox{[}2\mbox{]}, int stream\+Num)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_ae51864f8c5879ba8550c364adc2e234b}{Confine\+Proc\+In\+Sandbox} (const char $\ast$sandbox\+Root\+Ptr, uid\+\_\+t uid, gid\+\_\+t gid, const gid\+\_\+t $\ast$groups\+Ptr, size\+\_\+t num\+Groups)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_ac98b30e43d086dd5c5668f6337a1d2f9}{Block\+On\+Pipe} (int pipe\+Fd\mbox{[}2\mbox{]})
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{proc_8c_a5cd1f26200055817011d2a1f11ca2a04}{proc\+\_\+\+Start} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_ad7b7216e2c0ba8776a1bcbf9b549a863}{proc\+\_\+\+Stopping} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+\hyperlink{proc_8h_ae8d62eb5490293ab3682c72d53855820}{proc\+\_\+\+State\+\_\+t} \hyperlink{proc_8c_a3b9571e73de444091bb0d83ca526cb4b}{proc\+\_\+\+Get\+State} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+pid\+\_\+t \hyperlink{proc_8c_a2b8a383aa53c4a7c14890a57167de2e9}{proc\+\_\+\+Get\+P\+ID} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+const char $\ast$ \hyperlink{proc_8c_ada9607e7c3282ba2de40cc5a1c130f6a}{proc\+\_\+\+Get\+Name} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+const char $\ast$ \hyperlink{proc_8c_a07bb6fb6a8edb205a1e813256f2a1a66}{proc\+\_\+\+Get\+App\+Name} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+const char $\ast$ \hyperlink{proc_8c_a21db869fcf3d1f643f815519d20b8a7c}{proc\+\_\+\+Get\+Config\+Path} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+bool \hyperlink{proc_8c_a35f1c276c96d1c87e36fca59e10ef995}{proc\+\_\+\+Is\+Realtime} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a3f93a8e926b2663aeb066b1d6d45eb4f}{proc\+\_\+\+Set\+Std\+In} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, int std\+In\+Fd)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a3a82c4d10dbc3f42102f6168c77294aa}{proc\+\_\+\+Set\+Std\+Out} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, int std\+Out\+Fd)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a8ab626f39b0e1408c7b282fd240eff22}{proc\+\_\+\+Set\+Std\+Err} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, int std\+Err\+Fd)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{proc_8c_a0740a44eebd4fc657f8bc87bc5077898}{proc\+\_\+\+Set\+Exec\+Path} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, const char $\ast$exec\+Path\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{proc_8c_a0b4fa33c8153f07ce123cea3160a5868}{proc\+\_\+\+Set\+Priority} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, const char $\ast$priority\+Ptr)
+\item 
+\hyperlink{le__basics_8h_a1cca095ed6ebab24b57a636382a6c86c}{le\+\_\+result\+\_\+t} \hyperlink{proc_8c_aa20e193396652210ed523d815ecacd80}{proc\+\_\+\+Add\+Args} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, const char $\ast$arg\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a8ed1caf8c0c8167b6aff12d15355e8e1}{proc\+\_\+\+Clear\+Args} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a4ab7279282cfa86752d816cf195daee6}{proc\+\_\+\+Set\+Fault\+Action} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, \hyperlink{class_fault_action__t}{Fault\+Action\+\_\+t} fault\+Action)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a45523a9ab8e6f89bdfb55d052e418b9d}{proc\+\_\+\+Set\+Block\+Callback} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, \hyperlink{proc_8h_aaf793926bc4dcaac12c4668929f32174}{proc\+\_\+\+Block\+Callback\+\_\+t} block\+Callback, \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} $\ast$context\+Ptr)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a52032cd24456b41a181583d224820135}{proc\+\_\+\+Unblock} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+\hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_ae67577d3731139b56ec35704a4660c9f}{proc\+\_\+\+Set\+Run} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, bool run)
+\item 
+static \hyperlink{_t_e_m_p_l_a_t_e__cdef_8h_ac9c84fa68bbad002983e35ce3663c686}{void} \hyperlink{proc_8c_a77297e773fd3db13438924d6f32c7ce5}{Capture\+Debug\+Data} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, bool is\+Rebooting)
+\item 
+\hyperlink{daemons_2linux_2supervisor_2watchdog_action_8h_a564b482466482512da0352e768e90852}{wdog\+\_\+action\+\_\+\+Watchdog\+Action\+\_\+t} \hyperlink{proc_8c_a5dafe439c757db52f2eb77252d28bea7}{proc\+\_\+\+Get\+Watchdog\+Action} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref)
+\item 
+static bool \hyperlink{proc_8c_a727b450c5798025022676b6ca80d9394}{Reached\+Fault\+Limit} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, \hyperlink{class_fault_action__t}{Fault\+Action\+\_\+t} curr\+Fault\+Action, time\+\_\+t prev\+Fault\+Time)
+\item 
+\hyperlink{class_fault_action__t}{Fault\+Action\+\_\+t} \hyperlink{proc_8c_ac8b7e877a595bfa590b21d10023459ea}{proc\+\_\+\+Sig\+Child\+Handler} (\hyperlink{proc_8h_a88e732e553d7fcbe7c9f9278ec9defbf}{proc\+\_\+\+Ref\+\_\+t} proc\+Ref, int proc\+Exit\+Status)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{proc_8c_a62899d3b636dd960175da1f98ee110b0}{Process\+Pool}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{proc_8c_a0c90fc7b8538d5294c2d40d9bfb5990a}{Path\+Pool}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{proc_8c_ad596f84163907d0b289baabd587d241a}{Priority\+Pool}
+\item 
+static \hyperlink{le__mem_8h_a44a896f6a0a1a8c733e8038eb332989e}{le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} \hyperlink{proc_8c_a3f8795e8f24eee4c8f1b882351146b46}{Args\+Pool}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This is the process class that is used to reference the Supervisor\textquotesingle{}s child processes in applications. This class has methods for starting and stopping processes and keeping process state information. However, a processes state must be updated by calling the \hyperlink{proc_8c_ac8b7e877a595bfa590b21d10023459ea}{proc\+\_\+\+Sig\+Child\+Handler()} from within a S\+I\+G\+C\+H\+I\+LD handler.
+
+Copyright (C) Sierra Wireless Inc. 
+
+\subsection{Macro Definition Documentation}
+\index{proc.\+c@{proc.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+R\+GS@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+R\+GS}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+R\+GS@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+R\+GS}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+R\+GS}{CFG_NODE_ARGS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+A\+R\+GS~\char`\"{}args\char`\"{}}\hypertarget{proc_8c_a482d2b346d3bbc1cba0b7ac1e50ffb0b}{}\label{proc_8c_a482d2b346d3bbc1cba0b7ac1e50ffb0b}
+The name of the node in the config tree that contains a process\textquotesingle{}s command-\/line arguments.
+
+The list of arguments is the command-\/line argument list used to start the process. The first argument in the list must be the absolute path (relative to the sandbox root) of the executable file.
+
+If this entry in the config tree is missing or is empty, the process will fail to launch. \index{proc.\+c@{proc.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+E\+N\+V\+\_\+\+V\+A\+RS@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+E\+N\+V\+\_\+\+V\+A\+RS}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+E\+N\+V\+\_\+\+V\+A\+RS@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+E\+N\+V\+\_\+\+V\+A\+RS}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+E\+N\+V\+\_\+\+V\+A\+RS}{CFG_NODE_ENV_VARS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+E\+N\+V\+\_\+\+V\+A\+RS~\char`\"{}env\+Vars\char`\"{}}\hypertarget{proc_8c_a5ee88cec06fcafdc62e9645fee222ef4}{}\label{proc_8c_a5ee88cec06fcafdc62e9645fee222ef4}
+The name of the node in the config tree that contains a process\textquotesingle{}s environment variables.
+
+Each item in the environment variables list must be a name=value pair.
+
+If this entry in the config tree is missing or is empty, no environment variables will be set. \index{proc.\+c@{proc.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+A\+U\+L\+T\+\_\+\+A\+C\+T\+I\+ON@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+A\+U\+L\+T\+\_\+\+A\+C\+T\+I\+ON}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+A\+U\+L\+T\+\_\+\+A\+C\+T\+I\+ON@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+A\+U\+L\+T\+\_\+\+A\+C\+T\+I\+ON}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+A\+U\+L\+T\+\_\+\+A\+C\+T\+I\+ON}{CFG_NODE_FAULT_ACTION}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+F\+A\+U\+L\+T\+\_\+\+A\+C\+T\+I\+ON~\char`\"{}fault\+Action\char`\"{}}\hypertarget{proc_8c_af66b423b1ece4abb422630a5d26f6128}{}\label{proc_8c_af66b423b1ece4abb422630a5d26f6128}
+The name of the node in the config tree that contains the fault action for a process.
+
+The fault action value must be either I\+G\+N\+O\+RE, R\+E\+S\+T\+A\+RT, R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+PP, T\+E\+R\+M\+I\+N\+A\+T\+E\+\_\+\+A\+PP or R\+E\+B\+O\+OT.
+
+If this entry in the config tree is missing or is empty, A\+P\+P\+\_\+\+P\+R\+O\+C\+\_\+\+I\+G\+N\+O\+RE is assumed. \index{proc.\+c@{proc.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+I\+O\+R\+I\+TY@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+I\+O\+R\+I\+TY}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+I\+O\+R\+I\+TY@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+I\+O\+R\+I\+TY}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+I\+O\+R\+I\+TY}{CFG_NODE_PRIORITY}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+P\+R\+I\+O\+R\+I\+TY~\char`\"{}priority\char`\"{}}\hypertarget{proc_8c_a64b3c947c0fffa66e71c46fdf240bb67}{}\label{proc_8c_a64b3c947c0fffa66e71c46fdf240bb67}
+The name of the node in the config tree that contains a process\textquotesingle{}s scheduling priority level.
+
+Possible values for the scheduling priorty are\+: \char`\"{}idle\char`\"{}, \char`\"{}low\char`\"{}, \char`\"{}medium\char`\"{}, \char`\"{}high\char`\"{}, \char`\"{}rt1\char`\"{}... \char`\"{}rt32\char`\"{}.
+
+\char`\"{}idle\char`\"{} -\/ intended for very low priority processes that will only get C\+PU time if there are no other processes waiting for the C\+PU.
+
+\char`\"{}low\char`\"{}, \char`\"{}medium\char`\"{}, \char`\"{}high\char`\"{} -\/ intended for normal processes that contend for the C\+PU. Processes with these priorities do not preempt each other but their priorities affect how they are inserted into the schdeduling queue. ie. \char`\"{}high\char`\"{} will get higher priority than \char`\"{}medium\char`\"{} when inserted into the queue.
+
+\char`\"{}rt1\char`\"{} to \char`\"{}rt32\char`\"{} -\/ intended for (soft) realtime processes. A higher realtime priority will pre-\/empt a lower realtime priority (ie. \char`\"{}rt2\char`\"{} would pre-\/empt \char`\"{}rt1\char`\"{}). Processes with any realtime priority will pre-\/empt processes with \char`\"{}high\char`\"{}, \char`\"{}medium\char`\"{}, \char`\"{}low\char`\"{} and \char`\"{}idle\char`\"{} priorities. Also, note that processes with these realtime priorities will pre-\/empt the Legato framework processes so take care to design realtime processes that relinquishes the C\+PU appropriately.
+
+If this entry in the config tree is missing or is empty, \char`\"{}medium\char`\"{} priority is used. \index{proc.\+c@{proc.\+c}!C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+A\+C\+T\+I\+ON@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+A\+C\+T\+I\+ON}}
+\index{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+A\+C\+T\+I\+ON@{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+A\+C\+T\+I\+ON}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+A\+C\+T\+I\+ON}{CFG_NODE_WDOG_ACTION}}]{\setlength{\rightskip}{0pt plus 5cm}\#define C\+F\+G\+\_\+\+N\+O\+D\+E\+\_\+\+W\+D\+O\+G\+\_\+\+A\+C\+T\+I\+ON~\char`\"{}watchdog\+Action\char`\"{}}\hypertarget{proc_8c_a508c00775774dbf9925c5cc59bd6a10a}{}\label{proc_8c_a508c00775774dbf9925c5cc59bd6a10a}
+The name in the config tree that contains the watchdog action for the process \index{proc.\+c@{proc.\+c}!F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+RT@{F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+RT}}
+\index{F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+RT@{F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+RT}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+RT}{FAULT_LIMIT_INTERVAL_RESTART}}]{\setlength{\rightskip}{0pt plus 5cm}\#define F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+RT~10}\hypertarget{proc_8c_a2029b9157d992cc83c22bd6351c8057e}{}\label{proc_8c_a2029b9157d992cc83c22bd6351c8057e}
+The fault limits.
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000012}{Todo}]Put in the config tree so that it can be configured. \end{DoxyRefDesc}
+\index{proc.\+c@{proc.\+c}!F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+PP@{F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+PP}}
+\index{F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+PP@{F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+PP}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+PP}{FAULT_LIMIT_INTERVAL_RESTART_APP}}]{\setlength{\rightskip}{0pt plus 5cm}\#define F\+A\+U\+L\+T\+\_\+\+L\+I\+M\+I\+T\+\_\+\+I\+N\+T\+E\+R\+V\+A\+L\+\_\+\+R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+PP~10}\hypertarget{proc_8c_a69b18cc6f9a34f2adaf9ce145998a902}{}\label{proc_8c_a69b18cc6f9a34f2adaf9ce145998a902}
+\index{proc.\+c@{proc.\+c}!H\+I\+G\+H\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL@{H\+I\+G\+H\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}}
+\index{H\+I\+G\+H\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL@{H\+I\+G\+H\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{H\+I\+G\+H\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}{HIGH_PRIORITY_NICE_LEVEL}}]{\setlength{\rightskip}{0pt plus 5cm}\#define H\+I\+G\+H\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL~-\/10}\hypertarget{proc_8c_a67686c612e0bb8187fca32db47d24079}{}\label{proc_8c_a67686c612e0bb8187fca32db47d24079}
+\index{proc.\+c@{proc.\+c}!I\+G\+N\+O\+R\+E\+\_\+\+S\+TR@{I\+G\+N\+O\+R\+E\+\_\+\+S\+TR}}
+\index{I\+G\+N\+O\+R\+E\+\_\+\+S\+TR@{I\+G\+N\+O\+R\+E\+\_\+\+S\+TR}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{I\+G\+N\+O\+R\+E\+\_\+\+S\+TR}{IGNORE_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\+G\+N\+O\+R\+E\+\_\+\+S\+TR~\char`\"{}ignore\char`\"{}}\hypertarget{proc_8c_a203cca1c0beaab05ddaa09bc39f7ebe6}{}\label{proc_8c_a203cca1c0beaab05ddaa09bc39f7ebe6}
+Fault action string definitions. \index{proc.\+c@{proc.\+c}!I\+N\+D\+E\+X\+\_\+\+A\+R\+GS@{I\+N\+D\+E\+X\+\_\+\+A\+R\+GS}}
+\index{I\+N\+D\+E\+X\+\_\+\+A\+R\+GS@{I\+N\+D\+E\+X\+\_\+\+A\+R\+GS}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{I\+N\+D\+E\+X\+\_\+\+A\+R\+GS}{INDEX_ARGS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\+N\+D\+E\+X\+\_\+\+A\+R\+GS~{\bf I\+N\+D\+E\+X\+\_\+\+P\+R\+OC} + 1}\hypertarget{proc_8c_a18309602a083b3d78f421168f439bba9}{}\label{proc_8c_a18309602a083b3d78f421168f439bba9}
+\index{proc.\+c@{proc.\+c}!I\+N\+D\+E\+X\+\_\+\+E\+X\+EC@{I\+N\+D\+E\+X\+\_\+\+E\+X\+EC}}
+\index{I\+N\+D\+E\+X\+\_\+\+E\+X\+EC@{I\+N\+D\+E\+X\+\_\+\+E\+X\+EC}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{I\+N\+D\+E\+X\+\_\+\+E\+X\+EC}{INDEX_EXEC}}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\+N\+D\+E\+X\+\_\+\+E\+X\+EC~0}\hypertarget{proc_8c_ab2bdf7ea033e298542f90b2975f5d428}{}\label{proc_8c_ab2bdf7ea033e298542f90b2975f5d428}
+\index{proc.\+c@{proc.\+c}!I\+N\+D\+E\+X\+\_\+\+P\+R\+OC@{I\+N\+D\+E\+X\+\_\+\+P\+R\+OC}}
+\index{I\+N\+D\+E\+X\+\_\+\+P\+R\+OC@{I\+N\+D\+E\+X\+\_\+\+P\+R\+OC}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{I\+N\+D\+E\+X\+\_\+\+P\+R\+OC}{INDEX_PROC}}]{\setlength{\rightskip}{0pt plus 5cm}\#define I\+N\+D\+E\+X\+\_\+\+P\+R\+OC~{\bf I\+N\+D\+E\+X\+\_\+\+E\+X\+EC} + 1}\hypertarget{proc_8c_a74d857c0b6fd5a8101ffe934b6bb6eb0}{}\label{proc_8c_a74d857c0b6fd5a8101ffe934b6bb6eb0}
+\index{proc.\+c@{proc.\+c}!L\+O\+W\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL@{L\+O\+W\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}}
+\index{L\+O\+W\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL@{L\+O\+W\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{L\+O\+W\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}{LOW_PRIORITY_NICE_LEVEL}}]{\setlength{\rightskip}{0pt plus 5cm}\#define L\+O\+W\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL~10}\hypertarget{proc_8c_aa3207fbc0e620cf42be4430f633d6c3d}{}\label{proc_8c_aa3207fbc0e620cf42be4430f633d6c3d}
+Nice level definitions for the different Legato priority levels. \index{proc.\+c@{proc.\+c}!M\+A\+X\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY@{M\+A\+X\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY}}
+\index{M\+A\+X\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY@{M\+A\+X\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{M\+A\+X\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY}{MAX_RT_PRIORITY}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+A\+X\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY~32}\hypertarget{proc_8c_aa610aebbe87c008f6db8f9f674532236}{}\label{proc_8c_aa610aebbe87c008f6db8f9f674532236}
+\index{proc.\+c@{proc.\+c}!M\+E\+D\+I\+U\+M\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL@{M\+E\+D\+I\+U\+M\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}}
+\index{M\+E\+D\+I\+U\+M\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL@{M\+E\+D\+I\+U\+M\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{M\+E\+D\+I\+U\+M\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL}{MEDIUM_PRIORITY_NICE_LEVEL}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+E\+D\+I\+U\+M\+\_\+\+P\+R\+I\+O\+R\+I\+T\+Y\+\_\+\+N\+I\+C\+E\+\_\+\+L\+E\+V\+EL~0}\hypertarget{proc_8c_a9d2ccb139807e16cba2b84675629a245}{}\label{proc_8c_a9d2ccb139807e16cba2b84675629a245}
+\index{proc.\+c@{proc.\+c}!M\+I\+N\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY@{M\+I\+N\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY}}
+\index{M\+I\+N\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY@{M\+I\+N\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{M\+I\+N\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY}{MIN_RT_PRIORITY}}]{\setlength{\rightskip}{0pt plus 5cm}\#define M\+I\+N\+\_\+\+R\+T\+\_\+\+P\+R\+I\+O\+R\+I\+TY~1}\hypertarget{proc_8c_ad746d5989fbd6451d713c1c44c7e6d62}{}\label{proc_8c_ad746d5989fbd6451d713c1c44c7e6d62}
+Minimum and maximum realtime priority levels. \index{proc.\+c@{proc.\+c}!N\+U\+M\+\_\+\+A\+R\+G\+S\+\_\+\+P\+T\+RS@{N\+U\+M\+\_\+\+A\+R\+G\+S\+\_\+\+P\+T\+RS}}
+\index{N\+U\+M\+\_\+\+A\+R\+G\+S\+\_\+\+P\+T\+RS@{N\+U\+M\+\_\+\+A\+R\+G\+S\+\_\+\+P\+T\+RS}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{N\+U\+M\+\_\+\+A\+R\+G\+S\+\_\+\+P\+T\+RS}{NUM_ARGS_PTRS}}]{\setlength{\rightskip}{0pt plus 5cm}\#define N\+U\+M\+\_\+\+A\+R\+G\+S\+\_\+\+P\+T\+RS~{\bf L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+N\+U\+M\+\_\+\+C\+M\+D\+\_\+\+L\+I\+N\+E\+\_\+\+A\+R\+GS} + 3}\hypertarget{proc_8c_ad9c81cfe5ed594ce38f9242a39f4d1cd}{}\label{proc_8c_ad9c81cfe5ed594ce38f9242a39f4d1cd}
+The number of string pointers needed when obtaining the command line arguments from the config database. \index{proc.\+c@{proc.\+c}!O\+V\+E\+R\+\_\+\+W\+R\+I\+T\+E\+\_\+\+E\+N\+V\+\_\+\+V\+AR@{O\+V\+E\+R\+\_\+\+W\+R\+I\+T\+E\+\_\+\+E\+N\+V\+\_\+\+V\+AR}}
+\index{O\+V\+E\+R\+\_\+\+W\+R\+I\+T\+E\+\_\+\+E\+N\+V\+\_\+\+V\+AR@{O\+V\+E\+R\+\_\+\+W\+R\+I\+T\+E\+\_\+\+E\+N\+V\+\_\+\+V\+AR}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{O\+V\+E\+R\+\_\+\+W\+R\+I\+T\+E\+\_\+\+E\+N\+V\+\_\+\+V\+AR}{OVER_WRITE_ENV_VAR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define O\+V\+E\+R\+\_\+\+W\+R\+I\+T\+E\+\_\+\+E\+N\+V\+\_\+\+V\+AR~1}\hypertarget{proc_8c_ae43eb8915e5434cd82c49c7fe25fba0d}{}\label{proc_8c_ae43eb8915e5434cd82c49c7fe25fba0d}
+\index{proc.\+c@{proc.\+c}!R\+E\+A\+D\+\_\+\+P\+I\+PE@{R\+E\+A\+D\+\_\+\+P\+I\+PE}}
+\index{R\+E\+A\+D\+\_\+\+P\+I\+PE@{R\+E\+A\+D\+\_\+\+P\+I\+PE}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{R\+E\+A\+D\+\_\+\+P\+I\+PE}{READ_PIPE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\+E\+A\+D\+\_\+\+P\+I\+PE~0}\hypertarget{proc_8c_a031d8f477e47a415d1ed8c486001f106}{}\label{proc_8c_a031d8f477e47a415d1ed8c486001f106}
+Definitions for the read and write ends of a pipe. \index{proc.\+c@{proc.\+c}!R\+E\+B\+O\+O\+T\+\_\+\+S\+TR@{R\+E\+B\+O\+O\+T\+\_\+\+S\+TR}}
+\index{R\+E\+B\+O\+O\+T\+\_\+\+S\+TR@{R\+E\+B\+O\+O\+T\+\_\+\+S\+TR}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{R\+E\+B\+O\+O\+T\+\_\+\+S\+TR}{REBOOT_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\+E\+B\+O\+O\+T\+\_\+\+S\+TR~\char`\"{}reboot\char`\"{}}\hypertarget{proc_8c_a1ac8ec7fda3bbe44c42876c75dbf9d22}{}\label{proc_8c_a1ac8ec7fda3bbe44c42876c75dbf9d22}
+\index{proc.\+c@{proc.\+c}!R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+P\+P\+\_\+\+S\+TR@{R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+P\+P\+\_\+\+S\+TR}}
+\index{R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+P\+P\+\_\+\+S\+TR@{R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+P\+P\+\_\+\+S\+TR}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+P\+P\+\_\+\+S\+TR}{RESTART_APP_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\+E\+S\+T\+A\+R\+T\+\_\+\+A\+P\+P\+\_\+\+S\+TR~\char`\"{}restart\+App\char`\"{}}\hypertarget{proc_8c_a9a5cace55fcb8215d9c39c892f750a23}{}\label{proc_8c_a9a5cace55fcb8215d9c39c892f750a23}
+\index{proc.\+c@{proc.\+c}!R\+E\+S\+T\+A\+R\+T\+\_\+\+S\+TR@{R\+E\+S\+T\+A\+R\+T\+\_\+\+S\+TR}}
+\index{R\+E\+S\+T\+A\+R\+T\+\_\+\+S\+TR@{R\+E\+S\+T\+A\+R\+T\+\_\+\+S\+TR}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{R\+E\+S\+T\+A\+R\+T\+\_\+\+S\+TR}{RESTART_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define R\+E\+S\+T\+A\+R\+T\+\_\+\+S\+TR~\char`\"{}restart\char`\"{}}\hypertarget{proc_8c_aa5c91d794384be14bebf0786ce074087}{}\label{proc_8c_aa5c91d794384be14bebf0786ce074087}
+\index{proc.\+c@{proc.\+c}!S\+T\+O\+P\+\_\+\+A\+P\+P\+\_\+\+S\+TR@{S\+T\+O\+P\+\_\+\+A\+P\+P\+\_\+\+S\+TR}}
+\index{S\+T\+O\+P\+\_\+\+A\+P\+P\+\_\+\+S\+TR@{S\+T\+O\+P\+\_\+\+A\+P\+P\+\_\+\+S\+TR}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{S\+T\+O\+P\+\_\+\+A\+P\+P\+\_\+\+S\+TR}{STOP_APP_STR}}]{\setlength{\rightskip}{0pt plus 5cm}\#define S\+T\+O\+P\+\_\+\+A\+P\+P\+\_\+\+S\+TR~\char`\"{}stop\+App\char`\"{}}\hypertarget{proc_8c_a069c89c4a3e0d4c993fc0e07d381b26a}{}\label{proc_8c_a069c89c4a3e0d4c993fc0e07d381b26a}
+\index{proc.\+c@{proc.\+c}!W\+R\+I\+T\+E\+\_\+\+P\+I\+PE@{W\+R\+I\+T\+E\+\_\+\+P\+I\+PE}}
+\index{W\+R\+I\+T\+E\+\_\+\+P\+I\+PE@{W\+R\+I\+T\+E\+\_\+\+P\+I\+PE}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{W\+R\+I\+T\+E\+\_\+\+P\+I\+PE}{WRITE_PIPE}}]{\setlength{\rightskip}{0pt plus 5cm}\#define W\+R\+I\+T\+E\+\_\+\+P\+I\+PE~1}\hypertarget{proc_8c_adb459b61592e1d436a934c7db53678c2}{}\label{proc_8c_adb459b61592e1d436a934c7db53678c2}
+
+
+\subsection{Function Documentation}
+\index{proc.\+c@{proc.\+c}!Block\+On\+Pipe@{Block\+On\+Pipe}}
+\index{Block\+On\+Pipe@{Block\+On\+Pipe}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Block\+On\+Pipe(int pipe\+Fd[2])}{BlockOnPipe(int pipeFd[2])}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Block\+On\+Pipe (
+\begin{DoxyParamCaption}
+\item[{int}]{pipe\+Fd\mbox{[}2\mbox{]}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_ac98b30e43d086dd5c5668f6337a1d2f9}{}\label{proc_8c_ac98b30e43d086dd5c5668f6337a1d2f9}
+Blocks the calling thread\textquotesingle{}s execution by performing a blocking read on the read end of the pipe. This function will unblock and return once the other end of the pipe is closed. This function is used to synchronize parent/child processes and assumes that both the parent and child have copies of the pipe.
+
+When this function exits both ends of the pipe are closed. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pipe\+Fd} & \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Capture\+Debug\+Data@{Capture\+Debug\+Data}}
+\index{Capture\+Debug\+Data@{Capture\+Debug\+Data}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Capture\+Debug\+Data(proc\+\_\+\+Ref\+\_\+t proc\+Ref, bool is\+Rebooting)}{CaptureDebugData(proc_Ref_t procRef, bool isRebooting)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Capture\+Debug\+Data (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{bool}]{is\+Rebooting}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a77297e773fd3db13438924d6f32c7ce5}{}\label{proc_8c_a77297e773fd3db13438924d6f32c7ce5}
+Called to capture any extra data that may help indicate what contributed to the fault that caused the given process to fail.
+
+This function calls a shell script that will save a dump of the system log and any core files that have been generated into a known location. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em is\+Rebooting} & Is the supervisor going to reboot the system? \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Config\+Non\+Sandboxed\+Process@{Config\+Non\+Sandboxed\+Process}}
+\index{Config\+Non\+Sandboxed\+Process@{Config\+Non\+Sandboxed\+Process}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Config\+Non\+Sandboxed\+Process(const char $\ast$working\+Dir\+Ptr)}{ConfigNonSandboxedProcess(const char *workingDirPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Config\+Non\+Sandboxed\+Process (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{working\+Dir\+Ptr}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a8816ed728593fa4bdd296c114dd90a70}{}\label{proc_8c_a8816ed728593fa4bdd296c114dd90a70}
+Configure non-\/sandboxed processes. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em working\+Dir\+Ptr} & The path to the process\textquotesingle{}s working directory. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Confine\+Proc\+In\+Sandbox@{Confine\+Proc\+In\+Sandbox}}
+\index{Confine\+Proc\+In\+Sandbox@{Confine\+Proc\+In\+Sandbox}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Confine\+Proc\+In\+Sandbox(const char $\ast$sandbox\+Root\+Ptr, uid\+\_\+t uid, gid\+\_\+t gid, const gid\+\_\+t $\ast$groups\+Ptr, size\+\_\+t num\+Groups)}{ConfineProcInSandbox(const char *sandboxRootPtr, uid_t uid, gid_t gid, const gid_t *groupsPtr, size_t numGroups)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Confine\+Proc\+In\+Sandbox (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{sandbox\+Root\+Ptr, }
+\item[{uid\+\_\+t}]{uid, }
+\item[{gid\+\_\+t}]{gid, }
+\item[{const gid\+\_\+t $\ast$}]{groups\+Ptr, }
+\item[{size\+\_\+t}]{num\+Groups}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_ae51864f8c5879ba8550c364adc2e234b}{}\label{proc_8c_ae51864f8c5879ba8550c364adc2e234b}
+Confines the calling process into the sandbox. The current working directory will be set to \char`\"{}/\char`\"{} relative to the sandbox.
+
+\begin{DoxyNote}{Note}
+Kills the calling process if there is an error. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em sandbox\+Root\+Ptr} & Path to the sandbox root. \\
+\hline
+\mbox{\tt in}  & {\em uid} & The user ID the process should be set to. \\
+\hline
+\mbox{\tt in}  & {\em gid} & The group ID the process should be set to. \\
+\hline
+\mbox{\tt in}  & {\em groups\+Ptr} & List of supplementary groups for this process. \\
+\hline
+\mbox{\tt in}  & {\em num\+Groups} & The number of groups in the supplementary groups list. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Create\+Log\+Pipe@{Create\+Log\+Pipe}}
+\index{Create\+Log\+Pipe@{Create\+Log\+Pipe}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Create\+Log\+Pipe(proc\+\_\+\+Ref\+\_\+t proc\+Ref, int pipefd[2], int stream\+Num)}{CreateLogPipe(proc_Ref_t procRef, int pipefd[2], int streamNum)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Create\+Log\+Pipe (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{int}]{pipefd\mbox{[}2\mbox{]}, }
+\item[{int}]{stream\+Num}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a53adb25d65f73fce8e516d214a8ead5d}{}\label{proc_8c_a53adb25d65f73fce8e516d214a8ead5d}
+Creates a pipe for logging either stdout or stderr. The logging pipe is only created if the process\textquotesingle{}s stdout/stderr should not be redirected somewhere else. If the pipe is not created the pipe\textquotesingle{}s fd values are set to -\/1. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & Process to create the pipe for. \\
+\hline
+\mbox{\tt out}  & {\em pipefd} & Pipe fds. \\
+\hline
+\mbox{\tt in}  & {\em stream\+Num} & Either S\+T\+D\+O\+U\+T\+\_\+\+F\+I\+L\+E\+NO or S\+T\+D\+E\+R\+R\+\_\+\+F\+I\+L\+E\+NO. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Get\+Args@{Get\+Args}}
+\index{Get\+Args@{Get\+Args}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Args(proc\+\_\+\+Ref\+\_\+t proc\+Ref, char args\+Buffers[L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+N\+U\+M\+\_\+\+C\+M\+D\+\_\+\+L\+I\+N\+E\+\_\+\+A\+R\+GS][L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+A\+R\+G\+S\+\_\+\+S\+T\+R\+\_\+\+B\+Y\+T\+ES], char $\ast$args\+Ptr[N\+U\+M\+\_\+\+A\+R\+G\+S\+\_\+\+P\+T\+RS])}{GetArgs(proc_Ref_t procRef, char argsBuffers[LIMIT_MAX_NUM_CMD_LINE_ARGS][LIMIT_MAX_ARGS_STR_BYTES], char *argsPtr[NUM_ARGS_PTRS])}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Args (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{char}]{args\+Buffers\mbox{[}\+L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+N\+U\+M\+\_\+\+C\+M\+D\+\_\+\+L\+I\+N\+E\+\_\+\+A\+R\+G\+S\mbox{]}\mbox{[}\+L\+I\+M\+I\+T\+\_\+\+M\+A\+X\+\_\+\+A\+R\+G\+S\+\_\+\+S\+T\+R\+\_\+\+B\+Y\+T\+E\+S\mbox{]}, }
+\item[{char $\ast$}]{args\+Ptr\mbox{[}\+N\+U\+M\+\_\+\+A\+R\+G\+S\+\_\+\+P\+T\+R\+S\mbox{]}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a6883b9a3058f054e75827661a8d8a12d}{}\label{proc_8c_a6883b9a3058f054e75827661a8d8a12d}
+Gets the arguments list for this process.
+
+The program executable path will be the first element in the list. The second element will be the process name to for this process. Subsequent elements in the list will contain command line arguments for the process. The list of arguments will be terminated by a N\+U\+LL pointer.
+
+The arguments list will be passed out to the caller in args\+Ptr.
+
+The caller must provide a list of buffers, args\+Buffers, that can be used to store the fetched arguments. Note that this buffer does not necessarily store the arguments in the correct order. The caller should read args\+Ptr to see the proper arguments list.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process to get the args for. \\
+\hline
+\mbox{\tt out}  & {\em args\+Buffers} & A pointer to an array of buffers used to store arguments. \\
+\hline
+\mbox{\tt out}  & {\em args\+Ptr} & An array of pointers that will point to the valid arguments list. The list is terminated by N\+U\+LL. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Get\+Environment\+Variables@{Get\+Environment\+Variables}}
+\index{Get\+Environment\+Variables@{Get\+Environment\+Variables}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Environment\+Variables(proc\+\_\+\+Ref\+\_\+t proc\+Ref, Env\+Var\+\_\+t env\+Vars[], size\+\_\+t max\+Num\+Env\+Vars)}{GetEnvironmentVariables(proc_Ref_t procRef, EnvVar_t envVars[], size_t maxNumEnvVars)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf le\+\_\+result\+\_\+t} Get\+Environment\+Variables (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{{\bf Env\+Var\+\_\+t}}]{env\+Vars\mbox{[}$\,$\mbox{]}, }
+\item[{size\+\_\+t}]{max\+Num\+Env\+Vars}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_aadb7c2e769c743e7bba700229c8f203e}{}\label{proc_8c_aadb7c2e769c743e7bba700229c8f203e}
+Gets the environment variable from the list of environment variables in the config tree.
+
+\begin{DoxyReturn}{Returns}
+The number of environment variables read from the config tree if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process to get the environment variables for. \\
+\hline
+\mbox{\tt in}  & {\em \hyperlink{namespaceenv_vars}{env\+Vars}} & The list of environment variables. \\
+\hline
+\mbox{\tt in}  & {\em max\+Num\+Env\+Vars} & The maximum number of items \hyperlink{namespaceenv_vars}{env\+Vars} can hold. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Get\+Fault\+Action@{Get\+Fault\+Action}}
+\index{Get\+Fault\+Action@{Get\+Fault\+Action}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Fault\+Action(proc\+\_\+\+Ref\+\_\+t proc\+Ref, le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t proc\+Cfg)}{GetFaultAction(proc_Ref_t procRef, le_cfg_IteratorRef_t procCfg)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Get\+Fault\+Action (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t}}]{proc\+Cfg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a7533244cc85491288b37ffecb2115a0c}{}\label{proc_8c_a7533244cc85491288b37ffecb2115a0c}
+Gets the fault action for the process from the config tree and store in the process record 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Cfg} & The process config tree reference \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Get\+Watchdog\+Action@{Get\+Watchdog\+Action}}
+\index{Get\+Watchdog\+Action@{Get\+Watchdog\+Action}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Get\+Watchdog\+Action(proc\+\_\+\+Ref\+\_\+t proc\+Ref, le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t proc\+Cfg)}{GetWatchdogAction(proc_Ref_t procRef, le_cfg_IteratorRef_t procCfg)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Get\+Watchdog\+Action (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{{\bf le\+\_\+cfg\+\_\+\+Iterator\+Ref\+\_\+t}}]{proc\+Cfg}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a8e819dff906c03977796408549bec53c}{}\label{proc_8c_a8e819dff906c03977796408549bec53c}
+Gets the watchdog action for the process from the config tree and store in the process record 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Cfg} & The process config tree reference \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Add\+Args@{proc\+\_\+\+Add\+Args}}
+\index{proc\+\_\+\+Add\+Args@{proc\+\_\+\+Add\+Args}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Add\+Args(proc\+\_\+\+Ref\+\_\+t proc\+Ref, const char $\ast$arg\+Ptr)}{proc_AddArgs(proc_Ref_t procRef, const char *argPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} proc\+\_\+\+Add\+Args (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{const char $\ast$}]{arg\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_aa20e193396652210ed523d815ecacd80}{}\label{proc_8c_aa20e193396652210ed523d815ecacd80}
+Adds a cmd-\/line argument to a process. Adding a N\+U\+LL arg\+Ptr is valid and can be used to validate the args list without actually adding an argument. This is useful for overriding the configured arguments with an empty list.
+
+This overrides the configured arguments if available.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the argument string is too long. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em arg\+Ptr} & Argument string. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Clear\+Args@{proc\+\_\+\+Clear\+Args}}
+\index{proc\+\_\+\+Clear\+Args@{proc\+\_\+\+Clear\+Args}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Clear\+Args(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_ClearArgs(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} proc\+\_\+\+Clear\+Args (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a8ed1caf8c0c8167b6aff12d15355e8e1}{}\label{proc_8c_a8ed1caf8c0c8167b6aff12d15355e8e1}
+Deletes and invalidates the cmd-\/line arguments to a process. This means the process will only use arguments from the config if available. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Create@{proc\+\_\+\+Create}}
+\index{proc\+\_\+\+Create@{proc\+\_\+\+Create}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Create(const char $\ast$name\+Ptr, app\+\_\+\+Ref\+\_\+t app\+Ref, const char $\ast$cfg\+Path\+Root\+Ptr)}{proc_Create(const char *namePtr, app_Ref_t appRef, const char *cfgPathRootPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf proc\+\_\+\+Ref\+\_\+t} proc\+\_\+\+Create (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{name\+Ptr, }
+\item[{{\bf app\+\_\+\+Ref\+\_\+t}}]{app\+Ref, }
+\item[{const char $\ast$}]{cfg\+Path\+Root\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a69b7379e3a8941bd36fdbaeaa11860f6}{}\label{proc_8c_a69b7379e3a8941bd36fdbaeaa11860f6}
+Create a process object.
+
+\begin{DoxyNote}{Note}
+If the config path is given, the last node in the path must be the name of the process.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+A reference to a process object if successful. N\+U\+LL if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em name\+Ptr} & Name of the process. \\
+\hline
+\mbox{\tt in}  & {\em app\+Ref} & Reference to the app that we are part of. \\
+\hline
+\mbox{\tt in}  & {\em cfg\+Path\+Root\+Ptr} & The path in the config tree for this process. Can be N\+U\+LL if there is no config entry for this process. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Delete@{proc\+\_\+\+Delete}}
+\index{proc\+\_\+\+Delete@{proc\+\_\+\+Delete}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Delete(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_Delete(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} proc\+\_\+\+Delete (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_aecce034b5ef776ed02d94ef33652bbed}{}\label{proc_8c_aecce034b5ef776ed02d94ef33652bbed}
+Delete the process object.
+
+\begin{DoxyNote}{Note}
+If this function fails it will kill the calling process. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process to start. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Get\+App\+Name@{proc\+\_\+\+Get\+App\+Name}}
+\index{proc\+\_\+\+Get\+App\+Name@{proc\+\_\+\+Get\+App\+Name}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Get\+App\+Name(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_GetAppName(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ proc\+\_\+\+Get\+App\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a07bb6fb6a8edb205a1e813256f2a1a66}{}\label{proc_8c_a07bb6fb6a8edb205a1e813256f2a1a66}
+Get the name of the application that this process belongs to.
+
+\begin{DoxyReturn}{Returns}
+The application name. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Get\+Config\+Path@{proc\+\_\+\+Get\+Config\+Path}}
+\index{proc\+\_\+\+Get\+Config\+Path@{proc\+\_\+\+Get\+Config\+Path}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Get\+Config\+Path(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_GetConfigPath(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ proc\+\_\+\+Get\+Config\+Path (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a21db869fcf3d1f643f815519d20b8a7c}{}\label{proc_8c_a21db869fcf3d1f643f815519d20b8a7c}
+Get the process\textquotesingle{}s config path.
+
+\begin{DoxyReturn}{Returns}
+The process\textquotesingle{}s config path. N\+U\+LL if the process does not have a config. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Get\+Name@{proc\+\_\+\+Get\+Name}}
+\index{proc\+\_\+\+Get\+Name@{proc\+\_\+\+Get\+Name}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Get\+Name(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_GetName(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ proc\+\_\+\+Get\+Name (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_ada9607e7c3282ba2de40cc5a1c130f6a}{}\label{proc_8c_ada9607e7c3282ba2de40cc5a1c130f6a}
+Get the process\textquotesingle{}s name.
+
+\begin{DoxyReturn}{Returns}
+The process\textquotesingle{}s name. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Get\+P\+ID@{proc\+\_\+\+Get\+P\+ID}}
+\index{proc\+\_\+\+Get\+P\+ID@{proc\+\_\+\+Get\+P\+ID}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Get\+P\+I\+D(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_GetPID(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}pid\+\_\+t proc\+\_\+\+Get\+P\+ID (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a2b8a383aa53c4a7c14890a57167de2e9}{}\label{proc_8c_a2b8a383aa53c4a7c14890a57167de2e9}
+Gets the process\textquotesingle{}s P\+ID.
+
+\begin{DoxyReturn}{Returns}
+The process\textquotesingle{}s P\+ID if the state is not P\+R\+O\+C\+\_\+\+S\+T\+A\+T\+E\+\_\+\+D\+E\+AD. -\/1 if the state is P\+R\+O\+C\+\_\+\+S\+T\+A\+T\+E\+\_\+\+D\+E\+AD. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Get\+State@{proc\+\_\+\+Get\+State}}
+\index{proc\+\_\+\+Get\+State@{proc\+\_\+\+Get\+State}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Get\+State(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_GetState(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf proc\+\_\+\+State\+\_\+t} proc\+\_\+\+Get\+State (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a3b9571e73de444091bb0d83ca526cb4b}{}\label{proc_8c_a3b9571e73de444091bb0d83ca526cb4b}
+Gets the process state.
+
+\begin{DoxyReturn}{Returns}
+The process state. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Get\+Watchdog\+Action@{proc\+\_\+\+Get\+Watchdog\+Action}}
+\index{proc\+\_\+\+Get\+Watchdog\+Action@{proc\+\_\+\+Get\+Watchdog\+Action}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Get\+Watchdog\+Action(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_GetWatchdogAction(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf wdog\+\_\+action\+\_\+\+Watchdog\+Action\+\_\+t} proc\+\_\+\+Get\+Watchdog\+Action (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a5dafe439c757db52f2eb77252d28bea7}{}\label{proc_8c_a5dafe439c757db52f2eb77252d28bea7}
+Get the watchdog action for this process.
+
+\begin{DoxyReturn}{Returns}
+The watchdog action that should be taken for this process or one of the following\+: W\+A\+T\+C\+H\+D\+O\+G\+\_\+\+A\+C\+T\+I\+O\+N\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND -\/ no action was configured for this process W\+A\+T\+C\+H\+D\+O\+G\+\_\+\+A\+C\+T\+I\+O\+N\+\_\+\+E\+R\+R\+OR -\/ the action could not be read or is unknown W\+A\+T\+C\+H\+D\+O\+G\+\_\+\+A\+C\+T\+I\+O\+N\+\_\+\+H\+A\+N\+D\+L\+ED -\/ no further action is required, it is already handled. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Init@{proc\+\_\+\+Init}}
+\index{proc\+\_\+\+Init@{proc\+\_\+\+Init}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Init(void)}{proc_Init(void)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} proc\+\_\+\+Init (
+\begin{DoxyParamCaption}
+\item[{{\bf void}}]{}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a6955614a4a48ceac8598d28e2a553723}{}\label{proc_8c_a6955614a4a48ceac8598d28e2a553723}
+Initialize the process system. \index{proc.\+c@{proc.\+c}!proc\+\_\+\+Is\+Realtime@{proc\+\_\+\+Is\+Realtime}}
+\index{proc\+\_\+\+Is\+Realtime@{proc\+\_\+\+Is\+Realtime}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Is\+Realtime(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_IsRealtime(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}bool proc\+\_\+\+Is\+Realtime (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a35f1c276c96d1c87e36fca59e10ef995}{}\label{proc_8c_a35f1c276c96d1c87e36fca59e10ef995}
+Determines if the process is a realtime process.
+
+\begin{DoxyReturn}{Returns}
+true if the process has realtime priority. false if the process does not have realtime priority. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Set\+Block\+Callback@{proc\+\_\+\+Set\+Block\+Callback}}
+\index{proc\+\_\+\+Set\+Block\+Callback@{proc\+\_\+\+Set\+Block\+Callback}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Set\+Block\+Callback(proc\+\_\+\+Ref\+\_\+t proc\+Ref, proc\+\_\+\+Block\+Callback\+\_\+t block\+Callback, void $\ast$context\+Ptr)}{proc_SetBlockCallback(proc_Ref_t procRef, proc_BlockCallback_t blockCallback, void *contextPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} proc\+\_\+\+Set\+Block\+Callback (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{{\bf proc\+\_\+\+Block\+Callback\+\_\+t}}]{block\+Callback, }
+\item[{{\bf void} $\ast$}]{context\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a45523a9ab8e6f89bdfb55d052e418b9d}{}\label{proc_8c_a45523a9ab8e6f89bdfb55d052e418b9d}
+Blocks the process on startup, after it is forked and initialized but before it has execed. The specified callback function will be called when the process has blocked. Clearing the callback function means the process should not block on startup. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em block\+Callback} & Callback to set. N\+U\+LL to clear. \\
+\hline
+\mbox{\tt in}  & {\em context\+Ptr} & Context pointer. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Set\+Exec\+Path@{proc\+\_\+\+Set\+Exec\+Path}}
+\index{proc\+\_\+\+Set\+Exec\+Path@{proc\+\_\+\+Set\+Exec\+Path}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Set\+Exec\+Path(proc\+\_\+\+Ref\+\_\+t proc\+Ref, const char $\ast$exec\+Path\+Ptr)}{proc_SetExecPath(proc_Ref_t procRef, const char *execPathPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} proc\+\_\+\+Set\+Exec\+Path (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{const char $\ast$}]{exec\+Path\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a0740a44eebd4fc657f8bc87bc5077898}{}\label{proc_8c_a0740a44eebd4fc657f8bc87bc5077898}
+Set the process\textquotesingle{}s executable path.
+
+This overrides the configured executable path if available. If the configuration for the process is unavailable this function must be called to set the executable path.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the executable path is too long. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em exec\+Path\+Ptr} & Executable path to use for this process. N\+U\+LL to clear the executable path. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Set\+Fault\+Action@{proc\+\_\+\+Set\+Fault\+Action}}
+\index{proc\+\_\+\+Set\+Fault\+Action@{proc\+\_\+\+Set\+Fault\+Action}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Set\+Fault\+Action(proc\+\_\+\+Ref\+\_\+t proc\+Ref, Fault\+Action\+\_\+t fault\+Action)}{proc_SetFaultAction(proc_Ref_t procRef, FaultAction_t faultAction)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} proc\+\_\+\+Set\+Fault\+Action (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{{\bf Fault\+Action\+\_\+t}}]{fault\+Action}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a4ab7279282cfa86752d816cf195daee6}{}\label{proc_8c_a4ab7279282cfa86752d816cf195daee6}
+Set fault action.
+
+This overrides the configured fault action if available.
+
+The fault action can be set to F\+A\+U\+L\+T\+\_\+\+A\+C\+T\+I\+O\+N\+\_\+\+N\+O\+NE to indicate that the configured fault action should be used if available. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em fault\+Action} & Fault action. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Set\+Priority@{proc\+\_\+\+Set\+Priority}}
+\index{proc\+\_\+\+Set\+Priority@{proc\+\_\+\+Set\+Priority}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Set\+Priority(proc\+\_\+\+Ref\+\_\+t proc\+Ref, const char $\ast$priority\+Ptr)}{proc_SetPriority(proc_Ref_t procRef, const char *priorityPtr)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} proc\+\_\+\+Set\+Priority (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{const char $\ast$}]{priority\+Ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a0b4fa33c8153f07ce123cea3160a5868}{}\label{proc_8c_a0b4fa33c8153f07ce123cea3160a5868}
+Sets the process\textquotesingle{}s priority.
+
+This overrides the configured priority if available.
+
+The priority level string can be either \char`\"{}idle\char`\"{}, \char`\"{}low\char`\"{}, \char`\"{}medium\char`\"{}, \char`\"{}high\char`\"{}, \char`\"{}rt1\char`\"{} ... \char`\"{}rt32\char`\"{}.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+O\+V\+E\+R\+F\+L\+OW if the priority string is too long. L\+E\+\_\+\+F\+A\+U\+LT if the priority string is not valid. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em priority\+Ptr} & Priority string. N\+U\+LL to clear the priority. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Set\+Run@{proc\+\_\+\+Set\+Run}}
+\index{proc\+\_\+\+Set\+Run@{proc\+\_\+\+Set\+Run}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Set\+Run(proc\+\_\+\+Ref\+\_\+t proc\+Ref, bool run)}{proc_SetRun(proc_Ref_t procRef, bool run)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} proc\+\_\+\+Set\+Run (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{bool}]{run}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_ae67577d3731139b56ec35704a4660c9f}{}\label{proc_8c_ae67577d3731139b56ec35704a4660c9f}
+Set the run flag. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em run} & Run flag. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Set\+Std\+Err@{proc\+\_\+\+Set\+Std\+Err}}
+\index{proc\+\_\+\+Set\+Std\+Err@{proc\+\_\+\+Set\+Std\+Err}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Set\+Std\+Err(proc\+\_\+\+Ref\+\_\+t proc\+Ref, int std\+Err\+Fd)}{proc_SetStdErr(proc_Ref_t procRef, int stdErrFd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} proc\+\_\+\+Set\+Std\+Err (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{int}]{std\+Err\+Fd}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a8ab626f39b0e1408c7b282fd240eff22}{}\label{proc_8c_a8ab626f39b0e1408c7b282fd240eff22}
+Set the process\textquotesingle{}s file descriptors to use as its standard error.
+
+By default the standard out is directed to the logs. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em std\+Err\+Fd} & File descriptor to use as the app proc\textquotesingle{}s standard error. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Set\+Std\+In@{proc\+\_\+\+Set\+Std\+In}}
+\index{proc\+\_\+\+Set\+Std\+In@{proc\+\_\+\+Set\+Std\+In}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Set\+Std\+In(proc\+\_\+\+Ref\+\_\+t proc\+Ref, int std\+In\+Fd)}{proc_SetStdIn(proc_Ref_t procRef, int stdInFd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} proc\+\_\+\+Set\+Std\+In (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{int}]{std\+In\+Fd}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a3f93a8e926b2663aeb066b1d6d45eb4f}{}\label{proc_8c_a3f93a8e926b2663aeb066b1d6d45eb4f}
+Set the process\textquotesingle{}s file descriptors to use as its standard in.
+
+By default the standard in is directed to /dev/null. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em std\+In\+Fd} & File descriptor to use as the app proc\textquotesingle{}s standard in. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Set\+Std\+Out@{proc\+\_\+\+Set\+Std\+Out}}
+\index{proc\+\_\+\+Set\+Std\+Out@{proc\+\_\+\+Set\+Std\+Out}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Set\+Std\+Out(proc\+\_\+\+Ref\+\_\+t proc\+Ref, int std\+Out\+Fd)}{proc_SetStdOut(proc_Ref_t procRef, int stdOutFd)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} proc\+\_\+\+Set\+Std\+Out (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{int}]{std\+Out\+Fd}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a3a82c4d10dbc3f42102f6168c77294aa}{}\label{proc_8c_a3a82c4d10dbc3f42102f6168c77294aa}
+Set the process\textquotesingle{}s file descriptors to use as its standard out.
+
+By default the standard out is directed to the logs. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em std\+Out\+Fd} & File descriptor to use as the app proc\textquotesingle{}s standard out. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Sig\+Child\+Handler@{proc\+\_\+\+Sig\+Child\+Handler}}
+\index{proc\+\_\+\+Sig\+Child\+Handler@{proc\+\_\+\+Sig\+Child\+Handler}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Sig\+Child\+Handler(proc\+\_\+\+Ref\+\_\+t proc\+Ref, int proc\+Exit\+Status)}{proc_SigChildHandler(proc_Ref_t procRef, int procExitStatus)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Fault\+Action\+\_\+t} proc\+\_\+\+Sig\+Child\+Handler (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{int}]{proc\+Exit\+Status}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_ac8b7e877a595bfa590b21d10023459ea}{}\label{proc_8c_ac8b7e877a595bfa590b21d10023459ea}
+This handler must be called when a S\+I\+G\+C\+H\+I\+LD is received for the specified process.
+
+\begin{DoxyReturn}{Returns}
+The fault action that should be taken for this process. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em proc\+Exit\+Status} & The status of the process given by wait(). \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Start@{proc\+\_\+\+Start}}
+\index{proc\+\_\+\+Start@{proc\+\_\+\+Start}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Start(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_Start(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} proc\+\_\+\+Start (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a5cd1f26200055817011d2a1f11ca2a04}{}\label{proc_8c_a5cd1f26200055817011d2a1f11ca2a04}
+Starts a process. If the process belongs to a sandboxed app the process will run in its sandbox, otherwise the process will run in its working directory as root.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process to start. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Stopping@{proc\+\_\+\+Stopping}}
+\index{proc\+\_\+\+Stopping@{proc\+\_\+\+Stopping}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Stopping(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_Stopping(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} proc\+\_\+\+Stopping (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_ad7b7216e2c0ba8776a1bcbf9b549a863}{}\label{proc_8c_ad7b7216e2c0ba8776a1bcbf9b549a863}
+Used to indicate that the process is intentionally being stopped externally and not due to a fault. The process state is not updated right away only when the process actually stops. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process to stop. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!proc\+\_\+\+Unblock@{proc\+\_\+\+Unblock}}
+\index{proc\+\_\+\+Unblock@{proc\+\_\+\+Unblock}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{proc\+\_\+\+Unblock(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{proc_Unblock(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf void} proc\+\_\+\+Unblock (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a52032cd24456b41a181583d224820135}{}\label{proc_8c_a52032cd24456b41a181583d224820135}
+Unblocks a process that was blocked on startup. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Reached\+Fault\+Limit@{Reached\+Fault\+Limit}}
+\index{Reached\+Fault\+Limit@{Reached\+Fault\+Limit}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Reached\+Fault\+Limit(proc\+\_\+\+Ref\+\_\+t proc\+Ref, Fault\+Action\+\_\+t curr\+Fault\+Action, time\+\_\+t prev\+Fault\+Time)}{ReachedFaultLimit(proc_Ref_t procRef, FaultAction_t currFaultAction, time_t prevFaultTime)}}]{\setlength{\rightskip}{0pt plus 5cm}static bool Reached\+Fault\+Limit (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{{\bf Fault\+Action\+\_\+t}}]{curr\+Fault\+Action, }
+\item[{time\+\_\+t}]{prev\+Fault\+Time}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a727b450c5798025022676b6ca80d9394}{}\label{proc_8c_a727b450c5798025022676b6ca80d9394}
+Checks to see if the fault limit for this process has been reached. The fault limit is reached when there is more than one fault within the fault limit interval.
+
+\begin{DoxyReturn}{Returns}
+true if the fault limit has been reached. false if the fault limit has not been reached. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process reference. \\
+\hline
+\mbox{\tt in}  & {\em curr\+Fault\+Action} & The process\textquotesingle{}s current fault action. \\
+\hline
+\mbox{\tt in}  & {\em prev\+Fault\+Time} & Time of the previous fault. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Redirect\+Std\+Stream@{Redirect\+Std\+Stream}}
+\index{Redirect\+Std\+Stream@{Redirect\+Std\+Stream}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Redirect\+Std\+Stream(int fd, int log\+Pipe[2], int stream\+Num)}{RedirectStdStream(int fd, int logPipe[2], int streamNum)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Redirect\+Std\+Stream (
+\begin{DoxyParamCaption}
+\item[{int}]{fd, }
+\item[{int}]{log\+Pipe\mbox{[}2\mbox{]}, }
+\item[{int}]{stream\+Num}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a33834cd1c3779e34abf91fce44fc48aa}{}\label{proc_8c_a33834cd1c3779e34abf91fce44fc48aa}
+Redirects the calling process\textquotesingle{}s specified standard stream to the specified fd if the fd is a valid file descriptor. Otherwise redirect the standard stream to the log pipe. The log pipe is always closed afterwards. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em fd} & Fd to redirect to. \\
+\hline
+\mbox{\tt in}  & {\em log\+Pipe} & Log standard out pipe. \\
+\hline
+\mbox{\tt in}  & {\em stream\+Num} & Either S\+T\+D\+O\+U\+T\+\_\+\+F\+I\+L\+E\+NO or S\+T\+D\+E\+R\+R\+\_\+\+F\+I\+L\+E\+NO. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Redirect\+Std\+Streams@{Redirect\+Std\+Streams}}
+\index{Redirect\+Std\+Streams@{Redirect\+Std\+Streams}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Redirect\+Std\+Streams(proc\+\_\+\+Ref\+\_\+t proc\+Ref, int std\+Out\+Log\+Pipe[2], int std\+Err\+Log\+Pipe[2])}{RedirectStdStreams(proc_Ref_t procRef, int stdOutLogPipe[2], int stdErrLogPipe[2])}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Redirect\+Std\+Streams (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{int}]{std\+Out\+Log\+Pipe\mbox{[}2\mbox{]}, }
+\item[{int}]{std\+Err\+Log\+Pipe\mbox{[}2\mbox{]}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a98f497641be04428204739f7a141e7d1}{}\label{proc_8c_a98f497641be04428204739f7a141e7d1}
+Redirects the calling process\textquotesingle{}s standard in, standard out and standard error to either the process\textquotesingle{}s stored file descriptors (possibly set by a client process) or to the specified log pipes. The log pipes are always closed afterwards. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & Process reference. \\
+\hline
+\mbox{\tt in}  & {\em std\+Out\+Log\+Pipe} & Log standard out pipe. \\
+\hline
+\mbox{\tt in}  & {\em std\+Err\+Log\+Pipe} & Log standard in pipe. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Send\+Std\+Pipe\+To\+Log\+Daemon@{Send\+Std\+Pipe\+To\+Log\+Daemon}}
+\index{Send\+Std\+Pipe\+To\+Log\+Daemon@{Send\+Std\+Pipe\+To\+Log\+Daemon}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Send\+Std\+Pipe\+To\+Log\+Daemon(proc\+\_\+\+Ref\+\_\+t proc\+Ref, int pipefd[2], int stream\+Num)}{SendStdPipeToLogDaemon(proc_Ref_t procRef, int pipefd[2], int streamNum)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Send\+Std\+Pipe\+To\+Log\+Daemon (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref, }
+\item[{int}]{pipefd\mbox{[}2\mbox{]}, }
+\item[{int}]{stream\+Num}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_ab39f46af487c31e0d373859fef33512c}{}\label{proc_8c_ab39f46af487c31e0d373859fef33512c}
+Send the read end of the pipe to the log daemon for logging. Closes both ends of the local pipe afterwards. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & Process that owns the write end of the pipe. \\
+\hline
+\mbox{\tt in}  & {\em pipefd} & Pipe fds. \\
+\hline
+\mbox{\tt in}  & {\em stream\+Num} & Either S\+T\+D\+O\+U\+T\+\_\+\+F\+I\+L\+E\+NO or S\+T\+D\+E\+R\+R\+\_\+\+F\+I\+L\+E\+NO. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Set\+Environment\+Variables@{Set\+Environment\+Variables}}
+\index{Set\+Environment\+Variables@{Set\+Environment\+Variables}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Environment\+Variables(\+Env\+Var\+\_\+t env\+Vars[], int num\+Env\+Vars)}{SetEnvironmentVariables(EnvVar_t envVars[], int numEnvVars)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Environment\+Variables (
+\begin{DoxyParamCaption}
+\item[{{\bf Env\+Var\+\_\+t}}]{env\+Vars\mbox{[}$\,$\mbox{]}, }
+\item[{int}]{num\+Env\+Vars}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a4faadcbc4b4d5bf2dfa99619b92c49ac}{}\label{proc_8c_a4faadcbc4b4d5bf2dfa99619b92c49ac}
+Sets the environment variable for the calling process.
+
+\begin{DoxyNote}{Note}
+Kills the calling process if there is an error. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em \hyperlink{namespaceenv_vars}{env\+Vars}} & The list of environment variables. \\
+\hline
+\mbox{\tt in}  & {\em num\+Env\+Vars} & The number environment variables in the list. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Set\+Proc\+Priority@{Set\+Proc\+Priority}}
+\index{Set\+Proc\+Priority@{Set\+Proc\+Priority}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Proc\+Priority(const char $\ast$prior\+Str, pid\+\_\+t pid)}{SetProcPriority(const char *priorStr, pid_t pid)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+result\+\_\+t} Set\+Proc\+Priority (
+\begin{DoxyParamCaption}
+\item[{const char $\ast$}]{prior\+Str, }
+\item[{pid\+\_\+t}]{pid}
+\end{DoxyParamCaption}
+)}\hypertarget{proc_8c_a1fbf2f2d941578f75637132d014569c9}{}\label{proc_8c_a1fbf2f2d941578f75637132d014569c9}
+Sets the priority level for the specified process.
+
+The priority level string can be either \char`\"{}idle\char`\"{}, \char`\"{}low\char`\"{}, \char`\"{}medium\char`\"{}, \char`\"{}high\char`\"{}, \char`\"{}rt1\char`\"{} ... \char`\"{}rt32\char`\"{}.
+
+\begin{DoxyReturn}{Returns}
+L\+E\+\_\+\+OK if successful. L\+E\+\_\+\+F\+A\+U\+LT if there was an error. 
+\end{DoxyReturn}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em prior\+Str} & Priority level string. \\
+\hline
+\mbox{\tt in}  & {\em pid} & P\+ID of the process to set the priority for. \\
+\hline
+\end{DoxyParams}
+\index{proc.\+c@{proc.\+c}!Set\+Scheduling\+Priority@{Set\+Scheduling\+Priority}}
+\index{Set\+Scheduling\+Priority@{Set\+Scheduling\+Priority}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Set\+Scheduling\+Priority(proc\+\_\+\+Ref\+\_\+t proc\+Ref)}{SetSchedulingPriority(proc_Ref_t procRef)}}]{\setlength{\rightskip}{0pt plus 5cm}static {\bf void} Set\+Scheduling\+Priority (
+\begin{DoxyParamCaption}
+\item[{{\bf proc\+\_\+\+Ref\+\_\+t}}]{proc\+Ref}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a58e7c4362b314f44d4353b4964c8d515}{}\label{proc_8c_a58e7c4362b314f44d4353b4964c8d515}
+Sets the scheduling policy, priority and/or nice level for the specified process.
+
+\begin{DoxyNote}{Note}
+This function kills the specified process if there is an error. 
+\end{DoxyNote}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em proc\+Ref} & The process to set the priority for. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Variable Documentation}
+\index{proc.\+c@{proc.\+c}!Args\+Pool@{Args\+Pool}}
+\index{Args\+Pool@{Args\+Pool}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Args\+Pool}{ArgsPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Args\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a3f8795e8f24eee4c8f1b882351146b46}{}\label{proc_8c_a3f8795e8f24eee4c8f1b882351146b46}
+The memory pool for argument strings. \index{proc.\+c@{proc.\+c}!Path\+Pool@{Path\+Pool}}
+\index{Path\+Pool@{Path\+Pool}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Path\+Pool}{PathPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Path\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a0c90fc7b8538d5294c2d40d9bfb5990a}{}\label{proc_8c_a0c90fc7b8538d5294c2d40d9bfb5990a}
+The memory pool for path and name strings. \index{proc.\+c@{proc.\+c}!Priority\+Pool@{Priority\+Pool}}
+\index{Priority\+Pool@{Priority\+Pool}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Priority\+Pool}{PriorityPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Priority\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_ad596f84163907d0b289baabd587d241a}{}\label{proc_8c_ad596f84163907d0b289baabd587d241a}
+The memory pool for priority strings. \index{proc.\+c@{proc.\+c}!Process\+Pool@{Process\+Pool}}
+\index{Process\+Pool@{Process\+Pool}!proc.\+c@{proc.\+c}}
+\subsubsection[{\texorpdfstring{Process\+Pool}{ProcessPool}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf le\+\_\+mem\+\_\+\+Pool\+Ref\+\_\+t} Process\+Pool\hspace{0.3cm}{\ttfamily [static]}}\hypertarget{proc_8c_a62899d3b636dd960175da1f98ee110b0}{}\label{proc_8c_a62899d3b636dd960175da1f98ee110b0}
+The memory pool for process objects. 

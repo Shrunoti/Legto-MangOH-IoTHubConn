@@ -1,0 +1,270 @@
+#!/bin/sh
+
+# Starts/stops/restarts and installs the Legato framework.
+
+INSTALLED_VERSION=/legato/systems/current/version
+
+ACTION=$1
+
+# Make sure system/bin and /sbin is in the path.
+# Search installed system bin first. Fallback to MTD3 if necessary.
+export PATH=/legato/systems/current/bin:/mnt/legato/system/bin:/sbin:$PATH
+
+# Check if ps supports arguments.  If so, we need to run "ps aux" to be able
+# to see the supervisor process if it is running.  Otherwise, we just run "ps".
+PS='ps aux'
+if ! $PS > /dev/null 2>&1
+then
+    PS=ps
+fi
+
+PrintUsage()
+{
+    echo -e "NAME"
+    echo -e "  legato - Use the legato tool to control the Legato Application Framework.\n"
+    echo -e "SYNOPSIS"
+    echo -e "  legato [start|stop|restart|status|version|help]\n"
+    echo -e "DESCRIPTION"
+    echo -e "\tlegato start\n\t\tStarts the Legato Application Framework."
+    echo -e "\tlegato stop\n\t\tStops the Legato Application Framework."
+    echo -e "\tlegato restart\n\t\tRestarts the Legato Application Framework."
+    echo -e "\tlegato status\n\t\tDisplays the current running state (started, stopped),
+                system state (good, bad, probation) and system index of Legato."
+    echo -e "\tlegato version\n\t\tDisplays the current installed version."
+    echo -e "\tlegato help\n\t\tDisplays usage help."
+}
+
+
+# Checks if a process with a given name is running.
+# Takes a single argument, which is the name of the process.
+IsRunning()
+{
+    $PS | grep $1 | grep -v grep > /dev/null
+}
+
+
+LegatoStatus()
+{
+    printf 'Systems installed:'
+    systems=`ls /legato/systems 2> /dev/null`
+    if ! [ "$systems" ]
+    then
+        printf " NONE"
+    else
+        for dirName in $systems
+        do
+            # Ignore system unpack directory.
+            if [ "$dirName" != "unpack" ]
+            then
+                # If the status file exists, get status from it, else status is "untried".
+                if [ -f /legato/systems/$dirName/status ]
+                then
+                    status=`cat /legato/systems/$dirName/status`
+                else
+                    status="untried"
+                fi
+
+                appendix=""
+
+                index=`cat /legato/systems/$dirName/index`
+
+                # If the directory name is "current", flag as the current system.
+                if [ "$dirName" = "current" ]
+                then
+                    appendix=" <-- current"
+
+                # If this is not the current system, then take this opportunity to do a
+                # sanity check that the index file contains the directory name.
+                else
+                    if [ "$index" != "$dirName" ]
+                    then
+                        appendix=" <-- ERROR: index file doesn't match dir name."
+                    fi
+                fi
+
+                printf '\n  %s [%s]%s' "$index" "$status" "$appendix"
+            fi
+        done
+    fi
+
+    printf "\nLegato framework is "
+    if IsRunning supervisor
+    then
+        echo "running."
+        exit 0
+    else
+        echo "NOT running."
+        exit 1
+    fi
+}
+
+
+StartLegato()
+{
+    # Make sure it isn't running already.
+    if IsRunning supervisor
+    then
+        echo "The Legato Supervisor is already running."
+        exit 0
+    fi
+
+    echo "Starting Legato..."
+
+    /mnt/legato/start
+}
+
+
+StopLegato()
+{
+    wasRunning="no"
+
+    if IsRunning supervisor
+    then
+        wasRunning="yes"
+
+        # Scale StopLegatoTimeout according to the number of running apps.
+        # Estimate 5 seconds for the framework itself, and 3 seconds per app to shutdown.
+        StopLegatoTimeout=$(( 5 + $(app status | grep running | wc -l) * 3 ))
+
+        echo -n "Stopping Legato"
+
+        # Tell the Supervisor to shutdown Legato.
+        app "stopLegato" 2> /dev/null &
+        appToolPid=$!
+
+        # wait for supervisor shutdown
+        countDown=$StopLegatoTimeout
+        while [ $countDown -ne 0 ]
+        do
+            if IsRunning supervisor
+            then
+                echo -n "."
+                sleep 1
+            else
+                break
+            fi
+            countDown=`expr $countDown - 1`
+        done
+        echo
+
+        # make sure Legato shuts down
+        if IsRunning supervisor
+        then
+            # Get the pgid of startSystem.
+            startSystemPgid=`ps -eo "%r %c" | grep startSystem | awk '{print $1}'`
+
+            # If startSystem isn't running, something is wrong. So reboot.
+            if [ -z $startSystemPgid ]
+            then
+                echo "startSystem isn't running. Rebooting without attempting to hard-kill Legato."
+                reboot
+            fi
+
+            # Kill all processes with the same pgid as startSystem - hopefully that includes all
+            # Legato processes.
+            kill -9 -$startSystemPgid
+
+            # Wait for all killed processes to die before proceeding.
+            echo -n "Hard-killing Legato"
+            countDown=StopLegatoTimeout
+            while [ $countDown -ne 0 ]
+            do
+                if IsRunning startSystem
+                then
+                    echo -n "."
+                    sleep 1
+                else
+                    break
+                fi
+                countDown=`expr $countDown - 1`
+            done
+            echo
+
+            # If startSystem is still not dead, reboot
+            if IsRunning startSystem
+            then
+                echo "Legato may still be alive after attempt of hard-kill. Rebooting the system."
+                reboot
+            fi
+        fi
+    fi
+
+    # Make sure the serviceDirectory isn't still running.
+    if IsRunning serviceDirectory
+    then
+        wasRunning="yes"
+
+        echo "Service Directory still running. Killing it now ..."
+
+        killall serviceDirectory > /dev/null 2>&1
+
+    fi
+
+    # supervisor mounted smack. supervisor is dead now so unmount smack else it may
+    # give us trouble if we need to unmount the things smack is mounted to
+    if [ ! -e /legato/SMACK_DISABLED ]
+    then
+        umount /legato/smack
+    fi
+
+    if [ $wasRunning = "yes" ]
+    then
+        echo "DONE."
+    else
+        echo "Legato wasn't running."
+    fi
+}
+
+
+RestartLegato()
+{
+    if IsRunning supervisor
+    then
+        echo "Restarting Legato... "
+
+        # Tell the Supervisor to restart Legato.
+        app "restartLegato" 2> /dev/null
+    else
+        StopLegato
+        StartLegato
+    fi
+}
+
+
+case "$ACTION" in
+start)
+    StartLegato
+    ;;
+
+stop)
+    StopLegato
+    ;;
+
+restart)
+    RestartLegato
+    ;;
+
+status)
+    LegatoStatus
+    ;;
+
+help | --help | -h)
+    PrintUsage
+    ;;
+
+version)
+    if [ -f $INSTALLED_VERSION ]
+    then
+        cat $INSTALLED_VERSION
+    else
+        echo "UNKNOWN"
+        exit 1
+    fi
+    ;;
+
+*)
+    PrintUsage
+    exit 1
+    ;;
+
+esac

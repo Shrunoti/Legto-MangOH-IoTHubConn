@@ -1,0 +1,13 @@
+var searchData=
+[
+  ['kernelmodules_5finit',['kernelModules_Init',['../kernel_modules_8c.html#a1bac96619fefbaf0d3a0d0ed71ee7f33',1,'kernelModules_Init(void):&#160;kernelModules.c'],['../kernel_modules_8h.html#a1bac96619fefbaf0d3a0d0ed71ee7f33',1,'kernelModules_Init(void):&#160;kernelModules.c'],['../supervisor_8c.html#aef51a606d699d4a7edcf09f56945c949',1,'kernelModules_Init():&#160;kernelModules.c']]],
+  ['kernelmodules_5finsert',['kernelModules_Insert',['../kernel_modules_8c.html#a228c1ce798510f133148a213f099c784',1,'kernelModules_Insert(void):&#160;kernelModules.c'],['../kernel_modules_8h.html#a228c1ce798510f133148a213f099c784',1,'kernelModules_Insert(void):&#160;kernelModules.c']]],
+  ['kernelmodules_5fremove',['kernelModules_Remove',['../kernel_modules_8c.html#a7911ea0fe1f80f9d178567cb1fe3a83a',1,'kernelModules_Remove(void):&#160;kernelModules.c'],['../kernel_modules_8h.html#a7911ea0fe1f80f9d178567cb1fe3a83a',1,'kernelModules_Remove(void):&#160;kernelModules.c']]],
+  ['kill_5fbyname',['kill_ByName',['../kill_proc_8c.html#aeed67ce78cdd88653d42f2625b0570b7',1,'kill_ByName(const char *procNamePtr):&#160;killProc.c'],['../kill_proc_8h.html#aeed67ce78cdd88653d42f2625b0570b7',1,'kill_ByName(const char *procNamePtr):&#160;killProc.c']]],
+  ['kill_5fdied',['kill_Died',['../kill_proc_8c.html#aaf56ee79805a6ac10670ea67a57b0cea',1,'kill_Died(pid_t pid):&#160;killProc.c'],['../kill_proc_8h.html#aaf56ee79805a6ac10670ea67a57b0cea',1,'kill_Died(pid_t pid):&#160;killProc.c']]],
+  ['kill_5fhard',['kill_Hard',['../kill_proc_8c.html#a20e30b287cc001b8dd3d8b0ccfb2834a',1,'kill_Hard(pid_t pid):&#160;killProc.c'],['../kill_proc_8h.html#a20e30b287cc001b8dd3d8b0ccfb2834a',1,'kill_Hard(pid_t pid):&#160;killProc.c']]],
+  ['kill_5finit',['kill_Init',['../kill_proc_8c.html#a77443f1c8c37b388787f4411fb0d0937',1,'kill_Init(void):&#160;killProc.c'],['../kill_proc_8h.html#a77443f1c8c37b388787f4411fb0d0937',1,'kill_Init(void):&#160;killProc.c']]],
+  ['kill_5fsendsig',['kill_SendSig',['../kill_proc_8c.html#a278e5e0aeb148af0577afce1ee23eef5',1,'kill_SendSig(pid_t pid, int sig):&#160;killProc.c'],['../kill_proc_8h.html#a278e5e0aeb148af0577afce1ee23eef5',1,'kill_SendSig(pid_t pid, int sig):&#160;killProc.c']]],
+  ['kill_5fsoft',['kill_Soft',['../kill_proc_8c.html#a361d4f8519e840ea6488700b192f1321',1,'kill_Soft(pid_t pid, size_t timeoutMsecs):&#160;killProc.c'],['../kill_proc_8h.html#a361d4f8519e840ea6488700b192f1321',1,'kill_Soft(pid_t pid, size_t timeoutMsecs):&#160;killProc.c']]],
+  ['killappprocs',['KillAppProcs',['../supervisor_2app_8c.html#af977ab3ac367db35bb415b4d7eab11ef',1,'app.c']]]
+];
